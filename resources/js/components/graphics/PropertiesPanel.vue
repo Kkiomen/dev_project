@@ -11,6 +11,99 @@ const graphicsStore = useGraphicsStore();
 const selectedLayer = computed(() => graphicsStore.selectedLayer);
 const currentTemplate = computed(() => graphicsStore.currentTemplate);
 
+// API docs state
+const showApiDocs = ref(false);
+const copiedSection = ref(null);
+
+// Get all modifiable layers with their properties
+const modifiableLayers = computed(() => {
+    return graphicsStore.layers.map(layer => {
+        let modifiableProps = [];
+        if (layer.type === 'text') {
+            modifiableProps = ['text', 'fill', 'fontFamily', 'fontSize'];
+        } else if (layer.type === 'image') {
+            modifiableProps = ['src'];
+        } else if (layer.type === 'rectangle' || layer.type === 'ellipse') {
+            if (layer.properties?.fillType === 'image') {
+                modifiableProps = ['fillImage', 'fillFit'];
+            } else {
+                modifiableProps = ['fill', 'stroke'];
+            }
+        }
+
+        return {
+            id: layer.id,
+            name: layer.name,
+            type: layer.type,
+            modifiableProps,
+            properties: layer.properties,
+        };
+    });
+});
+
+// Generate complete example modifications object (keyed by layer name)
+const exampleModifications = computed(() => {
+    const mods = {};
+    modifiableLayers.value.forEach(layer => {
+        const key = layer.name;
+
+        if (layer.type === 'text') {
+            mods[key] = {
+                text: 'Your text here',
+            };
+        } else if (layer.type === 'image') {
+            mods[key] = {
+                src: 'https://your-image-url.jpg',
+            };
+        } else if (layer.type === 'rectangle' || layer.type === 'ellipse') {
+            if (layer.properties?.fillType === 'image') {
+                mods[key] = {
+                    fillImage: 'https://your-image-url.jpg',
+                    fillFit: 'cover',
+                };
+            } else {
+                mods[key] = {
+                    fill: '#FF5733',
+                };
+            }
+        }
+    });
+    return mods;
+});
+
+// API base URL
+const apiBaseUrl = computed(() => window.location.origin);
+
+// Template ID (the API uses 'id' which is actually public_id)
+const templateId = computed(() => currentTemplate.value?.id);
+
+// Full API endpoints
+const endpoints = computed(() => ({
+    generate: `${apiBaseUrl.value}/api/v1/templates/${templateId.value}/generate`,
+}));
+
+// Generate curl command
+const curlCommand = computed(() => {
+    const body = JSON.stringify({ modifications: exampleModifications.value, format: 'png', quality: 100, scale: 1 });
+    return `curl -X POST "${endpoints.value.generate}" \\
+  -H "Content-Type: application/json" \\
+  -H "Authorization: Bearer YOUR_API_TOKEN" \\
+  -d '${body}'`;
+});
+
+// Copy to clipboard
+const copyToClipboard = async (text, section) => {
+    try {
+        await navigator.clipboard.writeText(text);
+        copiedSection.value = section;
+        setTimeout(() => {
+            copiedSection.value = null;
+        }, 2000);
+    } catch (err) {
+        console.error('Failed to copy:', err);
+    }
+};
+
 // Local state for text editing (to avoid too many updates)
 const localText = ref('');
 watch(() => selectedLayer.value?.properties?.text, (newText) => {
@@ -220,6 +313,163 @@ const toggleTextDecoration = (decoration) => {
                         class="hidden"
                     />
                 </label>
+            </div>
+
+            <!-- API Documentation Section -->
+            <div class="border-b border-gray-200">
+                <button
+                    @click="showApiDocs = !showApiDocs"
+                    class="w-full px-3 py-3 flex items-center justify-between hover:bg-gray-50 transition-colors"
+                >
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">{{ t('graphics.apiDocs.title') }}</span>
+                    </div>
+                    <svg
+                        :class="['w-4 h-4 text-gray-400 transition-transform', showApiDocs ? 'rotate-180' : '']"
+                        fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"
+                    >
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+                    </svg>
+                </button>
+
+                <div v-if="showApiDocs" class="px-3 pb-4 space-y-4">
+                    <!-- How it works -->
+                    <div class="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p class="text-[10px] text-amber-800 leading-relaxed">
+                            <strong>{{ t('graphics.apiDocs.howItWorks') }}:</strong> {{ t('graphics.apiDocs.howItWorksDesc') }}
+                        </p>
+                    </div>
+
+                    <!-- Template ID -->
+                    <div class="p-3 bg-blue-50 rounded-lg">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-[10px] font-medium text-blue-700 uppercase">Template ID</span>
+                            <button
+                                @click="copyToClipboard(templateId, 'templateId')"
+                                class="text-[10px] text-blue-600 hover:text-blue-800"
+                            >
+                                {{ copiedSection === 'templateId' ? '✓' : t('graphics.apiDocs.copy') }}
+                            </button>
+                        </div>
+                        <code class="block text-xs font-mono text-blue-900 break-all">{{ templateId }}</code>
+                    </div>
+
+                    <!-- Endpoint: Generate image -->
+                    <div>
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-[11px] font-medium text-gray-900">{{ t('graphics.apiDocs.generateEndpoint') }}</span>
+                        </div>
+                        <div class="p-2.5 bg-gray-800 rounded-lg">
+                            <div class="flex items-center gap-2 mb-2">
+                                <span class="px-1.5 py-0.5 bg-blue-500 text-white text-[9px] font-bold rounded">POST</span>
+                                <button
+                                    @click="copyToClipboard(endpoints.generate, 'generate')"
+                                    class="ml-auto text-[10px] text-gray-400 hover:text-white"
+                                >
+                                    {{ copiedSection === 'generate' ? '✓' : t('graphics.apiDocs.copy') }}
+                                </button>
+                            </div>
+                            <code class="block text-[11px] font-mono break-all" style="color: #86efac;">{{ endpoints.generate }}</code>
+                        </div>
+                    </div>
+
+                    <!-- Layers list -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-medium text-gray-900">{{ t('graphics.apiDocs.modifiableLayers') }}</span>
+                            <span class="text-[10px] text-gray-500">({{ modifiableLayers.length }})</span>
+                        </div>
+
+                        <div v-if="modifiableLayers.length > 0" class="space-y-2">
+                            <div
+                                v-for="layer in modifiableLayers"
+                                :key="layer.id"
+                                class="p-2 bg-gray-50 rounded-lg border border-gray-200"
+                            >
+                                <div class="flex items-center gap-2 mb-1.5">
+                                    <span :class="[
+                                        'px-1.5 py-0.5 text-[9px] font-bold rounded',
+                                        layer.type === 'text' ? 'bg-purple-100 text-purple-700' :
+                                        layer.type === 'image' ? 'bg-green-100 text-green-700' :
+                                        'bg-orange-100 text-orange-700'
+                                    ]">{{ layer.type.toUpperCase() }}</span>
+                                    <span class="text-[10px] text-gray-700 font-medium truncate flex-1">{{ layer.name }}</span>
+                                </div>
+                                <div class="flex flex-wrap gap-1 mt-1">
+                                    <span
+                                        v-for="prop in layer.modifiableProps"
+                                        :key="prop"
+                                        class="px-1.5 py-0.5 bg-white border border-gray-200 text-[9px] text-gray-600 rounded"
+                                    >{{ prop }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-else class="text-[10px] text-gray-400 italic py-2">{{ t('graphics.apiDocs.noModifiableLayers') }}</p>
+                    </div>
+
+                    <!-- Request body -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-medium text-gray-900">{{ t('graphics.apiDocs.requestBody') }}</span>
+                            <button
+                                @click="copyToClipboard(JSON.stringify({ modifications: exampleModifications, format: 'png', quality: 100, scale: 1 }, null, 2), 'body')"
+                                class="text-[10px] text-blue-600 hover:text-blue-800"
+                            >
+                                {{ copiedSection === 'body' ? '✓' : t('graphics.apiDocs.copy') }}
+                            </button>
+                        </div>
+                        <pre class="p-2.5 bg-gray-800 rounded-lg text-[10px] font-mono overflow-x-auto max-h-64 overflow-y-auto"><code class="whitespace-pre" style="color: #86efac;">{{ JSON.stringify({ modifications: exampleModifications, format: 'png', quality: 100, scale: 1 }, null, 2) }}</code></pre>
+                    </div>
+
+                    <!-- Optional params note -->
+                    <div class="p-2.5 bg-gray-50 rounded-lg border border-gray-200">
+                        <span class="text-[10px] font-medium text-gray-700 block mb-1">{{ t('graphics.apiDocs.optionalParams') }}:</span>
+                        <span class="text-[9px] text-gray-500">{{ t('graphics.apiDocs.optionalParamsDesc') }}</span>
+                    </div>
+
+                    <!-- Response -->
+                    <div>
+                        <span class="text-[11px] font-medium text-gray-900 mb-2 block">{{ t('graphics.apiDocs.response') }}</span>
+                        <pre class="p-2.5 bg-gray-800 rounded-lg text-[10px] font-mono overflow-x-auto max-h-48 overflow-y-auto"><code class="whitespace-pre" style="color: #86efac;">{
+  "success": true,
+  "template": {
+    "id": "{{ templateId }}",
+    "width": {{ currentTemplate?.width || 1080 }},
+    "height": {{ currentTemplate?.height || 1080 }},
+    "background_color": "{{ currentTemplate?.background_color || '#FFFFFF' }}"
+  },
+  "layers": [...],
+  "render_options": {
+    "format": "png",
+    "quality": 100,
+    "scale": 1
+  }
+}</code></pre>
+                    </div>
+
+                    <!-- Auth header -->
+                    <div class="p-2.5 bg-gray-100 rounded-lg">
+                        <span class="text-[10px] font-medium text-gray-700 block mb-1">Header:</span>
+                        <code class="text-[10px] font-mono text-gray-600">Authorization: Bearer YOUR_API_TOKEN</code>
+                    </div>
+
+                    <!-- Curl command -->
+                    <div>
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="text-[11px] font-medium text-gray-900">{{ t('graphics.apiDocs.curlCommand') }}</span>
+                            <button
+                                @click="copyToClipboard(curlCommand, 'curl')"
+                                class="text-[10px] text-blue-600 hover:text-blue-800"
+                            >
+                                {{ copiedSection === 'curl' ? '✓' : t('graphics.apiDocs.copy') }}
+                            </button>
+                        </div>
+                        <pre class="p-2.5 bg-gray-800 rounded-lg text-[10px] font-mono overflow-x-auto max-h-48 overflow-y-auto"><code class="whitespace-pre" style="color: #86efac;">{{ curlCommand }}</code></pre>
+                    </div>
+                </div>
             </div>
         </div>
 

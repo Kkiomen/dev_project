@@ -762,22 +762,18 @@
         },
         "apiDocs": {
             "title": "Dokumentacja API",
-            "templateInfo": "Informacje o szablonie",
-            "dimensions": "Wymiary",
-            "modifiableLayers": "Modyfikowalne warstwy",
-            "layerKey": "Klucz warstwy",
-            "layerName": "Nazwa",
-            "layerType": "Typ",
-            "currentValue": "Aktualna wartość",
-            "noModifiableLayers": "Brak modyfikowalnych warstw w tym szablonie",
-            "endpoints": "Endpointy API",
-            "getLayersDesc": "Pobierz szablon ze wszystkimi warstwami i ich aktualnymi wartościami",
-            "postImageDesc": "Prześlij wygenerowany obraz na serwer do przechowania",
-            "modificationsStructure": "Struktura modyfikacji",
-            "codeExamples": "Przykłady kodu",
+            "howItWorks": "Jak to działa",
+            "howItWorksDesc": "Wyślij modyfikacje warstw przez API i otrzymaj dane szablonu ze zmianami. Użyj zwróconych danych do renderowania obrazu po stronie klienta za pomocą Konva.js. Oryginalny szablon pozostaje niezmieniony.",
+            "modifiableLayers": "Warstwy do modyfikacji",
+            "noModifiableLayers": "Brak warstw w tym szablonie",
+            "generateEndpoint": "Endpoint generowania",
+            "requestBody": "Body żądania",
+            "response": "Odpowiedź",
             "copy": "Kopiuj",
             "copied": "Skopiowano!",
-            "note": "Uwaga: Zastąp YOUR_API_TOKEN swoim aktualnym tokenem API."
+            "optionalParams": "Opcjonalne parametry",
+            "optionalParamsDesc": "format (png/jpeg/webp), quality (1-100), scale (0.1-4)",
+            "curlCommand": "Gotowy curl"
         }
     }
 }

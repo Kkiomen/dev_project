@@ -57,6 +57,7 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('templates/{template}/duplicate', [TemplateController::class, 'duplicate']);
     Route::post('templates/{template}/thumbnail', [TemplateController::class, 'uploadThumbnail']);
     Route::post('templates/{template}/background', [TemplateController::class, 'uploadBackgroundImage']);
+    Route::post('templates/{template}/generate', [TemplateController::class, 'generate']);
 
     // Base-specific templates (for automation)
     Route::get('bases/{base}/templates', [TemplateController::class, 'indexByBase']);

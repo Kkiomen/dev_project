@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\GenerateTemplateRequest;
 use App\Http\Requests\Api\StoreTemplateRequest;
 use App\Http\Requests\Api\UpdateTemplateRequest;
+use App\Http\Resources\LayerResource;
 use App\Http\Resources\TemplateResource;
 use App\Models\Base;
 use App\Models\Template;
@@ -156,5 +158,73 @@ class TemplateController extends Controller
         $template->update(['background_image' => $path]);
 
         return new TemplateResource($template);
+    }
+
+    /**
+     * Generate template preview with modifications applied.
+     *
+     * Returns the template data with layers modified according to the provided modifications.
+     * The actual image rendering happens client-side using Konva.js.
+     * The original template remains unchanged.
+     */
+    public function generate(GenerateTemplateRequest $request, Template $template)
+    {
+        $this->authorize('view', $template);
+
+        $template->load(['layers', 'fonts']);
+
+        $modifications = $request->input('modifications', []);
+        $format = $request->input('format', 'png');
+        $quality = $request->input('quality', 100);
+        $scale = $request->input('scale', 1);
+
+        // Create modified layers data without changing the database
+        $modifiedLayers = $template->layers->map(function ($layer) use ($modifications) {
+            $layerData = $layer->toArray();
+
+            // Check if there are modifications for this layer (by name)
+            if (isset($modifications[$layer->name])) {
+                $layerModifications = $modifications[$layer->name];
+
+                // Merge modifications into properties
+                $properties = $layer->properties ?? [];
+                foreach ($layerModifications as $key => $value) {
+                    // Handle top-level layer properties vs nested properties
+                    if (in_array($key, ['text', 'src', 'fill', 'fillImage', 'fillFit', 'stroke', 'fontFamily', 'fontSize'])) {
+                        $properties[$key] = $value;
+                    } else {
+                        $layerData[$key] = $value;
+                    }
+                }
+
+                $layerData['properties'] = $properties;
+            }
+
+            return $layerData;
+        });
+
+        return response()->json([
+            'success' => true,
+            'template' => [
+                'id' => $template->public_id,
+                'name' => $template->name,
+                'width' => $template->width,
+                'height' => $template->height,
+                'background_color' => $template->background_color,
+                'background_image' => $template->background_image,
+            ],
+            'layers' => $modifiedLayers,
+            'fonts' => $template->fonts->map(fn ($font) => [
+                'font_family' => $font->font_family,
+                'font_url' => $font->font_file ? asset('storage/' . $font->font_file) : null,
+                'font_weight' => $font->font_weight,
+                'font_style' => $font->font_style,
+            ]),
+            'render_options' => [
+                'format' => $format,
+                'quality' => $quality,
+                'scale' => $scale,
+            ],
+        ]);
     }
 }

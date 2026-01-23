@@ -165,7 +165,7 @@ const handleDelete = (layer) => {
                     <!-- Name -->
                     <span
                         :class="[
-                            'flex-1 text-xs font-medium truncate',
+                            'flex-1 min-w-0 text-xs font-medium truncate',
                             layer.visible ? 'text-gray-900' : 'text-gray-400'
                         ]"
                     >

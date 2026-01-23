@@ -9,7 +9,6 @@ import LayersPanel from './LayersPanel.vue';
 import PropertiesPanel from './PropertiesPanel.vue';
 import ExportModal from './modals/ExportModal.vue';
 import FontUploadModal from './modals/FontUploadModal.vue';
-import ApiDocsModal from './modals/ApiDocsModal.vue';
 
 const { t } = useI18n();
 const { loadFont } = useGoogleFonts();
@@ -28,7 +27,6 @@ const showLayersPanel = ref(true);
 const showPropertiesPanel = ref(true);
 const showExportModal = ref(false);
 const showFontModal = ref(false);
-const showApiDocsModal = ref(false);
 
 // Auto-save interval (30 seconds)
 const AUTO_SAVE_INTERVAL = 30000;
@@ -193,10 +191,6 @@ const handleExport = () => {
 const handleOpenFonts = () => {
     showFontModal.value = true;
 };
-
-const handleOpenApiDocs = () => {
-    showApiDocsModal.value = true;
-};
 </script>
 
 <template>
@@ -207,7 +201,6 @@ const handleOpenApiDocs = () => {
             @save="handleSave"
             @export="handleExport"
             @open-fonts="handleOpenFonts"
-            @open-api-docs="handleOpenApiDocs"
             @toggle-layers="showLayersPanel = !showLayersPanel"
             @toggle-properties="showPropertiesPanel = !showPropertiesPanel"
         />
@@ -234,7 +227,7 @@ const handleOpenApiDocs = () => {
             <!-- Properties panel -->
             <div
                 v-if="showPropertiesPanel"
-                class="w-72 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto"
+                class="w-96 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto"
             >
                 <PropertiesPanel />
             </div>
@@ -253,13 +246,6 @@ const handleOpenApiDocs = () => {
             :show="showFontModal"
             :template-id="template.id"
             @close="showFontModal = false"
-        />
-
-        <!-- API docs modal -->
-        <ApiDocsModal
-            :show="showApiDocsModal"
-            :template="template"
-            @close="showApiDocsModal = false"
         />
     </div>
 </template>

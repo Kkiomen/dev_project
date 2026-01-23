@@ -761,22 +761,18 @@
         },
         "apiDocs": {
             "title": "API Documentation",
-            "templateInfo": "Template Information",
-            "dimensions": "Dimensions",
-            "modifiableLayers": "Modifiable Layers",
-            "layerKey": "Layer Key",
-            "layerName": "Name",
-            "layerType": "Type",
-            "currentValue": "Current Value",
-            "noModifiableLayers": "No modifiable layers in this template",
-            "endpoints": "API Endpoints",
-            "getLayersDesc": "Get template with all layers and their current values",
-            "postImageDesc": "Upload generated image to server for storage",
-            "modificationsStructure": "Modifications Structure",
-            "codeExamples": "Code Examples",
+            "howItWorks": "How it works",
+            "howItWorksDesc": "Send layer modifications via API and receive template data with applied changes. Use the returned data to render the image client-side with Konva.js. The original template remains unchanged.",
+            "modifiableLayers": "Layers you can modify",
+            "noModifiableLayers": "No layers in this template",
+            "generateEndpoint": "Generate endpoint",
+            "requestBody": "Request body",
+            "response": "Response",
             "copy": "Copy",
             "copied": "Copied!",
-            "note": "Note: Replace YOUR_API_TOKEN with your actual API token."
+            "optionalParams": "Optional parameters",
+            "optionalParamsDesc": "format (png/jpeg/webp), quality (1-100), scale (0.1-4)",
+            "curlCommand": "Ready to use curl"
         }
     }
 }
