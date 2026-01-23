@@ -715,7 +715,10 @@
             "alignBottom": "Align Bottom",
             "gradientLinear": "Linear",
             "gradientRadial": "Radial",
-            "gradientAngle": "Angle"
+            "gradientAngle": "Angle",
+            "lineStyle": "Line Style",
+            "lineCap": "Line Cap",
+            "dashPattern": "Dash Pattern"
         },
         "export": {
             "title": "Export Image",
@@ -749,7 +752,8 @@
             "text": "Text",
             "image": "Image",
             "rectangle": "Rectangle",
-            "ellipse": "Ellipse"
+            "ellipse": "Ellipse",
+            "line": "Line"
         },
         "contextMenu": {
             "copy": "Copy",
@@ -805,6 +809,9 @@
             "addToLibrary": "Add to Library",
             "removeFromLibrary": "Remove from Library",
             "use": "Use",
+            "useHere": "Use Here",
+            "createNew": "Create New",
+            "unlinkFromLibrary": "Unlink from Library",
             "useTemplate": "Use this Template",
             "copyToMyTemplates": "Copy to My Templates",
             "confirmAdd": "Add template to library?",

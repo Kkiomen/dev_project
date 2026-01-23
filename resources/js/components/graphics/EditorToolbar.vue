@@ -15,7 +15,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at', 'open-library', 'add-to-library']);
+const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at', 'open-library', 'add-to-library', 'unlink-from-library']);
 
 const authStore = useAuthStore();
 
@@ -41,6 +41,7 @@ const tools = [
     { id: 'text', icon: 'type', label: 'tools.text', shortcut: 'T', draggable: true },
     { id: 'rectangle', icon: 'square', label: 'tools.rectangle', shortcut: 'R', draggable: true },
     { id: 'ellipse', icon: 'circle', label: 'tools.ellipse', shortcut: 'O', draggable: true },
+    { id: 'line', icon: 'line', label: 'tools.line', shortcut: 'L', draggable: true },
     { id: 'image', icon: 'image', label: 'tools.image', shortcut: 'I', draggable: false },
 ];
 
@@ -187,6 +188,10 @@ const handleBack = () => {
                 <svg v-else-if="tool.icon === 'circle'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z"/>
                 </svg>
+                <!-- Line icon -->
+                <svg v-else-if="tool.icon === 'line'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20L20 4"/>
+                </svg>
                 <!-- Image icon -->
                 <svg v-else-if="tool.icon === 'image'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
@@ -319,9 +324,9 @@ const handleBack = () => {
                 <span>{{ t('graphics.library.titleShort') }}</span>
             </button>
 
-            <!-- Add to Library (Admin only) -->
+            <!-- Add to Library (Admin only) - creates a copy -->
             <button
-                v-if="authStore.isAdmin && !template.is_library"
+                v-if="authStore.isAdmin"
                 @click="$emit('add-to-library')"
                 class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium text-sm bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-all"
                 :title="t('graphics.library.addToLibrary')"
@@ -331,16 +336,17 @@ const handleBack = () => {
                 </svg>
             </button>
 
-            <!-- Library badge (if template is in library) -->
-            <span
-                v-if="template.is_library"
-                class="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-lg"
+            <!-- Unlink from library (if template is in library - for migration from old logic) -->
+            <button
+                v-if="authStore.isAdmin && template.is_library"
+                @click="$emit('unlink-from-library')"
+                class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium text-sm bg-red-50 text-red-700 hover:bg-red-100 border border-red-200 transition-all"
+                :title="t('graphics.library.unlinkFromLibrary')"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/>
                 </svg>
-                {{ t('graphics.library.title') }}
-            </span>
+            </button>
 
             <!-- Separator -->
             <div class="w-px h-6 bg-gray-300 mx-1"></div>

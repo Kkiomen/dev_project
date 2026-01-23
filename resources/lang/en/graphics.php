@@ -6,6 +6,7 @@ return [
         'image' => 'Image',
         'rectangle' => 'Rectangle',
         'ellipse' => 'Ellipse',
+        'line' => 'Line',
     ],
 
     'templates' => [

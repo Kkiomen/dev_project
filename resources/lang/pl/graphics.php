@@ -6,6 +6,7 @@ return [
         'image' => 'Obraz',
         'rectangle' => 'Prostokąt',
         'ellipse' => 'Elipsa',
+        'line' => 'Linia',
     ],
 
     'templates' => [

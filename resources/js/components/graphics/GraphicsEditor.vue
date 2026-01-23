@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue';
 import { useI18n } from 'vue-i18n';
+import axios from 'axios';
 import { useGraphicsStore } from '@/stores/graphics';
 import { useGoogleFonts } from '@/composables/useGoogleFonts';
 import EditorToolbar from './EditorToolbar.vue';
@@ -68,9 +69,24 @@ const handleTemplateCopied = (newTemplate) => {
     window.location.href = `/graphics/${newTemplate.id}`;
 };
 
+const handleAppliedToCurrent = (updatedTemplate) => {
+    showLibraryModal.value = false;
+    // Reload the page to get fresh template data with new layers
+    window.location.reload();
+};
+
 const handleAddedToLibrary = (template) => {
     showAddToLibraryModal.value = false;
     // Optionally refresh template data
+};
+
+const handleUnlinkFromLibrary = async () => {
+    try {
+        await axios.post(`/api/v1/templates/${props.template.id}/unlink-from-library`);
+        window.location.reload();
+    } catch (error) {
+        console.error('Failed to unlink from library:', error);
+    }
 };
 
 // Auto-save interval (30 seconds)
@@ -174,6 +190,7 @@ const handleKeydown = (e) => {
         if (e.key === 't') graphicsStore.setTool('text');
         if (e.key === 'r') graphicsStore.setTool('rectangle');
         if (e.key === 'o') graphicsStore.setTool('ellipse');
+        if (e.key === 'l') graphicsStore.setTool('line');
         if (e.key === 'i') graphicsStore.setTool('image');
     }
 
@@ -250,6 +267,7 @@ const handleOpenFonts = () => {
             @toggle-properties="showPropertiesPanel = !showPropertiesPanel"
             @open-library="showLibraryModal = true"
             @add-to-library="showAddToLibraryModal = true"
+            @unlink-from-library="handleUnlinkFromLibrary"
         />
 
         <!-- Main content -->
@@ -313,8 +331,10 @@ const handleOpenFonts = () => {
         <!-- Template Library modal -->
         <TemplateLibraryModal
             :show="showLibraryModal"
+            :current-template-id="template.id"
             @close="showLibraryModal = false"
             @template-copied="handleTemplateCopied"
+            @applied-to-current="handleAppliedToCurrent"
         />
 
         <!-- Add to Library modal (admin only) -->

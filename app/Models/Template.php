@@ -151,20 +151,33 @@ class Template extends Model
     }
 
     /**
-     * Add current template to library (admin only).
+     * Copy current template to library as a new template.
+     * Original template remains unchanged - user can continue working on it.
      */
-    public function addToLibrary(?string $category = null, ?string $thumbnailPath = null): self
+    public function copyToLibrary(?string $category = null, ?string $thumbnailPath = null): Template
     {
-        $this->is_library = true;
-        $this->library_category = $category;
+        // Create a copy of the template for library
+        $libraryTemplate = $this->replicate(['public_id', 'is_library', 'library_category', 'thumbnail_path']);
+        $libraryTemplate->is_library = true;
+        $libraryTemplate->library_category = $category;
+        $libraryTemplate->thumbnail_path = $thumbnailPath;
+        $libraryTemplate->save();
 
-        if ($thumbnailPath) {
-            $this->thumbnail_path = $thumbnailPath;
+        // Copy all layers
+        foreach ($this->layers as $layer) {
+            $newLayer = $layer->replicate(['public_id']);
+            $newLayer->template_id = $libraryTemplate->id;
+            $newLayer->save();
         }
 
-        $this->save();
+        // Copy all fonts
+        foreach ($this->fonts as $font) {
+            $newFont = $font->replicate();
+            $newFont->template_id = $libraryTemplate->id;
+            $newFont->save();
+        }
 
-        return $this;
+        return $libraryTemplate->load('layers', 'fonts');
     }
 
     /**

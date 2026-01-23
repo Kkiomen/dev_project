@@ -41,7 +41,48 @@ class TemplateLibraryController extends Controller
     }
 
     /**
-     * Add current template to library (admin only).
+     * Apply library template to current template (replace layers).
+     */
+    public function applyToCurrent(Request $request, Template $libraryTemplate): TemplateResource
+    {
+        // Verify it's a library template
+        if (!$libraryTemplate->is_library) {
+            abort(404, 'Template not found in library.');
+        }
+
+        $validated = $request->validate([
+            'target_template_id' => 'required|string',
+        ]);
+
+        // Find target template
+        $targetTemplate = Template::where('public_id', $validated['target_template_id'])
+            ->where('user_id', $request->user()->id)
+            ->firstOrFail();
+
+        // Delete existing layers from target template
+        $targetTemplate->layers()->delete();
+
+        // Copy layers from library template to target
+        foreach ($libraryTemplate->layers as $layer) {
+            $newLayer = $layer->replicate(['public_id']);
+            $newLayer->template_id = $targetTemplate->id;
+            $newLayer->save();
+        }
+
+        // Update template settings (dimensions, background) from library template
+        $targetTemplate->update([
+            'width' => $libraryTemplate->width,
+            'height' => $libraryTemplate->height,
+            'background_color' => $libraryTemplate->background_color,
+            'background_image' => $libraryTemplate->background_image,
+        ]);
+
+        return new TemplateResource($targetTemplate->fresh()->load('layers', 'fonts'));
+    }
+
+    /**
+     * Copy current template to library as a new template (admin only).
+     * Original template remains unchanged - user can continue working on it.
      */
     public function addToLibrary(Request $request, Template $template): TemplateResource
     {
@@ -57,9 +98,10 @@ class TemplateLibraryController extends Controller
             $thumbnailPath = $this->saveThumbnail($validated['thumbnail'], $template);
         }
 
-        $template->addToLibrary(null, $thumbnailPath);
+        // Create a COPY in the library, original template stays unchanged
+        $libraryTemplate = $template->copyToLibrary(null, $thumbnailPath);
 
-        return new TemplateResource($template->fresh());
+        return new TemplateResource($libraryTemplate);
     }
 
     /**
@@ -80,6 +122,19 @@ class TemplateLibraryController extends Controller
         }
 
         $template->removeFromLibrary();
+
+        return new TemplateResource($template->fresh());
+    }
+
+    /**
+     * Unlink template from library (set is_library = false).
+     * Used for migrating templates from old logic where user's template was marked as library.
+     */
+    public function unlinkFromLibrary(Request $request, Template $template): TemplateResource
+    {
+        $this->authorize('update', $template);
+
+        $template->update(['is_library' => false, 'library_category' => null]);
 
         return new TemplateResource($template->fresh());
     }

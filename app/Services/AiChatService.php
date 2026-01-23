@@ -134,8 +134,32 @@ FOR RECTANGLE/ELLIPSE LAYERS - properties MUST include:
 - "fill": hex color (NEVER omit this - shapes need color!)
 - "cornerRadius": for rectangles (0 for sharp, 10-30 for rounded)
 
+FOR LINE LAYERS - properties MUST include:
+- "points": array of coordinates [x1, y1, x2, y2] relative to layer position (e.g., [0, 0, 200, 0] for horizontal line)
+- "stroke": hex color for the line
+- "strokeWidth": line thickness in pixels (2-10)
+- "lineCap": "butt", "round", or "square" (optional, default "round")
+- "dash": array for dashed lines, e.g., [10, 5] for dashed, [2, 4] for dotted, [] for solid (optional)
+
 FOR IMAGE LAYERS - properties MUST include:
 - "fit": "cover" or "contain"
+
+IMAGE ASPECT RATIOS - CRITICAL!
+When creating image layers, use PROPER aspect ratios that match real photos:
+- **Square (1:1)**: width = height (e.g., 500x500, 600x600)
+- **Landscape 4:3**: width = height * 1.33 (e.g., 800x600, 600x450)
+- **Landscape 3:2**: width = height * 1.5 (e.g., 900x600, 600x400)
+- **Landscape 16:9**: width = height * 1.78 (e.g., 800x450, 640x360)
+- **Portrait 3:4**: height = width * 1.33 (e.g., 450x600, 600x800)
+- **Portrait 2:3**: height = width * 1.5 (e.g., 400x600, 500x750)
+- **Portrait 4:5** (Instagram): height = width * 1.25 (e.g., 480x600, 800x1000)
+
+MATCH image_searches orientation with layer dimensions:
+- orientation: "landscape" → use landscape ratio (wider than tall)
+- orientation: "portrait" → use portrait ratio (taller than wide)
+- orientation: "square" → use 1:1 ratio
+
+NEVER use random dimensions like 900x500 or 880x450 - these distort photos!
 
 ##############################################################################
 
@@ -158,6 +182,41 @@ MODERN EFFECTS TOOLKIT:
 - **Typography hierarchy**: headlines uppercase with letterSpacing: 3-5, body text normal
 - **Contrasting CTA buttons**: bright/bold color that pops against background, rounded (cornerRadius: 25-35)
 - **Thin accent lines**: height: 2-4px, accent color, as visual separators
+
+TYPOGRAPHY BEST PRACTICES - USE GOOGLE FONTS!
+NEVER use "Arial" or "Helvetica" - these are boring system fonts!
+You have access to ALL Google Fonts! ALWAYS use stylish, modern fonts:
+
+**DISPLAY/HEADLINE FONTS** (bold, attention-grabbing):
+- "Bebas Neue" - condensed, all-caps impact
+- "Oswald" - modern condensed sans-serif
+- "Playfair Display" - elegant serif
+- "Abril Fatface" - bold display with personality
+- "Lobster" - script, playful
+- "Pacifico" - handwritten, friendly
+- "Dancing Script" - elegant cursive
+
+**BODY/READABLE FONTS** (clean, professional):
+- "Roboto" - Google's clean sans-serif
+- "Open Sans" - friendly, readable
+- "Montserrat" - geometric, modern
+- "Poppins" - rounded, contemporary
+- "Lato" - warm, stable
+- "Raleway" - elegant thin
+- "Nunito" - rounded, friendly
+
+**TYPOGRAPHY COMBINATIONS** (headline + body):
+- "Bebas Neue" + "Roboto" - modern impact
+- "Playfair Display" + "Lato" - elegant classic
+- "Oswald" + "Open Sans" - bold modern
+- "Montserrat" + "Montserrat" - consistent modern
+- "Abril Fatface" + "Poppins" - creative contrast
+
+**TEXT STYLING TIPS**:
+- Headlines: fontWeight 700-900, letterSpacing 2-5, textTransform "uppercase"
+- Subheadings: fontWeight 500-600, letterSpacing 1-2
+- Body text: fontWeight 400, letterSpacing 0, lineHeight 1.4-1.6
+- CTAs: fontWeight 600-700, textTransform "uppercase", letterSpacing 1-3
 
 IMPORTANT - CTA BUTTONS BEST PRACTICES:
 When creating CTA buttons (rectangle + text combo), ALWAYS:
@@ -255,91 +314,132 @@ INSTRUCTIONS:
 3. Always respond in the user's language (Polish if they write in Polish)
 4. Be creative with text content - generate compelling marketing copy for the specific industry
 
+##############################################################################
+# HOW TO MODIFY LAYERS - CRITICAL!
+##############################################################################
+
+When modifying a layer, you MUST include the "properties" object in changes!
+
+TO CHANGE COLOR of a rectangle/ellipse:
+- If layer has SOLID fill: set properties.fill to new color
+  Example: {"layer_name": "CTA Button", "changes": {"properties": {"fill": "#FFD700"}}}
+
+- If layer has GRADIENT: set properties.gradientStartColor and/or properties.gradientEndColor
+  Example: {"layer_name": "CTA Button", "changes": {"properties": {"gradientStartColor": "#FFD700", "gradientEndColor": "#FFA500"}}}
+
+- To change from gradient to solid: set properties.fillType to "solid" and properties.fill
+  Example: {"layer_name": "CTA Button", "changes": {"properties": {"fillType": "solid", "fill": "#FFD700"}}}
+
+TO CHANGE TEXT COLOR:
+  Example: {"layer_name": "Headline", "changes": {"properties": {"fill": "#FF0000"}}}
+
+TO CHANGE TEXT CONTENT:
+  Example: {"layer_name": "Headline", "changes": {"properties": {"text": "New Text Here"}}}
+
+TO CHANGE FONT FAMILY (use any Google Font!):
+  Example: {"layer_name": "Headline", "changes": {"properties": {"fontFamily": "Bebas Neue"}}}
+
+TO CHANGE FONT SIZE:
+  Example: {"layer_name": "Headline", "changes": {"properties": {"fontSize": 64}}}
+
+TO CHANGE FONT WEIGHT (use 100-900 or "normal"/"bold"):
+  Example: {"layer_name": "Headline", "changes": {"properties": {"fontWeight": "700"}}}
+
+TO MAKE TEXT UPPERCASE:
+  Example: {"layer_name": "Headline", "changes": {"properties": {"textTransform": "uppercase"}}}
+
+TO ADD LETTER SPACING:
+  Example: {"layer_name": "Headline", "changes": {"properties": {"letterSpacing": 3}}}
+
+TO MAKE TEXT ITALIC:
+  Example: {"layer_name": "Headline", "changes": {"properties": {"fontStyle": "italic"}}}
+
+TO CHANGE MULTIPLE TEXT PROPERTIES AT ONCE:
+  Example: {"layer_name": "Headline", "changes": {"properties": {"fontFamily": "Oswald", "fontSize": 56, "fontWeight": "700", "textTransform": "uppercase", "letterSpacing": 4, "fill": "#FFFFFF"}}}
+
+TO CHANGE LINE COLOR:
+  Example: {"layer_name": "Accent Line", "changes": {"properties": {"stroke": "#FF0000"}}}
+
+IMPORTANT: Look at the layer context to see if it has GRADIENT or solid fill!
+
+##############################################################################
+
 IMPORTANT RULES:
 - Layer names are case-sensitive
 - Colors must be hex format (#FF0000)
 - Font sizes in pixels
-- Coordinates (x, y) start from top-left corner
+- Coordinates (x, y) start from top-left corner - x is LEFT EDGE of layer!
+- For centered text (align: "center"): x should be small (40-100), width should span most of canvas
+  Example for 1080px: x: 40, width: 1000 (NOT x: 540!)
 - EVERY layer MUST have a properties object with appropriate values!
 
 ##############################################################################
-# CORRECT EXAMPLE - Modern Instagram Beauty Post (FOLLOW THIS STRUCTURE)
+# CRITICAL: BE CREATIVE AND VARY YOUR LAYOUTS!
 ##############################################################################
+
+STOP USING THE SAME BORING LAYOUT! You keep creating:
+- Two ellipse blobs in corners (TOP-LEFT and BOTTOM-RIGHT) - STOP THIS!
+- Photo at top, content card below - CHANGE IT UP!
+- Always same accent positions - BE CREATIVE!
+
+MANDATORY: Each template MUST use a DIFFERENT layout pattern. Pick ONE randomly:
+
+1. **FULL-BLEED PHOTO** - Photo covers 100% canvas, dark overlay (opacity 0.4-0.6), text on top
+   - NO accent blobs! Photo IS the background
+   - Text directly on overlay, no content cards
+
+2. **SPLIT VERTICAL** - Left 50% = photo, Right 50% = solid color with text
+   - NO blobs! Clean geometric split
+   - Maybe a single accent line between sections
+
+3. **SPLIT HORIZONTAL** - Top 40% = content, Bottom 60% = photo
+   - Reverse the typical order! Text ABOVE photo
+   - Single accent rectangle or line, not ellipses
+
+4. **CENTER PRODUCT** - Product/photo centered (400x400), text around it
+   - Background: solid bold color or subtle gradient
+   - NO corner blobs! Maybe small rectangles as accents
+
+5. **TEXT DOMINANT** - 80% large bold text, small image or NO image
+   - Great for quotes, announcements, sales
+   - Geometric accent: single line or small rectangle
+
+6. **DIAGONAL COMPOSITION** - Elements arranged diagonally
+   - Photo rotated slightly or positioned diagonally
+   - Text aligned to diagonal flow
+
+7. **MINIMALIST** - Maximum whitespace, 3-5 layers ONLY
+   - One image, one headline, one CTA
+   - NO decorative shapes at all
+
+8. **BOLD TYPOGRAPHY** - Text IS the design
+   - Multiple text sizes creating visual interest
+   - Background gradient, minimal or no images
+
+9. **CARD STACK** - Multiple overlapping cards/rectangles
+   - Create depth with shadows and overlap
+   - Photo in one card, text in another
+
+10. **ASYMMETRIC** - Deliberately off-center composition
+    - Photo on far left or right edge
+    - Text positioned asymmetrically
+
+ACCENT ELEMENTS - STOP USING CORNER BLOBS!
+- NO MORE ellipses in top-left and bottom-right corners!
+- Instead use: horizontal lines, vertical bars, small squares, or NOTHING
+- If using shapes: ONE accent only, not two matching blobs
+- Best accents: thin lines (2-4px), small geometric shapes, subtle gradients
+
+EXAMPLE STRUCTURE (for syntax reference only - DO NOT copy this layout!):
 ```json
 {
-  "template_settings": {"width": 1080, "height": 1080, "background_color": "#1A1A2E"},
+  "template_settings": {"width": 1080, "height": 1080, "background_color": "#FFFFFF"},
   "layers": [
-    {
-      "name": "Gradient Background",
-      "type": "rectangle",
-      "x": 0, "y": 0, "width": 1080, "height": 1080,
-      "properties": {"fillType": "gradient", "gradientType": "linear", "gradientStartColor": "#667eea", "gradientEndColor": "#764ba2", "gradientAngle": 135}
-    },
-    {
-      "name": "Accent Blob Top Right",
-      "type": "ellipse",
-      "x": 680, "y": -200, "width": 600, "height": 600,
-      "properties": {"fill": "#f093fb", "opacity": 0.3}
-    },
-    {
-      "name": "Accent Blob Bottom Left",
-      "type": "ellipse",
-      "x": -150, "y": 700, "width": 500, "height": 500,
-      "properties": {"fill": "#4facfe", "opacity": 0.25}
-    },
-    {
-      "name": "Photo Container",
-      "type": "rectangle",
-      "x": 60, "y": 80, "width": 960, "height": 540,
-      "properties": {"fill": "#FFFFFF", "cornerRadius": 24, "shadowEnabled": true, "shadowColor": "#000000", "shadowBlur": 40, "shadowOffsetX": 0, "shadowOffsetY": 20, "shadowOpacity": 0.25}
-    },
-    {
-      "name": "Photo",
-      "type": "image",
-      "x": 75, "y": 95, "width": 930, "height": 510,
-      "properties": {"fit": "cover", "cornerRadius": 16}
-    },
-    {
-      "name": "Content Card",
-      "type": "rectangle",
-      "x": 80, "y": 660, "width": 920, "height": 360,
-      "properties": {"fill": "#FFFFFF", "cornerRadius": 28, "shadowEnabled": true, "shadowColor": "#000000", "shadowBlur": 35, "shadowOffsetX": 0, "shadowOffsetY": 15, "shadowOpacity": 0.15}
-    },
-    {
-      "name": "Accent Line",
-      "type": "rectangle",
-      "x": 390, "y": 700, "width": 300, "height": 4,
-      "properties": {"fillType": "gradient", "gradientType": "linear", "gradientStartColor": "#667eea", "gradientEndColor": "#764ba2", "gradientAngle": 90, "cornerRadius": 2}
-    },
-    {
-      "name": "Headline",
-      "type": "text",
-      "x": 100, "y": 730, "width": 880, "height": 80,
-      "properties": {"text": "Odkryj Swój Blask", "fontSize": 52, "fontWeight": "bold", "fill": "#1A1A2E", "align": "center", "textTransform": "uppercase", "letterSpacing": 4}
-    },
-    {
-      "name": "Subheading",
-      "type": "text",
-      "x": 100, "y": 820, "width": 880, "height": 60,
-      "properties": {"text": "Profesjonalna pielęgnacja dla wymagających", "fontSize": 22, "fontWeight": "normal", "fill": "#666666", "align": "center", "lineHeight": 1.4}
-    },
-    {
-      "name": "CTA Button",
-      "type": "rectangle",
-      "x": 190, "y": 900, "width": 700, "height": 65,
-      "properties": {"fillType": "gradient", "gradientType": "linear", "gradientStartColor": "#667eea", "gradientEndColor": "#764ba2", "gradientAngle": 90, "cornerRadius": 32, "shadowEnabled": true, "shadowColor": "#667eea", "shadowBlur": 20, "shadowOffsetX": 0, "shadowOffsetY": 8, "shadowOpacity": 0.4}
-    },
-    {
-      "name": "CTA Text",
-      "type": "text",
-      "x": 190, "y": 918, "width": 700, "height": 40,
-      "properties": {"text": "Umów Wizytę", "fontSize": 20, "fontWeight": "bold", "fill": "#FFFFFF", "align": "center", "textTransform": "uppercase", "letterSpacing": 3}
-    }
+    {"name": "Layer Name", "type": "rectangle|ellipse|text|image|line", "x": 0, "y": 0, "width": 100, "height": 100, "properties": {...}}
   ],
-  "image_searches": [{"layer_name": "Photo", "search_query": "beauty spa woman relaxing facial treatment", "orientation": "landscape"}]
+  "image_searches": [{"layer_name": "Photo", "search_query": "search terms", "orientation": "landscape|portrait|square"}]
 }
 ```
-This example shows MODERN style with: gradient background, floating cards with shadows, accent blobs, strong visual hierarchy, contrasting CTA.
 ##############################################################################
 PROMPT;
     }
@@ -375,22 +475,45 @@ PROMPT;
                                     'type' => 'object',
                                     'properties' => [
                                         'name' => ['type' => 'string', 'description' => 'Unique layer name'],
-                                        'type' => ['type' => 'string', 'enum' => ['text', 'image', 'rectangle', 'ellipse']],
+                                        'type' => ['type' => 'string', 'enum' => ['text', 'image', 'rectangle', 'ellipse', 'line']],
                                         'x' => ['type' => 'number', 'description' => 'X position'],
                                         'y' => ['type' => 'number', 'description' => 'Y position'],
                                         'width' => ['type' => 'number', 'description' => 'Width in pixels'],
                                         'height' => ['type' => 'number', 'description' => 'Height in pixels'],
                                         'properties' => [
                                             'type' => 'object',
-                                            'description' => 'REQUIRED! For text: {text, fontSize, fontWeight, fill, align}. For rectangle: {fill, cornerRadius}. For ellipse: {fill}. For image: {fit}. Example text: {"text": "Summer Sale", "fontSize": 48, "fontWeight": "bold", "fill": "#B76E79", "align": "center"}',
+                                            'description' => 'REQUIRED! TEXT: {text, fontFamily (any Google Font!), fontSize, fontWeight (100-900), fontStyle, fill, align, verticalAlign, lineHeight, letterSpacing, textTransform, textDecoration}. RECTANGLE/ELLIPSE: {fill OR fillType:"gradient" with gradientStartColor, gradientEndColor, gradientAngle; cornerRadius}. IMAGE: {fit}. LINE: {points, stroke, strokeWidth, lineCap, dash}. COMMON: {opacity, shadow*}.',
                                             'properties' => [
-                                                'text' => ['type' => 'string', 'description' => 'For text layers: actual marketing copy, never placeholders'],
-                                                'fontSize' => ['type' => 'number', 'description' => 'For text: font size in pixels (40-72 for headlines, 18-32 for body)'],
-                                                'fontWeight' => ['type' => 'string', 'enum' => ['normal', 'bold'], 'description' => 'For text: font weight'],
-                                                'fill' => ['type' => 'string', 'description' => 'Color in hex format (#RRGGBB)'],
-                                                'align' => ['type' => 'string', 'enum' => ['left', 'center', 'right'], 'description' => 'For text: horizontal alignment'],
-                                                'cornerRadius' => ['type' => 'number', 'description' => 'For rectangles: corner radius'],
-                                                'fit' => ['type' => 'string', 'enum' => ['cover', 'contain'], 'description' => 'For images: how to fit'],
+                                                'text' => ['type' => 'string', 'description' => 'For text: actual marketing copy'],
+                                                'fontFamily' => ['type' => 'string', 'description' => 'Any Google Font: Roboto, Montserrat, Poppins, Playfair Display, Oswald, Raleway, Bebas Neue, Dancing Script, Pacifico, Lobster, etc.'],
+                                                'fontSize' => ['type' => 'number', 'description' => 'Size in pixels (48-72 headlines, 18-32 body)'],
+                                                'fontWeight' => ['type' => 'string', 'description' => 'normal, bold, or 100-900'],
+                                                'fontStyle' => ['type' => 'string', 'enum' => ['normal', 'italic']],
+                                                'fill' => ['type' => 'string', 'description' => 'Color in hex (#RRGGBB)'],
+                                                'align' => ['type' => 'string', 'enum' => ['left', 'center', 'right']],
+                                                'verticalAlign' => ['type' => 'string', 'enum' => ['top', 'middle', 'bottom']],
+                                                'lineHeight' => ['type' => 'number', 'description' => '1.0 tight, 1.2 normal, 1.5 loose'],
+                                                'letterSpacing' => ['type' => 'number', 'description' => '0 normal, 2-5 for spaced headlines'],
+                                                'textTransform' => ['type' => 'string', 'enum' => ['none', 'uppercase', 'lowercase', 'capitalize'], 'description' => 'Use uppercase for modern headlines!'],
+                                                'textDecoration' => ['type' => 'string', 'enum' => ['', 'underline', 'line-through']],
+                                                'cornerRadius' => ['type' => 'number', 'description' => 'For rectangles'],
+                                                'fit' => ['type' => 'string', 'enum' => ['cover', 'contain']],
+                                                'fillType' => ['type' => 'string', 'enum' => ['solid', 'gradient']],
+                                                'gradientStartColor' => ['type' => 'string', 'description' => 'Gradient start hex'],
+                                                'gradientEndColor' => ['type' => 'string', 'description' => 'Gradient end hex'],
+                                                'gradientAngle' => ['type' => 'number', 'description' => 'Gradient angle 0-360'],
+                                                'stroke' => ['type' => 'string', 'description' => 'For lines/shapes: stroke color hex'],
+                                                'strokeWidth' => ['type' => 'number', 'description' => 'Stroke thickness'],
+                                                'points' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => 'For lines: [x1,y1,x2,y2]'],
+                                                'lineCap' => ['type' => 'string', 'enum' => ['butt', 'round', 'square']],
+                                                'dash' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => 'Dash pattern e.g. [10,5] or []'],
+                                                'opacity' => ['type' => 'number', 'description' => '0-1 opacity'],
+                                                'shadowEnabled' => ['type' => 'boolean'],
+                                                'shadowColor' => ['type' => 'string', 'description' => 'Shadow color hex'],
+                                                'shadowBlur' => ['type' => 'number', 'description' => 'Shadow blur radius'],
+                                                'shadowOffsetX' => ['type' => 'number'],
+                                                'shadowOffsetY' => ['type' => 'number'],
+                                                'shadowOpacity' => ['type' => 'number', 'description' => '0-1'],
                                             ],
                                         ],
                                     ],
@@ -439,7 +562,37 @@ PROMPT;
                                     'visible' => ['type' => 'boolean', 'description' => 'Layer visibility'],
                                     'properties' => [
                                         'type' => 'object',
-                                        'description' => 'Type-specific properties (text, fill, fontSize, etc.)',
+                                        'description' => 'Type-specific properties to modify. TEXT: {text, fontFamily (any Google Font!), fontSize, fontWeight (100-900), fontStyle, fill, align, verticalAlign, lineHeight, letterSpacing, textTransform, textDecoration}. RECTANGLE/ELLIPSE: {fill, OR fillType+gradient*, cornerRadius}. LINE: {stroke, strokeWidth, dash, lineCap}. COMMON: {opacity, shadow*}.',
+                                        'properties' => [
+                                            'text' => ['type' => 'string'],
+                                            'fontFamily' => ['type' => 'string', 'description' => 'Any Google Font: Roboto, Montserrat, Poppins, Oswald, Playfair Display, etc.'],
+                                            'fontSize' => ['type' => 'number'],
+                                            'fontWeight' => ['type' => 'string', 'description' => 'normal, bold, or 100-900'],
+                                            'fontStyle' => ['type' => 'string', 'enum' => ['normal', 'italic']],
+                                            'lineHeight' => ['type' => 'number', 'description' => '1.0-1.5'],
+                                            'letterSpacing' => ['type' => 'number', 'description' => '0-5 pixels'],
+                                            'textTransform' => ['type' => 'string', 'enum' => ['none', 'uppercase', 'lowercase', 'capitalize']],
+                                            'textDecoration' => ['type' => 'string', 'enum' => ['', 'underline', 'line-through']],
+                                            'fill' => ['type' => 'string', 'description' => 'Color hex for solid fill'],
+                                            'fillType' => ['type' => 'string', 'enum' => ['solid', 'gradient']],
+                                            'gradientStartColor' => ['type' => 'string'],
+                                            'gradientEndColor' => ['type' => 'string'],
+                                            'gradientAngle' => ['type' => 'number'],
+                                            'align' => ['type' => 'string', 'enum' => ['left', 'center', 'right']],
+                                            'verticalAlign' => ['type' => 'string', 'enum' => ['top', 'middle', 'bottom']],
+                                            'cornerRadius' => ['type' => 'number'],
+                                            'stroke' => ['type' => 'string'],
+                                            'strokeWidth' => ['type' => 'number'],
+                                            'dash' => ['type' => 'array', 'items' => ['type' => 'number']],
+                                            'lineCap' => ['type' => 'string', 'enum' => ['butt', 'round', 'square']],
+                                            'opacity' => ['type' => 'number'],
+                                            'shadowEnabled' => ['type' => 'boolean'],
+                                            'shadowColor' => ['type' => 'string'],
+                                            'shadowBlur' => ['type' => 'number'],
+                                            'shadowOffsetX' => ['type' => 'number'],
+                                            'shadowOffsetY' => ['type' => 'number'],
+                                            'shadowOpacity' => ['type' => 'number'],
+                                        ],
                                     ],
                                 ],
                             ],
@@ -452,19 +605,54 @@ PROMPT;
                 'type' => 'function',
                 'function' => [
                     'name' => 'add_layer',
-                    'description' => 'Add a single new layer to the template.',
+                    'description' => 'Add a single new layer to the template. ALWAYS include properties with appropriate values for the layer type!',
                     'parameters' => [
                         'type' => 'object',
                         'properties' => [
                             'name' => ['type' => 'string', 'description' => 'Name for the new layer'],
-                            'type' => ['type' => 'string', 'enum' => ['text', 'image', 'rectangle', 'ellipse']],
-                            'x' => ['type' => 'number'],
-                            'y' => ['type' => 'number'],
-                            'width' => ['type' => 'number'],
-                            'height' => ['type' => 'number'],
-                            'properties' => ['type' => 'object'],
+                            'type' => ['type' => 'string', 'enum' => ['text', 'image', 'rectangle', 'ellipse', 'line']],
+                            'x' => ['type' => 'number', 'description' => 'X position in pixels'],
+                            'y' => ['type' => 'number', 'description' => 'Y position in pixels'],
+                            'width' => ['type' => 'number', 'description' => 'Width in pixels'],
+                            'height' => ['type' => 'number', 'description' => 'Height in pixels'],
+                            'properties' => [
+                                'type' => 'object',
+                                'description' => 'REQUIRED! TEXT: {text, fontFamily (any Google Font!), fontSize, fontWeight (100-900), fontStyle, fill, align, verticalAlign, lineHeight, letterSpacing, textTransform, textDecoration}. RECTANGLE/ELLIPSE: {fill OR fillType:"gradient" with gradient*, cornerRadius}. IMAGE: {src, fit}. LINE: {points, stroke, strokeWidth, lineCap, dash}. COMMON: {opacity, shadow*}.',
+                                'properties' => [
+                                    'text' => ['type' => 'string', 'description' => 'For text: actual content'],
+                                    'fontFamily' => ['type' => 'string', 'description' => 'Any Google Font: Roboto, Montserrat, Poppins, Oswald, Playfair Display, Bebas Neue, etc.'],
+                                    'fontSize' => ['type' => 'number', 'description' => 'Size in pixels (48-72 headlines, 18-32 body)'],
+                                    'fontWeight' => ['type' => 'string', 'description' => 'normal, bold, or 100-900'],
+                                    'fontStyle' => ['type' => 'string', 'enum' => ['normal', 'italic']],
+                                    'lineHeight' => ['type' => 'number', 'description' => '1.0 tight, 1.2 normal, 1.5 loose'],
+                                    'letterSpacing' => ['type' => 'number', 'description' => '0 normal, 2-5 for spaced headlines'],
+                                    'textTransform' => ['type' => 'string', 'enum' => ['none', 'uppercase', 'lowercase', 'capitalize']],
+                                    'textDecoration' => ['type' => 'string', 'enum' => ['', 'underline', 'line-through']],
+                                    'fill' => ['type' => 'string', 'description' => 'Color in hex (#RRGGBB)'],
+                                    'align' => ['type' => 'string', 'enum' => ['left', 'center', 'right']],
+                                    'verticalAlign' => ['type' => 'string', 'enum' => ['top', 'middle', 'bottom']],
+                                    'cornerRadius' => ['type' => 'number', 'description' => 'For rectangles'],
+                                    'fit' => ['type' => 'string', 'enum' => ['cover', 'contain']],
+                                    'stroke' => ['type' => 'string', 'description' => 'For lines: color in hex'],
+                                    'strokeWidth' => ['type' => 'number', 'description' => 'For lines: thickness'],
+                                    'points' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => 'For lines: [x1,y1,x2,y2]'],
+                                    'lineCap' => ['type' => 'string', 'enum' => ['butt', 'round', 'square']],
+                                    'dash' => ['type' => 'array', 'items' => ['type' => 'number'], 'description' => 'Dash pattern [10,5] or []'],
+                                    'fillType' => ['type' => 'string', 'enum' => ['solid', 'gradient']],
+                                    'gradientStartColor' => ['type' => 'string', 'description' => 'Gradient start hex'],
+                                    'gradientEndColor' => ['type' => 'string', 'description' => 'Gradient end hex'],
+                                    'gradientAngle' => ['type' => 'number', 'description' => 'Gradient angle 0-360'],
+                                    'opacity' => ['type' => 'number', 'description' => '0-1'],
+                                    'shadowEnabled' => ['type' => 'boolean'],
+                                    'shadowColor' => ['type' => 'string'],
+                                    'shadowBlur' => ['type' => 'number'],
+                                    'shadowOffsetX' => ['type' => 'number'],
+                                    'shadowOffsetY' => ['type' => 'number'],
+                                    'shadowOpacity' => ['type' => 'number'],
+                                ],
+                            ],
                         ],
-                        'required' => ['name', 'type'],
+                        'required' => ['name', 'type', 'properties'],
                     ],
                 ],
             ],
@@ -716,8 +904,8 @@ PROMPT;
                     'type' => $type,
                     'x' => $layer['x'] ?? 0,
                     'y' => $layer['y'] ?? 0,
-                    'width' => $layer['width'] ?? ($type === 'text' ? 300 : 200),
-                    'height' => $layer['height'] ?? ($type === 'text' ? 50 : 200),
+                    'width' => $layer['width'] ?? ($type === 'text' ? 300 : ($type === 'line' ? 150 : 200)),
+                    'height' => $layer['height'] ?? ($type === 'text' ? 50 : ($type === 'line' ? 10 : 200)),
                     'rotation' => $layer['rotation'] ?? 0,
                     'visible' => true,
                     'locked' => false,
@@ -847,8 +1035,8 @@ PROMPT;
                 'type' => $type,
                 'x' => $arguments['x'] ?? 100,
                 'y' => $arguments['y'] ?? 100,
-                'width' => $arguments['width'] ?? ($type === 'text' ? 300 : 200),
-                'height' => $arguments['height'] ?? ($type === 'text' ? 50 : 200),
+                'width' => $arguments['width'] ?? ($type === 'text' ? 300 : ($type === 'line' ? 150 : 200)),
+                'height' => $arguments['height'] ?? ($type === 'text' ? 50 : ($type === 'line' ? 10 : 200)),
                 'visible' => true,
                 'locked' => false,
                 'properties' => $defaultProperties,
@@ -944,7 +1132,7 @@ PROMPT;
         $defaults = match ($type) {
             'text' => [
                 'text' => $customProperties['text'] ?? '[Text content needed]',
-                'fontFamily' => $customProperties['fontFamily'] ?? 'Arial',
+                'fontFamily' => $customProperties['fontFamily'] ?? 'Montserrat',
                 'fontSize' => $customProperties['fontSize'] ?? 24,
                 'fontWeight' => $customProperties['fontWeight'] ?? 'normal',
                 'fontStyle' => $customProperties['fontStyle'] ?? 'normal',
@@ -968,6 +1156,14 @@ PROMPT;
                 'fill' => $customProperties['fill'] ?? '#CCCCCC',
                 'stroke' => $customProperties['stroke'] ?? null,
                 'strokeWidth' => $customProperties['strokeWidth'] ?? 0,
+            ],
+            'line' => [
+                'points' => $customProperties['points'] ?? [0, 0, 100, 0],
+                'stroke' => $customProperties['stroke'] ?? '#000000',
+                'strokeWidth' => $customProperties['strokeWidth'] ?? 2,
+                'lineCap' => $customProperties['lineCap'] ?? 'round',
+                'lineJoin' => $customProperties['lineJoin'] ?? 'round',
+                'dash' => $customProperties['dash'] ?? [],
             ],
             default => [],
         };

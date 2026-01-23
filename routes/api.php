@@ -96,11 +96,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     // === TEMPLATE LIBRARY (available to all users) ===
     Route::get('library/templates', [TemplateLibraryController::class, 'index']);
     Route::post('library/templates/{template}/copy', [TemplateLibraryController::class, 'copy']);
+    Route::post('library/templates/{template}/apply', [TemplateLibraryController::class, 'applyToCurrent']);
 
     // === TEMPLATE LIBRARY ADMIN ===
     Route::middleware('admin')->group(function () {
         Route::post('templates/{template}/add-to-library', [TemplateLibraryController::class, 'addToLibrary']);
         Route::post('templates/{template}/remove-from-library', [TemplateLibraryController::class, 'removeFromLibrary']);
+        Route::post('templates/{template}/unlink-from-library', [TemplateLibraryController::class, 'unlinkFromLibrary']);
         Route::delete('library/templates/{template}', [TemplateLibraryController::class, 'destroy']);
     });
 });

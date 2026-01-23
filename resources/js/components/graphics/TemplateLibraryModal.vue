@@ -10,9 +10,13 @@ const props = defineProps({
         type: Boolean,
         default: false,
     },
+    currentTemplateId: {
+        type: String,
+        default: null,
+    },
 });
 
-const emit = defineEmits(['close', 'template-copied']);
+const emit = defineEmits(['close', 'template-copied', 'applied-to-current']);
 
 const { t } = useI18n();
 const authStore = useAuthStore();
@@ -20,6 +24,7 @@ const authStore = useAuthStore();
 const loading = ref(false);
 const templates = ref([]);
 const copying = ref(null);
+const applying = ref(null);
 const deleting = ref(null);
 
 const fetchLibrary = async () => {
@@ -34,6 +39,25 @@ const fetchLibrary = async () => {
     }
 };
 
+// Apply template to current canvas (replace layers)
+const applyToCurrent = async (template) => {
+    if (!props.currentTemplateId) return;
+
+    applying.value = template.id;
+    try {
+        const response = await axios.post(`/api/v1/library/templates/${template.id}/apply`, {
+            target_template_id: props.currentTemplateId,
+        });
+        emit('applied-to-current', response.data.data);
+    } catch (error) {
+        console.error('Failed to apply template:', error);
+        alert(error.response?.data?.message || 'Failed to apply template');
+    } finally {
+        applying.value = null;
+    }
+};
+
+// Copy as new template
 const copyTemplate = async (template) => {
     copying.value = template.id;
     try {
@@ -147,14 +171,26 @@ watch(() => props.show, (newVal) => {
                                     </div>
 
                                     <!-- Overlay with actions -->
-                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                                    <div class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2">
+                                        <!-- Apply to current (main action when in editor) -->
+                                        <button
+                                            v-if="currentTemplateId"
+                                            :disabled="applying === template.id"
+                                            @click="applyToCurrent(template)"
+                                            class="w-full px-2 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50"
+                                        >
+                                            <span v-if="applying === template.id">...</span>
+                                            <span v-else>{{ t('graphics.library.useHere') }}</span>
+                                        </button>
+
+                                        <!-- Copy as new template -->
                                         <button
                                             :disabled="copying === template.id"
                                             @click="copyTemplate(template)"
-                                            class="px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50"
+                                            class="w-full px-2 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded transition-colors disabled:opacity-50"
                                         >
                                             <span v-if="copying === template.id">...</span>
-                                            <span v-else>{{ t('graphics.library.use') }}</span>
+                                            <span v-else>{{ t('graphics.library.createNew') }}</span>
                                         </button>
 
                                         <!-- Admin remove from library button -->
@@ -162,7 +198,7 @@ watch(() => props.show, (newVal) => {
                                             v-if="authStore.isAdmin"
                                             @click="removeFromLibrary(template)"
                                             :disabled="deleting === template.id"
-                                            class="p-1 bg-amber-600 hover:bg-amber-700 text-white rounded transition-colors disabled:opacity-50"
+                                            class="absolute top-1 right-1 p-1 bg-amber-600 hover:bg-amber-700 text-white rounded transition-colors disabled:opacity-50"
                                             :title="t('graphics.library.removeFromLibrary')"
                                         >
                                             <svg v-if="deleting === template.id" class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">

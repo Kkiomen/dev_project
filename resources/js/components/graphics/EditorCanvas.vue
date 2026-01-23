@@ -780,6 +780,26 @@ const getShapeConfig = (layer) => {
                 ...baseConfig,
             };
 
+        case 'line':
+            return {
+                id: layer.id,
+                x: layer.x,
+                y: layer.y,
+                points: layer.properties?.points || [0, 0, 100, 0],
+                stroke: layer.properties?.stroke || '#000000',
+                strokeWidth: layer.properties?.strokeWidth || 2,
+                lineCap: layer.properties?.lineCap || 'round',
+                lineJoin: layer.properties?.lineJoin || 'round',
+                dash: layer.properties?.dash || [],
+                rotation: layer.rotation,
+                scaleX: layer.scale_x,
+                scaleY: layer.scale_y,
+                draggable: !layer.locked,
+                visible: layer.visible,
+                opacity: layer.opacity ?? 1,
+                ...getShadowConfig(layer),
+            };
+
         default:
             return baseConfig;
     }
@@ -924,6 +944,7 @@ const addLayerAtPosition = async (type, x, y) => {
         text: { width: 200, height: 40 },
         rectangle: { width: 150, height: 100 },
         ellipse: { width: 120, height: 120 },
+        line: { width: 150, height: 0 },
     };
 
     const size = defaultSizes[type] || { width: 100, height: 100 };
@@ -932,18 +953,30 @@ const addLayerAtPosition = async (type, x, y) => {
     const centeredX = Math.max(0, x - size.width / 2);
     const centeredY = Math.max(0, y - size.height / 2);
 
+    // Build properties based on type
+    let properties;
+    if (type === 'text') {
+        properties = {
+            text: 'Text',
+            fontSize: 24,
+            fontFamily: 'Arial',
+            fill: '#000000',
+        };
+    } else if (type === 'line') {
+        properties = {
+            points: [0, 0, size.width, 0],
+            stroke: '#000000',
+            strokeWidth: 2,
+        };
+    }
+
     // Create layer via store
     const layer = await graphicsStore.addLayer(type, {
         x: centeredX,
         y: centeredY,
         width: size.width,
-        height: size.height,
-        properties: type === 'text' ? {
-            text: 'Text',
-            fontSize: 24,
-            fontFamily: 'Arial',
-            fill: '#000000',
-        } : undefined,
+        height: size.height || 10,
+        properties,
     });
 
     if (layer) {
@@ -1306,6 +1339,18 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                             ...getShapeConfig(layer),
                             image: layerImages[layer.id],
                         }"
+                        @click="(e) => handleShapeClick(e, layer)"
+                        @contextmenu="(e) => handleContextMenu(e, layer)"
+                        @dragmove="(e) => handleDragMove(e, layer)"
+                        @dragend="(e) => handleDragEnd(e, layer)"
+                        @transform="(e) => handleTransform(e, layer)"
+                        @transformend="(e) => handleTransformEnd(e, layer)"
+                    />
+
+                    <!-- Line -->
+                    <v-line
+                        v-else-if="layer.type === 'line'"
+                        :config="getShapeConfig(layer)"
                         @click="(e) => handleShapeClick(e, layer)"
                         @contextmenu="(e) => handleContextMenu(e, layer)"
                         @dragmove="(e) => handleDragMove(e, layer)"

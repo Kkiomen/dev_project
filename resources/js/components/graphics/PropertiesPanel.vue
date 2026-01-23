@@ -586,6 +586,10 @@ const toggleTextDecoration = (decoration) => {
                         <svg v-else-if="selectedLayer.type === 'image'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
+                        <!-- Line icon -->
+                        <svg v-else-if="selectedLayer.type === 'line'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 20L20 4" />
+                        </svg>
                     </div>
                     <input
                         :value="selectedLayer.name"
@@ -1379,6 +1383,138 @@ const toggleTextDecoration = (decoration) => {
                         :max="200"
                         :sensitivity="0.5"
                     />
+                </div>
+            </template>
+
+            <!-- Line properties -->
+            <template v-if="selectedLayer.type === 'line'">
+                <!-- Stroke -->
+                <div class="px-3 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">
+                            {{ t('graphics.properties.stroke') }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 mb-3">
+                        <input
+                            :value="selectedLayer.properties?.stroke || '#000000'"
+                            @input="updateProperty('stroke', $event.target.value)"
+                            type="color"
+                            class="w-9 h-9 rounded cursor-pointer border border-gray-300"
+                            style="padding: 2px;"
+                        />
+                        <input
+                            :value="selectedLayer.properties?.stroke || '#000000'"
+                            @input="updateProperty('stroke', $event.target.value)"
+                            type="text"
+                            class="flex-1 px-2.5 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white uppercase transition-colors font-mono"
+                        />
+                    </div>
+                    <!-- Stroke width -->
+                    <ScrubberInput
+                        :model-value="selectedLayer.properties?.strokeWidth || 2"
+                        @update:model-value="updateProperty('strokeWidth', $event)"
+                        :label="t('graphics.properties.strokeWidth')"
+                        suffix="px"
+                        :min="1"
+                        :max="50"
+                        :sensitivity="0.2"
+                    />
+                </div>
+
+                <!-- Line style -->
+                <div class="px-3 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">
+                            {{ t('graphics.properties.lineStyle') }}
+                        </span>
+                    </div>
+
+                    <!-- Line cap -->
+                    <div class="mb-3">
+                        <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.properties.lineCap') }}</label>
+                        <div class="flex bg-gray-50 border border-gray-200 rounded overflow-hidden">
+                            <button
+                                @click="updateProperty('lineCap', 'butt')"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors border-r border-gray-200',
+                                    (selectedLayer.properties?.lineCap || 'round') === 'butt'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ]"
+                            >
+                                Butt
+                            </button>
+                            <button
+                                @click="updateProperty('lineCap', 'round')"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors border-r border-gray-200',
+                                    (selectedLayer.properties?.lineCap || 'round') === 'round'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ]"
+                            >
+                                Round
+                            </button>
+                            <button
+                                @click="updateProperty('lineCap', 'square')"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors',
+                                    selectedLayer.properties?.lineCap === 'square'
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ]"
+                            >
+                                Square
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Dash pattern -->
+                    <div>
+                        <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.properties.dashPattern') }}</label>
+                        <div class="flex bg-gray-50 border border-gray-200 rounded overflow-hidden">
+                            <button
+                                @click="updateProperty('dash', [])"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors border-r border-gray-200',
+                                    !selectedLayer.properties?.dash || selectedLayer.properties?.dash?.length === 0
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ]"
+                            >
+                                Solid
+                            </button>
+                            <button
+                                @click="updateProperty('dash', [10, 5])"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors border-r border-gray-200',
+                                    JSON.stringify(selectedLayer.properties?.dash) === JSON.stringify([10, 5])
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ]"
+                            >
+                                Dashed
+                            </button>
+                            <button
+                                @click="updateProperty('dash', [2, 4])"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors',
+                                    JSON.stringify(selectedLayer.properties?.dash) === JSON.stringify([2, 4])
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ]"
+                            >
+                                Dotted
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </template>
         </div>

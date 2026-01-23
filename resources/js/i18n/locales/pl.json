@@ -716,7 +716,10 @@
             "alignBottom": "Do dołu",
             "gradientLinear": "Liniowy",
             "gradientRadial": "Promieniowy",
-            "gradientAngle": "Kąt"
+            "gradientAngle": "Kąt",
+            "lineStyle": "Styl linii",
+            "lineCap": "Zakończenie linii",
+            "dashPattern": "Wzór przerywany"
         },
         "export": {
             "title": "Eksportuj obraz",
@@ -750,7 +753,8 @@
             "text": "Tekst",
             "image": "Obraz",
             "rectangle": "Prostokąt",
-            "ellipse": "Elipsa"
+            "ellipse": "Elipsa",
+            "line": "Linia"
         },
         "contextMenu": {
             "copy": "Kopiuj",
@@ -806,6 +810,9 @@
             "addToLibrary": "Dodaj do biblioteki",
             "removeFromLibrary": "Usuń z biblioteki",
             "use": "Użyj",
+            "useHere": "Użyj tutaj",
+            "createNew": "Utwórz nowy",
+            "unlinkFromLibrary": "Odłącz od biblioteki",
             "useTemplate": "Użyj tego szablonu",
             "copyToMyTemplates": "Skopiuj do moich szablonów",
             "confirmAdd": "Dodać szablon do biblioteki?",

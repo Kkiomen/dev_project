@@ -49,14 +49,41 @@ class TemplateContextService
         $context = "Template: {$template->name}\n";
         $context .= "Dimensions: {$template->width}x{$template->height}px\n";
         $context .= "Background: {$template->background_color}\n";
-        $context .= "\nLayers:\n";
+        $context .= "\nLayers (with current properties):\n";
 
         foreach ($template->layers as $index => $layer) {
+            $props = $layer->properties ?? [];
             $context .= "- [{$layer->type->value}] \"{$layer->name}\"";
 
-            if ($layer->type->value === 'text' && isset($layer->properties['text'])) {
-                $text = mb_substr($layer->properties['text'], 0, 50);
+            // Show relevant properties based on layer type
+            if ($layer->type->value === 'text') {
+                $text = mb_substr($props['text'] ?? '', 0, 30);
                 $context .= " - text: \"{$text}\"";
+                if (isset($props['fontFamily'])) {
+                    $context .= ", font: {$props['fontFamily']}";
+                }
+                if (isset($props['fontSize'])) {
+                    $context .= ", size: {$props['fontSize']}px";
+                }
+                if (isset($props['fontWeight']) && $props['fontWeight'] !== 'normal') {
+                    $context .= ", weight: {$props['fontWeight']}";
+                }
+                if (isset($props['fill'])) {
+                    $context .= ", color: {$props['fill']}";
+                }
+                if (isset($props['textTransform']) && $props['textTransform'] !== 'none') {
+                    $context .= ", transform: {$props['textTransform']}";
+                }
+            } elseif (in_array($layer->type->value, ['rectangle', 'ellipse'])) {
+                if (isset($props['fillType']) && $props['fillType'] === 'gradient') {
+                    $context .= " - GRADIENT from {$props['gradientStartColor']} to {$props['gradientEndColor']}";
+                } elseif (isset($props['fill'])) {
+                    $context .= " - fill: {$props['fill']}";
+                }
+            } elseif ($layer->type->value === 'line') {
+                if (isset($props['stroke'])) {
+                    $context .= " - stroke: {$props['stroke']}";
+                }
             }
 
             $context .= "\n";
@@ -122,16 +149,16 @@ Layer Types and Properties:
 
 TEXT:
 - text: string (the text content)
-- fontFamily: string (e.g., "Arial", "Roboto", "Playfair Display", "Montserrat")
-- fontSize: number (in pixels)
-- fontWeight: "normal" | "bold" | "100"-"900"
+- fontFamily: string - ANY Google Font name! Examples: "Roboto", "Open Sans", "Montserrat", "Playfair Display", "Lato", "Poppins", "Oswald", "Raleway", "Merriweather", "Ubuntu", "Nunito", "Dancing Script", "Pacifico", "Bebas Neue", "Lobster", "Abril Fatface". Use modern, stylish fonts for headlines!
+- fontSize: number (in pixels, headlines: 48-72px, subtext: 18-32px)
+- fontWeight: "normal" | "bold" | "100" | "200" | "300" | "400" | "500" | "600" | "700" | "800" | "900"
 - fontStyle: "normal" | "italic"
 - fill: string (hex color, e.g., "#000000")
 - align: "left" | "center" | "right"
 - verticalAlign: "top" | "middle" | "bottom"
-- lineHeight: number (e.g., 1.2)
-- letterSpacing: number (in pixels)
-- textTransform: "none" | "uppercase" | "lowercase" | "capitalize"
+- lineHeight: number (e.g., 1.0 for tight, 1.2 normal, 1.5 for loose)
+- letterSpacing: number (in pixels, 0 normal, 2-5 for spaced headlines)
+- textTransform: "none" | "uppercase" | "lowercase" | "capitalize" (use "uppercase" for modern headlines!)
 - textDecoration: "" | "underline" | "line-through"
 
 IMAGE:
@@ -155,6 +182,14 @@ ELLIPSE:
 - strokeWidth: number
 - fillType: "solid" | "gradient"
 - gradientType, gradientStartColor, gradientEndColor, gradientAngle (same as rectangle)
+
+LINE:
+- points: array of numbers [x1, y1, x2, y2] (coordinates relative to layer position, e.g., [0, 0, 200, 0] for horizontal line)
+- stroke: string (hex color for the line)
+- strokeWidth: number (line thickness, e.g., 2-10)
+- lineCap: "butt" | "round" | "square" (line ending style)
+- lineJoin: "miter" | "round" | "bevel" (line join style)
+- dash: array of numbers (e.g., [10, 5] for dashed, [2, 4] for dotted, [] for solid)
 
 COMMON PROPERTIES (all layer types):
 - opacity: number (0-1, default: 1)
