@@ -69,13 +69,13 @@ const actionSummaries = computed(() => {
     >
         <div
             :class="[
-                'max-w-[85%] rounded-lg px-3 py-2',
-                isUser
-                    ? 'bg-purple-600 text-white'
-                    : isError
-                        ? 'bg-red-50 text-red-700 border border-red-200'
-                        : 'bg-gray-100 text-gray-900',
+                'max-w-[85%] rounded-lg px-3 py-2 overflow-hidden',
+                isError ? 'border border-red-200' : '',
             ]"
+            :style="{
+                backgroundColor: isUser ? '#9333ea' : isError ? '#fef2f2' : '#f3f4f6',
+                color: isUser ? 'white' : isError ? '#b91c1c' : '#111827'
+            }"
         >
             <!-- Message content -->
             <div class="text-sm whitespace-pre-wrap break-words">

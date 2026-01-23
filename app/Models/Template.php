@@ -153,13 +153,30 @@ class Template extends Model
     /**
      * Add current template to library (admin only).
      */
-    public function addToLibrary(?string $category = null): self
+    public function addToLibrary(?string $category = null, ?string $thumbnailPath = null): self
     {
         $this->is_library = true;
         $this->library_category = $category;
+
+        if ($thumbnailPath) {
+            $this->thumbnail_path = $thumbnailPath;
+        }
+
         $this->save();
 
         return $this;
+    }
+
+    /**
+     * Get the full URL for the thumbnail.
+     */
+    public function getThumbnailUrlAttribute(): ?string
+    {
+        if (!$this->thumbnail_path) {
+            return null;
+        }
+
+        return asset('storage/' . $this->thumbnail_path);
     }
 
     /**

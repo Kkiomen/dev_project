@@ -59,13 +59,13 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="flex flex-col h-full">
+    <div class="flex flex-col h-full min-w-0 overflow-hidden">
         <!-- Header -->
         <div class="px-3 py-2.5 border-b border-gray-200 flex items-center justify-between">
             <div class="flex items-center gap-2">
                 <!-- AI Icon -->
                 <div class="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center">
-                    <svg class="w-4 h-4 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-4 h-4" style="color: #9333ea" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
                     </svg>
                 </div>
@@ -100,7 +100,7 @@ onMounted(() => {
         <!-- Messages area -->
         <div
             ref="messagesContainer"
-            class="flex-1 overflow-y-auto p-3 space-y-3"
+            class="flex-1 overflow-y-auto p-3 space-y-3 min-w-0"
         >
             <!-- Empty state with suggestions -->
             <div v-if="!hasMessages" class="h-full flex flex-col justify-center">

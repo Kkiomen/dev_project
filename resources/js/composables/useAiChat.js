@@ -1,6 +1,9 @@
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { useGraphicsStore } from '@/stores/graphics';
+
+// Storage key for persisting chat history
+const STORAGE_KEY_PREFIX = 'ai_chat_history_';
 
 export function useAiChat() {
     const messages = ref([]);
@@ -10,6 +13,57 @@ export function useAiChat() {
 
     // Generate unique ID for messages
     const generateId = () => `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // Get storage key for current template
+    const getStorageKey = () => {
+        const templateId = graphicsStore.currentTemplate?.id;
+        return templateId ? `${STORAGE_KEY_PREFIX}${templateId}` : null;
+    };
+
+    // Load messages from localStorage
+    const loadMessages = () => {
+        const key = getStorageKey();
+        if (!key) return;
+
+        try {
+            const stored = localStorage.getItem(key);
+            if (stored) {
+                messages.value = JSON.parse(stored);
+            }
+        } catch (e) {
+            console.error('Failed to load chat history:', e);
+        }
+    };
+
+    // Save messages to localStorage
+    const saveMessages = () => {
+        const key = getStorageKey();
+        if (!key) return;
+
+        try {
+            // Keep only last 50 messages to avoid storage limits
+            const toSave = messages.value.slice(-50);
+            localStorage.setItem(key, JSON.stringify(toSave));
+        } catch (e) {
+            console.error('Failed to save chat history:', e);
+        }
+    };
+
+    // Watch for template changes and load history
+    watch(
+        () => graphicsStore.currentTemplate?.id,
+        (newId) => {
+            if (newId) {
+                loadMessages();
+            } else {
+                messages.value = [];
+            }
+        },
+        { immediate: true }
+    );
+
+    // Save messages whenever they change
+    watch(messages, saveMessages, { deep: true });
 
     /**
      * Send a message to the AI chat.
@@ -184,6 +238,12 @@ export function useAiChat() {
     const clearHistory = () => {
         messages.value = [];
         error.value = null;
+
+        // Also clear from localStorage
+        const key = getStorageKey();
+        if (key) {
+            localStorage.removeItem(key);
+        }
     };
 
     /**

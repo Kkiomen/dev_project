@@ -292,9 +292,13 @@ const handleBack = () => {
                 :class="[
                     'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm transition-all',
                     graphicsStore.chatPanelOpen
-                        ? 'bg-purple-600 text-white shadow-md'
-                        : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
+                        ? 'shadow-md'
+                        : 'border border-purple-200'
                 ]"
+                :style="{
+                    backgroundColor: graphicsStore.chatPanelOpen ? '#9333ea' : '#faf5ff',
+                    color: graphicsStore.chatPanelOpen ? 'white' : '#7c3aed'
+                }"
                 :title="t('graphics.aiChat.toggle')"
             >
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

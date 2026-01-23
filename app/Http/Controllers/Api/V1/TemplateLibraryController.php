@@ -7,6 +7,8 @@ use App\Http\Resources\TemplateResource;
 use App\Models\Template;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class TemplateLibraryController extends Controller
 {
@@ -15,37 +17,12 @@ class TemplateLibraryController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = Template::library()
+        $templates = Template::library()
             ->withCount('layers')
-            ->orderBy('library_category')
-            ->orderBy('name');
-
-        // Filter by category if provided
-        if ($request->has('category')) {
-            $query->where('library_category', $request->category);
-        }
-
-        $templates = $query->get();
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         return TemplateResource::collection($templates);
-    }
-
-    /**
-     * Get library categories.
-     */
-    public function categories(): array
-    {
-        $categories = Template::library()
-            ->whereNotNull('library_category')
-            ->distinct()
-            ->pluck('library_category')
-            ->sort()
-            ->values()
-            ->toArray();
-
-        return [
-            'categories' => $categories,
-        ];
     }
 
     /**
@@ -71,20 +48,32 @@ class TemplateLibraryController extends Controller
         $this->authorize('update', $template);
 
         $validated = $request->validate([
-            'category' => 'nullable|string|max:100',
+            'thumbnail' => 'nullable|string',
         ]);
 
-        $template->addToLibrary($validated['category'] ?? null);
+        // Save thumbnail if provided
+        $thumbnailPath = null;
+        if (!empty($validated['thumbnail'])) {
+            $thumbnailPath = $this->saveThumbnail($validated['thumbnail'], $template);
+        }
+
+        $template->addToLibrary(null, $thumbnailPath);
 
         return new TemplateResource($template->fresh());
     }
 
     /**
      * Remove template from library (admin only).
+     * Admin can remove any template from library, owner can remove their own.
      */
-    public function removeFromLibrary(Template $template): TemplateResource
+    public function removeFromLibrary(Request $request, Template $template): TemplateResource
     {
-        $this->authorize('update', $template);
+        $user = $request->user();
+
+        // Must be admin or owner
+        if (!$user->isAdmin() && $user->id !== $template->user_id) {
+            abort(403, 'Unauthorized.');
+        }
 
         if (!$template->is_library) {
             abort(400, 'Template is not in library.');
@@ -104,9 +93,41 @@ class TemplateLibraryController extends Controller
             abort(404, 'Template not found in library.');
         }
 
+        // Delete thumbnail if exists
+        if ($template->thumbnail_path) {
+            Storage::disk('public')->delete($template->thumbnail_path);
+        }
+
         // Force delete - admin removes from library completely
         $template->forceDelete();
 
         return response()->noContent();
+    }
+
+    /**
+     * Save thumbnail from base64 data URL.
+     */
+    protected function saveThumbnail(string $base64Data, Template $template): ?string
+    {
+        // Extract the base64 data from the data URL
+        if (preg_match('/^data:image\/(\w+);base64,/', $base64Data, $matches)) {
+            $extension = $matches[1] === 'jpeg' ? 'jpg' : $matches[1];
+            $base64Data = substr($base64Data, strpos($base64Data, ',') + 1);
+            $imageData = base64_decode($base64Data);
+
+            if ($imageData === false) {
+                return null;
+            }
+
+            // Generate unique filename
+            $filename = 'thumbnails/' . Str::uuid() . '.' . $extension;
+
+            // Save to storage
+            Storage::disk('public')->put($filename, $imageData);
+
+            return $filename;
+        }
+
+        return null;
     }
 }

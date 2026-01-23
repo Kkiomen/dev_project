@@ -33,6 +33,35 @@ const showFontModal = ref(false);
 const showLibraryModal = ref(false);
 const showAddToLibraryModal = ref(false);
 
+// Resizable panel
+const DEFAULT_PANEL_WIDTH = 384; // w-96 = 24rem = 384px
+const MIN_PANEL_WIDTH = 280;
+const MAX_PANEL_WIDTH = 600;
+const propertiesPanelWidth = ref(DEFAULT_PANEL_WIDTH);
+const isResizing = ref(false);
+
+const startResize = (e) => {
+    isResizing.value = true;
+    document.addEventListener('mousemove', handleResize);
+    document.addEventListener('mouseup', stopResize);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+};
+
+const handleResize = (e) => {
+    if (!isResizing.value) return;
+    const newWidth = window.innerWidth - e.clientX;
+    propertiesPanelWidth.value = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, newWidth));
+};
+
+const stopResize = () => {
+    isResizing.value = false;
+    document.removeEventListener('mousemove', handleResize);
+    document.removeEventListener('mouseup', stopResize);
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+};
+
 const handleTemplateCopied = (newTemplate) => {
     showLibraryModal.value = false;
     // Redirect to the new template
@@ -245,8 +274,17 @@ const handleOpenFonts = () => {
             <!-- Properties panel / AI Chat panel -->
             <div
                 v-if="showPropertiesPanel"
-                class="w-96 flex-shrink-0 bg-white border-l border-gray-200 overflow-hidden"
+                class="flex-shrink-0 bg-white border-l border-gray-200 overflow-hidden relative"
+                :style="{ width: graphicsStore.chatPanelOpen ? propertiesPanelWidth + 'px' : '384px' }"
             >
+                <!-- Resize handle (only for AI chat) -->
+                <div
+                    v-if="graphicsStore.chatPanelOpen"
+                    class="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-purple-400 transition-colors z-10"
+                    :style="{ backgroundColor: isResizing ? '#a855f7' : 'transparent' }"
+                    @mousedown="startResize"
+                ></div>
+
                 <AiChatPanel
                     v-if="graphicsStore.chatPanelOpen"
                     @close="graphicsStore.closeChatPanel()"
@@ -283,6 +321,7 @@ const handleOpenFonts = () => {
         <AddToLibraryModal
             :show="showAddToLibraryModal"
             :template-id="template.id"
+            :canvas-ref="canvasRef"
             @close="showAddToLibraryModal = false"
             @added="handleAddedToLibrary"
         />

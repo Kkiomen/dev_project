@@ -141,8 +141,8 @@ const stageConfig = computed(() => {
     const canvasWidth = props.template.width * graphicsStore.zoom;
     const canvasHeight = props.template.height * graphicsStore.zoom;
 
-    const offsetX = (containerWidth.value - canvasWidth) / 2;
-    const offsetY = (containerHeight.value - canvasHeight) / 2;
+    const offsetX = (containerWidth.value - canvasWidth) / 2 + panOffset.value.x;
+    const offsetY = (containerHeight.value - canvasHeight) / 2 + panOffset.value.y;
 
     return {
         width: containerWidth.value,
@@ -150,6 +150,129 @@ const stageConfig = computed(() => {
         x: offsetX,
         y: offsetY,
     };
+});
+
+// Handle wheel zoom (Ctrl/Cmd + scroll) and pan (scroll without modifier)
+const handleWheel = (e) => {
+    e.preventDefault();
+
+    const stage = stageRef.value?.getNode();
+    if (!stage) return;
+
+    // Zoom with Ctrl/Cmd or Shift
+    if (e.ctrlKey || e.metaKey || e.shiftKey) {
+        const scaleBy = 1.1;
+        const oldZoom = graphicsStore.zoom;
+
+        // Get pointer position relative to stage
+        const pointer = stage.getPointerPosition();
+        if (!pointer) return;
+
+        // Calculate mouse position on canvas before zoom
+        const mousePointTo = {
+            x: (pointer.x - stageConfig.value.x) / oldZoom,
+            y: (pointer.y - stageConfig.value.y) / oldZoom,
+        };
+
+        // Calculate new zoom
+        const direction = e.deltaY > 0 ? -1 : 1;
+        const newZoom = direction > 0 ? oldZoom * scaleBy : oldZoom / scaleBy;
+
+        // Clamp zoom between 0.1 and 5
+        const clampedZoom = Math.max(0.1, Math.min(5, newZoom));
+        graphicsStore.setZoom(clampedZoom);
+
+        // Adjust pan to keep mouse position stable
+        const newCanvasWidth = props.template.width * clampedZoom;
+        const newCanvasHeight = props.template.height * clampedZoom;
+        const baseCenterX = (containerWidth.value - newCanvasWidth) / 2;
+        const baseCenterY = (containerHeight.value - newCanvasHeight) / 2;
+
+        panOffset.value = {
+            x: pointer.x - baseCenterX - mousePointTo.x * clampedZoom,
+            y: pointer.y - baseCenterY - mousePointTo.y * clampedZoom,
+        };
+    } else {
+        // Pan with scroll (no modifier)
+        panOffset.value = {
+            x: panOffset.value.x - e.deltaX,
+            y: panOffset.value.y - e.deltaY,
+        };
+    }
+};
+
+// Handle space key for pan mode
+const handleKeyDown = (e) => {
+    if (e.code === 'Space' && !isSpacePressed.value) {
+        isSpacePressed.value = true;
+        if (containerRef.value) {
+            containerRef.value.style.cursor = 'grab';
+        }
+    }
+    if (e.shiftKey) {
+        isShiftPressed.value = true;
+    }
+};
+
+const handleKeyUp = (e) => {
+    if (e.code === 'Space') {
+        isSpacePressed.value = false;
+        isPanning.value = false;
+        if (containerRef.value) {
+            containerRef.value.style.cursor = 'default';
+        }
+    }
+    if (!e.shiftKey) {
+        isShiftPressed.value = false;
+    }
+};
+
+// Mouse events for panning
+const handleMouseDown = (e) => {
+    // Middle mouse button or Space + left click
+    if (e.button === 1 || (e.button === 0 && isSpacePressed.value)) {
+        e.preventDefault();
+        isPanning.value = true;
+        lastMousePos.value = { x: e.clientX, y: e.clientY };
+        if (containerRef.value) {
+            containerRef.value.style.cursor = 'grabbing';
+        }
+    }
+};
+
+const handleMouseMove = (e) => {
+    if (isPanning.value) {
+        const deltaX = e.clientX - lastMousePos.value.x;
+        const deltaY = e.clientY - lastMousePos.value.y;
+
+        panOffset.value = {
+            x: panOffset.value.x + deltaX,
+            y: panOffset.value.y + deltaY,
+        };
+
+        lastMousePos.value = { x: e.clientX, y: e.clientY };
+    }
+};
+
+const handleMouseUp = (e) => {
+    if (isPanning.value) {
+        isPanning.value = false;
+        if (containerRef.value) {
+            containerRef.value.style.cursor = isSpacePressed.value ? 'grab' : 'default';
+        }
+    }
+};
+
+// Reset pan when zoom is reset
+const resetPan = () => {
+    panOffset.value = { x: 0, y: 0 };
+};
+
+// Watch for zoom reset
+watch(() => graphicsStore.zoom, (newZoom, oldZoom) => {
+    if (newZoom === 1 && oldZoom !== 1) {
+        resetPan();
+    }
 });
 
 // Calculate snap position
@@ -185,19 +308,6 @@ const updateContainerSize = () => {
 };
 
 let resizeObserver = null;
-
-// Track Shift key for aspect ratio lock
-const handleKeyDown = (e) => {
-    if (e.key === 'Shift') {
-        isShiftPressed.value = true;
-    }
-};
-
-const handleKeyUp = (e) => {
-    if (e.key === 'Shift') {
-        isShiftPressed.value = false;
-    }
-};
 
 onMounted(() => {
     // Initial size update
@@ -941,6 +1051,12 @@ const exportToBlob = async (options = {}) => {
     return response.blob();
 };
 
+// Reset zoom and pan to default
+const resetView = () => {
+    graphicsStore.setZoom(1);
+    resetPan();
+};
+
 // Expose functions and refs
 defineExpose({
     exportImage,
@@ -949,6 +1065,8 @@ defineExpose({
     stageRef,
     getNode: () => stageRef.value?.getNode?.(),
     addLayerAtPosition,
+    resetPan,
+    resetView,
 });
 
 // Background image loading
@@ -1094,6 +1212,11 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
         @dragover="handleDragOver"
         @dragleave="handleDragLeave"
         @drop="handleDrop"
+        @wheel.prevent="handleWheel"
+        @mousedown="handleMouseDown"
+        @mousemove="handleMouseMove"
+        @mouseup="handleMouseUp"
+        @mouseleave="handleMouseUp"
     >
         <!-- Drop zone indicator -->
         <div

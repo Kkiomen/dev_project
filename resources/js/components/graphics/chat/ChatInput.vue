@@ -67,7 +67,11 @@ const placeholderText = props.placeholder || t('graphics.aiChat.placeholder');
             <button
                 type="button"
                 :disabled="disabled || !inputText.trim()"
-                class="flex-shrink-0 rounded-lg bg-purple-600 px-3 py-2 text-white transition-colors hover:bg-purple-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                class="flex-shrink-0 rounded-lg px-3 py-2 transition-colors disabled:cursor-not-allowed"
+                :style="{
+                    backgroundColor: (disabled || !inputText.trim()) ? '#d1d5db' : '#9333ea',
+                    color: 'white'
+                }"
                 @click="handleSubmit"
             >
                 <!-- Send icon -->

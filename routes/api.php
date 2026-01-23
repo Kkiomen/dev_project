@@ -95,7 +95,6 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
     // === TEMPLATE LIBRARY (available to all users) ===
     Route::get('library/templates', [TemplateLibraryController::class, 'index']);
-    Route::get('library/categories', [TemplateLibraryController::class, 'categories']);
     Route::post('library/templates/{template}/copy', [TemplateLibraryController::class, 'copy']);
 
     // === TEMPLATE LIBRARY ADMIN ===
