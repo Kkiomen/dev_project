@@ -1,0 +1,609 @@
+{
+    "common": {
+        "cancel": "Anuluj",
+        "confirm": "Potwierdź",
+        "save": "Zapisano",
+        "delete": "Usuń",
+        "edit": "Edytuj",
+        "create": "Utwórz",
+        "update": "Aktualizuj",
+        "close": "Zamknij",
+        "loading": "Ładowanie...",
+        "error": "Błąd",
+        "success": "Sukces",
+        "tryAgain": "Spróbuj ponownie",
+        "yes": "Tak",
+        "no": "Nie",
+        "optional": "Opcjonalnie",
+        "required": "Wymagane",
+        "name": "Nazwa",
+        "description": "Opis",
+        "color": "Kolor",
+        "icon": "Ikona",
+        "actions": "Akcje",
+        "search": "Szukaj",
+        "filter": "Filtruj",
+        "sort": "Sortuj",
+        "noData": "Brak danych",
+        "confirmAction": "Potwierdzenie",
+        "select": "wybierz"
+    },
+    "dashboard": {
+        "title": "Moje bazy danych",
+        "subtitle": "Zarządzaj swoimi bazami danych i tabelami",
+        "newBase": "+ Nowa baza",
+        "noBases": "Brak baz danych",
+        "noBasesDescription": "Zacznij od utworzenia nowej bazy danych.",
+        "baseUpdated": "Baza zaktualizowana",
+        "baseCreated": "Baza utworzona",
+        "baseDeleted": "Baza usunięta",
+        "saveBaseError": "Nie udało się zapisać bazy",
+        "deleteBaseError": "Nie udało się usunąć bazy",
+        "deleteBaseTitle": "Usuń bazę danych",
+        "deleteBaseMessage": "Czy na pewno chcesz usunąć bazę \"{name}\"? Wszystkie tabele i dane zostaną bezpowrotnie usunięte.",
+        "deleteBaseConfirm": "Usuń bazę"
+    },
+    "field": {
+        "add": "Dodaj nowe pole",
+        "edit": "Edytuj pole",
+        "name": "Nazwa pola",
+        "namePlaceholder": "Np. Imię i nazwisko",
+        "type": "Wybierz typ pola",
+        "options": "Opcje wyboru",
+        "addOption": "+ Dodaj opcję",
+        "optionName": "Nazwa opcji",
+        "delete": "Usuń pole",
+        "deleteMessage": "Czy na pewno chcesz usunąć pole \"{name}\"? Wszystkie dane w tym polu zostaną utracone.",
+        "fieldDeleted": "Pole usunięte",
+        "deleteFieldError": "Nie udało się usunąć pola",
+        "saveFieldError": "Nie udało się zapisać pola",
+        "cannotDeleteMainField": "Nie można usunąć pola głównego",
+        "renameFieldError": "Nie udało się zmienić nazwy pola",
+        "addField": "Dodaj pole",
+        "saveChanges": "Zapisz zmiany",
+        "types": {
+            "text": "Tekst",
+            "number": "Liczba",
+            "date": "Data",
+            "datetime": "Data i czas",
+            "checkbox": "Checkbox",
+            "select": "Wybór",
+            "multi_select": "Multi-wybór",
+            "attachment": "Załącznik",
+            "url": "URL",
+            "json": "JSON"
+        },
+        "typeDescriptions": {
+            "text": "Jednoliniowy tekst",
+            "number": "Liczby",
+            "date": "Tylko data",
+            "datetime": "Data z godziną",
+            "checkbox": "Tak/Nie",
+            "select": "Jedna opcja",
+            "multi_select": "Wiele opcji",
+            "attachment": "Pliki",
+            "url": "Link",
+            "json": "Dane JSON"
+        },
+        "typeExamples": {
+            "text": "Jan Kowalski",
+            "number": "42, 3.14",
+            "date": "2024-01-15",
+            "datetime": "2024-01-15 14:30",
+            "checkbox": "✓ lub puste",
+            "select": "Status: Nowy",
+            "multi_select": "Tagi: A, B",
+            "attachment": "foto.jpg",
+            "url": "https://...",
+            "json": "key: val"
+        }
+    },
+    "filter": {
+        "title": "Filtry",
+        "addCondition": "Dodaj warunek",
+        "noFilters": "Brak aktywnych filtrów",
+        "addConditionDescription": "Dodaj warunek aby przefiltrować dane",
+        "addConditionsMessage": "Dodaj warunki aby przefiltrować widoczne rekordy",
+        "showRecordsMatching": "Pokaż rekordy pasujące do:",
+        "value": "Wartość",
+        "valuePlaceholder": "Wpisz wartość...",
+        "from": "Od",
+        "to": "Do",
+        "allConditions": "Wszystkich warunków",
+        "anyCondition": "Dowolnego warunku",
+        "filterData": "Filtruj dane",
+        "select": "wybierz",
+        "sortAscending": "Rosnąco",
+        "sortDescending": "Malejąco",
+        "oldest": "Najstarsze",
+        "newest": "Najnowsze",
+        "noToYes": "Nie → Tak",
+        "yesToNo": "Tak → Nie",
+        "clearAll": "Wyczyść wszystko",
+        "applyFilters": "Zastosuj filtry",
+        "operators": {
+            "equals": "jest równe",
+            "not_equals": "nie jest równe",
+            "is_empty": "jest puste",
+            "is_not_empty": "nie jest puste",
+            "contains": "zawiera",
+            "not_contains": "nie zawiera",
+            "starts_with": "zaczyna się od",
+            "ends_with": "kończy się na",
+            "greater_than": "większe niż",
+            "less_than": "mniejsze niż",
+            "greater_or_equal": "większe lub równe",
+            "less_or_equal": "mniejsze lub równe",
+            "between": "pomiędzy",
+            "before": "przed",
+            "after": "po",
+            "on_or_before": "w dniu lub przed",
+            "on_or_after": "w dniu lub po",
+            "is_true": "jest zaznaczony",
+            "is_false": "nie jest zaznaczony",
+            "is_any_of": "jest jednym z",
+            "is_none_of": "nie jest żadnym z",
+            "contains_any": "zawiera którykolwiek z",
+            "contains_all": "zawiera wszystkie z"
+        },
+        "sort": {
+            "asc": "Rosnąco",
+            "desc": "Malejąco"
+        },
+        "field": "Pole",
+        "condition": "Warunek"
+    },
+    "attachment": {
+        "delete": "Usuń załącznik",
+        "deleteMessage": "Czy na pewno chcesz usunąć ten załącznik?",
+        "deleted": "Załącznik usunięty",
+        "deleteError": "Nie udało się usunąć załącznika",
+        "uploadError": "Nie udało się przesłać pliku"
+    },
+    "validation": {
+        "required": "To pole jest wymagane",
+        "min": "Wartość musi być większa lub równa {min}",
+        "max": "Wartość musi być mniejsza lub równa {max}",
+        "email": "Podaj prawidłowy adres email",
+        "url": "Podaj prawidłowy adres URL"
+    },
+    "json": {
+        "edit": "Edytuj JSON",
+        "format": "Formatuj",
+        "minify": "Minimalizuj",
+        "invalidJson": "Nieprawidłowy JSON: {message}",
+        "invalidSyntax": "Nieprawidłowa składnia JSON",
+        "clickToEdit": "kliknij 2x aby edytować"
+    },
+    "kanban": {
+        "deleteCard": "Usuń kartę",
+        "deleteCardMessage": "Czy na pewno chcesz usunąć ten rekord? Ta operacja jest nieodwracalna.",
+        "cardDeleted": "Karta usunięta",
+        "deleteCardError": "Nie udało się usunąć karty",
+        "addSelectField": "Dodaj pole typu \"Wybór\" lub \"Wybór wielokrotny\" aby używać widoku Kanban.",
+        "backToGrid": "Wróć do widoku Grid"
+    },
+    "base": {
+        "create": "Utwórz nową bazę",
+        "edit": "Edytuj bazę",
+        "namePlaceholder": "Np. Projekt CRM",
+        "descriptionPlaceholder": "Krótki opis bazy danych...",
+        "createButton": "Utwórz bazę",
+        "saveChanges": "Zapisz zmiany",
+        "backToDashboard": "← Dashboard",
+        "tables": "tabel",
+        "editButton": "Edytuj",
+        "deleteButton": "Usuń"
+    },
+    "table": {
+        "addRow": "Dodaj wiersz",
+        "deleteRow": "Usuń wiersz",
+        "deleteRowMessage": "Czy na pewno chcesz usunąć ten wiersz? Ta operacja jest nieodwracalna.",
+        "rowDeleted": "Wiersz usunięty",
+        "deleteRowError": "Nie udało się usunąć wiersza",
+        "fetchError": "Nie udało się pobrać danych",
+        "saveError": "Błąd zapisu",
+        "noRows": "Brak wierszy",
+        "addFirstRow": "Dodaj pierwszy wiersz",
+        "deleteTable": "Usuń tabelę",
+        "deleteTableMessage": "Czy na pewno chcesz usunąć tabelę \"{name}\"? Wszystkie dane zostaną utracone.",
+        "tableDeleted": "Tabela usunięta",
+        "deleteTableError": "Nie udało się usunąć tabeli",
+        "tableCreated": "Tabela utworzona",
+        "createTableError": "Nie udało się utworzyć tabeli",
+        "newTable": "Nowa tabela",
+        "newTableButton": "+ Nowa tabela",
+        "tableName": "Nazwa tabeli",
+        "tableNamePlaceholder": "Np. Kontakty",
+        "noTables": "Brak tabel",
+        "noTablesDescription": "Zacznij od utworzenia nowej tabeli.",
+        "fields": "pól",
+        "records": "rekordów",
+        "filtered": "(przefiltrowane)",
+        "viewGrid": "Grid",
+        "viewKanban": "Kanban",
+        "base": "Baza",
+        "clickToAddRow": "Kliknij aby dodać nowy wiersz...",
+        "searchPlaceholder": "Szukaj...",
+        "groupBy": "Grupuj wg:",
+        "noGroupingField": "Brak pola do grupowania"
+    },
+    "navigation": {
+        "dashboard": "Dashboard",
+        "profile": "Profil",
+        "logout": "Wyloguj",
+        "menu": "Menu",
+        "docs": "Dokumentacja"
+    },
+    "docs": {
+        "title": "Dokumentacja API",
+        "subtitle": "Kompletny przewodnik po API do integracji z Twoimi aplikacjami",
+        "search": "Szukaj w dokumentacji...",
+        "onThisPage": "Na tej stronie",
+        "backToTop": "Wróć na górę",
+        "copyCode": "Kopiuj",
+        "copied": "Skopiowano!",
+        "tryIt": "Wypróbuj",
+        "required": "Wymagane",
+        "optional": "Opcjonalne",
+        "deprecated": "Przestarzałe",
+        "new": "Nowe",
+        "example": "Przykład",
+        "examples": "Przykłady",
+        "response": "Odpowiedź",
+        "request": "Żądanie",
+        "parameters": "Parametry",
+        "headers": "Nagłówki",
+        "authentication": "Uwierzytelnianie",
+        "rateLimit": "Limity zapytań",
+        "errors": "Błędy",
+        "pagination": "Paginacja",
+        "sidebar": {
+            "gettingStarted": "Wprowadzenie",
+            "overview": "Przegląd API",
+            "authentication": "Uwierzytelnianie",
+            "quickStart": "Szybki start",
+            "resources": "Zasoby",
+            "bases": "Bazy danych",
+            "tables": "Tabele",
+            "fields": "Pola",
+            "rows": "Rekordy",
+            "cells": "Komórki",
+            "attachments": "Załączniki",
+            "advanced": "Zaawansowane",
+            "filtering": "Filtrowanie",
+            "sorting": "Sortowanie",
+            "pagination": "Paginacja",
+            "errors": "Obsługa błędów"
+        },
+        "overview": {
+            "title": "Przegląd API",
+            "description": "Nasze API REST umożliwia pełną integrację z Twoimi aplikacjami. Wszystkie endpointy zwracają dane w formacie JSON.",
+            "baseUrl": "Bazowy URL",
+            "baseUrlDescription": "Wszystkie żądania API powinny być kierowane do:",
+            "versioning": "Wersjonowanie",
+            "versioningDescription": "API jest wersjonowane poprzez URL. Aktualna wersja to v1.",
+            "responseFormat": "Format odpowiedzi",
+            "responseFormatDescription": "Wszystkie odpowiedzi są opakowane w obiekt z kluczem data:",
+            "contentType": "Typ zawartości",
+            "contentTypeDescription": "Wszystkie żądania powinny zawierać nagłówki:"
+        },
+        "auth": {
+            "title": "Uwierzytelnianie",
+            "description": "API wykorzystuje tokeny Bearer do uwierzytelniania. Token należy dołączyć do każdego żądania w nagłówku Authorization.",
+            "getToken": "Uzyskanie tokena",
+            "getTokenDescription": "Aby uzyskać token API, zaloguj się do panelu i przejdź do ustawień profilu. Tam możesz wygenerować nowy token.",
+            "usingToken": "Używanie tokena",
+            "usingTokenDescription": "Dołącz token do każdego żądania:",
+            "tokenSecurity": "Bezpieczeństwo tokena",
+            "tokenSecurityDescription": "Traktuj swój token API jak hasło. Nigdy nie udostępniaj go publicznie ani nie przechowuj w kodzie źródłowym.",
+            "tokenSecurityTips": {
+                "tip1": "Przechowuj tokeny w zmiennych środowiskowych",
+                "tip2": "Nie commituj tokenów do repozytoriów",
+                "tip3": "Regularnie rotuj tokeny",
+                "tip4": "Używaj różnych tokenów dla różnych środowisk"
+            }
+        },
+        "quickStart": {
+            "title": "Szybki start",
+            "description": "Wykonaj swoje pierwsze zapytanie API w kilku prostych krokach.",
+            "step1": "Krok 1: Uzyskaj token API",
+            "step1Description": "Zaloguj się do panelu i wygeneruj token API w ustawieniach profilu.",
+            "step2": "Krok 2: Wykonaj pierwsze zapytanie",
+            "step2Description": "Użyj poniższego przykładu, aby pobrać listę swoich baz danych:",
+            "step3": "Krok 3: Eksploruj zasoby",
+            "step3Description": "Teraz możesz eksplorować pozostałe endpointy. Zacznij od pobrania tabel z wybranej bazy.",
+            "congratulations": "Gratulacje!",
+            "congratulationsDescription": "Wykonałeś swoje pierwsze zapytanie API. Teraz możesz integrować nasze API z Twoimi aplikacjami."
+        },
+        "bases": {
+            "title": "Bazy danych",
+            "description": "Bazy danych to główne kontenery na Twoje dane. Każda baza może zawierać wiele tabel.",
+            "object": "Obiekt bazy danych",
+            "objectDescription": "Obiekt bazy danych zawiera następujące pola:",
+            "fields": {
+                "id": "Unikalny identyfikator bazy",
+                "name": "Nazwa bazy danych",
+                "description": "Opcjonalny opis bazy",
+                "icon": "Ikona bazy (emoji)",
+                "color": "Kolor bazy (hex)",
+                "tablesCount": "Liczba tabel w bazie",
+                "createdAt": "Data utworzenia",
+                "updatedAt": "Data ostatniej modyfikacji"
+            },
+            "endpoints": {
+                "list": "Lista baz danych",
+                "listDescription": "Pobiera listę wszystkich baz danych użytkownika.",
+                "get": "Pobierz bazę",
+                "getDescription": "Pobiera szczegóły konkretnej bazy danych.",
+                "create": "Utwórz bazę",
+                "createDescription": "Tworzy nową bazę danych.",
+                "update": "Zaktualizuj bazę",
+                "updateDescription": "Aktualizuje istniejącą bazę danych.",
+                "delete": "Usuń bazę",
+                "deleteDescription": "Usuwa bazę danych wraz ze wszystkimi tabelami i danymi."
+            }
+        },
+        "tables": {
+            "title": "Tabele",
+            "description": "Tabele przechowują Twoje dane w strukturze wierszy i kolumn (pól).",
+            "object": "Obiekt tabeli",
+            "objectDescription": "Obiekt tabeli zawiera następujące pola:",
+            "fields": {
+                "id": "Unikalny identyfikator tabeli",
+                "baseId": "Identyfikator bazy nadrzędnej",
+                "name": "Nazwa tabeli",
+                "description": "Opcjonalny opis tabeli",
+                "icon": "Ikona tabeli (emoji)",
+                "fieldsCount": "Liczba pól (kolumn)",
+                "rowsCount": "Liczba rekordów",
+                "createdAt": "Data utworzenia",
+                "updatedAt": "Data ostatniej modyfikacji"
+            },
+            "endpoints": {
+                "list": "Lista tabel",
+                "listDescription": "Pobiera listę wszystkich tabel w bazie.",
+                "get": "Pobierz tabelę",
+                "getDescription": "Pobiera szczegóły tabeli wraz z polami.",
+                "create": "Utwórz tabelę",
+                "createDescription": "Tworzy nową tabelę w bazie.",
+                "update": "Zaktualizuj tabelę",
+                "updateDescription": "Aktualizuje nazwę lub opis tabeli.",
+                "delete": "Usuń tabelę",
+                "deleteDescription": "Usuwa tabelę wraz ze wszystkimi danymi."
+            }
+        },
+        "fields": {
+            "title": "Pola",
+            "description": "Pola definiują strukturę tabeli - kolumny i ich typy danych.",
+            "object": "Obiekt pola",
+            "objectDescription": "Obiekt pola zawiera następujące atrybuty:",
+            "attributes": {
+                "id": "Unikalny identyfikator pola",
+                "tableId": "Identyfikator tabeli nadrzędnej",
+                "name": "Nazwa pola (nagłówek kolumny)",
+                "type": "Typ pola (text, number, date, etc.)",
+                "options": "Opcje pola (dla select, multi_select)",
+                "isPrimary": "Czy pole jest główne (nie można usunąć)",
+                "position": "Pozycja kolumny w tabeli"
+            },
+            "types": {
+                "title": "Typy pól",
+                "description": "Dostępne typy pól i ich zastosowanie:",
+                "text": "Tekst - jednoliniowy tekst do 65535 znaków",
+                "number": "Liczba - wartości numeryczne (integer lub decimal)",
+                "date": "Data - data bez czasu (YYYY-MM-DD)",
+                "datetime": "Data i czas - pełna data z czasem",
+                "checkbox": "Checkbox - wartość logiczna (tak/nie)",
+                "select": "Wybór - pojedynczy wybór z listy opcji",
+                "multiSelect": "Multi-wybór - wiele opcji z listy",
+                "url": "URL - adresy internetowe",
+                "attachment": "Załącznik - pliki i obrazy",
+                "json": "JSON - dowolne dane w formacie JSON"
+            },
+            "endpoints": {
+                "list": "Lista pól",
+                "listDescription": "Pobiera listę wszystkich pól w tabeli.",
+                "get": "Pobierz pole",
+                "getDescription": "Pobiera szczegóły konkretnego pola.",
+                "create": "Utwórz pole",
+                "createDescription": "Dodaje nowe pole (kolumnę) do tabeli.",
+                "update": "Zaktualizuj pole",
+                "updateDescription": "Aktualizuje nazwę, typ lub opcje pola.",
+                "delete": "Usuń pole",
+                "deleteDescription": "Usuwa pole i wszystkie jego wartości."
+            }
+        },
+        "rows": {
+            "title": "Rekordy",
+            "description": "Rekordy (wiersze) to pojedyncze wpisy w tabeli, zawierające wartości dla wszystkich pól.",
+            "object": "Obiekt rekordu",
+            "objectDescription": "Obiekt rekordu zawiera:",
+            "attributes": {
+                "id": "Unikalny identyfikator rekordu",
+                "tableId": "Identyfikator tabeli",
+                "cells": "Obiekt z wartościami komórek (field_id → value)",
+                "position": "Pozycja w tabeli",
+                "createdAt": "Data utworzenia",
+                "updatedAt": "Data ostatniej modyfikacji"
+            },
+            "endpoints": {
+                "list": "Lista rekordów",
+                "listDescription": "Pobiera paginowaną listę rekordów z tabeli.",
+                "get": "Pobierz rekord",
+                "getDescription": "Pobiera pojedynczy rekord z wszystkimi wartościami.",
+                "create": "Utwórz rekord",
+                "createDescription": "Tworzy nowy rekord z podanymi wartościami.",
+                "update": "Zaktualizuj rekord",
+                "updateDescription": "Aktualizuje wartości komórek w rekordzie.",
+                "delete": "Usuń rekord",
+                "deleteDescription": "Usuwa rekord wraz ze wszystkimi wartościami."
+            }
+        },
+        "cells": {
+            "title": "Komórki",
+            "description": "Komórki to pojedyncze wartości na przecięciu wiersza i kolumny.",
+            "object": "Obiekt komórki",
+            "objectDescription": "Obiekt komórki zawiera wartość i metadane:",
+            "attributes": {
+                "rowId": "Identyfikator rekordu",
+                "fieldId": "Identyfikator pola",
+                "value": "Wartość komórki (format zależy od typu pola)"
+            },
+            "valueFormats": {
+                "title": "Formaty wartości",
+                "description": "Format wartości zależy od typu pola:",
+                "text": "String - zwykły tekst",
+                "number": "Number - liczba całkowita lub zmiennoprzecinkowa",
+                "date": "String - data w formacie ISO (YYYY-MM-DD)",
+                "datetime": "String - data i czas ISO (YYYY-MM-DDTHH:mm:ss)",
+                "checkbox": "Boolean - true lub false",
+                "select": "Object - id, name, color",
+                "multiSelect": "Array - lista obiektów z id, name, color",
+                "url": "String - pełny URL",
+                "attachment": "Array - lista obiektów załączników",
+                "json": "Any - dowolna struktura JSON"
+            },
+            "endpoints": {
+                "update": "Zaktualizuj komórkę",
+                "updateDescription": "Aktualizuje wartość pojedynczej komórki."
+            }
+        },
+        "attachments": {
+            "title": "Załączniki",
+            "description": "Załączniki pozwalają przechowywać pliki powiązane z rekordami.",
+            "object": "Obiekt załącznika",
+            "objectDescription": "Obiekt załącznika zawiera:",
+            "attributes": {
+                "id": "Unikalny identyfikator załącznika",
+                "filename": "Oryginalna nazwa pliku",
+                "mimeType": "Typ MIME pliku",
+                "size": "Rozmiar w bajtach",
+                "url": "URL do pobrania pliku",
+                "thumbnailUrl": "URL miniatury (dla obrazów)"
+            },
+            "endpoints": {
+                "upload": "Prześlij załącznik",
+                "uploadDescription": "Przesyła nowy plik jako załącznik do komórki.",
+                "delete": "Usuń załącznik",
+                "deleteDescription": "Usuwa załącznik."
+            },
+            "limits": {
+                "title": "Limity",
+                "maxFileSize": "Maksymalny rozmiar pliku: 10MB",
+                "allowedTypes": "Dozwolone typy: obrazy, dokumenty, archiwa"
+            }
+        },
+        "filtering": {
+            "title": "Filtrowanie",
+            "description": "API obsługuje zaawansowane filtrowanie rekordów po wartościach pól.",
+            "syntax": "Składnia filtrów",
+            "syntaxDescription": "Filtry przekazuje się jako parametr JSON w query string lub w body żądania:",
+            "conjunction": "Łącznik warunków",
+            "conjunctionDescription": "Warunki można łączyć operatorem AND lub OR:",
+            "conjunctionAnd": "and - rekord musi spełniać wszystkie warunki",
+            "conjunctionOr": "or - rekord musi spełniać przynajmniej jeden warunek",
+            "operators": {
+                "title": "Dostępne operatory",
+                "description": "Operatory zależą od typu pola:",
+                "textOperators": "Operatory dla tekstu (text, url)",
+                "numberOperators": "Operatory dla liczb",
+                "dateOperators": "Operatory dla dat",
+                "checkboxOperators": "Operatory dla checkbox",
+                "selectOperators": "Operatory dla wyboru",
+                "multiSelectOperators": "Operatory dla multi-wyboru"
+            },
+            "examples": {
+                "title": "Przykłady filtrowania",
+                "simpleFilter": "Prosty filtr - tekstowy zawiera",
+                "multipleConditions": "Wiele warunków (AND)",
+                "orConditions": "Warunki OR",
+                "rangeFilter": "Filtr zakresu (between)",
+                "selectFilter": "Filtr po wartości select"
+            }
+        },
+        "sorting": {
+            "title": "Sortowanie",
+            "description": "Rekordy można sortować po wartościach wybranych pól.",
+            "syntax": "Składnia sortowania",
+            "syntaxDescription": "Sortowanie przekazuje się jako parametr JSON:",
+            "directions": {
+                "title": "Kierunki sortowania",
+                "asc": "asc - rosnąco (A-Z, 1-9, najstarsze najpierw)",
+                "desc": "desc - malejąco (Z-A, 9-1, najnowsze najpierw)"
+            },
+            "multiSort": "Sortowanie wielopoziomowe",
+            "multiSortDescription": "Można sortować po wielu polach - kolejność w tablicy określa priorytet:",
+            "nullHandling": "Obsługa wartości pustych",
+            "nullHandlingDescription": "Puste wartości są zawsze na końcu przy sortowaniu rosnącym i na początku przy malejącym.",
+            "examples": {
+                "title": "Przykłady sortowania",
+                "simpleSort": "Proste sortowanie A-Z",
+                "descSort": "Sortowanie malejące",
+                "multiSort": "Sortowanie wielopoziomowe"
+            }
+        },
+        "paginationSection": {
+            "title": "Paginacja",
+            "description": "Listy rekordów są automatycznie paginowane dla lepszej wydajności.",
+            "parameters": {
+                "title": "Parametry paginacji",
+                "page": "page - numer strony (domyślnie 1)",
+                "perPage": "per_page - liczba rekordów na stronę (domyślnie 50, max 100)"
+            },
+            "response": {
+                "title": "Struktura odpowiedzi",
+                "description": "Paginowana odpowiedź zawiera metadane:"
+            },
+            "examples": {
+                "title": "Przykłady",
+                "basicPagination": "Podstawowa paginacja",
+                "customPerPage": "Niestandardowa liczba na stronę"
+            }
+        },
+        "errorsSection": {
+            "title": "Obsługa błędów",
+            "description": "API zwraca błędy w spójnym formacie JSON.",
+            "format": "Format błędu",
+            "formatDescription": "Każdy błąd zawiera kod HTTP i opis:",
+            "codes": {
+                "title": "Kody błędów",
+                "400": "400 Bad Request - Nieprawidłowe żądanie lub dane",
+                "401": "401 Unauthorized - Brak lub nieprawidłowy token",
+                "403": "403 Forbidden - Brak uprawnień do zasobu",
+                "404": "404 Not Found - Zasób nie istnieje",
+                "422": "422 Unprocessable Entity - Błędy walidacji",
+                "429": "429 Too Many Requests - Przekroczono limit zapytań",
+                "500": "500 Internal Server Error - Błąd serwera"
+            },
+            "validation": {
+                "title": "Błędy walidacji",
+                "description": "Błędy walidacji (422) zawierają szczegóły dla każdego pola:"
+            },
+            "handling": {
+                "title": "Obsługa błędów w kodzie",
+                "description": "Przykład obsługi błędów:"
+            }
+        },
+        "rateLimiting": {
+            "title": "Limity zapytań",
+            "description": "API stosuje limity zapytań dla ochrony przed nadużyciami.",
+            "limits": {
+                "title": "Aktualne limity",
+                "perMinute": "60 zapytań na minutę dla standardowych endpointów",
+                "uploads": "10 przesyłek plików na minutę"
+            },
+            "headers": {
+                "title": "Nagłówki odpowiedzi",
+                "description": "Każda odpowiedź zawiera informacje o limitach:",
+                "limit": "X-RateLimit-Limit - maksymalna liczba zapytań",
+                "remaining": "X-RateLimit-Remaining - pozostałe zapytania",
+                "reset": "X-RateLimit-Reset - czas resetu limitu (Unix timestamp)"
+            },
+            "exceeded": {
+                "title": "Przekroczenie limitu",
+                "description": "Po przekroczeniu limitu otrzymasz odpowiedź 429:"
+            }
+        }
+    }
+}

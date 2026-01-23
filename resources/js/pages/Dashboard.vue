@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useBasesStore } from '@/stores/bases';
 import { useToast } from '@/composables/useToast';
 import { useConfirm } from '@/composables/useConfirm';
@@ -8,6 +9,8 @@ import Button from '@/components/common/Button.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import BaseCard from '@/components/base/BaseCard.vue';
 import CreateBaseModal from '@/components/base/CreateBaseModal.vue';
+
+const { t } = useI18n();
 
 const router = useRouter();
 const basesStore = useBasesStore();
@@ -40,24 +43,24 @@ const handleSave = async (data) => {
     try {
         if (editingBase.value) {
             await basesStore.updateBase(editingBase.value.id, data);
-            toast.success('Baza zaktualizowana');
+            toast.success(t('dashboard.baseUpdated'));
         } else {
             const newBase = await basesStore.createBase(data);
-            toast.success('Baza utworzona');
+            toast.success(t('dashboard.baseCreated'));
             router.push({ name: 'base', params: { baseId: newBase.id } });
         }
         closeModal();
     } catch (error) {
         console.error('Failed to save base:', error);
-        toast.error('Nie udało się zapisać bazy');
+        toast.error(t('dashboard.saveBaseError'));
     }
 };
 
 const handleDelete = async (base) => {
     const confirmed = await confirm({
-        title: 'Usuń bazę danych',
-        message: `Czy na pewno chcesz usunąć bazę "${base.name}"? Wszystkie tabele i dane zostaną bezpowrotnie usunięte.`,
-        confirmText: 'Usuń bazę',
+        title: t('dashboard.deleteBaseTitle'),
+        message: t('dashboard.deleteBaseMessage', { name: base.name }),
+        confirmText: t('dashboard.deleteBaseConfirm'),
         variant: 'danger',
     });
 
@@ -65,10 +68,10 @@ const handleDelete = async (base) => {
 
     try {
         await basesStore.deleteBase(base.id);
-        toast.success('Baza usunięta');
+        toast.success(t('dashboard.baseDeleted'));
     } catch (error) {
         console.error('Failed to delete base:', error);
-        toast.error('Nie udało się usunąć bazy');
+        toast.error(t('dashboard.deleteBaseError'));
     }
 };
 </script>
@@ -78,13 +81,13 @@ const handleDelete = async (base) => {
         <!-- Header -->
         <div class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-gray-900">Moje bazy danych</h1>
+                <h1 class="text-2xl font-bold text-gray-900">{{ t('dashboard.title') }}</h1>
                 <p class="mt-1 text-sm text-gray-500">
-                    Zarządzaj swoimi bazami danych i tabelami
+                    {{ t('dashboard.subtitle') }}
                 </p>
             </div>
             <Button @click="openCreateModal">
-                + Nowa baza
+                {{ t('dashboard.newBase') }}
             </Button>
         </div>
 
@@ -97,7 +100,7 @@ const handleDelete = async (base) => {
         <div v-else-if="basesStore.error" class="text-center py-12">
             <p class="text-red-500">{{ basesStore.error }}</p>
             <Button variant="secondary" class="mt-4" @click="basesStore.fetchBases()">
-                Spróbuj ponownie
+                {{ t('common.tryAgain') }}
             </Button>
         </div>
 
@@ -116,11 +119,11 @@ const handleDelete = async (base) => {
                     d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
                 />
             </svg>
-            <h3 class="mt-2 text-sm font-medium text-gray-900">Brak baz danych</h3>
-            <p class="mt-1 text-sm text-gray-500">Zacznij od utworzenia nowej bazy danych.</p>
+            <h3 class="mt-2 text-sm font-medium text-gray-900">{{ t('dashboard.noBases') }}</h3>
+            <p class="mt-1 text-sm text-gray-500">{{ t('dashboard.noBasesDescription') }}</p>
             <div class="mt-6">
                 <Button @click="openCreateModal">
-                    + Nowa baza
+                    {{ t('dashboard.newBase') }}
                 </Button>
             </div>
         </div>

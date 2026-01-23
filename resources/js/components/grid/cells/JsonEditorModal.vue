@@ -1,7 +1,10 @@
 <script setup>
 import { ref, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/common/Modal.vue';
 import Button from '@/components/common/Button.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     show: {
@@ -18,6 +21,7 @@ const emit = defineEmits(['close', 'save']);
 
 const jsonText = ref('');
 const error = ref('');
+const jsonPlaceholder = '{"key": "value"}';
 
 const isValid = computed(() => {
     if (!jsonText.value.trim()) return true;
@@ -53,7 +57,7 @@ const formatJson = () => {
         jsonText.value = JSON.stringify(parsed, null, 2);
         error.value = '';
     } catch (e) {
-        error.value = 'Nieprawidłowy JSON: ' + e.message;
+        error.value = t('json.invalidJson', { message: e.message });
     }
 };
 
@@ -63,7 +67,7 @@ const minifyJson = () => {
         jsonText.value = JSON.stringify(parsed);
         error.value = '';
     } catch (e) {
-        error.value = 'Nieprawidłowy JSON: ' + e.message;
+        error.value = t('json.invalidJson', { message: e.message });
     }
 };
 
@@ -77,7 +81,7 @@ const handleSave = () => {
         const parsed = JSON.parse(jsonText.value);
         emit('save', parsed);
     } catch (e) {
-        error.value = 'Nieprawidłowy JSON: ' + e.message;
+        error.value = t('json.invalidJson', { message: e.message });
     }
 };
 </script>
@@ -85,21 +89,21 @@ const handleSave = () => {
 <template>
     <Modal :show="show" max-width="2xl" @close="emit('close')">
         <div class="flex items-center justify-between mb-4">
-            <h3 class="text-lg font-semibold text-gray-900">Edytuj JSON</h3>
+            <h3 class="text-lg font-semibold text-gray-900">{{ t('json.edit') }}</h3>
             <div class="flex items-center space-x-2">
                 <button
                     type="button"
                     @click="formatJson"
                     class="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
                 >
-                    Formatuj
+                    {{ t('json.format') }}
                 </button>
                 <button
                     type="button"
                     @click="minifyJson"
                     class="px-2 py-1 text-xs text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
                 >
-                    Minimalizuj
+                    {{ t('json.minify') }}
                 </button>
             </div>
         </div>
@@ -110,21 +114,21 @@ const handleSave = () => {
                 rows="15"
                 class="w-full px-3 py-2 font-mono text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                 :class="{ 'border-red-500 focus:ring-red-500 focus:border-red-500': !isValid && jsonText.trim() }"
-                placeholder='{"key": "value"}'
+                :placeholder="jsonPlaceholder"
                 spellcheck="false"
             ></textarea>
             <p v-if="error" class="mt-1 text-sm text-red-500">{{ error }}</p>
             <p v-else-if="!isValid && jsonText.trim()" class="mt-1 text-sm text-red-500">
-                Nieprawidłowa składnia JSON
+                {{ t('json.invalidSyntax') }}
             </p>
         </div>
 
         <div class="flex justify-end space-x-3">
             <Button variant="secondary" @click="emit('close')">
-                Anuluj
+                {{ t('common.cancel') }}
             </Button>
             <Button @click="handleSave" :disabled="!isValid">
-                Zapisz
+                {{ t('common.save') }}
             </Button>
         </div>
     </Modal>

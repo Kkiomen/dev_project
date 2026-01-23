@@ -1,7 +1,11 @@
 <script setup>
+import { computed } from 'vue';
 import { RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 
-defineProps({
+const { t } = useI18n();
+
+const props = defineProps({
     base: {
         type: Object,
         required: true,
@@ -9,6 +13,23 @@ defineProps({
 });
 
 const emit = defineEmits(['edit', 'delete']);
+
+// Map old icon names to emoji
+const iconMap = {
+    'database': '🗃',
+    'chart': '📊',
+    'note': '📝',
+    'star': '⭐',
+    'briefcase': '💼',
+    'wrench': '🔧',
+    'sparkles': '🌟',
+    'lightbulb': '💡',
+};
+
+const displayIcon = computed(() => {
+    const icon = props.base.icon || '🗃';
+    return iconMap[icon] || icon;
+});
 </script>
 
 <template>
@@ -22,7 +43,7 @@ const emit = defineEmits(['edit', 'delete']);
                     class="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl"
                     :style="{ backgroundColor: base.color || '#3B82F6' }"
                 >
-                    {{ base.icon || '🗃' }}
+                    {{ displayIcon }}
                 </div>
                 <div class="flex-1 min-w-0">
                     <h3 class="text-lg font-medium text-gray-900 truncate">
@@ -32,7 +53,7 @@ const emit = defineEmits(['edit', 'delete']);
                         {{ base.description }}
                     </p>
                     <p class="text-sm text-gray-400 mt-1">
-                        {{ base.tables_count || 0 }} tabel
+                        {{ base.tables_count || 0 }} {{ t('base.tables') }}
                     </p>
                 </div>
             </div>
@@ -43,13 +64,13 @@ const emit = defineEmits(['edit', 'delete']);
                 @click.prevent="emit('edit', base)"
                 class="text-sm text-gray-500 hover:text-gray-700"
             >
-                Edytuj
+                {{ t('base.editButton') }}
             </button>
             <button
                 @click.prevent="emit('delete', base)"
                 class="text-sm text-red-500 hover:text-red-700"
             >
-                Usuń
+                {{ t('base.deleteButton') }}
             </button>
         </div>
     </div>

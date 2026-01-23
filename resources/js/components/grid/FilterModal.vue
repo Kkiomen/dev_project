@@ -1,8 +1,11 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useFiltersStore } from '@/stores/filters';
 import { getOperatorsForFieldType, operators, getDefaultOperator } from '@/config/filterOperators';
 import Modal from '@/components/common/Modal.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     show: {
@@ -75,7 +78,11 @@ const getFieldById = (fieldId) => {
 };
 
 const getAvailableOperators = (fieldType) => {
-    return getOperatorsForFieldType(fieldType);
+    const ops = getOperatorsForFieldType(fieldType);
+    return ops.map(op => ({
+        ...op,
+        label: op.labelKey ? t(op.labelKey) : op.label,
+    }));
 };
 
 const getOperatorConfig = (operatorValue) => {
@@ -159,8 +166,8 @@ const isChoiceSelected = (condition, choiceId) => {
                         </svg>
                     </div>
                     <div>
-                        <h2 class="text-lg font-semibold text-gray-900">Filtruj dane</h2>
-                        <p class="text-sm text-gray-500">Dodaj warunki aby przefiltrować widoczne rekordy</p>
+                        <h2 class="text-lg font-semibold text-gray-900">{{ t('filter.filterData') }}</h2>
+                        <p class="text-sm text-gray-500">{{ t('filter.addConditionsMessage') }}</p>
                     </div>
                 </div>
                 <button
@@ -176,7 +183,7 @@ const isChoiceSelected = (condition, choiceId) => {
             <!-- Conjunction selector -->
             <div v-if="localConditions.length > 1" class="py-3 border-b border-gray-100">
                 <div class="flex items-center gap-3">
-                    <span class="text-sm font-medium text-gray-700">Pokaż rekordy pasujące do:</span>
+                    <span class="text-sm font-medium text-gray-700">{{ t('filter.showRecordsMatching') }}</span>
                     <div class="flex bg-gray-100 rounded-lg p-1">
                         <button
                             @click="localConjunction = 'and'"
@@ -185,7 +192,7 @@ const isChoiceSelected = (condition, choiceId) => {
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'"
                         >
-                            Wszystkich warunków
+                            {{ t('filter.allConditions') }}
                         </button>
                         <button
                             @click="localConjunction = 'or'"
@@ -194,29 +201,30 @@ const isChoiceSelected = (condition, choiceId) => {
                                 ? 'bg-white text-gray-900 shadow-sm'
                                 : 'text-gray-600 hover:text-gray-900'"
                         >
-                            Dowolnego warunku
+                            {{ t('filter.anyCondition') }}
                         </button>
                     </div>
                 </div>
             </div>
 
             <!-- Conditions list -->
-            <div class="flex-1 overflow-y-auto py-4 space-y-3">
+            <div class="flex-1 overflow-y-auto py-4 space-y-4">
                 <TransitionGroup name="list">
                     <div
                         v-for="(condition, index) in localConditions"
                         :key="condition.id"
-                        class="bg-gray-50 rounded-lg p-4 relative group"
+                        class="bg-gray-50 rounded-lg p-4 relative group mb-4"
                     >
-                        <!-- Row number -->
-                        <div class="absolute -left-2 top-4 w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-xs font-medium flex items-center justify-center">
-                            {{ index + 1 }}
-                        </div>
+                        <div class="flex items-start gap-3">
+                            <!-- Row number -->
+                            <div class="flex-shrink-0 w-6 h-6 bg-blue-100 text-blue-600 rounded-full text-xs font-medium flex items-center justify-center mt-5">
+                                {{ index + 1 }}
+                            </div>
 
-                        <div class="grid grid-cols-12 gap-3 items-start ml-4">
-                            <!-- Field selector -->
-                            <div class="col-span-4">
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Pole</label>
+                            <div class="flex-1 grid grid-cols-12 gap-4 items-start">
+                                <!-- Field selector -->
+                                <div class="col-span-4">
+                                    <label class="block text-xs font-medium text-gray-500 mb-2">{{ t('filter.field') }}</label>
                                 <select
                                     :value="condition.field_id"
                                     @change="updateConditionField(index, $event.target.value)"
@@ -234,7 +242,7 @@ const isChoiceSelected = (condition, choiceId) => {
 
                             <!-- Operator selector -->
                             <div class="col-span-3">
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Warunek</label>
+                                <label class="block text-xs font-medium text-gray-500 mb-2">{{ t('filter.condition') }}</label>
                                 <select
                                     v-model="condition.operator"
                                     class="w-full text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
@@ -251,7 +259,7 @@ const isChoiceSelected = (condition, choiceId) => {
 
                             <!-- Value input -->
                             <div class="col-span-4">
-                                <label class="block text-xs font-medium text-gray-500 mb-1">Wartość</label>
+                                <label class="block text-xs font-medium text-gray-500 mb-2">{{ t('filter.value') }}</label>
 
                                 <!-- No value needed -->
                                 <div
@@ -285,7 +293,7 @@ const isChoiceSelected = (condition, choiceId) => {
                                         v-model="condition.value"
                                         class="w-full text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
                                     >
-                                        <option :value="null">-- wybierz --</option>
+                                        <option :value="null">-- {{ t('filter.select') }} --</option>
                                         <option
                                             v-for="choice in getFieldById(condition.field_id)?.options?.choices || []"
                                             :key="choice.id"
@@ -303,14 +311,14 @@ const isChoiceSelected = (condition, choiceId) => {
                                             v-model="condition.value"
                                             :type="getInputType(condition.field_type)"
                                             class="flex-1 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
-                                            placeholder="Od"
+                                            :placeholder="t('filter.from')"
                                         />
                                         <span class="text-gray-400">—</span>
                                         <input
                                             v-model="condition.value_end"
                                             :type="getInputType(condition.field_type)"
                                             class="flex-1 text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
-                                            placeholder="Do"
+                                            :placeholder="t('filter.to')"
                                         />
                                     </div>
                                 </template>
@@ -321,23 +329,24 @@ const isChoiceSelected = (condition, choiceId) => {
                                         v-model="condition.value"
                                         :type="getInputType(condition.field_type)"
                                         class="w-full text-sm border-gray-300 rounded-lg focus:border-blue-500 focus:ring-blue-500"
-                                        placeholder="Wpisz wartość..."
+                                        :placeholder="t('filter.valuePlaceholder')"
                                     />
                                 </template>
                             </div>
 
-                            <!-- Remove button -->
-                            <div class="col-span-1 flex justify-end">
-                                <button
-                                    @click="removeCondition(index)"
-                                    class="mt-6 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                                    :class="{ 'opacity-50 cursor-not-allowed': localConditions.length === 1 }"
-                                    :disabled="localConditions.length === 1"
-                                >
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                                    </svg>
-                                </button>
+                                <!-- Remove button -->
+                                <div class="col-span-1 flex justify-end">
+                                    <button
+                                        @click="removeCondition(index)"
+                                        class="mt-6 p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                                        :class="{ 'opacity-50 cursor-not-allowed': localConditions.length === 1 }"
+                                        :disabled="localConditions.length === 1"
+                                    >
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                        </svg>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>

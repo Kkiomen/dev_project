@@ -1,12 +1,15 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute, RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useTablesStore } from '@/stores/tables';
 import { useFieldsStore } from '@/stores/fields';
 import { useRowsStore } from '@/stores/rows';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import Button from '@/components/common/Button.vue';
 import KanbanBoard from '@/components/kanban/KanbanBoard.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     tableId: {
@@ -80,7 +83,7 @@ const changeGroupBy = (fieldId) => {
                             :to="{ name: 'base', params: { baseId: tablesStore.currentTable.base_id } }"
                             class="text-sm font-medium text-gray-500 hover:text-gray-700"
                         >
-                            Baza
+                            {{ t('table.base') }}
                         </RouterLink>
                         <span class="text-gray-300">/</span>
                         <span class="text-sm font-semibold text-gray-900">
@@ -92,7 +95,7 @@ const changeGroupBy = (fieldId) => {
                 <div class="flex items-center space-x-4">
                     <!-- Group by selector -->
                     <div v-if="selectFields.length > 0" class="flex items-center space-x-2">
-                        <span class="text-sm text-gray-500">Grupuj wg:</span>
+                        <span class="text-sm text-gray-500">{{ t('table.groupBy') }}</span>
                         <select
                             :value="groupByFieldId"
                             @change="changeGroupBy($event.target.value)"
@@ -114,10 +117,10 @@ const changeGroupBy = (fieldId) => {
                             :to="{ name: 'table.grid', params: { tableId } }"
                             class="px-3 py-1 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900"
                         >
-                            Grid
+                            {{ t('table.viewGrid') }}
                         </RouterLink>
                         <span class="px-3 py-1 text-sm font-medium rounded-md bg-white shadow text-gray-900">
-                            Kanban
+                            {{ t('table.viewKanban') }}
                         </span>
                     </div>
                 </div>
@@ -129,16 +132,16 @@ const changeGroupBy = (fieldId) => {
                     <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"/>
                     </svg>
-                    <h3 class="mt-2 text-sm font-medium text-gray-900">Brak pola do grupowania</h3>
+                    <h3 class="mt-2 text-sm font-medium text-gray-900">{{ t('table.noGroupingField') }}</h3>
                     <p class="mt-1 text-sm text-gray-500">
-                        Dodaj pole typu "Wybor" lub "Wybor wielokrotny" aby uzywac widoku Kanban.
+                        {{ t('kanban.addSelectField') }}
                     </p>
                     <div class="mt-6">
                         <RouterLink
                             :to="{ name: 'table.grid', params: { tableId } }"
                             class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
                         >
-                            Wroc do widoku Grid
+                            {{ t('kanban.backToGrid') }}
                         </RouterLink>
                     </div>
                 </div>

@@ -1,44 +1,45 @@
 /**
  * Filter operators configuration for different field types.
+ * Labels are translated using i18n in components that use this config.
  */
 
 export const operators = {
     // Common operators
-    equals: { value: 'equals', label: 'jest równe', requiresValue: true },
-    not_equals: { value: 'not_equals', label: 'nie jest równe', requiresValue: true },
-    is_empty: { value: 'is_empty', label: 'jest puste', requiresValue: false },
-    is_not_empty: { value: 'is_not_empty', label: 'nie jest puste', requiresValue: false },
+    equals: { value: 'equals', labelKey: 'filter.operators.equals', requiresValue: true },
+    not_equals: { value: 'not_equals', labelKey: 'filter.operators.not_equals', requiresValue: true },
+    is_empty: { value: 'is_empty', labelKey: 'filter.operators.is_empty', requiresValue: false },
+    is_not_empty: { value: 'is_not_empty', labelKey: 'filter.operators.is_not_empty', requiresValue: false },
 
     // Text operators
-    contains: { value: 'contains', label: 'zawiera', requiresValue: true },
-    not_contains: { value: 'not_contains', label: 'nie zawiera', requiresValue: true },
-    starts_with: { value: 'starts_with', label: 'zaczyna się od', requiresValue: true },
-    ends_with: { value: 'ends_with', label: 'kończy się na', requiresValue: true },
+    contains: { value: 'contains', labelKey: 'filter.operators.contains', requiresValue: true },
+    not_contains: { value: 'not_contains', labelKey: 'filter.operators.not_contains', requiresValue: true },
+    starts_with: { value: 'starts_with', labelKey: 'filter.operators.starts_with', requiresValue: true },
+    ends_with: { value: 'ends_with', labelKey: 'filter.operators.ends_with', requiresValue: true },
 
     // Number operators
-    greater_than: { value: 'greater_than', label: 'większe niż', requiresValue: true },
-    less_than: { value: 'less_than', label: 'mniejsze niż', requiresValue: true },
-    greater_or_equal: { value: 'greater_or_equal', label: 'większe lub równe', requiresValue: true },
-    less_or_equal: { value: 'less_or_equal', label: 'mniejsze lub równe', requiresValue: true },
-    between: { value: 'between', label: 'pomiędzy', requiresValue: true, isRange: true },
+    greater_than: { value: 'greater_than', labelKey: 'filter.operators.greater_than', requiresValue: true },
+    less_than: { value: 'less_than', labelKey: 'filter.operators.less_than', requiresValue: true },
+    greater_or_equal: { value: 'greater_or_equal', labelKey: 'filter.operators.greater_or_equal', requiresValue: true },
+    less_or_equal: { value: 'less_or_equal', labelKey: 'filter.operators.less_or_equal', requiresValue: true },
+    between: { value: 'between', labelKey: 'filter.operators.between', requiresValue: true, isRange: true },
 
     // Date operators
-    before: { value: 'before', label: 'przed', requiresValue: true },
-    after: { value: 'after', label: 'po', requiresValue: true },
-    on_or_before: { value: 'on_or_before', label: 'w dniu lub przed', requiresValue: true },
-    on_or_after: { value: 'on_or_after', label: 'w dniu lub po', requiresValue: true },
+    before: { value: 'before', labelKey: 'filter.operators.before', requiresValue: true },
+    after: { value: 'after', labelKey: 'filter.operators.after', requiresValue: true },
+    on_or_before: { value: 'on_or_before', labelKey: 'filter.operators.on_or_before', requiresValue: true },
+    on_or_after: { value: 'on_or_after', labelKey: 'filter.operators.on_or_after', requiresValue: true },
 
     // Checkbox operators
-    is_true: { value: 'is_true', label: 'jest zaznaczony', requiresValue: false },
-    is_false: { value: 'is_false', label: 'nie jest zaznaczony', requiresValue: false },
+    is_true: { value: 'is_true', labelKey: 'filter.operators.is_true', requiresValue: false },
+    is_false: { value: 'is_false', labelKey: 'filter.operators.is_false', requiresValue: false },
 
     // Select operators
-    is_any_of: { value: 'is_any_of', label: 'jest jednym z', requiresValue: true, isMultiple: true },
-    is_none_of: { value: 'is_none_of', label: 'nie jest żadnym z', requiresValue: true, isMultiple: true },
+    is_any_of: { value: 'is_any_of', labelKey: 'filter.operators.is_any_of', requiresValue: true, isMultiple: true },
+    is_none_of: { value: 'is_none_of', labelKey: 'filter.operators.is_none_of', requiresValue: true, isMultiple: true },
 
     // Multi-select operators
-    contains_any: { value: 'contains_any', label: 'zawiera którykolwiek z', requiresValue: true, isMultiple: true },
-    contains_all: { value: 'contains_all', label: 'zawiera wszystkie z', requiresValue: true, isMultiple: true },
+    contains_any: { value: 'contains_any', labelKey: 'filter.operators.contains_any', requiresValue: true, isMultiple: true },
+    contains_all: { value: 'contains_all', labelKey: 'filter.operators.contains_all', requiresValue: true, isMultiple: true },
 };
 
 /**

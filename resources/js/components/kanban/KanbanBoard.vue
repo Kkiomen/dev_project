@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useFieldsStore } from '@/stores/fields';
 import { useRowsStore } from '@/stores/rows';
 import { useCellsStore } from '@/stores/cells';
@@ -8,6 +9,7 @@ import { useConfirm } from '@/composables/useConfirm';
 import KanbanColumn from './KanbanColumn.vue';
 import CardModal from './CardModal.vue';
 
+const { t } = useI18n();
 const toast = useToast();
 const { confirm } = useConfirm();
 
@@ -90,9 +92,9 @@ const deleteCard = async () => {
     if (!selectedCard.value) return;
 
     const confirmed = await confirm({
-        title: 'Usuń kartę',
-        message: 'Czy na pewno chcesz usunąć ten rekord? Ta operacja jest nieodwracalna.',
-        confirmText: 'Usuń',
+        title: t('kanban.deleteCard'),
+        message: t('kanban.deleteCardMessage'),
+        confirmText: t('common.delete'),
         variant: 'danger',
     });
 
@@ -102,10 +104,10 @@ const deleteCard = async () => {
         await rowsStore.deleteRow(selectedCard.value.id);
         showCardModal.value = false;
         selectedCard.value = null;
-        toast.success('Karta usunięta');
+        toast.success(t('kanban.cardDeleted'));
     } catch (error) {
         console.error('Failed to delete card:', error);
-        toast.error('Nie udało się usunąć karty');
+        toast.error(t('kanban.deleteCardError'));
     }
 };
 

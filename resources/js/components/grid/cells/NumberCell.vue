@@ -79,7 +79,7 @@ const handleInput = (e) => {
                 type="number"
                 :value="localValue"
                 @input="handleInput"
-                @keydown.enter="emit('save')"
+                @keydown.enter.prevent="emit('save')"
                 @keydown.escape="emit('cancel')"
                 @blur="emit('save')"
                 :step="step"

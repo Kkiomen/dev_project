@@ -1,0 +1,608 @@
+{
+    "common": {
+        "cancel": "Cancel",
+        "confirm": "Confirm",
+        "save": "Save",
+        "delete": "Delete",
+        "edit": "Edit",
+        "create": "Create",
+        "update": "Update",
+        "close": "Close",
+        "loading": "Loading...",
+        "error": "Error",
+        "success": "Success",
+        "tryAgain": "Try again",
+        "yes": "Yes",
+        "no": "No",
+        "optional": "Optional",
+        "required": "Required",
+        "name": "Name",
+        "description": "Description",
+        "color": "Color",
+        "icon": "Icon",
+        "actions": "Actions",
+        "search": "Search",
+        "filter": "Filter",
+        "sort": "Sort",
+        "noData": "No data",
+        "confirmAction": "Confirmation"
+    },
+    "dashboard": {
+        "title": "My Databases",
+        "subtitle": "Manage your databases and tables",
+        "newBase": "+ New Database",
+        "noBases": "No databases",
+        "noBasesDescription": "Start by creating a new database.",
+        "baseUpdated": "Database updated",
+        "baseCreated": "Database created",
+        "baseDeleted": "Database deleted",
+        "saveBaseError": "Failed to save database",
+        "deleteBaseError": "Failed to delete database",
+        "deleteBaseTitle": "Delete Database",
+        "deleteBaseMessage": "Are you sure you want to delete the database \"{name}\"? All tables and data will be permanently deleted.",
+        "deleteBaseConfirm": "Delete Database"
+    },
+    "base": {
+        "create": "Create New Database",
+        "edit": "Edit Database",
+        "namePlaceholder": "E.g. CRM Project",
+        "descriptionPlaceholder": "Brief description of the database...",
+        "createButton": "Create Database",
+        "saveChanges": "Save Changes",
+        "backToDashboard": "← Dashboard",
+        "tables": "tables",
+        "editButton": "Edit",
+        "deleteButton": "Delete"
+    },
+    "table": {
+        "addRow": "Add Row",
+        "deleteRow": "Delete Row",
+        "deleteRowMessage": "Are you sure you want to delete this row? This operation is irreversible.",
+        "rowDeleted": "Row deleted",
+        "deleteRowError": "Failed to delete row",
+        "fetchError": "Failed to fetch data",
+        "saveError": "Save error",
+        "noRows": "No rows",
+        "addFirstRow": "Add first row",
+        "deleteTable": "Delete Table",
+        "deleteTableMessage": "Are you sure you want to delete the table \"{name}\"? All data will be lost.",
+        "tableDeleted": "Table deleted",
+        "deleteTableError": "Failed to delete table",
+        "tableCreated": "Table created",
+        "createTableError": "Failed to create table",
+        "newTable": "New Table",
+        "newTableButton": "+ New Table",
+        "tableName": "Table Name",
+        "tableNamePlaceholder": "E.g. Contacts",
+        "noTables": "No tables",
+        "noTablesDescription": "Start by creating a new table.",
+        "fields": "fields",
+        "records": "records",
+        "filtered": "(filtered)",
+        "viewGrid": "Grid",
+        "viewKanban": "Kanban",
+        "base": "Base",
+        "clickToAddRow": "Click to add a new row...",
+        "searchPlaceholder": "Search...",
+        "groupBy": "Group by:",
+        "noGroupingField": "No grouping field"
+    },
+    "field": {
+        "add": "Add New Field",
+        "edit": "Edit Field",
+        "name": "Field Name",
+        "namePlaceholder": "E.g. Full Name",
+        "type": "Select Field Type",
+        "options": "Choice Options",
+        "addOption": "+ Add Option",
+        "optionName": "Option Name",
+        "delete": "Delete Field",
+        "deleteMessage": "Are you sure you want to delete the field \"{name}\"? All data in this field will be lost.",
+        "fieldDeleted": "Field deleted",
+        "deleteFieldError": "Failed to delete field",
+        "saveFieldError": "Failed to save field",
+        "cannotDeleteMainField": "Cannot delete main field",
+        "renameFieldError": "Failed to rename field",
+        "addField": "Add Field",
+        "saveChanges": "Save Changes",
+        "types": {
+            "text": "Text",
+            "number": "Number",
+            "date": "Date",
+            "datetime": "Date & Time",
+            "checkbox": "Checkbox",
+            "select": "Select",
+            "multi_select": "Multi-Select",
+            "attachment": "Attachment",
+            "url": "URL",
+            "json": "JSON"
+        },
+        "typeDescriptions": {
+            "text": "Single-line text",
+            "number": "Numbers",
+            "date": "Date only",
+            "datetime": "Date with time",
+            "checkbox": "Yes/No",
+            "select": "Single option",
+            "multi_select": "Multiple options",
+            "attachment": "Files",
+            "url": "Link",
+            "json": "JSON data"
+        },
+        "typeExamples": {
+            "text": "John Doe",
+            "number": "42, 3.14",
+            "date": "2024-01-15",
+            "datetime": "2024-01-15 14:30",
+            "checkbox": "✓ or empty",
+            "select": "Status: New",
+            "multi_select": "Tags: A, B",
+            "attachment": "photo.jpg",
+            "url": "https://...",
+            "json": "key: val"
+        }
+    },
+    "filter": {
+        "title": "Filters",
+        "addCondition": "Add Condition",
+        "noFilters": "No active filters",
+        "addConditionDescription": "Add a condition to filter data",
+        "addConditionsMessage": "Add conditions to filter visible records",
+        "showRecordsMatching": "Show records matching:",
+        "value": "Value",
+        "valuePlaceholder": "Enter value...",
+        "from": "From",
+        "to": "To",
+        "allConditions": "All conditions",
+        "anyCondition": "Any condition",
+        "filterData": "Filter Data",
+        "select": "select",
+        "sortAscending": "Ascending",
+        "sortDescending": "Descending",
+        "oldest": "Oldest",
+        "newest": "Newest",
+        "noToYes": "No → Yes",
+        "yesToNo": "Yes → No",
+        "clearAll": "Clear All",
+        "applyFilters": "Apply Filters",
+        "operators": {
+            "equals": "equals",
+            "not_equals": "not equals",
+            "is_empty": "is empty",
+            "is_not_empty": "is not empty",
+            "contains": "contains",
+            "not_contains": "does not contain",
+            "starts_with": "starts with",
+            "ends_with": "ends with",
+            "greater_than": "greater than",
+            "less_than": "less than",
+            "greater_or_equal": "greater or equal",
+            "less_or_equal": "less or equal",
+            "between": "between",
+            "before": "before",
+            "after": "after",
+            "on_or_before": "on or before",
+            "on_or_after": "on or after",
+            "is_true": "is checked",
+            "is_false": "is not checked",
+            "is_any_of": "is any of",
+            "is_none_of": "is none of",
+            "contains_any": "contains any of",
+            "contains_all": "contains all of"
+        },
+        "sort": {
+            "asc": "Ascending",
+            "desc": "Descending"
+        },
+        "field": "Field",
+        "condition": "Condition"
+    },
+    "attachment": {
+        "delete": "Delete Attachment",
+        "deleteMessage": "Are you sure you want to delete this attachment?",
+        "deleted": "Attachment deleted",
+        "deleteError": "Failed to delete attachment",
+        "uploadError": "Failed to upload file"
+    },
+    "validation": {
+        "required": "This field is required",
+        "min": "Value must be greater than or equal to {min}",
+        "max": "Value must be less than or equal to {max}",
+        "email": "Please provide a valid email address",
+        "url": "Please provide a valid URL"
+    },
+    "json": {
+        "edit": "Edit JSON",
+        "format": "Format",
+        "minify": "Minify",
+        "invalidJson": "Invalid JSON: {message}",
+        "invalidSyntax": "Invalid JSON syntax",
+        "clickToEdit": "double-click to edit"
+    },
+    "kanban": {
+        "deleteCard": "Delete Card",
+        "deleteCardMessage": "Are you sure you want to delete this record? This operation is irreversible.",
+        "cardDeleted": "Card deleted",
+        "deleteCardError": "Failed to delete card",
+        "addSelectField": "Add a \"Select\" or \"Multi-Select\" field to use Kanban view.",
+        "backToGrid": "Back to Grid view"
+    },
+    "navigation": {
+        "dashboard": "Dashboard",
+        "profile": "Profile",
+        "logout": "Logout",
+        "menu": "Menu",
+        "docs": "Documentation"
+    },
+    "docs": {
+        "title": "API Documentation",
+        "subtitle": "Complete guide to integrate with your applications",
+        "search": "Search documentation...",
+        "onThisPage": "On this page",
+        "backToTop": "Back to top",
+        "copyCode": "Copy",
+        "copied": "Copied!",
+        "tryIt": "Try it",
+        "required": "Required",
+        "optional": "Optional",
+        "deprecated": "Deprecated",
+        "new": "New",
+        "example": "Example",
+        "examples": "Examples",
+        "response": "Response",
+        "request": "Request",
+        "parameters": "Parameters",
+        "headers": "Headers",
+        "authentication": "Authentication",
+        "rateLimit": "Rate limits",
+        "errors": "Errors",
+        "pagination": "Pagination",
+        "sidebar": {
+            "gettingStarted": "Getting Started",
+            "overview": "API Overview",
+            "authentication": "Authentication",
+            "quickStart": "Quick Start",
+            "resources": "Resources",
+            "bases": "Databases",
+            "tables": "Tables",
+            "fields": "Fields",
+            "rows": "Records",
+            "cells": "Cells",
+            "attachments": "Attachments",
+            "advanced": "Advanced",
+            "filtering": "Filtering",
+            "sorting": "Sorting",
+            "pagination": "Pagination",
+            "errors": "Error Handling"
+        },
+        "overview": {
+            "title": "API Overview",
+            "description": "Our REST API enables full integration with your applications. All endpoints return data in JSON format.",
+            "baseUrl": "Base URL",
+            "baseUrlDescription": "All API requests should be directed to:",
+            "versioning": "Versioning",
+            "versioningDescription": "The API is versioned through the URL. Current version is v1.",
+            "responseFormat": "Response Format",
+            "responseFormatDescription": "All responses are wrapped in an object with a data key:",
+            "contentType": "Content Type",
+            "contentTypeDescription": "All requests should include headers:"
+        },
+        "auth": {
+            "title": "Authentication",
+            "description": "The API uses Bearer tokens for authentication. The token must be included in every request in the Authorization header.",
+            "getToken": "Getting a Token",
+            "getTokenDescription": "To get an API token, log in to the dashboard and go to profile settings. There you can generate a new token.",
+            "usingToken": "Using the Token",
+            "usingTokenDescription": "Include the token in every request:",
+            "tokenSecurity": "Token Security",
+            "tokenSecurityDescription": "Treat your API token like a password. Never share it publicly or store it in source code.",
+            "tokenSecurityTips": {
+                "tip1": "Store tokens in environment variables",
+                "tip2": "Don't commit tokens to repositories",
+                "tip3": "Rotate tokens regularly",
+                "tip4": "Use different tokens for different environments"
+            }
+        },
+        "quickStart": {
+            "title": "Quick Start",
+            "description": "Make your first API request in a few simple steps.",
+            "step1": "Step 1: Get API Token",
+            "step1Description": "Log in to the dashboard and generate an API token in profile settings.",
+            "step2": "Step 2: Make Your First Request",
+            "step2Description": "Use the example below to get a list of your databases:",
+            "step3": "Step 3: Explore Resources",
+            "step3Description": "Now you can explore other endpoints. Start by getting tables from a selected database.",
+            "congratulations": "Congratulations!",
+            "congratulationsDescription": "You made your first API request. Now you can integrate our API with your applications."
+        },
+        "bases": {
+            "title": "Databases",
+            "description": "Databases are the main containers for your data. Each database can contain multiple tables.",
+            "object": "Database Object",
+            "objectDescription": "The database object contains the following fields:",
+            "fields": {
+                "id": "Unique database identifier",
+                "name": "Database name",
+                "description": "Optional database description",
+                "icon": "Database icon (emoji)",
+                "color": "Database color (hex)",
+                "tablesCount": "Number of tables in database",
+                "createdAt": "Creation date",
+                "updatedAt": "Last modification date"
+            },
+            "endpoints": {
+                "list": "List Databases",
+                "listDescription": "Gets a list of all user's databases.",
+                "get": "Get Database",
+                "getDescription": "Gets details of a specific database.",
+                "create": "Create Database",
+                "createDescription": "Creates a new database.",
+                "update": "Update Database",
+                "updateDescription": "Updates an existing database.",
+                "delete": "Delete Database",
+                "deleteDescription": "Deletes a database along with all tables and data."
+            }
+        },
+        "tables": {
+            "title": "Tables",
+            "description": "Tables store your data in a row and column (fields) structure.",
+            "object": "Table Object",
+            "objectDescription": "The table object contains the following fields:",
+            "fields": {
+                "id": "Unique table identifier",
+                "baseId": "Parent database identifier",
+                "name": "Table name",
+                "description": "Optional table description",
+                "icon": "Table icon (emoji)",
+                "fieldsCount": "Number of fields (columns)",
+                "rowsCount": "Number of records",
+                "createdAt": "Creation date",
+                "updatedAt": "Last modification date"
+            },
+            "endpoints": {
+                "list": "List Tables",
+                "listDescription": "Gets a list of all tables in a database.",
+                "get": "Get Table",
+                "getDescription": "Gets table details with fields.",
+                "create": "Create Table",
+                "createDescription": "Creates a new table in a database.",
+                "update": "Update Table",
+                "updateDescription": "Updates table name or description.",
+                "delete": "Delete Table",
+                "deleteDescription": "Deletes a table along with all data."
+            }
+        },
+        "fields": {
+            "title": "Fields",
+            "description": "Fields define the table structure - columns and their data types.",
+            "object": "Field Object",
+            "objectDescription": "The field object contains the following attributes:",
+            "attributes": {
+                "id": "Unique field identifier",
+                "tableId": "Parent table identifier",
+                "name": "Field name (column header)",
+                "type": "Field type (text, number, date, etc.)",
+                "options": "Field options (for select, multi_select)",
+                "isPrimary": "Whether field is primary (cannot be deleted)",
+                "position": "Column position in table"
+            },
+            "types": {
+                "title": "Field Types",
+                "description": "Available field types and their usage:",
+                "text": "Text - single-line text up to 65535 characters",
+                "number": "Number - numeric values (integer or decimal)",
+                "date": "Date - date without time (YYYY-MM-DD)",
+                "datetime": "Date & Time - full date with time",
+                "checkbox": "Checkbox - boolean value (yes/no)",
+                "select": "Select - single choice from option list",
+                "multiSelect": "Multi-Select - multiple options from list",
+                "url": "URL - web addresses",
+                "attachment": "Attachment - files and images",
+                "json": "JSON - any data in JSON format"
+            },
+            "endpoints": {
+                "list": "List Fields",
+                "listDescription": "Gets a list of all fields in a table.",
+                "get": "Get Field",
+                "getDescription": "Gets details of a specific field.",
+                "create": "Create Field",
+                "createDescription": "Adds a new field (column) to the table.",
+                "update": "Update Field",
+                "updateDescription": "Updates field name, type, or options.",
+                "delete": "Delete Field",
+                "deleteDescription": "Deletes a field and all its values."
+            }
+        },
+        "rows": {
+            "title": "Records",
+            "description": "Records (rows) are individual entries in a table, containing values for all fields.",
+            "object": "Record Object",
+            "objectDescription": "The record object contains:",
+            "attributes": {
+                "id": "Unique record identifier",
+                "tableId": "Table identifier",
+                "cells": "Object with cell values (field_id → value)",
+                "position": "Position in table",
+                "createdAt": "Creation date",
+                "updatedAt": "Last modification date"
+            },
+            "endpoints": {
+                "list": "List Records",
+                "listDescription": "Gets a paginated list of records from a table.",
+                "get": "Get Record",
+                "getDescription": "Gets a single record with all values.",
+                "create": "Create Record",
+                "createDescription": "Creates a new record with provided values.",
+                "update": "Update Record",
+                "updateDescription": "Updates cell values in a record.",
+                "delete": "Delete Record",
+                "deleteDescription": "Deletes a record along with all values."
+            }
+        },
+        "cells": {
+            "title": "Cells",
+            "description": "Cells are individual values at the intersection of a row and column.",
+            "object": "Cell Object",
+            "objectDescription": "The cell object contains value and metadata:",
+            "attributes": {
+                "rowId": "Record identifier",
+                "fieldId": "Field identifier",
+                "value": "Cell value (format depends on field type)"
+            },
+            "valueFormats": {
+                "title": "Value Formats",
+                "description": "Value format depends on field type:",
+                "text": "String - plain text",
+                "number": "Number - integer or floating point",
+                "date": "String - date in ISO format (YYYY-MM-DD)",
+                "datetime": "String - date and time ISO (YYYY-MM-DDTHH:mm:ss)",
+                "checkbox": "Boolean - true or false",
+                "select": "Object - id, name, color",
+                "multiSelect": "Array - list of objects with id, name, color",
+                "url": "String - full URL",
+                "attachment": "Array - list of attachment objects",
+                "json": "Any - any JSON structure"
+            },
+            "endpoints": {
+                "update": "Update Cell",
+                "updateDescription": "Updates the value of a single cell."
+            }
+        },
+        "attachments": {
+            "title": "Attachments",
+            "description": "Attachments allow storing files associated with records.",
+            "object": "Attachment Object",
+            "objectDescription": "The attachment object contains:",
+            "attributes": {
+                "id": "Unique attachment identifier",
+                "filename": "Original file name",
+                "mimeType": "File MIME type",
+                "size": "Size in bytes",
+                "url": "URL to download file",
+                "thumbnailUrl": "Thumbnail URL (for images)"
+            },
+            "endpoints": {
+                "upload": "Upload Attachment",
+                "uploadDescription": "Uploads a new file as an attachment to a cell.",
+                "delete": "Delete Attachment",
+                "deleteDescription": "Deletes an attachment."
+            },
+            "limits": {
+                "title": "Limits",
+                "maxFileSize": "Maximum file size: 10MB",
+                "allowedTypes": "Allowed types: images, documents, archives"
+            }
+        },
+        "filtering": {
+            "title": "Filtering",
+            "description": "The API supports advanced record filtering by field values.",
+            "syntax": "Filter Syntax",
+            "syntaxDescription": "Filters are passed as a JSON parameter in query string or request body:",
+            "conjunction": "Condition Conjunction",
+            "conjunctionDescription": "Conditions can be combined with AND or OR operator:",
+            "conjunctionAnd": "and - record must match all conditions",
+            "conjunctionOr": "or - record must match at least one condition",
+            "operators": {
+                "title": "Available Operators",
+                "description": "Operators depend on field type:",
+                "textOperators": "Operators for text (text, url)",
+                "numberOperators": "Operators for numbers",
+                "dateOperators": "Operators for dates",
+                "checkboxOperators": "Operators for checkbox",
+                "selectOperators": "Operators for select",
+                "multiSelectOperators": "Operators for multi-select"
+            },
+            "examples": {
+                "title": "Filtering Examples",
+                "simpleFilter": "Simple filter - text contains",
+                "multipleConditions": "Multiple conditions (AND)",
+                "orConditions": "OR conditions",
+                "rangeFilter": "Range filter (between)",
+                "selectFilter": "Filter by select value"
+            }
+        },
+        "sorting": {
+            "title": "Sorting",
+            "description": "Records can be sorted by values of selected fields.",
+            "syntax": "Sorting Syntax",
+            "syntaxDescription": "Sorting is passed as a JSON parameter:",
+            "directions": {
+                "title": "Sort Directions",
+                "asc": "asc - ascending (A-Z, 1-9, oldest first)",
+                "desc": "desc - descending (Z-A, 9-1, newest first)"
+            },
+            "multiSort": "Multi-level Sorting",
+            "multiSortDescription": "You can sort by multiple fields - array order determines priority:",
+            "nullHandling": "Null Value Handling",
+            "nullHandlingDescription": "Empty values are always at the end when sorting ascending and at the beginning when descending.",
+            "examples": {
+                "title": "Sorting Examples",
+                "simpleSort": "Simple A-Z sort",
+                "descSort": "Descending sort",
+                "multiSort": "Multi-level sort"
+            }
+        },
+        "paginationSection": {
+            "title": "Pagination",
+            "description": "Record lists are automatically paginated for better performance.",
+            "parameters": {
+                "title": "Pagination Parameters",
+                "page": "page - page number (default 1)",
+                "perPage": "per_page - records per page (default 50, max 100)"
+            },
+            "response": {
+                "title": "Response Structure",
+                "description": "Paginated response contains metadata:"
+            },
+            "examples": {
+                "title": "Examples",
+                "basicPagination": "Basic pagination",
+                "customPerPage": "Custom per page count"
+            }
+        },
+        "errorsSection": {
+            "title": "Error Handling",
+            "description": "The API returns errors in a consistent JSON format.",
+            "format": "Error Format",
+            "formatDescription": "Each error contains HTTP code and description:",
+            "codes": {
+                "title": "Error Codes",
+                "400": "400 Bad Request - Invalid request or data",
+                "401": "401 Unauthorized - Missing or invalid token",
+                "403": "403 Forbidden - No permission for resource",
+                "404": "404 Not Found - Resource doesn't exist",
+                "422": "422 Unprocessable Entity - Validation errors",
+                "429": "429 Too Many Requests - Rate limit exceeded",
+                "500": "500 Internal Server Error - Server error"
+            },
+            "validation": {
+                "title": "Validation Errors",
+                "description": "Validation errors (422) contain details for each field:"
+            },
+            "handling": {
+                "title": "Error Handling in Code",
+                "description": "Example of error handling:"
+            }
+        },
+        "rateLimiting": {
+            "title": "Rate Limiting",
+            "description": "The API applies rate limits for protection against abuse.",
+            "limits": {
+                "title": "Current Limits",
+                "perMinute": "60 requests per minute for standard endpoints",
+                "uploads": "10 file uploads per minute"
+            },
+            "headers": {
+                "title": "Response Headers",
+                "description": "Each response contains rate limit information:",
+                "limit": "X-RateLimit-Limit - maximum number of requests",
+                "remaining": "X-RateLimit-Remaining - remaining requests",
+                "reset": "X-RateLimit-Reset - limit reset time (Unix timestamp)"
+            },
+            "exceeded": {
+                "title": "Limit Exceeded",
+                "description": "After exceeding the limit you will receive a 429 response:"
+            }
+        }
+    }
+}

@@ -1,9 +1,11 @@
 <script setup>
 import { ref } from 'vue';
 import { RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import Dropdown from '@/components/common/Dropdown.vue';
 
+const { t } = useI18n();
 const authStore = useAuthStore();
 const showMobileMenu = ref(false);
 
@@ -18,14 +20,14 @@ const logout = () => {
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <!-- Logo -->
-                    <div class="shrink-0 flex items-center">
-                        <RouterLink to="/dashboard" class="text-xl font-bold text-gray-900">
-                            Panel
+                    <div class="shrink-0 flex items-center mr-8">
+                        <RouterLink to="/dashboard">
+                            <img src="/assets/images/logo_aisello_black.svg" alt="Logo" class="h-9 w-auto" />
                         </RouterLink>
                     </div>
 
                     <!-- Navigation Links -->
-                    <div class="hidden sm:ml-10 sm:flex sm:space-x-8">
+                    <div class="hidden sm:flex sm:space-x-8">
                         <RouterLink
                             to="/dashboard"
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
@@ -34,7 +36,17 @@ const logout = () => {
                                 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': $route.path !== '/dashboard',
                             }"
                         >
-                            Dashboard
+                            {{ t('navigation.dashboard') }}
+                        </RouterLink>
+                        <RouterLink
+                            to="/docs"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                            :class="{
+                                'border-blue-500 text-gray-900': $route.path.startsWith('/docs'),
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/docs'),
+                            }"
+                        >
+                            {{ t('navigation.docs') }}
                         </RouterLink>
                     </div>
                 </div>
@@ -47,7 +59,7 @@ const logout = () => {
                                 type="button"
                                 class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
                             >
-                                {{ authStore.user?.name || 'Menu' }}
+                                {{ authStore.user?.name || t('navigation.menu') }}
 
                                 <svg
                                     class="ml-2 -mr-0.5 h-4 w-4"
@@ -68,13 +80,13 @@ const logout = () => {
                                 to="/profile"
                                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                                Profil
+                                {{ t('navigation.profile') }}
                             </RouterLink>
                             <button
                                 @click="logout"
                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                                Wyloguj
+                                {{ t('navigation.logout') }}
                             </button>
                         </template>
                     </Dropdown>
@@ -115,7 +127,17 @@ const logout = () => {
                     class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
                     active-class="border-blue-500 text-blue-700 bg-blue-50"
                 >
-                    Dashboard
+                    {{ t('navigation.dashboard') }}
+                </RouterLink>
+                <RouterLink
+                    to="/docs"
+                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
+                    :class="{
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/docs'),
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/docs'),
+                    }"
+                >
+                    {{ t('navigation.docs') }}
                 </RouterLink>
             </div>
 
@@ -134,13 +156,13 @@ const logout = () => {
                         to="/profile"
                         class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
                     >
-                        Profil
+                        {{ t('navigation.profile') }}
                     </RouterLink>
                     <button
                         @click="logout"
                         class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
                     >
-                        Wyloguj
+                        {{ t('navigation.logout') }}
                     </button>
                 </div>
             </div>

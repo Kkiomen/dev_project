@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import JsonEditorModal from './JsonEditorModal.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     value: {
@@ -75,7 +78,7 @@ const handleClose = () => {
         <!-- Preview - clicking handled by parent GridCell -->
         <div class="text-sm font-mono truncate">
             <span v-if="!displayValue" class="text-gray-400 italic">
-                {{ editing ? '' : 'kliknij 2x aby edytować' }}
+                {{ editing ? '' : t('json.clickToEdit') }}
             </span>
             <span v-else class="text-gray-600" :title="JSON.stringify(parseValue(value), null, 2)">
                 {{ displayValue }}

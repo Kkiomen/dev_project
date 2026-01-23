@@ -1,8 +1,11 @@
 <script setup>
 import { reactive, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/common/Modal.vue';
 import Button from '@/components/common/Button.vue';
 import Input from '@/components/common/Input.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     show: {
@@ -58,33 +61,33 @@ const handleSubmit = () => {
 <template>
     <Modal :show="show" max-width="md" @close="emit('close')">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">
-            {{ editingBase ? 'Edytuj bazę' : 'Utwórz nową bazę' }}
+            {{ editingBase ? t('base.edit') : t('base.create') }}
         </h3>
 
         <form @submit.prevent="handleSubmit">
             <div class="space-y-4">
                 <Input
                     v-model="form.name"
-                    label="Nazwa"
-                    placeholder="Np. Projekt CRM"
+                    :label="t('common.name')"
+                    :placeholder="t('base.namePlaceholder')"
                     required
                 />
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
-                        Opis (opcjonalnie)
+                        {{ t('common.description') }} ({{ t('common.optional') }})
                     </label>
                     <textarea
                         v-model="form.description"
                         rows="2"
                         class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                        placeholder="Krótki opis bazy danych..."
+                        :placeholder="t('base.descriptionPlaceholder')"
                     ></textarea>
                 </div>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Kolor
+                        {{ t('common.color') }}
                     </label>
                     <div class="flex space-x-2">
                         <button
@@ -101,7 +104,7 @@ const handleSubmit = () => {
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Ikona
+                        {{ t('common.icon') }}
                     </label>
                     <div class="flex space-x-2">
                         <button
@@ -120,10 +123,10 @@ const handleSubmit = () => {
 
             <div class="mt-6 flex justify-end space-x-3">
                 <Button variant="secondary" @click="emit('close')">
-                    Anuluj
+                    {{ t('common.cancel') }}
                 </Button>
                 <Button type="submit" :loading="loading">
-                    {{ editingBase ? 'Zapisz zmiany' : 'Utwórz bazę' }}
+                    {{ editingBase ? t('base.saveChanges') : t('base.createButton') }}
                 </Button>
             </div>
         </form>

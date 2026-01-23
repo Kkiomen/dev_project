@@ -1,6 +1,7 @@
 <script setup>
-import { ref, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useBasesStore } from '@/stores/bases';
 import { useTablesStore } from '@/stores/tables';
 import { useToast } from '@/composables/useToast';
@@ -17,6 +18,7 @@ const props = defineProps({
     },
 });
 
+const { t } = useI18n();
 const router = useRouter();
 const basesStore = useBasesStore();
 const tablesStore = useTablesStore();
@@ -26,6 +28,24 @@ const { confirm } = useConfirm();
 const showCreateTableModal = ref(false);
 const newTableName = ref('');
 const creating = ref(false);
+
+// Map old icon names to emoji
+const iconMap = {
+    'database': '🗃',
+    'chart': '📊',
+    'note': '📝',
+    'star': '⭐',
+    'briefcase': '💼',
+    'wrench': '🔧',
+    'sparkles': '🌟',
+    'lightbulb': '💡',
+};
+
+const displayIcon = computed(() => {
+    if (!basesStore.currentBase) return '🗃';
+    const icon = basesStore.currentBase.icon || '🗃';
+    return iconMap[icon] || icon;
+});
 
 const fetchData = async () => {
     try {
@@ -49,11 +69,11 @@ const createTable = async () => {
         });
         showCreateTableModal.value = false;
         newTableName.value = '';
-        toast.success('Tabela utworzona');
+        toast.success(t('table.tableCreated'));
         router.push({ name: 'table.grid', params: { tableId: table.id } });
     } catch (error) {
         console.error('Failed to create table:', error);
-        toast.error('Nie udało się utworzyć tabeli');
+        toast.error(t('table.createTableError'));
     } finally {
         creating.value = false;
     }
@@ -61,9 +81,9 @@ const createTable = async () => {
 
 const deleteTable = async (table) => {
     const confirmed = await confirm({
-        title: 'Usuń tabelę',
-        message: `Czy na pewno chcesz usunąć tabelę "${table.name}"? Wszystkie dane zostaną utracone.`,
-        confirmText: 'Usuń',
+        title: t('table.deleteTable'),
+        message: t('table.deleteTableMessage', { name: table.name }),
+        confirmText: t('common.delete'),
         variant: 'danger',
     });
 
@@ -71,10 +91,10 @@ const deleteTable = async (table) => {
 
     try {
         await tablesStore.deleteTable(table.id);
-        toast.success('Tabela usunięta');
+        toast.success(t('table.tableDeleted'));
     } catch (error) {
         console.error('Failed to delete table:', error);
-        toast.error('Nie udało się usunąć tabeli');
+        toast.error(t('table.deleteTableError'));
     }
 };
 </script>
@@ -83,8 +103,11 @@ const deleteTable = async (table) => {
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <!-- Breadcrumb -->
         <div class="mb-6">
-            <RouterLink to="/dashboard" class="text-sm text-gray-500 hover:text-gray-700">
-                ← Dashboard
+            <RouterLink to="/dashboard" class="inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-700">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                </svg>
+                <span>{{ t('navigation.dashboard') }}</span>
             </RouterLink>
         </div>
 
@@ -102,7 +125,7 @@ const deleteTable = async (table) => {
                         class="w-12 h-12 rounded-lg flex items-center justify-center text-white text-xl"
                         :style="{ backgroundColor: basesStore.currentBase.color || '#3B82F6' }"
                     >
-                        {{ basesStore.currentBase.icon || '🗃' }}
+                        {{ displayIcon }}
                     </div>
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900">
@@ -114,7 +137,10 @@ const deleteTable = async (table) => {
                     </div>
                 </div>
                 <Button @click="showCreateTableModal = true">
-                    + Nowa tabela
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    {{ t('table.newTable') }}
                 </Button>
             </div>
 
@@ -133,11 +159,14 @@ const deleteTable = async (table) => {
                         d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                     />
                 </svg>
-                <h3 class="mt-2 text-sm font-medium text-gray-900">Brak tabel</h3>
-                <p class="mt-1 text-sm text-gray-500">Zacznij od utworzenia nowej tabeli.</p>
+                <h3 class="mt-2 text-sm font-medium text-gray-900">{{ t('table.noTables') }}</h3>
+                <p class="mt-1 text-sm text-gray-500">{{ t('table.noTablesDescription') }}</p>
                 <div class="mt-6">
                     <Button @click="showCreateTableModal = true">
-                        + Nowa tabela
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        {{ t('table.newTable') }}
                     </Button>
                 </div>
             </div>
@@ -156,28 +185,16 @@ const deleteTable = async (table) => {
                             {{ table.name }}
                         </h3>
                         <p class="text-sm text-gray-500">
-                            {{ table.fields_count || 0 }} pól • {{ table.rows_count || 0 }} rekordów
+                            {{ table.fields_count || 0 }} {{ t('table.fields') }} • {{ table.rows_count || 0 }} {{ t('table.records') }}
                         </p>
                     </RouterLink>
 
                     <div class="flex items-center space-x-2">
-                        <RouterLink
-                            :to="{ name: 'table.grid', params: { tableId: table.id } }"
-                            class="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
-                        >
-                            Grid
-                        </RouterLink>
-                        <RouterLink
-                            :to="{ name: 'table.kanban', params: { tableId: table.id } }"
-                            class="px-3 py-1 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
-                        >
-                            Kanban
-                        </RouterLink>
                         <button
                             @click="deleteTable(table)"
                             class="px-3 py-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 rounded"
                         >
-                            Usuń
+                            {{ t('common.delete') }}
                         </button>
                     </div>
                 </div>
@@ -187,20 +204,20 @@ const deleteTable = async (table) => {
 
     <!-- Create Table Modal -->
     <Modal :show="showCreateTableModal" max-width="md" @close="showCreateTableModal = false">
-        <h3 class="text-lg font-semibold text-gray-900 mb-4">Nowa tabela</h3>
+        <h3 class="text-lg font-semibold text-gray-900 mb-4">{{ t('table.newTable') }}</h3>
         <form @submit.prevent="createTable">
             <Input
                 v-model="newTableName"
-                label="Nazwa tabeli"
-                placeholder="Np. Kontakty"
+                :label="t('table.tableName')"
+                :placeholder="t('table.tableNamePlaceholder')"
                 required
             />
             <div class="mt-6 flex justify-end space-x-3">
                 <Button variant="secondary" @click="showCreateTableModal = false">
-                    Anuluj
+                    {{ t('common.cancel') }}
                 </Button>
                 <Button type="submit" :loading="creating">
-                    Utwórz
+                    {{ t('common.create') }}
                 </Button>
             </div>
         </form>

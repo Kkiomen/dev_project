@@ -28,6 +28,16 @@ const routes = [
         component: () => import('@/pages/TableKanbanView.vue'),
         props: true,
     },
+    {
+        path: '/docs',
+        redirect: '/docs/overview',
+    },
+    {
+        path: '/docs/:section',
+        name: 'docs',
+        component: () => import('@/pages/DocsPage.vue'),
+        props: true,
+    },
 ];
 
 const router = createRouter({

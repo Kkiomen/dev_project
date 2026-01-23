@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { getOperatorsForFieldType, operators, getDefaultOperator } from '@/config/filterOperators';
+
+const { t } = useI18n();
 
 const props = defineProps({
     condition: {
@@ -28,7 +31,11 @@ const selectedField = computed(() => {
 
 const availableOperators = computed(() => {
     if (!selectedField.value) return [];
-    return getOperatorsForFieldType(selectedField.value.type);
+    const ops = getOperatorsForFieldType(selectedField.value.type);
+    return ops.map(op => ({
+        ...op,
+        label: t(op.labelKey || op.label || ''),
+    }));
 });
 
 const currentOperator = computed(() => {
@@ -183,7 +190,7 @@ const isChoiceSelected = (choiceId) => {
                     v-model="filterValue"
                     class="w-full text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
                 >
-                    <option :value="null">-- wybierz --</option>
+                    <option :value="null">-- {{ t('common.select') }} --</option>
                     <option
                         v-for="choice in choices"
                         :key="choice.id"
@@ -201,14 +208,14 @@ const isChoiceSelected = (choiceId) => {
                         v-model="filterValue"
                         :type="inputType"
                         class="flex-1 text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Od"
+                        :placeholder="t('filter.from')"
                     />
                     <span class="text-gray-500 text-sm">-</span>
                     <input
                         v-model="filterValueEnd"
                         :type="inputType"
                         class="flex-1 text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
-                        placeholder="Do"
+                        :placeholder="t('filter.to')"
                     />
                 </div>
             </template>
@@ -219,7 +226,7 @@ const isChoiceSelected = (choiceId) => {
                     v-model="filterValue"
                     :type="inputType"
                     class="w-full text-sm border-gray-300 rounded-md focus:border-blue-500 focus:ring-blue-500"
-                    placeholder="Wartość..."
+                    :placeholder="t('filter.valuePlaceholder')"
                 />
             </template>
         </div>

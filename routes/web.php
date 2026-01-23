@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', fn () => view('spa'))->name('dashboard');
     Route::get('/bases/{any}', fn () => view('spa'))->where('any', '.*');
     Route::get('/tables/{any}', fn () => view('spa'))->where('any', '.*');
+    Route::get('/docs/{any?}', fn () => view('spa'))->where('any', '.*')->name('docs');
 });
 
 // Legacy Blade routes (keep for backward compatibility during migration)

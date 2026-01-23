@@ -1,5 +1,6 @@
 <script setup>
-import { ref, reactive, watch } from 'vue';
+import { ref, reactive, watch, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import Modal from '@/components/common/Modal.vue';
 import Button from '@/components/common/Button.vue';
 import Input from '@/components/common/Input.vue';
@@ -17,18 +18,20 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save']);
 
-const fieldTypes = [
-    { value: 'text', icon: 'Aa', label: 'Tekst', description: 'Jednoliniowy tekst', example: 'Jan Kowalski' },
-    { value: 'number', icon: '#', label: 'Liczba', description: 'Liczby', example: '42, 3.14' },
-    { value: 'date', icon: '📅', label: 'Data', description: 'Tylko data', example: '2024-01-15' },
-    { value: 'datetime', icon: '🕐', label: 'Data i czas', description: 'Data z godziną', example: '2024-01-15 14:30' },
-    { value: 'checkbox', icon: '☑️', label: 'Checkbox', description: 'Tak/Nie', example: '✓ lub puste' },
-    { value: 'select', icon: '▼', label: 'Wybór', description: 'Jedna opcja', example: 'Status: Nowy' },
-    { value: 'multi_select', icon: '≡', label: 'Multi-wybór', description: 'Wiele opcji', example: 'Tagi: A, B' },
-    { value: 'attachment', icon: '📎', label: 'Załącznik', description: 'Pliki', example: 'foto.jpg' },
-    { value: 'url', icon: '🔗', label: 'URL', description: 'Link', example: 'https://...' },
-    { value: 'json', icon: '{ }', label: 'JSON', description: 'Dane JSON', example: '{"key": "val"}' },
-];
+const { t } = useI18n();
+
+const fieldTypes = computed(() => [
+    { value: 'text', icon: 'Aa', label: t('field.types.text'), description: t('field.typeDescriptions.text'), example: t('field.typeExamples.text') },
+    { value: 'number', icon: '#', label: t('field.types.number'), description: t('field.typeDescriptions.number'), example: t('field.typeExamples.number') },
+    { value: 'date', icon: '📅', label: t('field.types.date'), description: t('field.typeDescriptions.date'), example: t('field.typeExamples.date') },
+    { value: 'datetime', icon: '🕐', label: t('field.types.datetime'), description: t('field.typeDescriptions.datetime'), example: t('field.typeExamples.datetime') },
+    { value: 'checkbox', icon: '☑️', label: t('field.types.checkbox'), description: t('field.typeDescriptions.checkbox'), example: t('field.typeExamples.checkbox') },
+    { value: 'select', icon: '▼', label: t('field.types.select'), description: t('field.typeDescriptions.select'), example: t('field.typeExamples.select') },
+    { value: 'multi_select', icon: '≡', label: t('field.types.multi_select'), description: t('field.typeDescriptions.multi_select'), example: t('field.typeExamples.multi_select') },
+    { value: 'attachment', icon: '📎', label: t('field.types.attachment'), description: t('field.typeDescriptions.attachment'), example: t('field.typeExamples.attachment') },
+    { value: 'url', icon: '🔗', label: t('field.types.url'), description: t('field.typeDescriptions.url'), example: t('field.typeExamples.url') },
+    { value: 'json', icon: '{ }', label: t('field.types.json'), description: t('field.typeDescriptions.json'), example: t('field.typeExamples.json') },
+]);
 
 const colors = ['#EF4444', '#F97316', '#EAB308', '#22C55E', '#06B6D4', '#3B82F6', '#8B5CF6', '#EC4899'];
 
@@ -91,7 +94,7 @@ const handleSubmit = () => {
 <template>
     <Modal :show="show" max-width="2xl" @close="emit('close')">
         <h3 class="text-lg font-semibold text-gray-900 mb-6">
-            {{ editingField ? 'Edytuj pole' : 'Dodaj nowe pole' }}
+            {{ editingField ? t('field.edit') : t('field.add') }}
         </h3>
 
         <form @submit.prevent="handleSubmit">
@@ -99,15 +102,15 @@ const handleSubmit = () => {
             <div class="mb-6">
                 <Input
                     v-model="form.name"
-                    label="Nazwa pola"
-                    placeholder="Np. Imię i nazwisko"
+                    :label="t('field.name')"
+                    :placeholder="t('field.namePlaceholder')"
                     required
                 />
             </div>
 
             <!-- Field type selection -->
             <div class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-3">Wybierz typ pola</label>
+                <label class="block text-sm font-medium text-gray-700 mb-3">{{ t('field.type') }}</label>
                 <div class="grid grid-cols-3 gap-3">
                     <div
                         v-for="ft in fieldTypes"
@@ -130,7 +133,7 @@ const handleSubmit = () => {
 
             <!-- Select/Multi-select options -->
             <div v-if="form.type === 'select' || form.type === 'multi_select'" class="mb-6">
-                <label class="block text-sm font-medium text-gray-700 mb-2">Opcje wyboru</label>
+                <label class="block text-sm font-medium text-gray-700 mb-2">{{ t('field.options') }}</label>
                 <div class="space-y-2 mb-3">
                     <div
                         v-for="(choice, index) in form.choices"
@@ -145,7 +148,7 @@ const handleSubmit = () => {
                         <input
                             type="text"
                             v-model="choice.name"
-                            placeholder="Nazwa opcji"
+                            :placeholder="t('field.optionName')"
                             class="flex-1 rounded-md border-gray-300 text-sm focus:border-blue-500 focus:ring-blue-500"
                         />
                         <button
@@ -164,16 +167,16 @@ const handleSubmit = () => {
                     @click="addChoice"
                     class="text-sm text-blue-600 hover:text-blue-700"
                 >
-                    + Dodaj opcję
+                    {{ t('field.addOption') }}
                 </button>
             </div>
 
             <div class="flex justify-end space-x-3">
                 <Button variant="secondary" @click="emit('close')">
-                    Anuluj
+                    {{ t('common.cancel') }}
                 </Button>
                 <Button type="submit">
-                    {{ editingField ? 'Zapisz zmiany' : 'Dodaj pole' }}
+                    {{ editingField ? t('field.saveChanges') : t('field.addField') }}
                 </Button>
             </div>
         </form>

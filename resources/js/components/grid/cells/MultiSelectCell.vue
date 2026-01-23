@@ -40,6 +40,7 @@ const handleKeydown = (event) => {
     if (event.key === 'Escape') {
         emit('cancel');
     } else if (event.key === 'Enter') {
+        event.preventDefault();
         emit('save');
     }
 };

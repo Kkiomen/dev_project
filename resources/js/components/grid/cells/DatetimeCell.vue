@@ -49,7 +49,7 @@ watch(() => props.editing, async (editing) => {
             type="datetime-local"
             :value="inputValue"
             @input="emit('update:value', $event.target.value)"
-            @keydown.enter="emit('save')"
+            @keydown.enter.prevent="emit('save')"
             @keydown.escape="emit('cancel')"
             @blur="emit('save')"
             class="w-full px-0 py-0 text-sm border-0 focus:ring-0 bg-transparent"

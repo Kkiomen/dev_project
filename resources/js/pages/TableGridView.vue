@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch, computed, onUnmounted } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
+import { useI18n } from 'vue-i18n';
 import { useTablesStore } from '@/stores/tables';
 import { useFieldsStore } from '@/stores/fields';
 import { useRowsStore } from '@/stores/rows';
@@ -8,6 +9,8 @@ import { useFiltersStore } from '@/stores/filters';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import Button from '@/components/common/Button.vue';
 import GridTable from '@/components/grid/GridTable.vue';
+
+const { t } = useI18n();
 
 const props = defineProps({
     tableId: {
@@ -82,7 +85,7 @@ const handleSearch = (query) => {
                             :to="{ name: 'base', params: { baseId: tablesStore.currentTable.base_id } }"
                             class="text-sm font-medium text-gray-500 hover:text-gray-700"
                         >
-                            Baza
+                            {{ t('table.base') }}
                         </RouterLink>
                         <span class="text-gray-300">/</span>
                         <span class="text-sm font-semibold text-gray-900">
@@ -91,29 +94,15 @@ const handleSearch = (query) => {
                     </div>
                 </div>
 
-                <!-- View switcher -->
-                <div class="flex items-center space-x-2">
-                    <div class="flex bg-gray-100 rounded-lg p-1">
-                        <span class="px-3 py-1 text-sm font-medium rounded-md bg-white shadow text-gray-900">
-                            Grid
-                        </span>
-                        <RouterLink
-                            :to="{ name: 'table.kanban', params: { tableId } }"
-                            class="px-3 py-1 text-sm font-medium rounded-md text-gray-600 hover:text-gray-900"
-                        >
-                            Kanban
-                        </RouterLink>
-                    </div>
-                </div>
             </div>
 
             <!-- Toolbar -->
             <div class="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
                 <div class="flex items-center space-x-4">
                     <span class="text-sm text-gray-500">
-                        {{ rowsStore.rows.length }} rekordów
+                        {{ rowsStore.rows.length }} {{ t('table.records') }}
                         <template v-if="filtersStore.hasActiveFilters">
-                            (przefiltrowane)
+                            {{ t('table.filtered') }}
                         </template>
                     </span>
                     <!-- Search -->
@@ -122,7 +111,7 @@ const handleSearch = (query) => {
                             type="text"
                             v-model="searchQuery"
                             @input="handleSearch(searchQuery)"
-                            placeholder="Szukaj..."
+                            :placeholder="t('table.searchPlaceholder')"
                             class="text-sm border-gray-300 rounded-md pl-8 pr-3 py-1.5 focus:border-blue-500 focus:ring-blue-500"
                         />
                         <svg
@@ -137,7 +126,7 @@ const handleSearch = (query) => {
                 </div>
                 <div class="flex items-center space-x-2">
                     <Button @click="handleAddRow">
-                        + Dodaj wiersz
+                        + {{ t('table.addRow') }}
                     </Button>
                 </div>
             </div>

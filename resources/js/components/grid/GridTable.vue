@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useFieldsStore } from '@/stores/fields';
 import { useRowsStore } from '@/stores/rows';
 import { useCellsStore } from '@/stores/cells';
@@ -14,6 +15,7 @@ import FieldMenu from './FieldMenu.vue';
 import AddFieldModal from './AddFieldModal.vue';
 import FilterToolbar from './FilterToolbar.vue';
 
+const { t } = useI18n();
 const toast = useToast();
 const { confirm } = useConfirm();
 
@@ -35,7 +37,7 @@ const fetchWithFilters = async () => {
         await rowsStore.fetchRows(props.tableId);
     } catch (error) {
         console.error('Failed to fetch rows:', error);
-        toast.error('Nie udało się pobrać danych');
+        toast.error(t('table.fetchError'));
     }
 };
 
@@ -122,15 +124,13 @@ const saveCell = async () => {
         value = parseFloat(value);
     }
 
-    editingCell.value = null;
-    editingValue.value = null;
-
-    try {
-        await cellsStore.updateCell(rowId, fieldId, value);
-
-        // For select/multi_select, update local row with full objects
-        const row = rowsStore.getRowById(rowId);
-        if (row && field.options?.choices) {
+    // Update local row value immediately for better UX
+    const row = rowsStore.getRowById(rowId);
+    if (row) {
+        if (!row.values) row.values = {};
+        
+        // For select/multi_select, update with full objects
+        if (field.options?.choices) {
             if (field.type === 'select') {
                 if (value) {
                     const choice = field.options.choices.find(c => c.id === value);
@@ -149,13 +149,28 @@ const saveCell = async () => {
                 } else {
                     row.values[fieldId] = [];
                 }
+            } else {
+                row.values[fieldId] = value;
             }
+        } else {
+            // For other field types, update directly
+            row.values[fieldId] = value;
         }
+    }
 
-        toast.success('Zapisano');
+    // Clear editing state immediately
+    editingCell.value = null;
+    editingValue.value = null;
+
+    try {
+        await cellsStore.updateCell(rowId, fieldId, value);
+        toast.success(t('common.save'));
     } catch (error) {
         console.error('Failed to save cell:', error);
-        toast.error('Błąd zapisu');
+        toast.error(t('table.saveError'));
+        // Revert editing state on error
+        editingCell.value = { row: rowId, field: fieldId };
+        editingValue.value = value;
     }
 };
 
@@ -167,10 +182,10 @@ const cancelEdit = () => {
 const toggleCheckbox = async (rowId, fieldId, currentValue) => {
     try {
         await cellsStore.updateCell(rowId, fieldId, !currentValue);
-        toast.success('Zapisano');
+        toast.success(t('common.save'));
     } catch (error) {
         console.error('Failed to toggle checkbox:', error);
-        toast.error('Błąd zapisu');
+        toast.error(t('table.saveError'));
     }
 };
 
@@ -223,9 +238,9 @@ const duplicateRow = async (rowId) => {
 
 const deleteRow = async (rowId) => {
     const confirmed = await confirm({
-        title: 'Usuń wiersz',
-        message: 'Czy na pewno chcesz usunąć ten wiersz? Ta operacja jest nieodwracalna.',
-        confirmText: 'Usuń',
+        title: t('table.deleteRow'),
+        message: t('table.deleteRowMessage'),
+        confirmText: t('common.delete'),
         variant: 'danger',
     });
     if (!confirmed) return;
@@ -236,10 +251,10 @@ const deleteRow = async (rowId) => {
             selectedRowId.value = null;
             activeCell.value = null;
         }
-        toast.success('Wiersz usunięty');
+        toast.success(t('table.rowDeleted'));
     } catch (error) {
         console.error('Failed to delete row:', error);
-        toast.error('Nie udało się usunąć wiersza');
+        toast.error(t('table.deleteRowError'));
     }
 };
 
@@ -258,7 +273,7 @@ const uploadAttachment = async (event, rowId, fieldId) => {
             }
         } catch (error) {
             console.error('Failed to upload:', error);
-            toast.error('Nie udało się przesłać pliku');
+            toast.error(t('attachment.uploadError'));
         }
     }
     event.target.value = '';
@@ -266,9 +281,9 @@ const uploadAttachment = async (event, rowId, fieldId) => {
 
 const removeAttachment = async (rowId, fieldId, attachmentId) => {
     const confirmed = await confirm({
-        title: 'Usuń załącznik',
-        message: 'Czy na pewno chcesz usunąć ten załącznik?',
-        confirmText: 'Usuń',
+        title: t('attachment.delete'),
+        message: t('attachment.deleteMessage'),
+        confirmText: t('common.delete'),
         variant: 'danger',
     });
     if (!confirmed) return;
@@ -279,10 +294,10 @@ const removeAttachment = async (rowId, fieldId, attachmentId) => {
         if (row?.values?.[fieldId]) {
             row.values[fieldId] = row.values[fieldId].filter(a => a.id !== attachmentId);
         }
-        toast.success('Załącznik usunięty');
+        toast.success(t('attachment.deleted'));
     } catch (error) {
         console.error('Failed to remove attachment:', error);
-        toast.error('Nie udało się usunąć załącznika');
+        toast.error(t('attachment.deleteError'));
     }
 };
 
@@ -317,28 +332,28 @@ const saveField = async (payload) => {
     try {
         if (editingFieldId.value) {
             await fieldsStore.updateField(editingFieldId.value, payload);
-            toast.success('Pole zaktualizowane');
+            toast.success(t('field.saveChanges'));
         } else {
             await fieldsStore.createField(props.tableId, payload);
-            toast.success('Pole dodane');
+            toast.success(t('field.addField'));
         }
         closeFieldModal();
     } catch (error) {
         console.error('Failed to save field:', error);
-        toast.error('Nie udało się zapisać pola');
+        toast.error(t('field.saveFieldError'));
     }
 };
 
 const deleteField = async () => {
     if (selectedField.value?.is_primary) {
-        toast.error('Nie można usunąć pola głównego');
+        toast.error(t('field.cannotDeleteMainField'));
         return;
     }
 
     const confirmed = await confirm({
-        title: 'Usuń pole',
-        message: `Czy na pewno chcesz usunąć pole "${selectedField.value?.name}"? Wszystkie dane w tym polu zostaną utracone.`,
-        confirmText: 'Usuń',
+        title: t('field.delete'),
+        message: t('field.deleteMessage', { name: selectedField.value?.name }),
+        confirmText: t('common.delete'),
         variant: 'danger',
     });
 
@@ -349,10 +364,10 @@ const deleteField = async () => {
 
     try {
         await fieldsStore.deleteField(selectedField.value.id);
-        toast.success('Pole usunięte');
+        toast.success(t('field.fieldDeleted'));
     } catch (error) {
         console.error('Failed to delete field:', error);
-        toast.error('Nie udało się usunąć pola');
+        toast.error(t('field.deleteFieldError'));
     }
     closeFieldMenu();
 };
@@ -384,10 +399,10 @@ const moveFieldRight = async () => {
 const renameField = async (fieldId, newName) => {
     try {
         await fieldsStore.updateField(fieldId, { name: newName });
-        toast.success('Nazwa zmieniona');
+        toast.success(t('common.save'));
     } catch (error) {
         console.error('Failed to rename field:', error);
-        toast.error('Nie udało się zmienić nazwy pola');
+        toast.error(t('field.renameFieldError'));
     }
 };
 
@@ -511,7 +526,7 @@ defineExpose({
                 <tr class="hover:bg-gray-50 cursor-pointer" @click="addRow">
                     <td class="px-2 py-2 text-xs text-gray-400 border-r border-gray-200 text-center">+</td>
                     <td :colspan="fieldsStore.fields.length + 1" class="px-2 py-2 text-sm text-gray-400">
-                        Kliknij aby dodać nowy wiersz...
+                        {{ t('table.clickToAddRow') }}
                     </td>
                 </tr>
             </tbody>

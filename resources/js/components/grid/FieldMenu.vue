@@ -1,6 +1,9 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useFiltersStore } from '@/stores/filters';
+
+const { t } = useI18n();
 
 const props = defineProps({
     show: {
@@ -56,23 +59,23 @@ const canSort = computed(() => {
 });
 
 const sortLabels = computed(() => {
-    if (!props.field) return { asc: 'A → Z', desc: 'Z → A' };
+    if (!props.field) return { asc: t('filter.sortAscending'), desc: t('filter.sortDescending') };
 
     switch (props.field.type) {
         case 'text':
         case 'url':
         case 'select':
         case 'multi_select':
-            return { asc: 'A → Z', desc: 'Z → A' };
+            return { asc: t('filter.sortAscending'), desc: t('filter.sortDescending') };
         case 'number':
-            return { asc: '1 → 9', desc: '9 → 1' };
+            return { asc: t('filter.sortAscending'), desc: t('filter.sortDescending') };
         case 'date':
         case 'datetime':
-            return { asc: 'Najstarsze', desc: 'Najnowsze' };
+            return { asc: t('filter.oldest'), desc: t('filter.newest') };
         case 'checkbox':
-            return { asc: 'Nie → Tak', desc: 'Tak → Nie' };
+            return { asc: t('filter.noToYes'), desc: t('filter.yesToNo') };
         default:
-            return { asc: 'Rosnąco', desc: 'Malejąco' };
+            return { asc: t('filter.sortAscending'), desc: t('filter.sortDescending') };
     }
 });
 
