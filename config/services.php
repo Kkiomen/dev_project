@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'rayso' => [
+        'url' => env('RAYSO_URL', 'http://rayso:3333'),
+        'timeout' => env('RAYSO_TIMEOUT', 30),
+    ],
+
 ];

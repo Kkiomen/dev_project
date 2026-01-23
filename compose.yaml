@@ -17,6 +17,7 @@ services:
             XDEBUG_MODE: '${SAIL_XDEBUG_MODE:-off}'
             XDEBUG_CONFIG: '${SAIL_XDEBUG_CONFIG:-client_host=host.docker.internal}'
             IGNITION_LOCAL_SITES_PATH: '${PWD}'
+            VITE_DEV_MODE: '${VITE_DEV_MODE:-}'
         volumes:
             - '.:/var/www/html'
         networks:
@@ -64,6 +65,29 @@ services:
                 - ping
             retries: 3
             timeout: 5s
+    rayso:
+        build:
+            context: './docker/rayso'
+            dockerfile: Dockerfile
+        image: 'sail-rayso/app'
+        ports:
+            - '${FORWARD_RAYSO_PORT:-3333}:3333'
+        environment:
+            PORT: 3333
+        shm_size: '1gb'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - node
+                - '-e'
+                - "require('http').get('http://localhost:3333/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1))"
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 40s
+        restart: unless-stopped
 networks:
     sail:
         driver: bridge

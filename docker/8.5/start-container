@@ -15,6 +15,29 @@ fi
 
 chmod -R ugo+rw /.composer
 
+# === Frontend Build on Container Start ===
+if [ -f /var/www/html/package.json ]; then
+    echo "=== Frontend Build ==="
+    cd /var/www/html
+
+    # Install dependencies if node_modules missing or package.json newer
+    if [ ! -d "node_modules" ] || [ "package.json" -nt "node_modules" ]; then
+        echo "Installing npm dependencies..."
+        npm install
+    fi
+
+    # Build for production (skip if VITE_DEV_MODE is set)
+    if [ -z "$VITE_DEV_MODE" ]; then
+        echo "Building frontend assets..."
+        npm run build
+        echo "=== Frontend Build Complete ==="
+    else
+        echo "VITE_DEV_MODE enabled - skipping build"
+        echo "Run 'npm run dev' manually for HMR"
+    fi
+fi
+# === End Frontend Build ===
+
 if [ $# -gt 0 ]; then
     if [ "$SUPERVISOR_PHP_USER" = "root" ]; then
         exec "$@"
