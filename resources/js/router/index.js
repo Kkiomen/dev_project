@@ -38,6 +38,17 @@ const routes = [
         component: () => import('@/pages/DocsPage.vue'),
         props: true,
     },
+    {
+        path: '/templates',
+        name: 'templates',
+        component: () => import('@/pages/TemplatesPage.vue'),
+    },
+    {
+        path: '/templates/:templateId/edit',
+        name: 'template.editor',
+        component: () => import('@/pages/GraphicsEditorPage.vue'),
+        props: true,
+    },
 ];
 
 const router = createRouter({

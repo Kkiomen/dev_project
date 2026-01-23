@@ -37,6 +37,11 @@ class Base extends Model
         return $this->hasMany(Table::class)->ordered();
     }
 
+    public function templates(): HasMany
+    {
+        return $this->hasMany(Template::class)->ordered();
+    }
+
     // Scopes
     public function scopeForUser($query, User $user)
     {

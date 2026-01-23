@@ -16,6 +16,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/dashboard', fn () => view('spa'))->name('dashboard');
     Route::get('/bases/{any}', fn () => view('spa'))->where('any', '.*');
     Route::get('/tables/{any}', fn () => view('spa'))->where('any', '.*');
+    Route::get('/templates/{any?}', fn () => view('spa'))->where('any', '.*')->name('templates');
     Route::get('/docs/{any?}', fn () => view('spa'))->where('any', '.*')->name('docs');
 });
 

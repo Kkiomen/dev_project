@@ -11,10 +11,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <div class="min-h-screen bg-gray-100">
+    <div class="h-screen flex flex-col bg-gray-100 overflow-hidden">
         <Navigation />
 
-        <main>
+        <main class="flex-1 min-h-0 overflow-auto">
             <slot />
         </main>
     </div>
