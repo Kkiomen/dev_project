@@ -229,7 +229,7 @@ const toggleTextDecoration = (decoration) => {
         <div v-if="!selectedLayer && currentTemplate" class="flex-1 overflow-y-auto">
             <!-- Canvas info -->
             <div class="px-3 py-4 border-b border-gray-200">
-                <div class="flex items-center gap-2.5">
+                <div class="flex items-center gap-2.5 mb-4">
                     <div class="w-8 h-8 flex items-center justify-center bg-purple-50 text-purple-600 rounded-lg">
                         <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
@@ -238,6 +238,88 @@ const toggleTextDecoration = (decoration) => {
                     <div>
                         <div class="text-sm font-medium text-gray-900">{{ currentTemplate.name }}</div>
                         <div class="text-[10px] text-gray-500">{{ currentTemplate.width }} × {{ currentTemplate.height }} px</div>
+                    </div>
+                </div>
+
+                <!-- Canvas Size -->
+                <div class="space-y-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">{{ t('graphics.canvas.size') }}</span>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.canvas.width') }}</label>
+                            <input
+                                :value="currentTemplate.width"
+                                @input="updateTemplateProperty('width', parseInt($event.target.value) || 1080)"
+                                type="number"
+                                min="100"
+                                max="4096"
+                                class="w-full px-2.5 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                            />
+                        </div>
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.canvas.height') }}</label>
+                            <input
+                                :value="currentTemplate.height"
+                                @input="updateTemplateProperty('height', parseInt($event.target.value) || 1080)"
+                                type="number"
+                                min="100"
+                                max="4096"
+                                class="w-full px-2.5 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white transition-colors"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Preset sizes -->
+                    <div class="flex flex-wrap gap-1.5">
+                        <button
+                            @click="updateTemplateProperty('width', 1080); updateTemplateProperty('height', 1080)"
+                            :class="[
+                                'px-2 py-1 text-[10px] rounded transition-colors',
+                                currentTemplate.width === 1080 && currentTemplate.height === 1080
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ]"
+                        >
+                            1080×1080
+                        </button>
+                        <button
+                            @click="updateTemplateProperty('width', 1080); updateTemplateProperty('height', 1920)"
+                            :class="[
+                                'px-2 py-1 text-[10px] rounded transition-colors',
+                                currentTemplate.width === 1080 && currentTemplate.height === 1920
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ]"
+                        >
+                            1080×1920
+                        </button>
+                        <button
+                            @click="updateTemplateProperty('width', 1200); updateTemplateProperty('height', 630)"
+                            :class="[
+                                'px-2 py-1 text-[10px] rounded transition-colors',
+                                currentTemplate.width === 1200 && currentTemplate.height === 630
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ]"
+                        >
+                            1200×630
+                        </button>
+                        <button
+                            @click="updateTemplateProperty('width', 1280); updateTemplateProperty('height', 720)"
+                            :class="[
+                                'px-2 py-1 text-[10px] rounded transition-colors',
+                                currentTemplate.width === 1280 && currentTemplate.height === 720
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            ]"
+                        >
+                            1280×720
+                        </button>
                     </div>
                 </div>
             </div>

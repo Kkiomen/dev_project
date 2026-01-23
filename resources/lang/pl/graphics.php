@@ -82,4 +82,28 @@ return [
         'delete' => 'Usuń czcionkę',
         'supported_formats' => 'Obsługiwane formaty: TTF, OTF, WOFF, WOFF2',
     ],
+
+    'aiChat' => [
+        'title' => 'Asystent AI',
+        'toggle' => 'Przełącz czat AI',
+        'placeholder' => 'Poproś mnie o utworzenie lub modyfikację szablonu...',
+        'send' => 'Wyślij',
+        'thinking' => 'Myślę...',
+        'error' => 'Coś poszło nie tak. Spróbuj ponownie.',
+        'welcomeMessage' => 'Cześć! Mogę pomóc Ci tworzyć i modyfikować szablony. Spróbuj poprosić mnie o:',
+        'enterHint' => 'Naciśnij Enter aby wysłać, Shift+Enter dla nowej linii',
+        'clearHistory' => 'Wyczyść historię czatu',
+        'suggestions' => [
+            'createInstagram' => 'Utwórz szablon posta na Instagram',
+            'changeText' => 'Zmień tekst na coś innego',
+            'addShape' => 'Dodaj kształt w tle',
+            'apiHelp' => 'Jak użyć API do generowania zdjęć?',
+        ],
+        'actions' => [
+            'layerModified' => 'Warstwa ":name" zmodyfikowana',
+            'layerAdded' => 'Nowa warstwa ":name" dodana',
+            'layerDeleted' => 'Warstwa ":name" usunięta',
+            'templateUpdated' => 'Szablon zaktualizowany',
+        ],
+    ],
 ];

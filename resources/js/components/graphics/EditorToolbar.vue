@@ -3,6 +3,7 @@ import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useGraphicsStore } from '@/stores/graphics';
+import { useAuthStore } from '@/stores/auth';
 import Button from '@/components/common/Button.vue';
 
 const { t } = useI18n();
@@ -14,7 +15,9 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at']);
+const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at', 'open-library', 'add-to-library']);
+
+const authStore = useAuthStore();
 
 const router = useRouter();
 const graphicsStore = useGraphicsStore();
@@ -280,21 +283,85 @@ const handleBack = () => {
                 </svg>
             </button>
 
+            <!-- Separator -->
+            <div class="w-px h-6 bg-gray-300 mx-1"></div>
+
+            <!-- AI Chat - wyróżniony przycisk -->
+            <button
+                @click="graphicsStore.toggleChatPanel()"
+                :class="[
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm transition-all',
+                    graphicsStore.chatPanelOpen
+                        ? 'bg-purple-600 text-white shadow-md'
+                        : 'bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200'
+                ]"
+                :title="t('graphics.aiChat.toggle')"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+                </svg>
+                <span>AI</span>
+            </button>
+
+            <!-- Library - wyróżniony przycisk -->
+            <button
+                @click="$emit('open-library')"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all"
+                :title="t('graphics.library.browse')"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
+                </svg>
+                <span>{{ t('graphics.library.titleShort') }}</span>
+            </button>
+
+            <!-- Add to Library (Admin only) -->
+            <button
+                v-if="authStore.isAdmin && !template.is_library"
+                @click="$emit('add-to-library')"
+                class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg font-medium text-sm bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-all"
+                :title="t('graphics.library.addToLibrary')"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+            </button>
+
+            <!-- Library badge (if template is in library) -->
+            <span
+                v-if="template.is_library"
+                class="flex items-center gap-1.5 px-3 py-1.5 bg-green-100 text-green-700 text-sm font-medium rounded-lg"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                </svg>
+                {{ t('graphics.library.title') }}
+            </span>
+
+            <!-- Separator -->
+            <div class="w-px h-6 bg-gray-300 mx-1"></div>
+
             <!-- Save -->
             <Button
-                size="sm"
+                size="md"
                 :loading="graphicsStore.saving"
                 @click="$emit('save')"
             >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                </svg>
                 {{ graphicsStore.saving ? t('graphics.editor.saving') : t('graphics.editor.save') }}
             </Button>
 
             <!-- Export -->
             <Button
-                size="sm"
+                size="md"
                 variant="secondary"
                 @click="$emit('export')"
             >
+                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                </svg>
                 {{ t('graphics.editor.export') }}
             </Button>
         </div>

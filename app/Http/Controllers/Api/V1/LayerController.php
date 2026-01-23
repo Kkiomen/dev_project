@@ -95,6 +95,14 @@ class LayerController extends Controller
             if ($layer) {
                 $updateData = collect($layerData)->except('id')->toArray();
 
+                // Filter out null values for fields that have NOT NULL constraint
+                $notNullFields = ['visible', 'locked', 'rotation', 'scale_x', 'scale_y', 'x', 'y', 'width', 'height'];
+                foreach ($notNullFields as $field) {
+                    if (array_key_exists($field, $updateData) && $updateData[$field] === null) {
+                        unset($updateData[$field]);
+                    }
+                }
+
                 // Merge properties instead of replacing
                 if (isset($updateData['properties']) && $layer->properties) {
                     $updateData['properties'] = array_merge($layer->properties, $updateData['properties']);

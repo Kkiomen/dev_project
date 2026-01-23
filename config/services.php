@@ -40,4 +40,15 @@ return [
         'timeout' => env('RAYSO_TIMEOUT', 30),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'model' => env('OPENAI_MODEL', 'gpt-4o'),
+        'max_tokens' => env('OPENAI_MAX_TOKENS', 4096),
+    ],
+
+    'pexels' => [
+        'api_key' => env('PEXELS_API_KEY'),
+        'base_url' => 'https://api.pexels.com/v1',
+    ],
+
 ];

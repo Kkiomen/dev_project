@@ -32,6 +32,12 @@ const textareaRef = ref(null);
 const isDragOver = ref(false);
 const isShiftPressed = ref(false);
 
+// Pan and zoom state
+const panOffset = ref({ x: 0, y: 0 });
+const isPanning = ref(false);
+const isSpacePressed = ref(false);
+const lastMousePos = ref({ x: 0, y: 0 });
+
 const containerWidth = ref(800);
 const containerHeight = ref(600);
 
@@ -950,6 +956,7 @@ const backgroundImage = ref(null);
 watch(() => props.template.background_image, async (newSrc) => {
     if (newSrc) {
         const img = new window.Image();
+        img.crossOrigin = 'anonymous'; // Enable CORS for export
         // Handle both base64 data URLs and storage paths
         img.src = newSrc.startsWith('data:') ? newSrc : `/storage/${newSrc}`;
         img.onload = () => {
@@ -966,6 +973,7 @@ watch(() => graphicsStore.layers, (layers) => {
     layers.forEach(layer => {
         if (layer.type === 'image' && layer.properties?.src && !layerImages.value[layer.id]) {
             const img = new window.Image();
+            img.crossOrigin = 'anonymous'; // Enable CORS for export
             img.src = layer.properties.src;
             img.onload = () => {
                 layerImages.value[layer.id] = img;
@@ -987,6 +995,7 @@ watch(() => graphicsStore.layers, (layers) => {
             if (fillImageSources.value[fillKey] !== fillImage) {
                 fillImageSources.value[fillKey] = fillImage;
                 const img = new window.Image();
+                img.crossOrigin = 'anonymous'; // Enable CORS for export
                 img.src = fillImage;
                 img.onload = () => {
                     fillImages.value = { ...fillImages.value, [fillKey]: img };

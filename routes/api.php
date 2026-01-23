@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AiChatController;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Http\Controllers\Api\V1\TableController;
 use App\Http\Controllers\Api\V1\FieldController;
@@ -7,6 +8,7 @@ use App\Http\Controllers\Api\V1\RowController;
 use App\Http\Controllers\Api\V1\CellController;
 use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\TemplateController;
+use App\Http\Controllers\Api\V1\TemplateLibraryController;
 use App\Http\Controllers\Api\V1\LayerController;
 use App\Http\Controllers\Api\V1\GeneratedImageController;
 use App\Http\Controllers\Api\V1\TemplateFontController;
@@ -14,7 +16,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
-    return $request->user();
+    $user = $request->user();
+    return [
+        'id' => $user->id,
+        'name' => $user->name,
+        'email' => $user->email,
+        'is_admin' => $user->is_admin,
+        'email_verified_at' => $user->email_verified_at,
+        'created_at' => $user->created_at,
+        'updated_at' => $user->updated_at,
+    ];
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
@@ -59,6 +70,9 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('templates/{template}/background', [TemplateController::class, 'uploadBackgroundImage']);
     Route::post('templates/{template}/generate', [TemplateController::class, 'generate']);
 
+    // === AI CHAT ===
+    Route::post('templates/{template}/ai/chat', [AiChatController::class, 'chat']);
+
     // Base-specific templates (for automation)
     Route::get('bases/{base}/templates', [TemplateController::class, 'indexByBase']);
 
@@ -78,4 +92,16 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::get('templates/{template}/fonts', [TemplateFontController::class, 'index']);
     Route::post('templates/{template}/fonts', [TemplateFontController::class, 'store']);
     Route::delete('fonts/{font}', [TemplateFontController::class, 'destroy']);
+
+    // === TEMPLATE LIBRARY (available to all users) ===
+    Route::get('library/templates', [TemplateLibraryController::class, 'index']);
+    Route::get('library/categories', [TemplateLibraryController::class, 'categories']);
+    Route::post('library/templates/{template}/copy', [TemplateLibraryController::class, 'copy']);
+
+    // === TEMPLATE LIBRARY ADMIN ===
+    Route::middleware('admin')->group(function () {
+        Route::post('templates/{template}/add-to-library', [TemplateLibraryController::class, 'addToLibrary']);
+        Route::post('templates/{template}/remove-from-library', [TemplateLibraryController::class, 'removeFromLibrary']);
+        Route::delete('library/templates/{template}', [TemplateLibraryController::class, 'destroy']);
+    });
 });

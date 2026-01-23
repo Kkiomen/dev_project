@@ -82,4 +82,28 @@ return [
         'delete' => 'Delete Font',
         'supported_formats' => 'Supported formats: TTF, OTF, WOFF, WOFF2',
     ],
+
+    'aiChat' => [
+        'title' => 'AI Assistant',
+        'toggle' => 'Toggle AI Chat',
+        'placeholder' => 'Ask me to create or modify your template...',
+        'send' => 'Send',
+        'thinking' => 'Thinking...',
+        'error' => 'Something went wrong. Please try again.',
+        'welcomeMessage' => 'Hi! I can help you create and modify templates. Try asking me to:',
+        'enterHint' => 'Press Enter to send, Shift+Enter for new line',
+        'clearHistory' => 'Clear chat history',
+        'suggestions' => [
+            'createInstagram' => 'Create an Instagram post template',
+            'changeText' => 'Change the text to something else',
+            'addShape' => 'Add a background shape',
+            'apiHelp' => 'How do I use the API to generate images?',
+        ],
+        'actions' => [
+            'layerModified' => 'Layer ":name" modified',
+            'layerAdded' => 'New layer ":name" added',
+            'layerDeleted' => 'Layer ":name" deleted',
+            'templateUpdated' => 'Template updated',
+        ],
+    ],
 ];

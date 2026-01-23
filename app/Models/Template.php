@@ -26,12 +26,15 @@ class Template extends Model
         'thumbnail_path',
         'settings',
         'position',
+        'is_library',
+        'library_category',
     ];
 
     protected $casts = [
         'width' => 'integer',
         'height' => 'integer',
         'settings' => 'array',
+        'is_library' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -79,6 +82,16 @@ class Template extends Model
         return $query->with('fonts');
     }
 
+    public function scopeLibrary($query)
+    {
+        return $query->where('is_library', true);
+    }
+
+    public function scopeUserTemplates($query)
+    {
+        return $query->where('is_library', false);
+    }
+
     // Helper methods
     public function addLayer(string $name, string $type, array $attributes = []): Layer
     {
@@ -108,5 +121,56 @@ class Template extends Model
         }
 
         return $newTemplate->load('layers', 'fonts');
+    }
+
+    /**
+     * Copy this template to a user's collection.
+     */
+    public function copyToUser(int $userId): Template
+    {
+        $newTemplate = $this->replicate(['public_id', 'is_library', 'library_category']);
+        $newTemplate->user_id = $userId;
+        $newTemplate->is_library = false;
+        $newTemplate->library_category = null;
+        $newTemplate->thumbnail_path = null;
+        $newTemplate->save();
+
+        foreach ($this->layers as $layer) {
+            $newLayer = $layer->replicate(['public_id']);
+            $newLayer->template_id = $newTemplate->id;
+            $newLayer->save();
+        }
+
+        foreach ($this->fonts as $font) {
+            $newFont = $font->replicate();
+            $newFont->template_id = $newTemplate->id;
+            $newFont->save();
+        }
+
+        return $newTemplate->load('layers', 'fonts');
+    }
+
+    /**
+     * Add current template to library (admin only).
+     */
+    public function addToLibrary(?string $category = null): self
+    {
+        $this->is_library = true;
+        $this->library_category = $category;
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Remove from library.
+     */
+    public function removeFromLibrary(): self
+    {
+        $this->is_library = false;
+        $this->library_category = null;
+        $this->save();
+
+        return $this;
     }
 }

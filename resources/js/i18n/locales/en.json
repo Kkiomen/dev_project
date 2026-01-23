@@ -663,6 +663,7 @@
         "canvas": {
             "title": "Canvas",
             "settings": "Canvas Settings",
+            "size": "Canvas Size",
             "width": "Width",
             "height": "Height",
             "backgroundColor": "Background Color",
@@ -773,6 +774,51 @@
             "optionalParams": "Optional parameters",
             "optionalParamsDesc": "format (png/jpeg/webp), quality (1-100), scale (0.1-4)",
             "curlCommand": "Ready to use curl"
+        },
+        "aiChat": {
+            "title": "AI Assistant",
+            "toggle": "Toggle AI Chat",
+            "placeholder": "Ask me to create or modify your template...",
+            "send": "Send",
+            "thinking": "Thinking...",
+            "error": "Something went wrong. Please try again.",
+            "welcomeMessage": "Hi! I can help you create and modify templates. Try asking me to:",
+            "enterHint": "Press Enter to send, Shift+Enter for new line",
+            "clearHistory": "Clear chat history",
+            "suggestions": {
+                "createInstagram": "Create an Instagram post template",
+                "changeText": "Change the text to something else",
+                "addShape": "Add a background shape",
+                "apiHelp": "How do I use the API to generate images?"
+            },
+            "actions": {
+                "layerModified": "Layer \"{name}\" modified",
+                "layerAdded": "New layer \"{name}\" added",
+                "layerDeleted": "Layer \"{name}\" deleted",
+                "templateUpdated": "Template updated"
+            }
+        },
+        "library": {
+            "title": "Template Library",
+            "titleShort": "Library",
+            "browse": "Browse Library",
+            "addToLibrary": "Add to Library",
+            "removeFromLibrary": "Remove from Library",
+            "useTemplate": "Use this Template",
+            "copyToMyTemplates": "Copy to My Templates",
+            "category": "Category",
+            "allCategories": "All Categories",
+            "noCategory": "Uncategorized",
+            "selectCategory": "Select category",
+            "categoryPlaceholder": "E.g. Social Media, Marketing...",
+            "noTemplates": "No templates in library",
+            "noTemplatesDescription": "The template library is empty.",
+            "copied": "Template copied to your collection",
+            "added": "Template added to library",
+            "removed": "Template removed from library",
+            "deleted": "Template deleted from library",
+            "confirmDelete": "Are you sure you want to permanently delete this template from the library?",
+            "adminOnly": "Admin only"
         }
     }
 }

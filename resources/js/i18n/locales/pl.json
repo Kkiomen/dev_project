@@ -664,6 +664,7 @@
         "canvas": {
             "title": "Płótno",
             "settings": "Ustawienia płótna",
+            "size": "Rozmiar płótna",
             "width": "Szerokość",
             "height": "Wysokość",
             "backgroundColor": "Kolor tła",
@@ -774,6 +775,51 @@
             "optionalParams": "Opcjonalne parametry",
             "optionalParamsDesc": "format (png/jpeg/webp), quality (1-100), scale (0.1-4)",
             "curlCommand": "Gotowy curl"
+        },
+        "aiChat": {
+            "title": "Asystent AI",
+            "toggle": "Przełącz czat AI",
+            "placeholder": "Poproś mnie o utworzenie lub modyfikację szablonu...",
+            "send": "Wyślij",
+            "thinking": "Myślę...",
+            "error": "Coś poszło nie tak. Spróbuj ponownie.",
+            "welcomeMessage": "Cześć! Mogę pomóc Ci tworzyć i modyfikować szablony. Spróbuj poprosić mnie o:",
+            "enterHint": "Naciśnij Enter aby wysłać, Shift+Enter dla nowej linii",
+            "clearHistory": "Wyczyść historię czatu",
+            "suggestions": {
+                "createInstagram": "Utwórz szablon posta na Instagram",
+                "changeText": "Zmień tekst na coś innego",
+                "addShape": "Dodaj kształt w tle",
+                "apiHelp": "Jak użyć API do generowania zdjęć?"
+            },
+            "actions": {
+                "layerModified": "Warstwa \"{name}\" zmodyfikowana",
+                "layerAdded": "Nowa warstwa \"{name}\" dodana",
+                "layerDeleted": "Warstwa \"{name}\" usunięta",
+                "templateUpdated": "Szablon zaktualizowany"
+            }
+        },
+        "library": {
+            "title": "Biblioteka szablonów",
+            "titleShort": "Biblioteka",
+            "browse": "Przeglądaj bibliotekę",
+            "addToLibrary": "Dodaj do biblioteki",
+            "removeFromLibrary": "Usuń z biblioteki",
+            "useTemplate": "Użyj tego szablonu",
+            "copyToMyTemplates": "Skopiuj do moich szablonów",
+            "category": "Kategoria",
+            "allCategories": "Wszystkie kategorie",
+            "noCategory": "Bez kategorii",
+            "selectCategory": "Wybierz kategorię",
+            "categoryPlaceholder": "Np. Social Media, Marketing...",
+            "noTemplates": "Brak szablonów w bibliotece",
+            "noTemplatesDescription": "Biblioteka szablonów jest pusta.",
+            "copied": "Szablon skopiowany do Twojej kolekcji",
+            "added": "Szablon dodany do biblioteki",
+            "removed": "Szablon usunięty z biblioteki",
+            "deleted": "Szablon usunięty z biblioteki na stałe",
+            "confirmDelete": "Czy na pewno chcesz trwale usunąć ten szablon z biblioteki?",
+            "adminOnly": "Tylko administrator"
         }
     }
 }

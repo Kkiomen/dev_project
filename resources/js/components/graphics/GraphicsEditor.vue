@@ -7,8 +7,11 @@ import EditorToolbar from './EditorToolbar.vue';
 import EditorCanvas from './EditorCanvas.vue';
 import LayersPanel from './LayersPanel.vue';
 import PropertiesPanel from './PropertiesPanel.vue';
+import AiChatPanel from './AiChatPanel.vue';
 import ExportModal from './modals/ExportModal.vue';
 import FontUploadModal from './modals/FontUploadModal.vue';
+import TemplateLibraryModal from './TemplateLibraryModal.vue';
+import AddToLibraryModal from './AddToLibraryModal.vue';
 
 const { t } = useI18n();
 const { loadFont } = useGoogleFonts();
@@ -27,6 +30,19 @@ const showLayersPanel = ref(true);
 const showPropertiesPanel = ref(true);
 const showExportModal = ref(false);
 const showFontModal = ref(false);
+const showLibraryModal = ref(false);
+const showAddToLibraryModal = ref(false);
+
+const handleTemplateCopied = (newTemplate) => {
+    showLibraryModal.value = false;
+    // Redirect to the new template
+    window.location.href = `/graphics/${newTemplate.id}`;
+};
+
+const handleAddedToLibrary = (template) => {
+    showAddToLibraryModal.value = false;
+    // Optionally refresh template data
+};
 
 // Auto-save interval (30 seconds)
 const AUTO_SAVE_INTERVAL = 30000;
@@ -203,6 +219,8 @@ const handleOpenFonts = () => {
             @open-fonts="handleOpenFonts"
             @toggle-layers="showLayersPanel = !showLayersPanel"
             @toggle-properties="showPropertiesPanel = !showPropertiesPanel"
+            @open-library="showLibraryModal = true"
+            @add-to-library="showAddToLibraryModal = true"
         />
 
         <!-- Main content -->
@@ -224,12 +242,18 @@ const handleOpenFonts = () => {
                 />
             </div>
 
-            <!-- Properties panel -->
+            <!-- Properties panel / AI Chat panel -->
             <div
                 v-if="showPropertiesPanel"
-                class="w-96 flex-shrink-0 bg-white border-l border-gray-200 overflow-y-auto"
+                class="w-96 flex-shrink-0 bg-white border-l border-gray-200 overflow-hidden"
             >
-                <PropertiesPanel />
+                <AiChatPanel
+                    v-if="graphicsStore.chatPanelOpen"
+                    @close="graphicsStore.closeChatPanel()"
+                />
+                <div v-else class="h-full overflow-y-auto">
+                    <PropertiesPanel />
+                </div>
             </div>
         </div>
 
@@ -246,6 +270,21 @@ const handleOpenFonts = () => {
             :show="showFontModal"
             :template-id="template.id"
             @close="showFontModal = false"
+        />
+
+        <!-- Template Library modal -->
+        <TemplateLibraryModal
+            :show="showLibraryModal"
+            @close="showLibraryModal = false"
+            @template-copied="handleTemplateCopied"
+        />
+
+        <!-- Add to Library modal (admin only) -->
+        <AddToLibraryModal
+            :show="showAddToLibraryModal"
+            :template-id="template.id"
+            @close="showAddToLibraryModal = false"
+            @added="handleAddedToLibrary"
         />
     </div>
 </template>

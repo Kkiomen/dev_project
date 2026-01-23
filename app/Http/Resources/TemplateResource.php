@@ -22,6 +22,8 @@ class TemplateResource extends JsonResource
             'thumbnail_url' => $this->thumbnail_path ? asset('storage/' . $this->thumbnail_path) : null,
             'settings' => $this->settings,
             'position' => $this->position,
+            'is_library' => $this->is_library,
+            'library_category' => $this->library_category,
             'layers_count' => $this->whenCounted('layers'),
             'layers' => LayerResource::collection($this->whenLoaded('layers')),
             'fonts' => TemplateFontResource::collection($this->whenLoaded('fonts')),

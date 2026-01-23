@@ -23,6 +23,7 @@ export const useGraphicsStore = defineStore('graphics', {
         isDirty: false,
         clipboard: null, // For copy/paste
         lastSavedAt: null, // Timestamp of last save
+        chatPanelOpen: false, // AI Chat panel state
     }),
 
     getters: {
@@ -494,6 +495,19 @@ export const useGraphicsStore = defineStore('graphics', {
 
         resetZoom() {
             this.zoom = 1;
+        },
+
+        // AI Chat Panel
+        toggleChatPanel() {
+            this.chatPanelOpen = !this.chatPanelOpen;
+        },
+
+        openChatPanel() {
+            this.chatPanelOpen = true;
+        },
+
+        closeChatPanel() {
+            this.chatPanelOpen = false;
         },
 
         // History
