@@ -71,6 +71,34 @@ const routes = [
         name: 'approval-tokens',
         component: () => import('@/pages/ApprovalTokensPage.vue'),
     },
+    {
+        path: '/approval-dashboard',
+        name: 'approval-dashboard',
+        component: () => import('@/pages/ApprovalDashboardPage.vue'),
+    },
+    // Brands management
+    {
+        path: '/brands',
+        name: 'brands',
+        component: () => import('@/pages/BrandsPage.vue'),
+    },
+    {
+        path: '/brands/new',
+        name: 'brand.create',
+        component: () => import('@/pages/BrandCreatePage.vue'),
+    },
+    {
+        path: '/brands/:brandId/edit',
+        name: 'brand.edit',
+        component: () => import('@/pages/BrandEditPage.vue'),
+        props: true,
+    },
+    // Settings
+    {
+        path: '/settings',
+        name: 'settings',
+        component: () => import('@/pages/SettingsPage.vue'),
+    },
     // Public client approval (no auth)
     {
         path: '/approve/:token',

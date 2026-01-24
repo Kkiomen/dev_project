@@ -23,6 +23,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/calendar', fn () => view('spa'))->name('calendar');
     Route::get('/posts/{any?}', fn () => view('spa'))->where('any', '.*')->name('posts');
     Route::get('/approval-tokens', fn () => view('spa'))->name('approval-tokens');
+
+    // Approval Dashboard
+    Route::get('/approval-dashboard', fn () => view('spa'))->name('approval-dashboard');
+
+    // Brands management
+    Route::get('/brands/{any?}', fn () => view('spa'))->where('any', '.*')->name('brands');
+
+    // Settings
+    Route::get('/settings', fn () => view('spa'))->name('settings');
 });
 
 // Public approval route (no auth required)

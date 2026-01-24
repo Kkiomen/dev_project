@@ -16,6 +16,7 @@ class Template extends Model
 
     protected $fillable = [
         'user_id',
+        'brand_id',
         'base_id',
         'name',
         'description',
@@ -54,6 +55,11 @@ class Template extends Model
     public function base(): BelongsTo
     {
         return $this->belongsTo(Base::class);
+    }
+
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
     }
 
     public function layers(): HasMany

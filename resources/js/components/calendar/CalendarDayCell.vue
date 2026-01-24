@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 import { useCalendarStore } from '@/stores/calendar';
 import CalendarPostCard from './CalendarPostCard.vue';
 
@@ -22,12 +22,30 @@ const isSelected = computed(() => calendarStore.selectedDate === props.day.date)
 const isDragTarget = computed(() => calendarStore.draggedPost !== null);
 const isWeekView = computed(() => calendarStore.view === 'week');
 
+// Prevent click handler from interfering with post clicks
+const clickedOnPost = ref(false);
+
 const handleClick = () => {
+    // Don't select date if we just clicked on a post
+    if (clickedOnPost.value) {
+        clickedOnPost.value = false;
+        return;
+    }
     calendarStore.selectDate(props.day.date);
 };
 
 const handleDoubleClick = () => {
+    // Don't create if we're clicking on a post
+    if (clickedOnPost.value) {
+        clickedOnPost.value = false;
+        return;
+    }
     emit('create');
+};
+
+const handlePostClick = (post) => {
+    clickedOnPost.value = true;
+    emit('edit', post);
 };
 </script>
 
@@ -77,7 +95,7 @@ const handleDoubleClick = () => {
                 v-for="post in posts.slice(0, 3)"
                 :key="post.id"
                 :post="post"
-                @click.stop="emit('edit', post)"
+                @click="handlePostClick(post)"
             />
 
             <!-- More indicator -->

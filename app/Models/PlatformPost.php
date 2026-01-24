@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\Platform;
+use App\Enums\PublishStatus;
 use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -23,16 +24,25 @@ class PlatformPost extends Model
         'link_preview',
         'publish_status',
         'published_at',
+        'external_id',
+        'error_message',
+        'platform_data',
     ];
 
     protected $casts = [
         'platform' => Platform::class,
+        'publish_status' => PublishStatus::class,
         'enabled' => 'boolean',
         'hashtags' => 'array',
         'link_preview' => 'array',
+        'platform_data' => 'array',
         'published_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
+    ];
+
+    protected $attributes = [
+        'publish_status' => 'not_started',
     ];
 
     // Relationships
@@ -88,21 +98,43 @@ class PlatformPost extends Model
         return $this;
     }
 
-    public function markAsPublished(): self
+    public function markAsPublished(?string $externalId = null): self
     {
-        $this->publish_status = 'published';
+        $this->publish_status = PublishStatus::Published;
         $this->published_at = now();
+        if ($externalId) {
+            $this->external_id = $externalId;
+        }
         $this->save();
 
         return $this;
     }
 
-    public function markAsFailed(): self
+    public function markAsFailed(?string $error = null): self
     {
-        $this->publish_status = 'failed';
+        $this->publish_status = PublishStatus::Failed;
+        if ($error) {
+            $this->error_message = $error;
+        }
         $this->save();
 
         return $this;
+    }
+
+    public function markAsPending(): self
+    {
+        $this->publish_status = PublishStatus::Pending;
+        $this->save();
+
+        return $this;
+    }
+
+    /**
+     * Get the caption to use for publishing.
+     */
+    public function getCaption(): string
+    {
+        return $this->platform_caption ?? $this->socialPost->main_caption ?? '';
     }
 
     public function isFacebook(): bool

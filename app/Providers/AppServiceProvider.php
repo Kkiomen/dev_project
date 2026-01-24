@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Services\FieldTypeRegistry;
+use App\Services\StockPhoto\PexelsClient;
+use App\Services\StockPhoto\StockPhotoService;
+use App\Services\StockPhoto\UnsplashClient;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -14,6 +17,15 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->singleton(FieldTypeRegistry::class, function () {
             return new FieldTypeRegistry();
+        });
+
+        $this->app->singleton(UnsplashClient::class);
+        $this->app->singleton(PexelsClient::class);
+        $this->app->singleton(StockPhotoService::class, function ($app) {
+            return new StockPhotoService(
+                $app->make(UnsplashClient::class),
+                $app->make(PexelsClient::class)
+            );
         });
     }
 

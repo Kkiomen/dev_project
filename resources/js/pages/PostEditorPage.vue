@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted, onUnmounted, computed, watch, reactive } from 'vue';
+import { ref, toRef, onMounted, onUnmounted, computed, watch, reactive } from 'vue';
 import { useRouter, useRoute, RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { usePostsStore } from '@/stores/posts';
@@ -17,6 +17,7 @@ import PlatformSelectModal from '@/components/posts/PlatformSelectModal.vue';
 import AiPlatformGenerateModal from '@/components/posts/AiPlatformGenerateModal.vue';
 import TemplatePickerModal from '@/components/posts/TemplatePickerModal.vue';
 import TemplateEditorModal from '@/components/posts/TemplateEditorModal.vue';
+import StockPhotoPicker from '@/components/stock/StockPhotoPicker.vue';
 
 const props = defineProps({
     postId: {
@@ -32,8 +33,8 @@ const postsStore = usePostsStore();
 const approvalStore = useApprovalStore();
 const toast = useToast();
 
-// Draft management
-const draft = usePostDraft(props.postId);
+// Draft management - pass postId as reactive ref so it updates when route changes
+const draft = usePostDraft(toRef(props, 'postId'));
 
 const loading = ref(true);
 const saving = ref(false);
@@ -48,6 +49,7 @@ const showPlatformSelectModal = ref(false);
 const showAiModal = ref(null); // null or platform name
 const showTemplatePickerModal = ref(false);
 const showTemplateEditorModal = ref(false);
+const showStockPhotoPicker = ref(false);
 const selectedTemplateForEdit = ref(null);
 const resumeTemplateId = ref(null);
 const templateInProgressInfo = ref(null);
@@ -144,6 +146,33 @@ const formData = computed(() => {
 
 const fetchData = async () => {
     loading.value = true;
+
+    // Clear current post to prevent showing stale data
+    postsStore.clearCurrentPost();
+
+    // Reset all modal states when route changes
+    showPlatformSelectModal.value = false;
+    showDraftRestoreModal.value = false;
+    showAiModal.value = null;
+    pendingDraft.value = null;
+    templateInProgressInfo.value = null;
+
+    // Reset form data to defaults
+    sharedData.value = {
+        title: '',
+        scheduled_at: route.query.date ? new Date(route.query.date).toISOString() : null,
+    };
+    selectedPlatforms.value = ['facebook', 'instagram', 'youtube'];
+    activePlatformTab.value = 'facebook';
+
+    Object.keys(platformContent).forEach(p => {
+        platformContent[p].caption = '';
+        platformContent[p].captionModified = false;
+        platformContent[p].hashtags = [];
+        platformContent[p].videoTitle = '';
+        platformContent[p].videoDescription = '';
+    });
+
     try {
         if (isEditing.value) {
             await postsStore.fetchPost(props.postId);
@@ -392,6 +421,26 @@ const handleReorderStagedMedia = (fromIndex, toIndex) => {
 // Handle template selection
 const handleOpenTemplates = () => {
     showTemplatePickerModal.value = true;
+};
+
+// Handle stock photo selection
+const handleOpenStockPhotos = () => {
+    showStockPhotoPicker.value = true;
+};
+
+const handleSelectStockPhoto = async (photo) => {
+    showStockPhotoPicker.value = false;
+    // Fetch the image and add as staged media
+    try {
+        const response = await fetch(photo.download_url || photo.url);
+        const blob = await response.blob();
+        const filename = `stock-${photo.source}-${photo.id}.jpg`;
+        const file = new File([blob], filename, { type: blob.type });
+        await draft.stageMediaFile(file);
+    } catch (error) {
+        console.error('Failed to add stock photo:', error);
+        toast.error(t('stockPhotos.error') || 'Failed to add photo');
+    }
 };
 
 const handleTemplateSelect = (template) => {
@@ -892,6 +941,7 @@ const lastSavedText = computed(() => {
                             @remove="handleRemoveStagedMedia"
                             @reorder="handleReorderStagedMedia"
                             @open-templates="handleOpenTemplates"
+                            @open-stock-photos="handleOpenStockPhotos"
                         />
 
                         <template v-else>
@@ -1064,6 +1114,15 @@ const lastSavedText = computed(() => {
                 @close="handleCloseTemplateEditor"
                 @add-to-post="handleAddTemplateToPost"
                 @save-for-later="handleSaveTemplateForLater"
+            />
+        </teleport>
+
+        <!-- Stock Photo Picker -->
+        <teleport to="body">
+            <StockPhotoPicker
+                v-if="showStockPhotoPicker"
+                @close="showStockPhotoPicker = false"
+                @select="handleSelectStockPhoto"
             />
         </teleport>
 

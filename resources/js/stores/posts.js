@@ -313,6 +313,22 @@ export const usePostsStore = defineStore('posts', {
             this.currentPost = null;
         },
 
+        // Add a new post from WebSocket event to the calendar
+        addCalendarPost(post) {
+            const dateKey = post.scheduled_date;
+            if (!dateKey) return;
+
+            if (!this.calendarPosts[dateKey]) {
+                this.calendarPosts[dateKey] = [];
+            }
+
+            // Check if post already exists to avoid duplicates
+            const exists = this.calendarPosts[dateKey].some(p => p.id === post.id);
+            if (!exists) {
+                this.calendarPosts[dateKey].push(post);
+            }
+        },
+
         async generateWithAi(config) {
             this.generatingAi = true;
             try {
@@ -340,6 +356,108 @@ export const usePostsStore = defineStore('posts', {
                 if (this.currentPost?.id === id) {
                     this.currentPost = updatedPost;
                 }
+
+                return response.data;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async fetchPendingApproval(params = {}) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await axios.get('/api/v1/posts/pending-approval', { params });
+                this.posts = response.data.data;
+                if (response.data.meta) {
+                    this.pagination = {
+                        currentPage: response.data.meta.current_page,
+                        lastPage: response.data.meta.last_page,
+                        perPage: response.data.meta.per_page,
+                        total: response.data.meta.total,
+                    };
+                }
+                return response.data;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch pending posts';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async approvePost(id) {
+            this.saving = true;
+            try {
+                const response = await axios.post(`/api/v1/posts/${id}/approve`);
+                const updatedPost = response.data.data;
+
+                // Remove from list (it's no longer pending)
+                this.posts = this.posts.filter(p => p.id !== id);
+
+                if (this.currentPost?.id === id) {
+                    this.currentPost = updatedPost;
+                }
+
+                return updatedPost;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async rejectPost(id, feedback = null) {
+            this.saving = true;
+            try {
+                const response = await axios.post(`/api/v1/posts/${id}/reject`, { feedback });
+                const updatedPost = response.data.data;
+
+                // Remove from pending list
+                this.posts = this.posts.filter(p => p.id !== id);
+
+                if (this.currentPost?.id === id) {
+                    this.currentPost = updatedPost;
+                }
+
+                return updatedPost;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async batchApprove(postIds) {
+            this.saving = true;
+            try {
+                const response = await axios.post('/api/v1/posts/batch-approve', {
+                    post_ids: postIds,
+                });
+
+                // Remove approved posts from list
+                this.posts = this.posts.filter(p => !postIds.includes(p.id));
+
+                return response.data;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.saving = false;
+            }
+        },
+
+        async batchReject(postIds, feedback = null) {
+            this.saving = true;
+            try {
+                const response = await axios.post('/api/v1/posts/batch-reject', {
+                    post_ids: postIds,
+                    feedback,
+                });
+
+                // Remove rejected posts from list
+                this.posts = this.posts.filter(p => !postIds.includes(p.id));
 
                 return response.data;
             } catch (error) {

@@ -4,6 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -87,5 +88,66 @@ class User extends Authenticatable
     public function approvalTokens(): HasMany
     {
         return $this->hasMany(ApprovalToken::class);
+    }
+
+    public function brands(): HasMany
+    {
+        return $this->hasMany(Brand::class);
+    }
+
+    public function brandMemberships(): HasMany
+    {
+        return $this->hasMany(BrandMember::class);
+    }
+
+    public function memberBrands(): BelongsToMany
+    {
+        return $this->belongsToMany(Brand::class, 'brand_members')
+            ->withPivot(['role', 'invited_at', 'accepted_at', 'invited_by'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Get all brands the user has access to (owned + member of)
+     */
+    public function allBrands()
+    {
+        $ownedBrandIds = $this->brands()->pluck('id');
+        $memberBrandIds = $this->memberBrands()->pluck('brands.id');
+
+        return Brand::whereIn('id', $ownedBrandIds->merge($memberBrandIds)->unique())
+            ->where('is_active', true);
+    }
+
+    public function aiOperationLogs(): HasMany
+    {
+        return $this->hasMany(AiOperationLog::class);
+    }
+
+    public function notifications(): HasMany
+    {
+        return $this->hasMany(Notification::class);
+    }
+
+    public function getCurrentBrandId(): ?int
+    {
+        return $this->getSetting('current_brand_id');
+    }
+
+    public function setCurrentBrand(Brand $brand): void
+    {
+        $this->setSetting('current_brand_id', $brand->id);
+        $this->save();
+    }
+
+    public function getCurrentBrand(): ?Brand
+    {
+        $brandId = $this->getCurrentBrandId();
+
+        if (!$brandId) {
+            return null;
+        }
+
+        return $this->brands()->find($brandId);
     }
 }

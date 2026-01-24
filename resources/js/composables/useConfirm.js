@@ -1,4 +1,5 @@
-import { ref, getCurrentInstance } from 'vue';
+import { ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 
 const isOpen = ref(false);
 const title = ref('');
@@ -9,20 +10,22 @@ const variant = ref('danger'); // 'danger' | 'warning' | 'info'
 let resolvePromise = null;
 
 export function useConfirm() {
-    const getT = () => {
-        const instance = getCurrentInstance();
-        if (instance) {
-            return instance.appContext.config.globalProperties.$t;
-        }
-        return (key, params) => key;
-    };
-    
+    // Get i18n instance - will work in component context
+    let t = (key) => key;
+    try {
+        const i18n = useI18n();
+        t = i18n.t;
+    } catch (e) {
+        // Fallback if called outside component
+    }
+
     const confirm = (options) => {
-        const t = getT();
         return new Promise((resolve) => {
             if (typeof options === 'string') {
                 message.value = options;
                 title.value = t('common.confirmAction');
+                confirmText.value = t('common.confirm');
+                cancelText.value = t('common.cancel');
             } else {
                 title.value = options.title || t('common.confirmAction');
                 message.value = options.message || '';

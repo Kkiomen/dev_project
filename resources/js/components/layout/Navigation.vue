@@ -1,13 +1,22 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
+import { useBrandsStore } from '@/stores/brands';
 import Dropdown from '@/components/common/Dropdown.vue';
+import BrandSwitcher from '@/components/brand/BrandSwitcher.vue';
+import NotificationBell from '@/components/notifications/NotificationBell.vue';
+import ActiveTasksIndicator from '@/components/tasks/ActiveTasksIndicator.vue';
 
 const { t } = useI18n();
 const authStore = useAuthStore();
+const brandsStore = useBrandsStore();
 const showMobileMenu = ref(false);
+
+onMounted(() => {
+    brandsStore.fetchBrands();
+});
 
 const logout = () => {
     authStore.logout();
@@ -20,10 +29,15 @@ const logout = () => {
             <div class="flex justify-between h-16">
                 <div class="flex">
                     <!-- Logo -->
-                    <div class="shrink-0 flex items-center mr-8">
+                    <div class="shrink-0 flex items-center mr-4">
                         <RouterLink to="/dashboard">
                             <img src="/assets/images/logo_aisello_black.svg" alt="Logo" class="h-9 w-auto" />
                         </RouterLink>
+                    </div>
+
+                    <!-- Brand Switcher -->
+                    <div class="hidden sm:flex sm:items-center mr-6">
+                        <BrandSwitcher />
                     </div>
 
                     <!-- Navigation Links -->
@@ -52,11 +66,21 @@ const logout = () => {
                             to="/calendar"
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
                             :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts') || $route.path.startsWith('/approval'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts') && !$route.path.startsWith('/approval'),
+                                'border-blue-500 text-gray-900': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts'),
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts'),
                             }"
                         >
                             {{ t('navigation.calendar') }}
+                        </RouterLink>
+                        <RouterLink
+                            to="/approval-dashboard"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                            :class="{
+                                'border-blue-500 text-gray-900': $route.path.startsWith('/approval'),
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/approval'),
+                            }"
+                        >
+                            {{ t('navigation.approval') }}
                         </RouterLink>
                         <RouterLink
                             to="/docs"
@@ -71,7 +95,13 @@ const logout = () => {
                     </div>
                 </div>
 
-                <div class="hidden sm:flex sm:items-center sm:ml-6">
+                <div class="hidden sm:flex sm:items-center sm:ml-6 sm:space-x-4">
+                    <!-- Active Tasks -->
+                    <ActiveTasksIndicator />
+
+                    <!-- Notifications -->
+                    <NotificationBell />
+
                     <!-- User Dropdown -->
                     <Dropdown align="right" width="48">
                         <template #trigger>
@@ -97,10 +127,16 @@ const logout = () => {
 
                         <template #content>
                             <RouterLink
-                                to="/profile"
+                                to="/settings"
                                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
-                                {{ t('navigation.profile') }}
+                                {{ t('navigation.settings') }}
+                            </RouterLink>
+                            <RouterLink
+                                to="/brands"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                                {{ t('navigation.brands') }}
                             </RouterLink>
                             <button
                                 @click="logout"
@@ -163,11 +199,21 @@ const logout = () => {
                     to="/calendar"
                     class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
                     :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts') || $route.path.startsWith('/approval'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts') && !$route.path.startsWith('/approval'),
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts'),
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts'),
                     }"
                 >
                     {{ t('navigation.calendar') }}
+                </RouterLink>
+                <RouterLink
+                    to="/approval-dashboard"
+                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
+                    :class="{
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/approval'),
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/approval'),
+                    }"
+                >
+                    {{ t('navigation.approval') }}
                 </RouterLink>
                 <RouterLink
                     to="/docs"
@@ -193,10 +239,16 @@ const logout = () => {
 
                 <div class="mt-3 space-y-1">
                     <RouterLink
-                        to="/profile"
+                        to="/settings"
                         class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
                     >
-                        {{ t('navigation.profile') }}
+                        {{ t('navigation.settings') }}
+                    </RouterLink>
+                    <RouterLink
+                        to="/brands"
+                        class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
+                    >
+                        {{ t('navigation.brands') }}
                     </RouterLink>
                     <button
                         @click="logout"

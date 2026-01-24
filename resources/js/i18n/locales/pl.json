@@ -32,7 +32,13 @@
         "done": "Gotowe",
         "created": "Utworzono",
         "disabled": "wyłączone",
-        "add": "Dodaj"
+        "add": "Dodaj",
+        "next": "Dalej",
+        "back": "Wstecz",
+        "finish": "Zakończ",
+        "selected": "zaznaczonych",
+        "selectAll": "Zaznacz wszystko",
+        "deselectAll": "Odznacz wszystko"
     },
     "dashboard": {
         "title": "Moje bazy danych",
@@ -237,12 +243,81 @@
     "navigation": {
         "dashboard": "Dashboard",
         "profile": "Profil",
+        "settings": "Ustawienia",
+        "brands": "Moje marki",
         "logout": "Wyloguj",
         "menu": "Menu",
         "docs": "Dokumentacja",
         "graphics": "Grafiki",
         "calendar": "Kalendarz",
+        "approval": "Akceptacja",
         "noBasesForGraphics": "Najpierw utwórz bazę danych"
+    },
+    "settings": {
+        "title": "Ustawienia",
+        "profileSaved": "Profil zapisany",
+        "settingsSaved": "Ustawienia zapisane",
+        "passwordChanged": "Hasło zostało zmienione",
+        "tabs": {
+            "profile": "Profil",
+            "ai": "Ustawienia AI",
+            "notifications": "Powiadomienia"
+        },
+        "profile": {
+            "title": "Informacje o profilu",
+            "name": "Imię i nazwisko",
+            "email": "Adres e-mail",
+            "interface": "Ustawienia interfejsu",
+            "language": "Język interfejsu",
+            "timezone": "Strefa czasowa",
+            "weekStartsOn": "Tydzień zaczyna się od",
+            "monday": "Poniedziałek",
+            "sunday": "Niedziela",
+            "timeFormat": "Format czasu",
+            "changePassword": "Zmiana hasła",
+            "currentPassword": "Aktualne hasło",
+            "newPassword": "Nowe hasło",
+            "confirmPassword": "Potwierdź nowe hasło",
+            "updatePassword": "Zmień hasło"
+        },
+        "ai": {
+            "title": "Ustawienia generowania AI",
+            "description": "Skonfiguruj, jak AI generuje treści dla Twoich postów i sugestii.",
+            "creativity": "Poziom kreatywności",
+            "creativityOptions": {
+                "low": "Zachowawczy",
+                "medium": "Zbalansowany",
+                "high": "Kreatywny"
+            },
+            "creativityHint": {
+                "low": "Bardziej przewidywalne i bezpieczne treści, ściśle trzymające się wytycznych marki.",
+                "medium": "Dobra równowaga między kreatywnością a spójnością z marką.",
+                "high": "Bardziej kreatywne i zróżnicowane treści, mogą pojawić się niespodziewane rezultaty."
+            },
+            "defaultLength": "Domyślna długość treści",
+            "lengthOptions": {
+                "short": "Krótkie",
+                "medium": "Średnie",
+                "long": "Długie"
+            },
+            "customInstructions": "Niestandardowe instrukcje",
+            "customInstructionsHint": "Dodaj szczegółowe instrukcje, których AI powinno zawsze przestrzegać podczas generowania treści.",
+            "customInstructionsPlaceholder": "Np. Zawsze wspominaj o naszej stronie na końcu. Unikaj słowa 'niesamowity'. Dołączaj statystyki, jeśli to możliwe...",
+            "autoSuggest": "Automatyczne sugestie",
+            "autoSuggestHint": "Automatycznie sugeruj ulepszenia podczas edycji postów."
+        },
+        "notifications": {
+            "title": "Preferencje powiadomień",
+            "description": "Wybierz, jakie powiadomienia chcesz otrzymywać.",
+            "emailNotifications": "Powiadomienia e-mail",
+            "emailNotificationsHint": "Otrzymuj powiadomienia na e-mail.",
+            "postPublished": "Post opublikowany",
+            "postPublishedHint": "Otrzymuj powiadomienia, gdy Twoje posty zostaną opublikowane.",
+            "approvalRequired": "Wymagana akceptacja",
+            "approvalRequiredHint": "Otrzymuj powiadomienia, gdy posty wymagają Twojej akceptacji.",
+            "weeklyReport": "Raport tygodniowy",
+            "weeklyReportHint": "Otrzymuj tygodniowe podsumowanie wyników Twoich treści."
+        }
     },
     "docs": {
         "title": "Dokumentacja API",
@@ -845,6 +920,7 @@
         "month": "Miesiąc",
         "week": "Tydzień",
         "allStatuses": "Wszystkie statusy",
+        "newPostCreated": "Nowy post dodany do kalendarza",
         "days": {
             "sun": "Ndz",
             "mon": "Pon",
@@ -875,6 +951,7 @@
         "edit": "Edytuj post",
         "duplicate": "Duplikuj",
         "deleteConfirm": "Czy na pewno chcesz usunąć ten post?",
+        "noCaption": "Brak treści",
         "titlePlaceholder": "Wpisz tytuł posta...",
         "mainCaption": "Główna treść",
         "mainCaptionPlaceholder": "Napisz treść swojego posta tutaj...",
@@ -968,6 +1045,7 @@
             "stagedInfo": "Te pliki zostaną przesłane po zapisaniu posta. Twój postęp jest automatycznie zapisywany lokalnie.",
             "pendingUpload": "Oczekujące przesłanie",
             "fromTemplates": "Dodaj z szablonów",
+            "fromStockPhotos": "Zdjęcia stockowe",
             "myTemplates": "Moje szablony",
             "templateLibrary": "Biblioteka szablonów",
             "noMyTemplates": "Brak szablonów",
@@ -1061,6 +1139,29 @@
             "pending": "Oczekujące",
             "approved": "Zatwierdzone",
             "rejected": "Zmiany"
+        },
+        "dashboard": {
+            "title": "Do zatwierdzenia",
+            "subtitle": "Przejrzyj i zatwierdź posty przed publikacją",
+            "allBrands": "Wszystkie marki",
+            "thisWeek": "Ten tydzień",
+            "thisMonth": "Ten miesiąc",
+            "allTime": "Wszystko",
+            "noPending": "Brak postów do zatwierdzenia",
+            "noPendingDescription": "Wszystkie posty zostały przejrzane. Świetna robota!",
+            "approveAll": "Zatwierdź wszystko",
+            "approveSelected": "Zatwierdź wybrane",
+            "rejectSelected": "Odrzuć wybrane",
+            "approvedCount": "{count} postów zatwierdzonych",
+            "rejectedCount": "{count} postów odrzuconych",
+            "filters": "Filtry",
+            "clearFilters": "Wyczyść filtry",
+            "postApproved": "Post zatwierdzony",
+            "postRejected": "Post odrzucony",
+            "confirmBatchApprove": "Zatwierdzić {count} postów?",
+            "confirmBatchApproveMessage": "Czy na pewno chcesz zatwierdzić {count} wybranych postów?",
+            "confirmBatchReject": "Odrzucić {count} postów?",
+            "confirmBatchRejectMessage": "Czy na pewno chcesz odrzucić {count} wybranych postów?"
         }
     },
     "editor": {
@@ -1106,15 +1207,271 @@
         "linkPreviewPlaceholder": "https://example.com/artykul",
         "linkPreviewHint": "Dodaj URL, aby wygenerować kartę podglądu linku"
     },
-    "settings": {
-        "title": "Ustawienia",
-        "weekStartsOn": "Tydzień zaczyna się od",
-        "sunday": "Niedziela",
-        "monday": "Poniedziałek",
-        "timeFormat": "Format czasu",
-        "time12h": "12-godzinny (AM/PM)",
-        "time24h": "24-godzinny",
-        "language": "Język",
-        "saved": "Ustawienia zapisane"
+    "brands": {
+        "title": "Marki",
+        "pageTitle": "Zarządzanie markami",
+        "selectBrand": "Wybierz markę",
+        "noBrands": "Brak marek",
+        "noBrandsDescription": "Zacznij od utworzenia nowej marki, aby zarządzać swoimi treściami.",
+        "createNew": "Utwórz nową markę",
+        "manageBrands": "Zarządzaj markami",
+        "editBrand": "Edytuj",
+        "deleteBrand": "Usuń",
+        "deleteBrandConfirm": "Czy na pewno chcesz usunąć markę \"{name}\"? Wszystkie powiązane posty i szablony zostaną trwale usunięte.",
+        "brandDeleted": "Marka została usunięta",
+        "brandUpdated": "Marka została zaktualizowana",
+        "currentBrand": "Aktualna marka",
+        "switchBrand": "Zmień markę",
+        "brandSwitched": "Marka została zmieniona",
+        "industries": {
+            "marketing": "Marketing",
+            "technology": "Technologia / IT",
+            "finance": "Finanse",
+            "healthcare": "Zdrowie",
+            "education": "Edukacja",
+            "ecommerce": "E-commerce",
+            "real_estate": "Nieruchomości",
+            "fitness": "Fitness / Wellness",
+            "food": "Gastronomia",
+            "travel": "Turystyka",
+            "fashion": "Moda i Uroda",
+            "entertainment": "Rozrywka",
+            "consulting": "Consulting",
+            "legal": "Prawo",
+            "non_profit": "Organizacje non-profit",
+            "other": "Inne"
+        },
+        "tones": {
+            "professional": "Profesjonalny",
+            "casual": "Swobodny",
+            "playful": "Zabawny",
+            "formal": "Formalny",
+            "friendly": "Przyjazny",
+            "authoritative": "Autorytatywny"
+        },
+        "personalities": {
+            "expert": "Ekspert",
+            "friendly": "Przyjazny",
+            "motivational": "Motywujący",
+            "humorous": "Humorystyczny",
+            "empathetic": "Empatyczny",
+            "bold": "Odważny",
+            "educational": "Edukacyjny",
+            "inspirational": "Inspirujący"
+        },
+        "emojiUsage": {
+            "often": "Często",
+            "sometimes": "Czasami",
+            "rarely": "Rzadko",
+            "never": "Nigdy"
+        },
+        "onboarding": {
+            "title": "Utwórz swoją markę",
+            "subtitle": "Skonfiguruj profil marki w kilku prostych krokach",
+            "stepOf": "Krok {current} z {total}",
+            "finish": "Utwórz markę",
+            "error": "Nie udało się utworzyć marki",
+            "steps": {
+                "basics": "Podstawy",
+                "audience": "Odbiorcy",
+                "voice": "Głos",
+                "pillars": "Treści",
+                "platforms": "Platformy",
+                "automation": "Automatyzacja"
+            },
+            "step1": {
+                "title": "Podstawowe informacje",
+                "description": "Opowiedz nam o swojej marce lub działalności.",
+                "brandName": "Nazwa marki",
+                "brandNamePlaceholder": "np. Jan Kowalski - Ekspert Marketingu",
+                "industry": "Branża",
+                "selectIndustry": "Wybierz branżę...",
+                "descriptionLabel": "Opis",
+                "descriptionPlaceholder": "Opisz czym się zajmujesz, komu pomagasz, jakie problemy rozwiązujesz, do kogo chcesz dotrzeć...",
+                "descriptionHint": "Szczegółowy opis pomoże AI wygenerować lepsze sugestie zainteresowań, problemów i filarów treści.",
+                "descriptionTooShort": "Dodaj jeszcze {remaining} znaków, aby sugestie AI działały poprawnie.",
+                "descriptionReady": "Opis jest gotowy do generowania sugestii AI!",
+                "language": "Język treści",
+                "languageHint": "Język, w którym AI będzie generować posty i treści."
+            },
+            "step2": {
+                "title": "Grupa docelowa",
+                "description": "Określ, do kogo chcesz dotrzeć ze swoimi treściami.",
+                "ageRange": "Przedział wiekowy",
+                "gender": "Płeć",
+                "genders": {
+                    "all": "Wszyscy",
+                    "male": "Mężczyźni",
+                    "female": "Kobiety"
+                },
+                "interests": "Zainteresowania",
+                "interestPlaceholder": "Dodaj zainteresowanie...",
+                "painPoints": "Problemy / Wyzwania",
+                "painPointPlaceholder": "Dodaj wyzwanie, z którym mierzą się Twoi odbiorcy...",
+                "generateWithAi": "Wygeneruj z AI",
+                "aiRequiresDescription": "Uzupełnij opis marki w Kroku 1, aby skorzystać z sugestii AI",
+                "aiGenerating": "Generowanie sugestii...",
+                "aiInterestsGenerated": "Wygenerowano zainteresowania",
+                "aiPainPointsGenerated": "Wygenerowano problemy"
+            },
+            "step3": {
+                "title": "Głos marki",
+                "description": "Określ, jak Twoja marka komunikuje się z odbiorcami.",
+                "tone": "Ton komunikacji",
+                "personality": "Cechy osobowości",
+                "selectMultiple": "wybierz wiele",
+                "emojiUsage": "Użycie emoji",
+                "language": "Język treści",
+                "languageHint": "Język, w którym AI będzie generować posty i treści. Jest to niezależne od języka interfejsu."
+            },
+            "step4": {
+                "title": "Filary treści",
+                "description": "Zdefiniuj główne tematy swoich treści. Procenty powinny sumować się do 100%.",
+                "pillarName": "Nazwa filaru (np. Porady i triki)",
+                "pillarDescription": "Krótki opis tego typu treści...",
+                "addPillar": "Dodaj filar",
+                "distributeEvenly": "Rozłóż równomiernie",
+                "total": "Suma",
+                "percentageError": "Procenty muszą sumować się do 100%",
+                "suggestedHint": "Nie wiesz od czego zacząć? Użyj naszych sugerowanych filarów treści.",
+                "useSuggested": "Użyj sugerowanych filarów",
+                "generateWithAi": "Wygeneruj z AI",
+                "aiRequiresDescription": "Uzupełnij opis marki w Kroku 1, aby skorzystać z sugestii AI",
+                "aiGenerating": "Generowanie filarów...",
+                "aiPillarsGenerated": "Wygenerowano filary treści"
+            },
+            "step5": {
+                "title": "Platformy i harmonogram",
+                "description": "Wybierz gdzie chcesz publikować i jak często.",
+                "selectPlatforms": "Wybierz platformy",
+                "postsPerWeek": "Posty na tydzień",
+                "week": "tydzień",
+                "bestTimes": "Najlepsze godziny publikacji",
+                "autoSchedule": "Automatyczne planowanie",
+                "autoScheduleDescription": "AI automatycznie zaplanuje posty w optymalnych godzinach",
+                "selectAtLeastOne": "Wybierz przynajmniej jedną platformę, aby kontynuować."
+            }
+        }
+    },
+    "contentPlan": {
+        "generateTitle": "Wygeneruj plan treści",
+        "generateDescription": "AI stworzy kalendarz treści na podstawie profilu Twojej marki i preferencji publikacji.",
+        "period": "Okres planowania",
+        "week": "Tydzień",
+        "weekDescription": "7 dni treści",
+        "month": "Miesiąc",
+        "monthDescription": "30 dni treści",
+        "startDate": "Data rozpoczęcia",
+        "startDateHint": "Pozostaw puste, aby zacząć od jutra",
+        "generatingFor": "Generowanie planu dla: {brand}",
+        "generate": "Wygeneruj plan",
+        "generating": "Generowanie...",
+        "success": "Plan treści wygenerowany pomyślnie!",
+        "error": "Nie udało się wygenerować planu treści",
+        "postsCreated": "Utworzono {count} szkiców postów",
+        "generateContent": "Wygeneruj treść",
+        "generatingContent": "Generowanie treści...",
+        "contentGenerated": "Treść wygenerowana pomyślnie!",
+        "regenerate": "Wygeneruj ponownie",
+        "feedback": "Feedback dla AI",
+        "feedbackPlaceholder": "Powiedz AI co poprawić..."
+    },
+    "stockPhotos": {
+        "title": "Zdjęcia stockowe",
+        "search": "Szukaj zdjęć",
+        "searchPlaceholder": "Szukaj zdjęć...",
+        "powered": "Zasilane przez Unsplash & Pexels",
+        "noResults": "Nie znaleziono zdjęć",
+        "noResultsHint": "Spróbuj innych słów kluczowych",
+        "loading": "Ładowanie zdjęć...",
+        "select": "Wybierz",
+        "selected": "Wybrano",
+        "attribution": "Zdjęcie: {author}",
+        "suggestedKeywords": "Sugerowane słowa kluczowe",
+        "featured": "Wyróżnione",
+        "searchResults": "Wyniki wyszukiwania",
+        "usePhoto": "Użyj tego zdjęcia",
+        "viewOnSource": "Zobacz na {source}",
+        "notConfigured": "Usługa zdjęć stockowych nie jest skonfigurowana",
+        "searchTip": "Wpisz słowa kluczowe i naciśnij Enter, aby wyszukać"
+    },
+    "automation": {
+        "title": "Automatyzacja treści",
+        "description": "Automatycznie generuj i planuj treści na podstawie ustawień marki",
+        "enabled": "Włączona",
+        "disabled": "Wyłączona",
+        "disabledTitle": "Automatyzacja jest wyłączona",
+        "disabledDescription": "Włącz automatyzację, aby automatycznie generować treści i wypełniać harmonogram publikacji.",
+        "enableNow": "Włącz automatyzację",
+        "howItWorks": "Jak to działa",
+        "step1Title": "Kolejka jest wypełniana",
+        "step1Desc": "System tworzy puste sloty na następne X dni na podstawie ustawień harmonogramu publikacji.",
+        "step2Title": "AI generuje treści",
+        "step2Desc": "Dla każdego slotu AI generuje post pasujący do głosu marki i filarów treści. Posty pojawiają się w Kalendarzu jako szkice.",
+        "step3Title": "Ty akceptujesz, system publikuje",
+        "step3Desc": "Przeglądaj posty w zakładce Akceptacja. Zatwierdzone posty są automatycznie publikowane w zaplanowanych godzinach.",
+        "enabledSuccess": "Automatyzacja włączona!",
+        "enabledSuccessDesc": "Kliknij \"Generuj teraz\" aby stworzyć pierwszą partię treści lub poczekaj na automatyczne uruchomienie (co godzinę).",
+        "queueStats": "Status kolejki",
+        "totalInQueue": "Łącznie",
+        "pending": "Oczekujące",
+        "ready": "Gotowe",
+        "published": "Opublikowane",
+        "failed": "Nieudane",
+        "planned": "zaplanowano",
+        "target": "cel",
+        "emptyQueueHint": "Kolejka jest pusta. Kliknij \"Generuj teraz\" aby ją wypełnić treściami.",
+        "pillarDistribution": "Rozkład filarów treści",
+        "settings": "Ustawienia",
+        "queueDays": "Dni w kolejce",
+        "queueDaysHint": "Na ile dni do przodu planować treści",
+        "days": "dni",
+        "lastRun": "Ostatnie uruchomienie",
+        "never": "Nigdy",
+        "coverageDays": "Pokrycie kolejki",
+        "nextRun": "Następne automatyczne uruchomienie",
+        "nextRunHint": "Co godzinę (jeśli kolejka wymaga uzupełnienia)",
+        "triggerNow": "Generuj teraz",
+        "triggerStarted": "Generowanie rozpoczęte! Posty pojawią się wkrótce w Kalendarzu.",
+        "refresh": "Odśwież",
+        "nextSlots": "Następne dostępne sloty",
+        "enableSuccess": "Automatyzacja włączona",
+        "disableSuccess": "Automatyzacja wyłączona",
+        "triggerSuccess": "Zadanie automatyzacji uruchomione",
+        "triggerError": "Nie udało się uruchomić automatyzacji",
+        "noPendingHint": "Wszystkie treści wygenerowane! Kliknij \"Rozszerz kolejkę\" aby dodać więcej dni.",
+        "extendQueue": "Rozszerz kolejkę",
+        "extendStarted": "Rozszerzanie kolejki rozpoczęte! Nowe posty pojawią się wkrótce.",
+        "extendError": "Nie udało się rozszerzyć kolejki"
+    },
+    "notifications": {
+        "title": "Powiadomienia",
+        "empty": "Brak powiadomień",
+        "markAllRead": "Oznacz wszystkie jako przeczytane",
+        "postGenerated": {
+            "title": "Post wygenerowany",
+            "message": "Nowy post \"{title}\" został wygenerowany dla {brand}"
+        },
+        "postPublished": {
+            "title": "Post opublikowany",
+            "message": "Post \"{title}\" został opublikowany na {platform}"
+        },
+        "approvalRequired": {
+            "title": "Wymagana akceptacja",
+            "message": "Post \"{title}\" wymaga Twojej akceptacji"
+        }
+    },
+    "tasks": {
+        "title": "Aktywne zadania",
+        "inProgress": "{count} w trakcie | {count} w trakcie",
+        "completed": "Ukończono",
+        "types": {
+            "contentGeneration": "Generowanie treści",
+            "postPublishing": "Publikowanie posta",
+            "imageGeneration": "Generowanie obrazu"
+        },
+        "descriptions": {
+            "contentGeneration": "Tworzenie posta dla \"{pillar}\" ({brand})"
+        }
     }
 }

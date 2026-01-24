@@ -51,4 +51,14 @@ return [
         'base_url' => 'https://api.pexels.com/v1',
     ],
 
+    'unsplash' => [
+        'access_key' => env('UNSPLASH_ACCESS_KEY'),
+        'base_url' => 'https://api.unsplash.com',
+    ],
+
+    'n8n' => [
+        'webhook_url' => env('N8N_WEBHOOK_URL'),
+        'webhook_secret' => env('N8N_WEBHOOK_SECRET'),
+    ],
+
 ];

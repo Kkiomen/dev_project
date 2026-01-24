@@ -1,4 +1,5 @@
 <script setup>
+import { ref } from 'vue';
 import { useCalendarStore } from '@/stores/calendar';
 
 const props = defineProps({
@@ -12,13 +13,45 @@ const emit = defineEmits(['click']);
 
 const calendarStore = useCalendarStore();
 
+// Track if we're dragging to prevent click from firing after drag
+const isDragging = ref(false);
+const dragStartPos = ref({ x: 0, y: 0 });
+
+const handleMouseDown = (event) => {
+    dragStartPos.value = { x: event.clientX, y: event.clientY };
+    isDragging.value = false;
+};
+
 const handleDragStart = (event) => {
+    isDragging.value = true;
     event.dataTransfer.setData('text/plain', props.post.id);
     calendarStore.startDragging(props.post);
 };
 
 const handleDragEnd = () => {
     calendarStore.stopDragging();
+    // Reset dragging state after a small delay to allow click to be prevented
+    setTimeout(() => {
+        isDragging.value = false;
+    }, 100);
+};
+
+const handleClick = (event) => {
+    // Don't emit click if we just finished dragging
+    if (isDragging.value) {
+        return;
+    }
+
+    // Check if mouse moved significantly (drag vs click)
+    if (event?.clientX !== undefined) {
+        const dx = Math.abs(event.clientX - dragStartPos.value.x);
+        const dy = Math.abs(event.clientY - dragStartPos.value.y);
+        if (dx > 5 || dy > 5) {
+            return;
+        }
+    }
+
+    emit('click');
 };
 
 const statusColors = {
@@ -33,10 +66,11 @@ const statusColors = {
 
 <template>
     <div
-        class="flex items-center space-x-2 px-2 py-1 rounded border cursor-pointer hover:shadow-sm transition-shadow"
+        class="flex items-center space-x-2 px-2 py-1 rounded border cursor-pointer hover:shadow-sm transition-shadow select-none"
         :class="statusColors[post.status] || 'bg-gray-100 border-gray-300'"
         draggable="true"
-        @click="emit('click')"
+        @mousedown="handleMouseDown"
+        @click.stop="handleClick"
         @dragstart="handleDragStart"
         @dragend="handleDragEnd"
     >

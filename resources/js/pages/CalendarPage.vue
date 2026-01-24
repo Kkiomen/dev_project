@@ -1,18 +1,22 @@
 <script setup>
-import { ref, onMounted, watch, computed } from 'vue';
+import { ref, onMounted, onUnmounted, watch, computed } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import { useToast } from '@/composables/useToast';
 import { usePostsStore } from '@/stores/posts';
 import { useCalendarStore } from '@/stores/calendar';
+import { useBrandsStore } from '@/stores/brands';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import Button from '@/components/common/Button.vue';
 import CalendarView from '@/components/calendar/CalendarView.vue';
 import CalendarToolbar from '@/components/calendar/CalendarToolbar.vue';
 
 const { t } = useI18n();
+const toast = useToast();
 const router = useRouter();
 const postsStore = usePostsStore();
 const calendarStore = useCalendarStore();
+const brandsStore = useBrandsStore();
 
 const loading = ref(true);
 
@@ -30,7 +34,33 @@ const fetchCalendarData = async () => {
     }
 };
 
-onMounted(fetchCalendarData);
+// Subscribe to WebSocket events for real-time calendar updates
+const subscribeToCalendarEvents = () => {
+    const brandId = brandsStore.currentBrand?.id;
+    if (brandId && window.Echo) {
+        window.Echo.private(`brand.${brandId}`)
+            .listen('.post.created', (e) => {
+                postsStore.addCalendarPost(e.post);
+                toast.success(t('calendar.newPostCreated'));
+            });
+    }
+};
+
+const unsubscribeFromCalendarEvents = () => {
+    const brandId = brandsStore.currentBrand?.id;
+    if (brandId && window.Echo) {
+        window.Echo.leave(`brand.${brandId}`);
+    }
+};
+
+onMounted(() => {
+    fetchCalendarData();
+    subscribeToCalendarEvents();
+});
+
+onUnmounted(() => {
+    unsubscribeFromCalendarEvents();
+});
 
 watch(
     () => [calendarStore.monthStart, calendarStore.monthEnd],
@@ -46,6 +76,10 @@ const handleCreatePost = () => {
 };
 
 const handleEditPost = (post) => {
+    if (!post?.id) {
+        console.error('Cannot edit post: missing post ID', post);
+        return;
+    }
     router.push({ name: 'post.edit', params: { postId: post.id } });
 };
 

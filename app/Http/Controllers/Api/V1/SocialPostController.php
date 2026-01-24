@@ -203,4 +203,118 @@ class SocialPostController extends Controller
             'data' => new SocialPostResource($post->load(['platformPosts', 'media'])),
         ]);
     }
+
+    public function approve(Request $request, SocialPost $post): SocialPostResource
+    {
+        $this->authorize('update', $post);
+
+        if ($post->status !== PostStatus::PendingApproval && $post->status !== PostStatus::Draft) {
+            abort(400, 'Post cannot be approved in current status');
+        }
+
+        $post->update([
+            'status' => PostStatus::Approved,
+        ]);
+
+        return new SocialPostResource($post->load(['platformPosts', 'media']));
+    }
+
+    public function reject(Request $request, SocialPost $post): SocialPostResource
+    {
+        $this->authorize('update', $post);
+
+        $request->validate([
+            'feedback' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        if ($post->status !== PostStatus::PendingApproval) {
+            abort(400, 'Only pending posts can be rejected');
+        }
+
+        $post->update([
+            'status' => PostStatus::Draft,
+        ]);
+
+        // TODO: Store feedback in a related model if needed
+
+        return new SocialPostResource($post->load(['platformPosts', 'media']));
+    }
+
+    public function batchApprove(Request $request): JsonResponse
+    {
+        $request->validate([
+            'post_ids' => ['required', 'array', 'min:1'],
+            'post_ids.*' => ['string'],
+        ]);
+
+        $posts = SocialPost::forUser($request->user())
+            ->whereIn('public_id', $request->post_ids)
+            ->whereIn('status', [PostStatus::Draft, PostStatus::PendingApproval])
+            ->get();
+
+        $approvedCount = 0;
+        foreach ($posts as $post) {
+            $post->update(['status' => PostStatus::Approved]);
+            $approvedCount++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'approved_count' => $approvedCount,
+            'message' => "{$approvedCount} posts approved",
+        ]);
+    }
+
+    public function batchReject(Request $request): JsonResponse
+    {
+        $request->validate([
+            'post_ids' => ['required', 'array', 'min:1'],
+            'post_ids.*' => ['string'],
+            'feedback' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $posts = SocialPost::forUser($request->user())
+            ->whereIn('public_id', $request->post_ids)
+            ->where('status', PostStatus::PendingApproval)
+            ->get();
+
+        $rejectedCount = 0;
+        foreach ($posts as $post) {
+            $post->update(['status' => PostStatus::Draft]);
+            $rejectedCount++;
+        }
+
+        return response()->json([
+            'success' => true,
+            'rejected_count' => $rejectedCount,
+            'message' => "{$rejectedCount} posts rejected",
+        ]);
+    }
+
+    public function pendingApproval(Request $request): AnonymousResourceCollection
+    {
+        $query = SocialPost::forUser($request->user())
+            ->with(['platformPosts', 'media', 'brand'])
+            ->withCount('media')
+            ->whereIn('status', [PostStatus::Draft, PostStatus::PendingApproval]);
+
+        // Filter by brand
+        if ($request->has('brand_id')) {
+            $query->whereHas('brand', function ($q) use ($request) {
+                $q->where('public_id', $request->brand_id);
+            });
+        }
+
+        // Filter by date range
+        if ($request->has('start')) {
+            $query->where('scheduled_at', '>=', $request->start);
+        }
+        if ($request->has('end')) {
+            $query->where('scheduled_at', '<=', $request->end);
+        }
+
+        $posts = $query->ordered()->paginate($request->get('per_page', 20));
+
+        return SocialPostResource::collection($posts);
+    }
 }

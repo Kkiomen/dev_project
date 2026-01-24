@@ -1,14 +1,18 @@
-import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { ref, computed, watch, onMounted, onUnmounted, toRef, isRef } from 'vue';
 
 const DRAFT_KEY_PREFIX = 'post_draft_';
 const STAGED_MEDIA_KEY_PREFIX = 'post_staged_media_';
 const TEMPLATE_IN_PROGRESS_KEY_PREFIX = 'post_template_';
 const AUTO_SAVE_INTERVAL = 2000; // 2 seconds
 
-export function usePostDraft(postId = null) {
-    const draftKey = postId ? `${DRAFT_KEY_PREFIX}${postId}` : `${DRAFT_KEY_PREFIX}new`;
-    const mediaKey = postId ? `${STAGED_MEDIA_KEY_PREFIX}${postId}` : `${STAGED_MEDIA_KEY_PREFIX}new`;
-    const templateKey = postId ? `${TEMPLATE_IN_PROGRESS_KEY_PREFIX}${postId}` : `${TEMPLATE_IN_PROGRESS_KEY_PREFIX}new`;
+export function usePostDraft(postIdInput = null) {
+    // Make postId reactive - accept either a ref or a plain value
+    const postIdRef = isRef(postIdInput) ? postIdInput : ref(postIdInput);
+
+    // Compute keys reactively based on postId
+    const draftKey = computed(() => postIdRef.value ? `${DRAFT_KEY_PREFIX}${postIdRef.value}` : `${DRAFT_KEY_PREFIX}new`);
+    const mediaKey = computed(() => postIdRef.value ? `${STAGED_MEDIA_KEY_PREFIX}${postIdRef.value}` : `${STAGED_MEDIA_KEY_PREFIX}new`);
+    const templateKey = computed(() => postIdRef.value ? `${TEMPLATE_IN_PROGRESS_KEY_PREFIX}${postIdRef.value}` : `${TEMPLATE_IN_PROGRESS_KEY_PREFIX}new`);
 
     const hasDraft = ref(false);
     const lastSaved = ref(null);
@@ -17,10 +21,22 @@ export function usePostDraft(postId = null) {
 
     let autoSaveTimeout = null;
 
+    // Reset state when postId changes
+    watch(postIdRef, () => {
+        hasDraft.value = false;
+        lastSaved.value = null;
+        stagedMedia.value = [];
+        templateInProgress.value = null;
+        if (autoSaveTimeout) {
+            clearTimeout(autoSaveTimeout);
+            autoSaveTimeout = null;
+        }
+    });
+
     // Load draft from localStorage
     const loadDraft = () => {
         try {
-            const savedDraft = localStorage.getItem(draftKey);
+            const savedDraft = localStorage.getItem(draftKey.value);
             if (savedDraft) {
                 const parsed = JSON.parse(savedDraft);
                 hasDraft.value = true;
@@ -41,7 +57,7 @@ export function usePostDraft(postId = null) {
                 ...data,
                 _savedAt: new Date().toISOString(),
             };
-            localStorage.setItem(draftKey, JSON.stringify(toSave));
+            localStorage.setItem(draftKey.value, JSON.stringify(toSave));
             hasDraft.value = true;
             lastSaved.value = new Date();
         } catch (error) {
@@ -52,8 +68,8 @@ export function usePostDraft(postId = null) {
     // Clear draft from localStorage
     const clearDraft = () => {
         try {
-            localStorage.removeItem(draftKey);
-            localStorage.removeItem(mediaKey);
+            localStorage.removeItem(draftKey.value);
+            localStorage.removeItem(mediaKey.value);
             hasDraft.value = false;
             lastSaved.value = null;
             stagedMedia.value = [];
@@ -75,7 +91,7 @@ export function usePostDraft(postId = null) {
     // Load staged media from localStorage
     const loadStagedMedia = () => {
         try {
-            const saved = localStorage.getItem(mediaKey);
+            const saved = localStorage.getItem(mediaKey.value);
             if (saved) {
                 stagedMedia.value = JSON.parse(saved);
                 return stagedMedia.value;
@@ -90,7 +106,7 @@ export function usePostDraft(postId = null) {
     const saveStagedMedia = (media) => {
         try {
             stagedMedia.value = media;
-            localStorage.setItem(mediaKey, JSON.stringify(media));
+            localStorage.setItem(mediaKey.value, JSON.stringify(media));
         } catch (error) {
             console.error('Failed to save staged media:', error);
         }
@@ -141,7 +157,7 @@ export function usePostDraft(postId = null) {
     const getAllMedia = (serverMedia = []) => {
         // For new posts, return staged media
         // For existing posts, server media takes precedence
-        if (!postId) {
+        if (!postIdRef.value) {
             return stagedMedia.value;
         }
         // For existing posts, combine server media with any newly staged media
@@ -182,7 +198,7 @@ export function usePostDraft(postId = null) {
 
     // Check if there's a draft for new post
     const checkForNewDraft = () => {
-        if (!postId) {
+        if (!postIdRef.value) {
             return loadDraft();
         }
         return null;
@@ -191,7 +207,7 @@ export function usePostDraft(postId = null) {
     // Template in progress management
     const loadTemplateInProgress = () => {
         try {
-            const saved = localStorage.getItem(templateKey);
+            const saved = localStorage.getItem(templateKey.value);
             if (saved) {
                 templateInProgress.value = JSON.parse(saved);
                 return templateInProgress.value;
@@ -211,7 +227,7 @@ export function usePostDraft(postId = null) {
                 isLibrary: data.isLibrary,
                 savedAt: new Date().toISOString(),
             };
-            localStorage.setItem(templateKey, JSON.stringify(toSave));
+            localStorage.setItem(templateKey.value, JSON.stringify(toSave));
             templateInProgress.value = toSave;
         } catch (error) {
             console.error('Failed to save template in progress:', error);
@@ -220,7 +236,7 @@ export function usePostDraft(postId = null) {
 
     const clearTemplateInProgress = () => {
         try {
-            localStorage.removeItem(templateKey);
+            localStorage.removeItem(templateKey.value);
             templateInProgress.value = null;
         } catch (error) {
             console.error('Failed to clear template in progress:', error);

@@ -19,6 +19,7 @@ class SocialPost extends Model
 
     protected $fillable = [
         'user_id',
+        'brand_id',
         'title',
         'main_caption',
         'status',
@@ -49,6 +50,11 @@ class SocialPost extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function brand(): BelongsTo
+    {
+        return $this->belongsTo(Brand::class);
+    }
+
     public function platformPosts(): HasMany
     {
         return $this->hasMany(PlatformPost::class);
@@ -68,6 +74,11 @@ class SocialPost extends Model
     public function scopeForUser(Builder $query, User $user): Builder
     {
         return $query->where('user_id', $user->id);
+    }
+
+    public function scopeForBrand(Builder $query, Brand $brand): Builder
+    {
+        return $query->where('brand_id', $brand->id);
     }
 
     public function scopeWithStatus(Builder $query, PostStatus $status): Builder

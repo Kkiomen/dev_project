@@ -31,7 +31,13 @@
         "done": "Done",
         "created": "Created",
         "disabled": "disabled",
-        "add": "Add"
+        "add": "Add",
+        "next": "Next",
+        "back": "Back",
+        "finish": "Finish",
+        "selected": "selected",
+        "selectAll": "Select all",
+        "deselectAll": "Deselect all"
     },
     "dashboard": {
         "title": "My Databases",
@@ -236,12 +242,81 @@
     "navigation": {
         "dashboard": "Dashboard",
         "profile": "Profile",
+        "settings": "Settings",
+        "brands": "My Brands",
         "logout": "Logout",
         "menu": "Menu",
         "docs": "Documentation",
         "graphics": "Graphics",
         "calendar": "Calendar",
+        "approval": "Approval",
         "noBasesForGraphics": "Create a database first"
+    },
+    "settings": {
+        "title": "Settings",
+        "profileSaved": "Profile saved",
+        "settingsSaved": "Settings saved",
+        "passwordChanged": "Password changed successfully",
+        "tabs": {
+            "profile": "Profile",
+            "ai": "AI Settings",
+            "notifications": "Notifications"
+        },
+        "profile": {
+            "title": "Profile Information",
+            "name": "Full Name",
+            "email": "Email Address",
+            "interface": "Interface Settings",
+            "language": "Interface Language",
+            "timezone": "Timezone",
+            "weekStartsOn": "Week Starts On",
+            "monday": "Monday",
+            "sunday": "Sunday",
+            "timeFormat": "Time Format",
+            "changePassword": "Change Password",
+            "currentPassword": "Current Password",
+            "newPassword": "New Password",
+            "confirmPassword": "Confirm New Password",
+            "updatePassword": "Update Password"
+        },
+        "ai": {
+            "title": "AI Generation Settings",
+            "description": "Configure how AI generates content for your posts and suggestions.",
+            "creativity": "Creativity Level",
+            "creativityOptions": {
+                "low": "Conservative",
+                "medium": "Balanced",
+                "high": "Creative"
+            },
+            "creativityHint": {
+                "low": "More predictable and safe content, sticks closely to your brand guidelines.",
+                "medium": "Good balance between creativity and consistency with your brand.",
+                "high": "More creative and varied content, may produce unexpected results."
+            },
+            "defaultLength": "Default Content Length",
+            "lengthOptions": {
+                "short": "Short",
+                "medium": "Medium",
+                "long": "Long"
+            },
+            "customInstructions": "Custom Instructions",
+            "customInstructionsHint": "Add specific instructions that AI should always follow when generating content.",
+            "customInstructionsPlaceholder": "E.g., Always mention our website at the end. Avoid using the word 'amazing'. Include statistics when possible...",
+            "autoSuggest": "Auto-suggest Content",
+            "autoSuggestHint": "Automatically suggest improvements when editing posts."
+        },
+        "notifications": {
+            "title": "Notification Preferences",
+            "description": "Choose what notifications you want to receive.",
+            "emailNotifications": "Email Notifications",
+            "emailNotificationsHint": "Receive notifications via email.",
+            "postPublished": "Post Published",
+            "postPublishedHint": "Get notified when your posts are published.",
+            "approvalRequired": "Approval Required",
+            "approvalRequiredHint": "Get notified when posts need your approval.",
+            "weeklyReport": "Weekly Report",
+            "weeklyReportHint": "Receive a weekly summary of your content performance."
+        }
     },
     "docs": {
         "title": "API Documentation",
@@ -844,6 +919,7 @@
         "month": "Month",
         "week": "Week",
         "allStatuses": "All Statuses",
+        "newPostCreated": "New post added to calendar",
         "days": {
             "sun": "Sun",
             "mon": "Mon",
@@ -874,6 +950,7 @@
         "edit": "Edit Post",
         "duplicate": "Duplicate",
         "deleteConfirm": "Are you sure you want to delete this post?",
+        "noCaption": "No caption",
         "titlePlaceholder": "Enter post title...",
         "mainCaption": "Main Caption",
         "mainCaptionPlaceholder": "Write your post content here...",
@@ -965,6 +1042,7 @@
             "stagedInfo": "These files will be uploaded when you save the post. Your progress is automatically saved locally.",
             "pendingUpload": "Pending Upload",
             "fromTemplates": "Add from Templates",
+            "fromStockPhotos": "Stock Photos",
             "myTemplates": "My Templates",
             "templateLibrary": "Template Library",
             "noMyTemplates": "No templates yet",
@@ -1058,6 +1136,29 @@
             "pending": "Pending",
             "approved": "Approved",
             "rejected": "Changes"
+        },
+        "dashboard": {
+            "title": "Pending Approval",
+            "subtitle": "Review and approve posts before publishing",
+            "allBrands": "All brands",
+            "thisWeek": "This week",
+            "thisMonth": "This month",
+            "allTime": "All time",
+            "noPending": "No Pending Posts",
+            "noPendingDescription": "All posts have been reviewed. Great job!",
+            "approveAll": "Approve All",
+            "approveSelected": "Approve Selected",
+            "rejectSelected": "Reject Selected",
+            "approvedCount": "{count} posts approved",
+            "rejectedCount": "{count} posts rejected",
+            "filters": "Filters",
+            "clearFilters": "Clear filters",
+            "postApproved": "Post approved",
+            "postRejected": "Post rejected",
+            "confirmBatchApprove": "Approve {count} posts?",
+            "confirmBatchApproveMessage": "Are you sure you want to approve {count} selected posts?",
+            "confirmBatchReject": "Reject {count} posts?",
+            "confirmBatchRejectMessage": "Are you sure you want to reject {count} selected posts?"
         }
     },
     "editor": {
@@ -1103,15 +1204,271 @@
         "linkPreviewPlaceholder": "https://example.com/article",
         "linkPreviewHint": "Add a URL to generate a link preview card"
     },
-    "settings": {
-        "title": "Settings",
-        "weekStartsOn": "Week starts on",
-        "sunday": "Sunday",
-        "monday": "Monday",
-        "timeFormat": "Time format",
-        "time12h": "12-hour (AM/PM)",
-        "time24h": "24-hour",
-        "language": "Language",
-        "saved": "Settings saved"
+    "brands": {
+        "title": "Brands",
+        "pageTitle": "Brand Management",
+        "selectBrand": "Select brand",
+        "noBrands": "No brands yet",
+        "noBrandsDescription": "Start by creating a new brand to manage your content.",
+        "createNew": "Create new brand",
+        "manageBrands": "Manage brands",
+        "editBrand": "Edit",
+        "deleteBrand": "Delete",
+        "deleteBrandConfirm": "Are you sure you want to delete the brand \"{name}\"? All associated posts and templates will be permanently deleted.",
+        "brandDeleted": "Brand deleted successfully",
+        "brandUpdated": "Brand updated successfully",
+        "currentBrand": "Current brand",
+        "switchBrand": "Switch brand",
+        "brandSwitched": "Brand switched successfully",
+        "industries": {
+            "marketing": "Marketing",
+            "technology": "Technology / IT",
+            "finance": "Finance",
+            "healthcare": "Healthcare",
+            "education": "Education",
+            "ecommerce": "E-commerce",
+            "real_estate": "Real Estate",
+            "fitness": "Fitness / Wellness",
+            "food": "Food & Beverage",
+            "travel": "Travel & Hospitality",
+            "fashion": "Fashion & Beauty",
+            "entertainment": "Entertainment",
+            "consulting": "Consulting",
+            "legal": "Legal",
+            "non_profit": "Non-Profit",
+            "other": "Other"
+        },
+        "tones": {
+            "professional": "Professional",
+            "casual": "Casual",
+            "playful": "Playful",
+            "formal": "Formal",
+            "friendly": "Friendly",
+            "authoritative": "Authoritative"
+        },
+        "personalities": {
+            "expert": "Expert",
+            "friendly": "Friendly",
+            "motivational": "Motivational",
+            "humorous": "Humorous",
+            "empathetic": "Empathetic",
+            "bold": "Bold",
+            "educational": "Educational",
+            "inspirational": "Inspirational"
+        },
+        "emojiUsage": {
+            "often": "Often",
+            "sometimes": "Sometimes",
+            "rarely": "Rarely",
+            "never": "Never"
+        },
+        "onboarding": {
+            "title": "Create your brand",
+            "subtitle": "Set up your brand profile in a few simple steps",
+            "stepOf": "Step {current} of {total}",
+            "finish": "Create Brand",
+            "error": "Failed to create brand",
+            "steps": {
+                "basics": "Basics",
+                "audience": "Audience",
+                "voice": "Voice",
+                "pillars": "Content",
+                "platforms": "Platforms",
+                "automation": "Automation"
+            },
+            "step1": {
+                "title": "Basic Information",
+                "description": "Tell us about your brand or personal business.",
+                "brandName": "Brand Name",
+                "brandNamePlaceholder": "e.g., John Smith - Marketing Expert",
+                "industry": "Industry",
+                "selectIndustry": "Select an industry...",
+                "descriptionLabel": "Description",
+                "descriptionPlaceholder": "Describe what you do, who you help, what problems you solve, who your target audience is...",
+                "descriptionHint": "A detailed description helps AI generate better suggestions for interests, problems, and content pillars.",
+                "descriptionTooShort": "Add {remaining} more characters for AI suggestions to work properly.",
+                "descriptionReady": "Description is ready for AI suggestions!",
+                "language": "Content Language",
+                "languageHint": "The language in which AI will generate posts and content."
+            },
+            "step2": {
+                "title": "Target Audience",
+                "description": "Define who you want to reach with your content.",
+                "ageRange": "Age Range",
+                "gender": "Gender",
+                "genders": {
+                    "all": "All",
+                    "male": "Male",
+                    "female": "Female"
+                },
+                "interests": "Interests",
+                "interestPlaceholder": "Add an interest...",
+                "painPoints": "Pain Points / Challenges",
+                "painPointPlaceholder": "Add a challenge your audience faces...",
+                "generateWithAi": "Generate with AI",
+                "aiRequiresDescription": "Fill in the brand description in Step 1 to use AI suggestions",
+                "aiGenerating": "Generating suggestions...",
+                "aiInterestsGenerated": "Interests generated",
+                "aiPainPointsGenerated": "Pain points generated"
+            },
+            "step3": {
+                "title": "Brand Voice",
+                "description": "Define how your brand communicates with the audience.",
+                "tone": "Communication Tone",
+                "personality": "Personality Traits",
+                "selectMultiple": "select multiple",
+                "emojiUsage": "Emoji Usage",
+                "language": "Content Language",
+                "languageHint": "The language in which AI will generate posts and content. This is independent of the interface language."
+            },
+            "step4": {
+                "title": "Content Pillars",
+                "description": "Define the main themes of your content. The percentages should add up to 100%.",
+                "pillarName": "Pillar name (e.g., Tips & Tricks)",
+                "pillarDescription": "Brief description of this content type...",
+                "addPillar": "Add pillar",
+                "distributeEvenly": "Distribute evenly",
+                "total": "Total",
+                "percentageError": "Percentages must add up to 100%",
+                "suggestedHint": "Not sure where to start? Use our suggested content pillars.",
+                "useSuggested": "Use suggested pillars",
+                "generateWithAi": "Generate with AI",
+                "aiRequiresDescription": "Fill in the brand description in Step 1 to use AI suggestions",
+                "aiGenerating": "Generating pillars...",
+                "aiPillarsGenerated": "Content pillars generated"
+            },
+            "step5": {
+                "title": "Platforms & Schedule",
+                "description": "Choose where you want to publish and how often.",
+                "selectPlatforms": "Select platforms",
+                "postsPerWeek": "Posts per week",
+                "week": "week",
+                "bestTimes": "Best posting times",
+                "autoSchedule": "Auto-schedule posts",
+                "autoScheduleDescription": "AI will automatically schedule posts at optimal times",
+                "selectAtLeastOne": "Please select at least one platform to continue."
+            }
+        }
+    },
+    "contentPlan": {
+        "generateTitle": "Generate Content Plan",
+        "generateDescription": "AI will create a content calendar based on your brand profile and posting preferences.",
+        "period": "Planning Period",
+        "week": "Week",
+        "weekDescription": "7 days of content",
+        "month": "Month",
+        "monthDescription": "30 days of content",
+        "startDate": "Start Date",
+        "startDateHint": "Leave empty to start from tomorrow",
+        "generatingFor": "Generating plan for: {brand}",
+        "generate": "Generate Plan",
+        "generating": "Generating...",
+        "success": "Content plan generated successfully!",
+        "error": "Failed to generate content plan",
+        "postsCreated": "{count} draft posts created",
+        "generateContent": "Generate Content",
+        "generatingContent": "Generating content...",
+        "contentGenerated": "Content generated successfully!",
+        "regenerate": "Regenerate",
+        "feedback": "Feedback for AI",
+        "feedbackPlaceholder": "Tell AI what to improve..."
+    },
+    "stockPhotos": {
+        "title": "Stock Photos",
+        "search": "Search photos",
+        "searchPlaceholder": "Search for photos...",
+        "powered": "Powered by Unsplash & Pexels",
+        "noResults": "No photos found",
+        "noResultsHint": "Try different keywords",
+        "loading": "Loading photos...",
+        "select": "Select",
+        "selected": "Selected",
+        "attribution": "Photo by {author}",
+        "suggestedKeywords": "Suggested keywords",
+        "featured": "Featured",
+        "searchResults": "Search results",
+        "usePhoto": "Use this photo",
+        "viewOnSource": "View on {source}",
+        "notConfigured": "Stock photo service is not configured",
+        "searchTip": "Enter keywords and press Enter to search"
+    },
+    "automation": {
+        "title": "Content Automation",
+        "description": "Automatically generate and schedule content based on your brand settings",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "disabledTitle": "Automation is disabled",
+        "disabledDescription": "Enable automation to automatically generate content and fill your posting schedule.",
+        "enableNow": "Enable Automation",
+        "howItWorks": "How it works",
+        "step1Title": "Queue is filled",
+        "step1Desc": "The system creates empty slots for the next X days based on your posting schedule settings.",
+        "step2Title": "AI generates content",
+        "step2Desc": "For each slot, AI generates a post matching your brand voice and content pillars. Posts appear in Calendar as drafts.",
+        "step3Title": "You approve, system publishes",
+        "step3Desc": "Review posts in the Approval tab. Approved posts are automatically published at scheduled times.",
+        "enabledSuccess": "Automation enabled!",
+        "enabledSuccessDesc": "Click \"Generate Now\" to create your first batch of content, or wait for the automatic run (every hour).",
+        "queueStats": "Queue Status",
+        "totalInQueue": "Total",
+        "pending": "Pending",
+        "ready": "Ready",
+        "published": "Published",
+        "failed": "Failed",
+        "planned": "planned",
+        "target": "target",
+        "emptyQueueHint": "Queue is empty. Click \"Generate Now\" to fill it with content.",
+        "pillarDistribution": "Content Pillar Distribution",
+        "settings": "Settings",
+        "queueDays": "Content queue days",
+        "queueDaysHint": "How many days ahead to plan content",
+        "days": "days",
+        "lastRun": "Last run",
+        "never": "Never",
+        "coverageDays": "Queue coverage",
+        "nextRun": "Next automatic run",
+        "nextRunHint": "Every hour (if queue needs filling)",
+        "triggerNow": "Generate Now",
+        "triggerStarted": "Generation started! Posts will appear in Calendar shortly.",
+        "refresh": "Refresh",
+        "nextSlots": "Next available slots",
+        "enableSuccess": "Automation enabled successfully",
+        "disableSuccess": "Automation disabled successfully",
+        "triggerSuccess": "Automation job started",
+        "triggerError": "Failed to start automation",
+        "noPendingHint": "All content generated! Click \"Extend Queue\" to add more days.",
+        "extendQueue": "Extend Queue",
+        "extendStarted": "Queue extension started! New posts will appear shortly.",
+        "extendError": "Failed to extend queue"
+    },
+    "notifications": {
+        "title": "Notifications",
+        "empty": "No notifications yet",
+        "markAllRead": "Mark all as read",
+        "postGenerated": {
+            "title": "Post Generated",
+            "message": "New post \"{title}\" was generated for brand {brand}"
+        },
+        "postPublished": {
+            "title": "Post Published",
+            "message": "Post \"{title}\" was published on {platform}"
+        },
+        "approvalRequired": {
+            "title": "Approval Required",
+            "message": "Post \"{title}\" requires your approval"
+        }
+    },
+    "tasks": {
+        "title": "Active Tasks",
+        "inProgress": "{count} in progress | {count} in progress",
+        "completed": "Completed",
+        "types": {
+            "contentGeneration": "Generating content",
+            "postPublishing": "Publishing post",
+            "imageGeneration": "Generating image"
+        },
+        "descriptions": {
+            "contentGeneration": "Creating post for \"{pillar}\" ({brand})"
+        }
     }
 }
