@@ -18,7 +18,15 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/tables/{any}', fn () => view('spa'))->where('any', '.*');
     Route::get('/templates/{any?}', fn () => view('spa'))->where('any', '.*')->name('templates');
     Route::get('/docs/{any?}', fn () => view('spa'))->where('any', '.*')->name('docs');
+
+    // Calendar & Social Posts
+    Route::get('/calendar', fn () => view('spa'))->name('calendar');
+    Route::get('/posts/{any?}', fn () => view('spa'))->where('any', '.*')->name('posts');
+    Route::get('/approval-tokens', fn () => view('spa'))->name('approval-tokens');
 });
+
+// Public approval route (no auth required)
+Route::get('/approve/{token}', fn () => view('spa'))->name('client-approval');
 
 // Legacy Blade routes (keep for backward compatibility during migration)
 Route::middleware(['auth', 'verified'])->prefix('legacy')->group(function () {

@@ -22,4 +22,37 @@ return [
     'in' => 'The selected :attribute is invalid.',
     'exists' => 'The selected :attribute does not exist.',
     'unique' => 'The :attribute has already been taken.',
+    'date' => 'The :attribute must be a valid date.',
+    'after' => 'The :attribute must be a date after :date.',
+    'after_or_equal' => 'The :attribute must be a date after or equal to :date.',
+    'before' => 'The :attribute must be a date before :date.',
+    'before_or_equal' => 'The :attribute must be a date before or equal to :date.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Attributes
+    |--------------------------------------------------------------------------
+    */
+
+    'attributes' => [
+        'scheduled_at' => 'schedule date',
+        'title' => 'title',
+        'main_caption' => 'caption',
+        'platforms' => 'platforms',
+        'email' => 'email address',
+        'password' => 'password',
+        'name' => 'name',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Messages
+    |--------------------------------------------------------------------------
+    */
+
+    'custom' => [
+        'scheduled_at' => [
+            'future' => 'The schedule date must be in the future.',
+        ],
+    ],
 ];

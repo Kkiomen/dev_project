@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email',
         'password',
         'is_admin',
+        'settings',
     ];
 
     /**
@@ -47,7 +48,20 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
+            'settings' => 'array',
         ];
+    }
+
+    public function getSetting(string $key, mixed $default = null): mixed
+    {
+        return data_get($this->settings, $key, $default);
+    }
+
+    public function setSetting(string $key, mixed $value): void
+    {
+        $settings = $this->settings ?? [];
+        data_set($settings, $key, $value);
+        $this->settings = $settings;
     }
 
     public function isAdmin(): bool
@@ -63,5 +77,15 @@ class User extends Authenticatable
     public function templates(): HasMany
     {
         return $this->hasMany(Template::class);
+    }
+
+    public function socialPosts(): HasMany
+    {
+        return $this->hasMany(SocialPost::class);
+    }
+
+    public function approvalTokens(): HasMany
+    {
+        return $this->hasMany(ApprovalToken::class);
     }
 }

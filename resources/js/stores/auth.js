@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia';
 import axios from 'axios';
+import { useSettingsStore } from './settings';
 
 export const useAuthStore = defineStore('auth', {
     state: () => ({
@@ -18,6 +19,10 @@ export const useAuthStore = defineStore('auth', {
                 this.loading = true;
                 const response = await axios.get('/api/user');
                 this.user = response.data;
+
+                // Initialize settings store with user settings
+                const settingsStore = useSettingsStore();
+                settingsStore.initFromUser(this.user);
             } catch (error) {
                 this.user = null;
             } finally {

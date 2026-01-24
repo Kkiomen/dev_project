@@ -49,6 +49,16 @@ const logout = () => {
                             {{ t('navigation.graphics') }}
                         </RouterLink>
                         <RouterLink
+                            to="/calendar"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                            :class="{
+                                'border-blue-500 text-gray-900': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts') || $route.path.startsWith('/approval'),
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts') && !$route.path.startsWith('/approval'),
+                            }"
+                        >
+                            {{ t('navigation.calendar') }}
+                        </RouterLink>
+                        <RouterLink
                             to="/docs"
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
                             :class="{
@@ -148,6 +158,16 @@ const logout = () => {
                     }"
                 >
                     {{ t('navigation.graphics') }}
+                </RouterLink>
+                <RouterLink
+                    to="/calendar"
+                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
+                    :class="{
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts') || $route.path.startsWith('/approval'),
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts') && !$route.path.startsWith('/approval'),
+                    }"
+                >
+                    {{ t('navigation.calendar') }}
                 </RouterLink>
                 <RouterLink
                     to="/docs"

@@ -7,12 +7,18 @@ export default {
         './vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php',
         './storage/framework/views/*.php',
         './resources/views/**/*.blade.php',
+        './resources/js/**/*.vue',
+        './resources/js/**/*.js',
     ],
 
     theme: {
         extend: {
             fontFamily: {
                 sans: ['Figtree', ...defaultTheme.fontFamily.sans],
+            },
+            gridTemplateColumns: {
+                // Ensure grid-cols-7 is available
+                '7': 'repeat(7, minmax(0, 1fr))',
             },
         },
     },

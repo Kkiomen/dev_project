@@ -7,6 +7,11 @@ Interfejs webowy do zarządzania danymi.
 - [Grid View](./grid-view.md) - Widok tabelaryczny (domyślny)
 - [Kanban View](./kanban-view.md) - Widok tablicy Kanban
 
+## Social Media
+
+- [Kalendarz i Posty](./calendar-posts.md) - Planowanie postów, kalendarz, system akceptacji
+- [Edytor Graficzny](./graphics-editor.md) - Canvas do tworzenia grafik (Konva.js)
+
 ---
 
 ## Nawigacja

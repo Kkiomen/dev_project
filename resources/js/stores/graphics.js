@@ -554,10 +554,27 @@ export const useGraphicsStore = defineStore('graphics', {
         },
 
         // Reset
+        // Direct setters for external use (e.g., embedded editor)
+        setCurrentTemplate(template) {
+            this.currentTemplate = template;
+            this.selectedLayerId = null;
+            this.isDirty = false;
+            this.saveToHistory();
+        },
+
+        setLayers(layers) {
+            this.layers = layers || [];
+        },
+
+        setFonts(fonts) {
+            this.fonts = fonts || [];
+        },
+
         reset() {
             this.currentTemplate = null;
             this.layers = [];
             this.selectedLayerId = null;
+            this.selectedLayerIds = [];
             this.fonts = [];
             this.history = [];
             this.historyIndex = -1;
@@ -565,6 +582,7 @@ export const useGraphicsStore = defineStore('graphics', {
             this.zoom = 1;
             this.tool = 'select';
             this.lastError = null;
+            this.clipboard = null;
         },
 
         clearError() {

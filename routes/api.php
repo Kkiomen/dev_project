@@ -1,12 +1,18 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AiChatController;
+use App\Http\Controllers\Api\V1\ApprovalTokenController;
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Http\Controllers\Api\V1\ClientApprovalController;
+use App\Http\Controllers\Api\V1\PostAiController;
 use App\Http\Controllers\Api\V1\TableController;
 use App\Http\Controllers\Api\V1\FieldController;
 use App\Http\Controllers\Api\V1\RowController;
 use App\Http\Controllers\Api\V1\CellController;
 use App\Http\Controllers\Api\V1\AttachmentController;
+use App\Http\Controllers\Api\V1\PlatformPostController;
+use App\Http\Controllers\Api\V1\PostMediaController;
+use App\Http\Controllers\Api\V1\SocialPostController;
 use App\Http\Controllers\Api\V1\TemplateController;
 use App\Http\Controllers\Api\V1\TemplateLibraryController;
 use App\Http\Controllers\Api\V1\LayerController;
@@ -22,10 +28,30 @@ Route::get('/user', function (Request $request) {
         'name' => $user->name,
         'email' => $user->email,
         'is_admin' => $user->is_admin,
+        'settings' => $user->settings ?? [
+            'weekStartsOn' => 1,
+            'timeFormat' => '24h',
+            'language' => 'pl',
+        ],
         'email_verified_at' => $user->email_verified_at,
         'created_at' => $user->created_at,
         'updated_at' => $user->updated_at,
     ];
+})->middleware('auth:sanctum');
+
+Route::put('/user/settings', function (Request $request) {
+    $request->validate([
+        'settings' => 'required|array',
+        'settings.weekStartsOn' => 'sometimes|integer|in:0,1',
+        'settings.timeFormat' => 'sometimes|string|in:12h,24h',
+        'settings.language' => 'sometimes|string|in:pl,en',
+    ]);
+
+    $user = $request->user();
+    $user->settings = array_merge($user->settings ?? [], $request->input('settings'));
+    $user->save();
+
+    return ['message' => 'Settings updated', 'settings' => $user->settings];
 })->middleware('auth:sanctum');
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
@@ -105,4 +131,46 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('templates/{template}/unlink-from-library', [TemplateLibraryController::class, 'unlinkFromLibrary']);
         Route::delete('library/templates/{template}', [TemplateLibraryController::class, 'destroy']);
     });
+
+    // === SOCIAL POSTS ===
+    Route::get('posts', [SocialPostController::class, 'index']);
+    Route::get('posts/calendar', [SocialPostController::class, 'calendar']);
+    Route::post('posts', [SocialPostController::class, 'store']);
+    Route::post('posts/ai/generate', [PostAiController::class, 'generate']);
+    Route::get('posts/{post}', [SocialPostController::class, 'show']);
+    Route::put('posts/{post}', [SocialPostController::class, 'update']);
+    Route::delete('posts/{post}', [SocialPostController::class, 'destroy']);
+    Route::post('posts/{post}/reschedule', [SocialPostController::class, 'reschedule']);
+    Route::post('posts/{post}/duplicate', [SocialPostController::class, 'duplicate']);
+    Route::post('posts/{post}/request-approval', [SocialPostController::class, 'requestApproval']);
+    Route::post('posts/{post}/publish', [SocialPostController::class, 'publish']);
+
+    // === PLATFORM POSTS ===
+    Route::put('posts/{post}/platforms/{platform}', [PlatformPostController::class, 'update']);
+    Route::post('posts/{post}/platforms/{platform}/sync', [PlatformPostController::class, 'sync']);
+    Route::post('posts/{post}/platforms/{platform}/toggle', [PlatformPostController::class, 'toggle']);
+
+    // === POST MEDIA ===
+    Route::get('posts/{post}/media', [PostMediaController::class, 'index']);
+    Route::post('posts/{post}/media', [PostMediaController::class, 'store']);
+    Route::delete('media/{media}', [PostMediaController::class, 'destroy']);
+    Route::post('posts/{post}/media/reorder', [PostMediaController::class, 'reorder']);
+    Route::get('media/{media}/validate/{platform}', [PostMediaController::class, 'validate']);
+
+    // === APPROVAL TOKENS ===
+    Route::get('approval-tokens', [ApprovalTokenController::class, 'index']);
+    Route::post('approval-tokens', [ApprovalTokenController::class, 'store']);
+    Route::get('approval-tokens/{approvalToken}', [ApprovalTokenController::class, 'show']);
+    Route::delete('approval-tokens/{approvalToken}', [ApprovalTokenController::class, 'destroy']);
+    Route::post('approval-tokens/{approvalToken}/regenerate', [ApprovalTokenController::class, 'regenerate']);
+    Route::get('approval-tokens/{approvalToken}/stats', [ApprovalTokenController::class, 'stats']);
+});
+
+// === PUBLIC APPROVAL ROUTES (No Auth) ===
+Route::prefix('v1/approve/{token}')->group(function () {
+    Route::get('/', [ClientApprovalController::class, 'validate']);
+    Route::get('/posts', [ClientApprovalController::class, 'posts']);
+    Route::get('/posts/{post}', [ClientApprovalController::class, 'show']);
+    Route::post('/posts/{post}/respond', [ClientApprovalController::class, 'respond']);
+    Route::get('/history', [ClientApprovalController::class, 'history']);
 });

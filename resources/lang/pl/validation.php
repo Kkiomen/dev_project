@@ -22,4 +22,38 @@ return [
     'in' => 'Wybrana wartość dla :attribute jest nieprawidłowa.',
     'exists' => 'Wybrana wartość dla :attribute nie istnieje.',
     'unique' => 'Wartość :attribute jest już zajęta.',
+    'date' => 'Pole :attribute musi być prawidłową datą.',
+    'after' => 'Pole :attribute musi być datą po :date.',
+    'after_or_equal' => 'Pole :attribute musi być datą nie wcześniejszą niż :date.',
+    'before' => 'Pole :attribute musi być datą przed :date.',
+    'before_or_equal' => 'Pole :attribute musi być datą nie późniejszą niż :date.',
+    'nullable' => 'Pole :attribute może być puste.',
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Attributes
+    |--------------------------------------------------------------------------
+    */
+
+    'attributes' => [
+        'scheduled_at' => 'data publikacji',
+        'title' => 'tytuł',
+        'main_caption' => 'treść główna',
+        'platforms' => 'platformy',
+        'email' => 'adres email',
+        'password' => 'hasło',
+        'name' => 'nazwa',
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Custom Validation Messages
+    |--------------------------------------------------------------------------
+    */
+
+    'custom' => [
+        'scheduled_at' => [
+            'future' => 'Data publikacji musi być w przyszłości.',
+        ],
+    ],
 ];

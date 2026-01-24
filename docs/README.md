@@ -28,6 +28,8 @@ Panel do automatyzacji procesów tworzenia marki osobistej.
 
 ## Model danych
 
+### Bazy danych (Grid/Kanban)
+
 ```
 User
  └── Base (workspace)
@@ -37,6 +39,21 @@ User
            └── Row (wiersze)
                 └── Cell (komórki)
                      └── Attachment (załączniki dla pól typu attachment)
+```
+
+### Social Media
+
+```
+User
+ ├── SocialPost
+ │    ├── PlatformPost[] (facebook, instagram, youtube)
+ │    ├── PostMedia[]
+ │    └── PostApproval[]
+ │
+ ├── ApprovalToken[] (tokeny dla klientów)
+ │
+ └── Template (edytor graficzny)
+      └── Layer[] (text, image, rectangle, ellipse)
 ```
 
 ## Typy pól

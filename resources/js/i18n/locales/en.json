@@ -25,7 +25,13 @@
         "filter": "Filter",
         "sort": "Sort",
         "noData": "No data",
-        "confirmAction": "Confirmation"
+        "confirmAction": "Confirmation",
+        "copy": "Copy",
+        "copyLink": "Copy Link",
+        "done": "Done",
+        "created": "Created",
+        "disabled": "disabled",
+        "add": "Add"
     },
     "dashboard": {
         "title": "My Databases",
@@ -234,6 +240,7 @@
         "menu": "Menu",
         "docs": "Documentation",
         "graphics": "Graphics",
+        "calendar": "Calendar",
         "noBasesForGraphics": "Create a database first"
     },
     "docs": {
@@ -830,5 +837,281 @@
             "confirmRemove": "Remove this template from the library? The template will remain in your collection.",
             "adminOnly": "Admin only"
         }
+    },
+    "calendar": {
+        "title": "Calendar",
+        "today": "Today",
+        "month": "Month",
+        "week": "Week",
+        "allStatuses": "All Statuses",
+        "days": {
+            "sun": "Sun",
+            "mon": "Mon",
+            "tue": "Tue",
+            "wed": "Wed",
+            "thu": "Thu",
+            "fri": "Fri",
+            "sat": "Sat"
+        },
+        "months": {
+            "january": "January",
+            "february": "February",
+            "march": "March",
+            "april": "April",
+            "may": "May",
+            "june": "June",
+            "july": "July",
+            "august": "August",
+            "september": "September",
+            "october": "October",
+            "november": "November",
+            "december": "December"
+        }
+    },
+    "posts": {
+        "title": "Posts",
+        "create": "New Post",
+        "edit": "Edit Post",
+        "duplicate": "Duplicate",
+        "deleteConfirm": "Are you sure you want to delete this post?",
+        "titlePlaceholder": "Enter post title...",
+        "mainCaption": "Main Caption",
+        "mainCaptionPlaceholder": "Write your post content here...",
+        "captionHint": "This caption will be used for all platforms unless you override it in platform settings.",
+        "characters": "characters",
+        "scheduledAt": "Schedule For",
+        "notScheduled": "Not scheduled",
+        "ai": {
+            "generate": "Generate with AI",
+            "generating": "Generating...",
+            "topic": "What should the post be about?",
+            "topicPlaceholder": "e.g., New product launch, Summer sale, Tips for...",
+            "tone": "Tone",
+            "tones": {
+                "professional": "Professional",
+                "casual": "Casual",
+                "playful": "Playful",
+                "inspirational": "Inspirational"
+            },
+            "length": "Length",
+            "lengths": {
+                "short": "Short",
+                "medium": "Medium",
+                "long": "Long"
+            },
+            "platforms": "Platforms to generate for",
+            "customPrompt": "Additional instructions",
+            "customPromptPlaceholder": "e.g., Include a call to action, mention discount code...",
+            "generateButton": "Generate Content",
+            "success": "Content generated successfully!"
+        },
+        "selectPlatforms": "Select Platforms",
+        "selectPlatformsDescription": "Choose which platforms you want to create content for",
+        "continueToEditor": "Continue",
+        "inheritedFromFirst": "Inherited",
+        "resetToInherit": "Reset to inherit",
+        "sections": {
+            "content": "Content",
+            "media": "Media",
+            "platforms": "Platforms"
+        },
+        "schedule": {
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "nextWeek": "Next Week",
+            "clear": "Clear schedule"
+        },
+        "status": {
+            "draft": "Draft",
+            "pending_approval": "Pending Approval",
+            "approved": "Approved",
+            "scheduled": "Scheduled",
+            "published": "Published",
+            "failed": "Failed"
+        },
+        "save": {
+            "save": "Save",
+            "saveAs": "Save as...",
+            "saveAndPublish": "Save & Publish",
+            "publishTo": "Publish to {platform}",
+            "publishing": "Publishing...",
+            "publishSuccess": "Post scheduled for publishing to {platform}",
+            "publishError": "Failed to publish post"
+        },
+        "platforms": {
+            "title": "Platforms",
+            "facebook": "Facebook",
+            "instagram": "Instagram",
+            "youtube": "YouTube"
+        },
+        "media": {
+            "title": "Media",
+            "dragOrClick": "Drag and drop files here, or click to browse",
+            "supportedFormats": "JPG, PNG, GIF, WebP, MP4, WebM (max 10MB images, 100MB videos)",
+            "deleteConfirm": "Are you sure you want to delete this media?",
+            "reorderHint": "Drag to reorder media",
+            "video": "Video",
+            "uploading": "Uploading...",
+            "total": "Total",
+            "images": "Images",
+            "videos": "Videos",
+            "cover": "Cover",
+            "setAsCover": "Set as cover",
+            "moveLeft": "Move left",
+            "moveRight": "Move right",
+            "saveToAdd": "Save post to add media",
+            "saveToAddDescription": "You need to save the post first before you can upload images and videos.",
+            "staged": "Pending",
+            "stagedInfo": "These files will be uploaded when you save the post. Your progress is automatically saved locally.",
+            "pendingUpload": "Pending Upload",
+            "fromTemplates": "Add from Templates",
+            "myTemplates": "My Templates",
+            "templateLibrary": "Template Library",
+            "noMyTemplates": "No templates yet",
+            "noLibraryTemplates": "Library is empty",
+            "createTemplate": "Create a template",
+            "selectedTemplate": "Selected: {name}",
+            "editAndAdd": "Edit & Add",
+            "editTemplate": "Edit Template",
+            "addToPost": "Add to Post",
+            "addedFromTemplate": "Image added from template",
+            "saveForLater": "Save for Later",
+            "discardChanges": "Discard",
+            "templateInProgress": "Template editing in progress",
+            "resumeEditing": "Resume Editing",
+            "discardTemplate": "Discard"
+        },
+        "preview": {
+            "title": "Preview"
+        },
+        "draft": {
+            "saved": "Draft saved",
+            "justNow": "just now",
+            "secondsAgo": "{seconds}s ago",
+            "minutesAgo": "{minutes}m ago",
+            "foundTitle": "Draft Found",
+            "foundDescription": "You have an unsaved draft from a previous session. Would you like to restore it?",
+            "untitled": "Untitled draft",
+            "restore": "Restore Draft",
+            "discard": "Discard"
+        },
+        "saveSuccess": "Post saved successfully",
+        "errors": {
+            "saveFailed": "Failed to save post",
+            "validationFailed": "Please check the form for errors",
+            "mediaUploadFailed": "Failed to upload media file",
+            "scheduledAtPast": "Scheduled date must be in the future"
+        },
+        "fields": {
+            "title": "Title",
+            "main_caption": "Caption",
+            "scheduled_at": "Schedule date"
+        }
+    },
+    "approval": {
+        "tokens": "Approval Tokens",
+        "createToken": "Create Token",
+        "request": "Request Approval",
+        "requestTitle": "Request Approval",
+        "requestDescription": "Select a client token to send for approval.",
+        "selectToken": "Select a token...",
+        "send": "Send Request",
+        "clientName": "Client Name",
+        "clientNamePlaceholder": "E.g. Acme Corp",
+        "clientEmail": "Client Email",
+        "clientEmailPlaceholder": "client@example.com",
+        "clientEmailHint": "Optional - for reference only",
+        "expiresAt": "Expires At",
+        "expiresAtHint": "Leave empty for no expiration",
+        "tokenCreated": "Token Created",
+        "tokenCreatedDescription": "Share this link with your client to request approval.",
+        "approvalLink": "Approval Link",
+        "noTokens": "No Tokens",
+        "noTokensDescription": "Create a token to share with clients for post approval.",
+        "active": "Active",
+        "inactive": "Inactive",
+        "expires": "Expires",
+        "noExpiry": "No expiry",
+        "pending": "Pending",
+        "revokeToken": "Revoke Token",
+        "revokeTokenMessage": "Are you sure you want to revoke the token for \"{name}\"? They will no longer be able to approve posts.",
+        "revoke": "Revoke",
+        "regenerateToken": "Regenerate Token",
+        "regenerateTokenMessage": "Are you sure you want to regenerate the token for \"{name}\"? The old link will stop working.",
+        "regenerate": "Regenerate",
+        "clientTitle": "Content Approval",
+        "pendingCount": "{count} posts pending",
+        "postsToReview": "Posts to Review",
+        "scheduledFor": "Scheduled for",
+        "allApproved": "All Done!",
+        "allApprovedDescription": "You have reviewed all pending posts.",
+        "invalidToken": "This link is invalid or has expired.",
+        "invalidTokenTitle": "Invalid Link",
+        "approve": "Approve",
+        "requestChanges": "Request Changes",
+        "requestChangesTitle": "Request Changes",
+        "requestChangesDescription": "Please describe what changes you'd like to see.",
+        "feedbackPlaceholder": "Describe the changes you need...",
+        "submitFeedback": "Submit Feedback",
+        "stats": {
+            "total": "Total",
+            "pending": "Pending",
+            "approved": "Approved",
+            "rejected": "Changes"
+        }
+    },
+    "editor": {
+        "bold": "Bold (Unicode)",
+        "italic": "Italic (Unicode)",
+        "removeFormatting": "Remove formatting",
+        "selectTextHint": "Select text to apply bold/italic formatting",
+        "hashtag": "Insert hashtag",
+        "mention": "Insert mention",
+        "bulletList": "Insert bullet list",
+        "lineBreak": "Insert line break",
+        "emoji": "Insert emoji"
+    },
+    "platforms": {
+        "enableFacebook": "Post to Facebook",
+        "enableInstagram": "Post to Instagram",
+        "enableYouTube": "Post to YouTube",
+        "syncFromMain": "Sync from main",
+        "useMainCaption": "Use main caption",
+        "customCaptionPlaceholder": "Write custom caption for this platform...",
+        "saveToCustomize": "Save post to customize platforms",
+        "saveToCustomizeDescription": "You need to save the post first before you can customize content for each platform."
+    },
+    "youtube": {
+        "videoTitle": "Video Title",
+        "videoTitlePlaceholder": "Enter video title...",
+        "titleLimit": "max 100 characters",
+        "videoDescription": "Video Description",
+        "videoDescriptionPlaceholder": "Enter video description...",
+        "videoUrl": "YouTube Video URL",
+        "videoUrlPlaceholder": "https://www.youtube.com/watch?v=...",
+        "videoUrlHint": "Paste a YouTube video URL to link an existing video",
+        "formattingNote": "Bold/italic formatting is automatically removed for YouTube"
+    },
+    "instagram": {
+        "hashtags": "Hashtags",
+        "addHashtag": "Add hashtag...",
+        "popularHashtags": "Popular hashtags"
+    },
+    "facebook": {
+        "linkPreview": "Link Preview",
+        "linkPreviewUrl": "Link Preview URL",
+        "linkPreviewPlaceholder": "https://example.com/article",
+        "linkPreviewHint": "Add a URL to generate a link preview card"
+    },
+    "settings": {
+        "title": "Settings",
+        "weekStartsOn": "Week starts on",
+        "sunday": "Sunday",
+        "monday": "Monday",
+        "timeFormat": "Time format",
+        "time12h": "12-hour (AM/PM)",
+        "time24h": "24-hour",
+        "language": "Language",
+        "saved": "Settings saved"
     }
 }

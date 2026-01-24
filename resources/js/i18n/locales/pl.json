@@ -2,7 +2,7 @@
     "common": {
         "cancel": "Anuluj",
         "confirm": "Potwierdź",
-        "save": "Zapisano",
+        "save": "Zapisz",
         "delete": "Usuń",
         "edit": "Edytuj",
         "create": "Utwórz",
@@ -26,7 +26,13 @@
         "sort": "Sortuj",
         "noData": "Brak danych",
         "confirmAction": "Potwierdzenie",
-        "select": "wybierz"
+        "select": "wybierz",
+        "copy": "Kopiuj",
+        "copyLink": "Kopiuj link",
+        "done": "Gotowe",
+        "created": "Utworzono",
+        "disabled": "wyłączone",
+        "add": "Dodaj"
     },
     "dashboard": {
         "title": "Moje bazy danych",
@@ -235,6 +241,7 @@
         "menu": "Menu",
         "docs": "Dokumentacja",
         "graphics": "Grafiki",
+        "calendar": "Kalendarz",
         "noBasesForGraphics": "Najpierw utwórz bazę danych"
     },
     "docs": {
@@ -831,5 +838,283 @@
             "confirmRemove": "Usunąć ten szablon z biblioteki? Szablon pozostanie w Twojej kolekcji.",
             "adminOnly": "Tylko administrator"
         }
+    },
+    "calendar": {
+        "title": "Kalendarz",
+        "today": "Dziś",
+        "month": "Miesiąc",
+        "week": "Tydzień",
+        "allStatuses": "Wszystkie statusy",
+        "days": {
+            "sun": "Ndz",
+            "mon": "Pon",
+            "tue": "Wt",
+            "wed": "Śr",
+            "thu": "Czw",
+            "fri": "Pt",
+            "sat": "Sob"
+        },
+        "months": {
+            "january": "Styczeń",
+            "february": "Luty",
+            "march": "Marzec",
+            "april": "Kwiecień",
+            "may": "Maj",
+            "june": "Czerwiec",
+            "july": "Lipiec",
+            "august": "Sierpień",
+            "september": "Wrzesień",
+            "october": "Październik",
+            "november": "Listopad",
+            "december": "Grudzień"
+        }
+    },
+    "posts": {
+        "title": "Posty",
+        "create": "Nowy post",
+        "edit": "Edytuj post",
+        "duplicate": "Duplikuj",
+        "deleteConfirm": "Czy na pewno chcesz usunąć ten post?",
+        "titlePlaceholder": "Wpisz tytuł posta...",
+        "mainCaption": "Główna treść",
+        "mainCaptionPlaceholder": "Napisz treść swojego posta tutaj...",
+        "captionHint": "Ta treść będzie używana dla wszystkich platform, chyba że zmienisz ją w ustawieniach platformy.",
+        "characters": "znaków",
+        "scheduledAt": "Zaplanuj na",
+        "notScheduled": "Nie zaplanowano",
+        "ai": {
+            "generate": "Generuj z AI",
+            "generating": "Generowanie...",
+            "topic": "O czym ma być post?",
+            "topicPlaceholder": "np. Premiera produktu, Letnia wyprzedaż, Porady...",
+            "tone": "Ton",
+            "tones": {
+                "professional": "Profesjonalny",
+                "casual": "Casualowy",
+                "playful": "Zabawny",
+                "inspirational": "Inspirujący"
+            },
+            "length": "Długość",
+            "lengths": {
+                "short": "Krótki",
+                "medium": "Średni",
+                "long": "Długi"
+            },
+            "platforms": "Platformy do wygenerowania",
+            "customPrompt": "Dodatkowe instrukcje",
+            "customPromptPlaceholder": "np. Dodaj wezwanie do działania, wspomnij o kodzie rabatowym...",
+            "generateButton": "Generuj treść",
+            "success": "Treść wygenerowana pomyślnie!"
+        },
+        "selectPlatforms": "Wybierz platformy",
+        "selectPlatformsDescription": "Wybierz platformy, dla których chcesz tworzyć treści",
+        "continueToEditor": "Kontynuuj",
+        "inheritedFromFirst": "Dziedziczone",
+        "resetToInherit": "Resetuj do dziedziczenia",
+        "sections": {
+            "content": "Treść",
+            "media": "Media",
+            "platforms": "Platformy"
+        },
+        "schedule": {
+            "today": "Dzisiaj",
+            "tomorrow": "Jutro",
+            "nextWeek": "Za tydzień",
+            "clear": "Usuń harmonogram"
+        },
+        "status": {
+            "draft": "Szkic",
+            "pending_approval": "Oczekuje na zatwierdzenie",
+            "approved": "Zatwierdzone",
+            "scheduled": "Zaplanowane",
+            "published": "Opublikowane",
+            "failed": "Błąd"
+        },
+        "save": {
+            "save": "Zapisz",
+            "saveAs": "Zapisz jako...",
+            "saveAndPublish": "Zapisz i opublikuj",
+            "publishTo": "Opublikuj na {platform}",
+            "publishing": "Publikowanie...",
+            "publishSuccess": "Post zaplanowany do publikacji na {platform}",
+            "publishError": "Nie udało się opublikować posta"
+        },
+        "platforms": {
+            "title": "Platformy",
+            "facebook": "Facebook",
+            "instagram": "Instagram",
+            "youtube": "YouTube",
+            "saveToCustomize": "Zapisz post, aby dostosować platformy",
+            "saveToCustomizeDescription": "Musisz najpierw zapisać post, zanim będziesz mógł dostosować treść dla każdej platformy."
+        },
+        "media": {
+            "title": "Media",
+            "dragOrClick": "Przeciągnij i upuść pliki tutaj lub kliknij, aby wybrać",
+            "supportedFormats": "JPG, PNG, GIF, WebP, MP4, WebM (max 10MB obrazy, 100MB wideo)",
+            "deleteConfirm": "Czy na pewno chcesz usunąć to medium?",
+            "reorderHint": "Przeciągnij, aby zmienić kolejność",
+            "video": "Wideo",
+            "uploading": "Przesyłanie...",
+            "total": "Razem",
+            "images": "Obrazy",
+            "videos": "Wideo",
+            "cover": "Okładka",
+            "setAsCover": "Ustaw jako okładkę",
+            "moveLeft": "Przesuń w lewo",
+            "moveRight": "Przesuń w prawo",
+            "saveToAdd": "Zapisz post, aby dodać media",
+            "saveToAddDescription": "Musisz najpierw zapisać post, zanim będziesz mógł przesyłać zdjęcia i filmy.",
+            "staged": "Oczekuje",
+            "stagedInfo": "Te pliki zostaną przesłane po zapisaniu posta. Twój postęp jest automatycznie zapisywany lokalnie.",
+            "pendingUpload": "Oczekujące przesłanie",
+            "fromTemplates": "Dodaj z szablonów",
+            "myTemplates": "Moje szablony",
+            "templateLibrary": "Biblioteka szablonów",
+            "noMyTemplates": "Brak szablonów",
+            "noLibraryTemplates": "Biblioteka jest pusta",
+            "createTemplate": "Utwórz szablon",
+            "selectedTemplate": "Wybrano: {name}",
+            "editAndAdd": "Edytuj i dodaj",
+            "editTemplate": "Edytuj szablon",
+            "addToPost": "Dodaj do posta",
+            "addedFromTemplate": "Obraz dodany z szablonu",
+            "saveForLater": "Zapisz na później",
+            "discardChanges": "Odrzuć",
+            "templateInProgress": "Trwa edycja szablonu",
+            "resumeEditing": "Wznów edycję",
+            "discardTemplate": "Odrzuć"
+        },
+        "preview": {
+            "title": "Podgląd"
+        },
+        "draft": {
+            "saved": "Szkic zapisany",
+            "justNow": "przed chwilą",
+            "secondsAgo": "{seconds}s temu",
+            "minutesAgo": "{minutes}m temu",
+            "foundTitle": "Znaleziono szkic",
+            "foundDescription": "Masz niezapisany szkic z poprzedniej sesji. Czy chcesz go przywrócić?",
+            "untitled": "Bez tytułu",
+            "restore": "Przywróć szkic",
+            "discard": "Odrzuć"
+        },
+        "saveSuccess": "Post zapisany pomyślnie",
+        "errors": {
+            "saveFailed": "Nie udało się zapisać posta",
+            "validationFailed": "Sprawdź formularz pod kątem błędów",
+            "mediaUploadFailed": "Nie udało się przesłać pliku",
+            "scheduledAtPast": "Data publikacji musi być w przyszłości"
+        },
+        "fields": {
+            "title": "Tytuł",
+            "main_caption": "Treść",
+            "scheduled_at": "Data publikacji"
+        }
+    },
+    "approval": {
+        "tokens": "Tokeny zatwierdzania",
+        "createToken": "Utwórz token",
+        "request": "Poproś o zatwierdzenie",
+        "requestTitle": "Prośba o zatwierdzenie",
+        "requestDescription": "Wybierz token klienta do wysłania do zatwierdzenia.",
+        "selectToken": "Wybierz token...",
+        "send": "Wyślij prośbę",
+        "clientName": "Nazwa klienta",
+        "clientNamePlaceholder": "Np. Firma ABC",
+        "clientEmail": "Email klienta",
+        "clientEmailPlaceholder": "klient@example.com",
+        "clientEmailHint": "Opcjonalnie - tylko do celów informacyjnych",
+        "expiresAt": "Wygasa",
+        "expiresAtHint": "Pozostaw puste, aby nie wygasał",
+        "tokenCreated": "Token utworzony",
+        "tokenCreatedDescription": "Udostępnij ten link klientowi, aby mógł zatwierdzić posty.",
+        "approvalLink": "Link do zatwierdzenia",
+        "noTokens": "Brak tokenów",
+        "noTokensDescription": "Utwórz token, aby udostępnić klientom do zatwierdzania postów.",
+        "active": "Aktywny",
+        "inactive": "Nieaktywny",
+        "expires": "Wygasa",
+        "noExpiry": "Bez wygaśnięcia",
+        "pending": "Oczekujące",
+        "revokeToken": "Unieważnij token",
+        "revokeTokenMessage": "Czy na pewno chcesz unieważnić token dla \"{name}\"? Nie będą mogli już zatwierdzać postów.",
+        "revoke": "Unieważnij",
+        "regenerateToken": "Wygeneruj nowy token",
+        "regenerateTokenMessage": "Czy na pewno chcesz wygenerować nowy token dla \"{name}\"? Stary link przestanie działać.",
+        "regenerate": "Wygeneruj",
+        "clientTitle": "Zatwierdzanie treści",
+        "pendingCount": "{count} postów oczekuje",
+        "postsToReview": "Posty do przejrzenia",
+        "scheduledFor": "Zaplanowano na",
+        "allApproved": "Gotowe!",
+        "allApprovedDescription": "Przejrzałeś wszystkie oczekujące posty.",
+        "invalidToken": "Ten link jest nieprawidłowy lub wygasł.",
+        "invalidTokenTitle": "Nieprawidłowy link",
+        "approve": "Zatwierdź",
+        "requestChanges": "Poproś o zmiany",
+        "requestChangesTitle": "Poproś o zmiany",
+        "requestChangesDescription": "Opisz, jakie zmiany chciałbyś zobaczyć.",
+        "feedbackPlaceholder": "Opisz potrzebne zmiany...",
+        "submitFeedback": "Wyślij uwagi",
+        "stats": {
+            "total": "Łącznie",
+            "pending": "Oczekujące",
+            "approved": "Zatwierdzone",
+            "rejected": "Zmiany"
+        }
+    },
+    "editor": {
+        "bold": "Pogrubienie (Unicode)",
+        "italic": "Kursywa (Unicode)",
+        "removeFormatting": "Usuń formatowanie",
+        "selectTextHint": "Zaznacz tekst, aby zastosować pogrubienie/kursywę",
+        "hashtag": "Wstaw hashtag",
+        "mention": "Wstaw wzmiankę",
+        "bulletList": "Wstaw listę",
+        "lineBreak": "Wstaw przejście do linii",
+        "emoji": "Wstaw emoji"
+    },
+    "platforms": {
+        "enableFacebook": "Publikuj na Facebooku",
+        "enableInstagram": "Publikuj na Instagramie",
+        "enableYouTube": "Publikuj na YouTube",
+        "syncFromMain": "Synchronizuj z główną",
+        "useMainCaption": "Użyj głównej treści",
+        "customCaptionPlaceholder": "Napisz własną treść dla tej platformy...",
+        "saveToCustomize": "Zapisz post, aby dostosować platformy",
+        "saveToCustomizeDescription": "Musisz najpierw zapisać post, zanim będziesz mógł dostosować treść dla każdej platformy."
+    },
+    "youtube": {
+        "videoTitle": "Tytuł filmu",
+        "videoTitlePlaceholder": "Wpisz tytuł filmu...",
+        "titleLimit": "max 100 znaków",
+        "videoDescription": "Opis filmu",
+        "videoDescriptionPlaceholder": "Wpisz opis filmu...",
+        "videoUrl": "URL filmu YouTube",
+        "videoUrlPlaceholder": "https://www.youtube.com/watch?v=...",
+        "videoUrlHint": "Wklej URL filmu YouTube, aby połączyć istniejący film",
+        "formattingNote": "Pogrubienie/kursywa jest automatycznie usuwane dla YouTube"
+    },
+    "instagram": {
+        "hashtags": "Hashtagi",
+        "addHashtag": "Dodaj hashtag...",
+        "popularHashtags": "Popularne hashtagi"
+    },
+    "facebook": {
+        "linkPreview": "Podgląd linku",
+        "linkPreviewUrl": "URL podglądu linku",
+        "linkPreviewPlaceholder": "https://example.com/artykul",
+        "linkPreviewHint": "Dodaj URL, aby wygenerować kartę podglądu linku"
+    },
+    "settings": {
+        "title": "Ustawienia",
+        "weekStartsOn": "Tydzień zaczyna się od",
+        "sunday": "Niedziela",
+        "monday": "Poniedziałek",
+        "timeFormat": "Format czasu",
+        "time12h": "12-godzinny (AM/PM)",
+        "time24h": "24-godzinny",
+        "language": "Język",
+        "saved": "Ustawienia zapisane"
     }
 }

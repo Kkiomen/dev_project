@@ -49,6 +49,36 @@ const routes = [
         component: () => import('@/pages/GraphicsEditorPage.vue'),
         props: true,
     },
+    // Calendar & Social Posts
+    {
+        path: '/calendar',
+        name: 'calendar',
+        component: () => import('@/pages/CalendarPage.vue'),
+    },
+    {
+        path: '/posts/new',
+        name: 'post.create',
+        component: () => import('@/pages/PostEditorPage.vue'),
+    },
+    {
+        path: '/posts/:postId/edit',
+        name: 'post.edit',
+        component: () => import('@/pages/PostEditorPage.vue'),
+        props: true,
+    },
+    {
+        path: '/approval-tokens',
+        name: 'approval-tokens',
+        component: () => import('@/pages/ApprovalTokensPage.vue'),
+    },
+    // Public client approval (no auth)
+    {
+        path: '/approve/:token',
+        name: 'client-approval',
+        component: () => import('@/pages/ClientApprovalPage.vue'),
+        props: true,
+        meta: { public: true },
+    },
 ];
 
 const router = createRouter({
