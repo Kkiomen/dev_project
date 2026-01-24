@@ -4,11 +4,14 @@ namespace App\Services\AI;
 
 use App\Models\AiOperationLog;
 use App\Models\Brand;
+use App\Services\Concerns\LogsApiUsage;
 use App\Services\OpenAiClientService;
 use Illuminate\Support\Facades\Cache;
 
 class ContentGeneratorService
 {
+    use LogsApiUsage;
+
     public function __construct(
         protected OpenAiClientService $openAiClient,
         protected AiResponseValidator $validator
@@ -21,8 +24,8 @@ class ContentGeneratorService
     {
         $startTime = microtime(true);
 
-        // Start logging
-        $log = AiOperationLog::start($brand, 'content_generation', $config);
+        // Start logging with detailed tracking
+        $log = $this->logAiStart($brand, 'content_generation', $config);
 
         try {
             $context = $this->getBrandContext($brand);
@@ -50,17 +53,23 @@ class ContentGeneratorService
             // Post-process the content
             $generatedContent = $this->postProcessContent($generatedContent);
 
-            // Calculate costs
-            $tokensUsed = $response->usage->totalTokens ?? 0;
-            $cost = $this->calculateCost($tokensUsed);
+            // Complete logging with detailed token usage
             $durationMs = (int)((microtime(true) - $startTime) * 1000);
+            $promptTokens = $response->usage->promptTokens ?? 0;
+            $completionTokens = $response->usage->completionTokens ?? 0;
 
-            $log->complete($generatedContent, $tokensUsed, $cost, $durationMs);
+            $this->completeAiLog(
+                $log,
+                $generatedContent,
+                $promptTokens,
+                $completionTokens,
+                $durationMs
+            );
 
             return $generatedContent;
         } catch (\Exception $e) {
             $durationMs = (int)((microtime(true) - $startTime) * 1000);
-            $log->fail($e->getMessage(), $durationMs);
+            $this->failLog($log, $e->getMessage(), $durationMs);
 
             throw $e;
         }
@@ -310,13 +319,5 @@ PROMPT;
             return 'Not specified';
         }
         return implode(', ', $items);
-    }
-
-    /**
-     * Calculate approximate cost.
-     */
-    protected function calculateCost(int $tokensUsed): float
-    {
-        return ($tokensUsed / 1000000) * 10;
     }
 }

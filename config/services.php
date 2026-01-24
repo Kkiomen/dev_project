@@ -61,4 +61,11 @@ return [
         'webhook_secret' => env('N8N_WEBHOOK_SECRET'),
     ],
 
+    'facebook' => [
+        'app_id' => env('FACEBOOK_APP_ID'),
+        'app_secret' => env('FACEBOOK_APP_SECRET'),
+        'redirect_url' => env('FACEBOOK_OAUTH_REDIRECT_URL'),
+        'graph_version' => 'v18.0',
+    ],
+
 ];

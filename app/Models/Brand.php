@@ -105,6 +105,11 @@ class Brand extends Model
         return $this->hasMany(PillarTracking::class);
     }
 
+    public function platformCredentials(): HasMany
+    {
+        return $this->hasMany(PlatformCredential::class);
+    }
+
     // Member helpers
     public function getMemberRole(User $user): ?string
     {
@@ -346,5 +351,25 @@ class Brand extends Model
     public function scopeWithAutomationEnabled(Builder $query): Builder
     {
         return $query->where('automation_enabled', true);
+    }
+
+    // Platform Credential Helpers
+    public function getPlatformCredential(string $platform): ?PlatformCredential
+    {
+        return $this->platformCredentials()->where('platform', $platform)->first();
+    }
+
+    public function isPlatformConnected(string $platform): bool
+    {
+        $credential = $this->getPlatformCredential($platform);
+
+        return $credential && !$credential->isExpired();
+    }
+
+    public function getConnectedPlatformNames(): array
+    {
+        return $this->platformCredentials()
+            ->pluck('platform')
+            ->toArray();
     }
 }

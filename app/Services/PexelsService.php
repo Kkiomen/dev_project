@@ -2,18 +2,35 @@
 
 namespace App\Services;
 
+use App\Enums\ApiProvider;
+use App\Models\Brand;
+use App\Services\Concerns\LogsApiUsage;
 use Illuminate\Support\Facades\Http;
 
 class PexelsService
 {
+    use LogsApiUsage;
+
     protected string $apiKey;
 
     protected string $baseUrl;
+
+    protected ?Brand $currentBrand = null;
 
     public function __construct()
     {
         $this->apiKey = config('services.pexels.api_key', '');
         $this->baseUrl = config('services.pexels.base_url', 'https://api.pexels.com/v1');
+    }
+
+    /**
+     * Set the current brand context for logging.
+     */
+    public function forBrand(?Brand $brand): self
+    {
+        $this->currentBrand = $brand;
+
+        return $this;
     }
 
     /**
@@ -47,6 +64,9 @@ class PexelsService
             ];
         }
 
+        $startTime = microtime(true);
+        $endpoint = '/search';
+
         $params = [
             'query' => $query,
             'per_page' => min($perPage, 80),
@@ -60,12 +80,25 @@ class PexelsService
             $params['size'] = $size;
         }
 
+        // Start API usage logging
+        $log = $this->logExternalStart(
+            $this->currentBrand,
+            'pexels_search',
+            ApiProvider::PEXELS,
+            $endpoint,
+            $params
+        );
+
         try {
             $response = Http::withHeaders([
                 'Authorization' => $this->apiKey,
             ])->get("{$this->baseUrl}/search", $params);
 
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+
             if (! $response->successful()) {
+                $this->failLog($log, 'Pexels API request failed: ' . $response->status(), $durationMs, $response->status());
+
                 return [
                     'success' => false,
                     'error' => 'Pexels API request failed: '.$response->status(),
@@ -74,15 +107,27 @@ class PexelsService
             }
 
             $data = $response->json();
-
-            return [
+            $result = [
                 'success' => true,
                 'total_results' => $data['total_results'] ?? 0,
                 'photos' => collect($data['photos'] ?? [])->map(function ($photo) {
                     return $this->formatPhoto($photo);
                 })->toArray(),
             ];
+
+            // Complete logging
+            $this->completeExternalLog(
+                $log,
+                ['total_results' => $result['total_results'], 'photos_count' => count($result['photos'])],
+                $response->status(),
+                $durationMs
+            );
+
+            return $result;
         } catch (\Exception $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, 'Pexels API error: ' . $e->getMessage(), $durationMs);
+
             return [
                 'success' => false,
                 'error' => 'Pexels API error: '.$e->getMessage(),
@@ -104,14 +149,29 @@ class PexelsService
             ];
         }
 
+        $startTime = microtime(true);
+        $endpoint = '/curated';
+        $params = ['per_page' => min($perPage, 80)];
+
+        // Start API usage logging
+        $log = $this->logExternalStart(
+            $this->currentBrand,
+            'pexels_curated',
+            ApiProvider::PEXELS,
+            $endpoint,
+            $params
+        );
+
         try {
             $response = Http::withHeaders([
                 'Authorization' => $this->apiKey,
-            ])->get("{$this->baseUrl}/curated", [
-                'per_page' => min($perPage, 80),
-            ]);
+            ])->get("{$this->baseUrl}/curated", $params);
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
 
             if (! $response->successful()) {
+                $this->failLog($log, 'Pexels API request failed: ' . $response->status(), $durationMs, $response->status());
+
                 return [
                     'success' => false,
                     'error' => 'Pexels API request failed',
@@ -120,14 +180,26 @@ class PexelsService
             }
 
             $data = $response->json();
-
-            return [
+            $result = [
                 'success' => true,
                 'photos' => collect($data['photos'] ?? [])->map(function ($photo) {
                     return $this->formatPhoto($photo);
                 })->toArray(),
             ];
+
+            // Complete logging
+            $this->completeExternalLog(
+                $log,
+                ['photos_count' => count($result['photos'])],
+                $response->status(),
+                $durationMs
+            );
+
+            return $result;
         } catch (\Exception $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, 'Pexels API error: ' . $e->getMessage(), $durationMs);
+
             return [
                 'success' => false,
                 'error' => 'Pexels API error: '.$e->getMessage(),

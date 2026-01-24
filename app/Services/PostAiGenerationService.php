@@ -2,10 +2,14 @@
 
 namespace App\Services;
 
+use App\Models\Brand;
+use App\Services\Concerns\LogsApiUsage;
 use OpenAI\Responses\Chat\CreateResponse;
 
 class PostAiGenerationService
 {
+    use LogsApiUsage;
+
     public function __construct(
         protected OpenAiClientService $openAiClient
     ) {}
@@ -13,17 +17,46 @@ class PostAiGenerationService
     /**
      * Generate social media post content for a single platform using AI.
      */
-    public function generate(array $config): array
+    public function generate(array $config, ?Brand $brand = null): array
     {
-        $systemPrompt = $this->buildSystemPrompt($config);
-        $userPrompt = $this->buildUserPrompt($config);
+        $startTime = microtime(true);
 
-        $response = $this->openAiClient->chatCompletion([
-            ['role' => 'system', 'content' => $systemPrompt],
-            ['role' => 'user', 'content' => $userPrompt],
+        // Start API usage logging
+        $log = $this->logAiStart($brand, 'post_content_generation', [
+            'platform' => $config['platform'],
+            'topic' => $config['topic'] ?? null,
+            'tone' => $config['tone'] ?? null,
+            'length' => $config['length'] ?? null,
         ]);
 
-        return $this->parseResponse($response, $config['platform']);
+        try {
+            $systemPrompt = $this->buildSystemPrompt($config);
+            $userPrompt = $this->buildUserPrompt($config);
+
+            $response = $this->openAiClient->chatCompletion([
+                ['role' => 'system', 'content' => $systemPrompt],
+                ['role' => 'user', 'content' => $userPrompt],
+            ]);
+
+            $result = $this->parseResponse($response, $config['platform']);
+
+            // Complete logging with token usage
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->completeAiLog(
+                $log,
+                $result,
+                $response->usage->promptTokens ?? 0,
+                $response->usage->completionTokens ?? 0,
+                $durationMs
+            );
+
+            return $result;
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            throw $e;
+        }
     }
 
     /**

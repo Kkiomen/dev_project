@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\V1\GeneratedImageController;
 use App\Http\Controllers\Api\V1\TemplateFontController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\PlatformCredentialController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -157,6 +158,16 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('process', [BrandController::class, 'triggerAutomation']);
         Route::post('extend', [BrandController::class, 'extendQueue']);
         Route::put('settings', [BrandController::class, 'updateAutomationSettings']);
+    });
+
+    // === PLATFORM CREDENTIALS (Facebook/Instagram OAuth) ===
+    Route::prefix('brands/{brand}/platforms')->group(function () {
+        Route::get('/', [PlatformCredentialController::class, 'index']);
+        Route::get('{platform}/auth-url', [PlatformCredentialController::class, 'authUrl']);
+        Route::get('facebook/pages', [PlatformCredentialController::class, 'getPages']);
+        Route::post('facebook/select-page', [PlatformCredentialController::class, 'selectPage']);
+        Route::post('{platform}/verify', [PlatformCredentialController::class, 'verify']);
+        Route::delete('{platform}', [PlatformCredentialController::class, 'disconnect']);
     });
 
     // === CONTENT PLANNING ===

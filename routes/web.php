@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\PlatformCredentialController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\BaseController;
@@ -49,6 +50,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+});
+
+// OAuth callbacks (must be web routes for redirects)
+Route::middleware('auth')->group(function () {
+    Route::get('/auth/facebook/callback', [PlatformCredentialController::class, 'callback'])
+        ->name('auth.facebook.callback');
 });
 
 require __DIR__.'/auth.php';

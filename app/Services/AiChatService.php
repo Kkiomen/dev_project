@@ -5,10 +5,13 @@ namespace App\Services;
 use App\Enums\LayerType;
 use App\Models\Layer;
 use App\Models\Template;
+use App\Services\Concerns\LogsApiUsage;
 use Illuminate\Support\Facades\Log;
 
 class AiChatService
 {
+    use LogsApiUsage;
+
     public function __construct(
         protected OpenAiClientService $openAiClient,
         protected TemplateContextService $contextService,
@@ -20,6 +23,9 @@ class AiChatService
      */
     public function chat(Template $template, array $history, string $userMessage): array
     {
+        $startTime = microtime(true);
+        $brand = $template->brand;
+
         Log::channel('single')->info('=== AI CHAT REQUEST ===', [
             'template_id' => $template->public_id,
             'template_name' => $template->name,
@@ -27,47 +33,77 @@ class AiChatService
             'history_count' => count($history),
         ]);
 
-        $systemPrompt = $this->buildSystemPrompt($template);
-
-        $messages = [
-            ['role' => 'system', 'content' => $systemPrompt],
-        ];
-
-        // Add conversation history
-        foreach ($history as $msg) {
-            $messages[] = [
-                'role' => $msg['role'],
-                'content' => $msg['content'],
-            ];
-        }
-
-        // Add current user message
-        $messages[] = ['role' => 'user', 'content' => $userMessage];
-
-        // Get available tools
-        $tools = $this->getAvailableTools();
-
-        // Call OpenAI
-        $response = $this->openAiClient->chatCompletion($messages, $tools);
-
-        Log::channel('single')->info('=== OPENAI RAW RESPONSE ===', [
-            'has_tool_calls' => ! empty($response->choices[0]->message->toolCalls),
-            'content' => $response->choices[0]->message->content,
-            'finish_reason' => $response->choices[0]->finishReason,
+        // Start API usage logging
+        $log = $this->logAiStart($brand, 'template_ai_chat', [
+            'template_id' => $template->public_id,
+            'user_message' => $userMessage,
+            'history_count' => count($history),
         ]);
 
-        if (! empty($response->choices[0]->message->toolCalls)) {
-            foreach ($response->choices[0]->message->toolCalls as $idx => $toolCall) {
-                Log::channel('single')->info("=== TOOL CALL #{$idx} ===", [
-                    'function_name' => $toolCall->function->name,
-                    'arguments_raw' => $toolCall->function->arguments,
-                    'arguments_decoded' => json_decode($toolCall->function->arguments, true),
-                ]);
-            }
-        }
+        try {
+            $systemPrompt = $this->buildSystemPrompt($template);
 
-        // Process response
-        return $this->processResponse($response, $template);
+            $messages = [
+                ['role' => 'system', 'content' => $systemPrompt],
+            ];
+
+            // Add conversation history
+            foreach ($history as $msg) {
+                $messages[] = [
+                    'role' => $msg['role'],
+                    'content' => $msg['content'],
+                ];
+            }
+
+            // Add current user message
+            $messages[] = ['role' => 'user', 'content' => $userMessage];
+
+            // Get available tools
+            $tools = $this->getAvailableTools();
+
+            // Call OpenAI
+            $response = $this->openAiClient->chatCompletion($messages, $tools);
+
+            Log::channel('single')->info('=== OPENAI RAW RESPONSE ===', [
+                'has_tool_calls' => ! empty($response->choices[0]->message->toolCalls),
+                'content' => $response->choices[0]->message->content,
+                'finish_reason' => $response->choices[0]->finishReason,
+            ]);
+
+            if (! empty($response->choices[0]->message->toolCalls)) {
+                foreach ($response->choices[0]->message->toolCalls as $idx => $toolCall) {
+                    Log::channel('single')->info("=== TOOL CALL #{$idx} ===", [
+                        'function_name' => $toolCall->function->name,
+                        'arguments_raw' => $toolCall->function->arguments,
+                        'arguments_decoded' => json_decode($toolCall->function->arguments, true),
+                    ]);
+                }
+            }
+
+            // Process response
+            $result = $this->processResponse($response, $template);
+
+            // Complete logging with token usage - save full output
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->completeAiLog(
+                $log,
+                [
+                    'reply' => $result['reply'] ?? '',
+                    'actions' => $result['actions'] ?? [],
+                    'actions_count' => count($result['actions'] ?? []),
+                ],
+                $response->usage->promptTokens ?? 0,
+                $response->usage->completionTokens ?? 0,
+                $durationMs
+            );
+
+            return $result;
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            throw $e;
+        }
     }
 
     /**

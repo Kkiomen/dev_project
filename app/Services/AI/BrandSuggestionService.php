@@ -2,10 +2,14 @@
 
 namespace App\Services\AI;
 
+use App\Models\Brand;
+use App\Services\Concerns\LogsApiUsage;
 use App\Services\OpenAiClientService;
 
 class BrandSuggestionService
 {
+    use LogsApiUsage;
+
     public function __construct(
         protected OpenAiClientService $openAiClient
     ) {}
@@ -13,21 +17,48 @@ class BrandSuggestionService
     /**
      * Generate suggestions based on brand description.
      */
-    public function generateSuggestions(string $type, array $brandData): array
+    public function generateSuggestions(string $type, array $brandData, ?Brand $brand = null): array
     {
-        $systemPrompt = $this->buildSystemPrompt();
-        $userPrompt = $this->buildUserPrompt($type, $brandData);
+        $startTime = microtime(true);
 
-        $response = retry(3, function () use ($systemPrompt, $userPrompt) {
-            return $this->openAiClient->chatCompletion([
-                ['role' => 'system', 'content' => $systemPrompt],
-                ['role' => 'user', 'content' => $userPrompt],
-            ]);
-        }, 1000);
+        // Start API usage logging
+        $log = $this->logAiStart($brand, 'brand_suggestion_' . $type, [
+            'type' => $type,
+            'brand_name' => $brandData['name'] ?? null,
+            'industry' => $brandData['industry'] ?? null,
+        ]);
 
-        $content = $response->choices[0]->message->content;
+        try {
+            $systemPrompt = $this->buildSystemPrompt();
+            $userPrompt = $this->buildUserPrompt($type, $brandData);
 
-        return $this->parseResponse($content, $type);
+            $response = retry(3, function () use ($systemPrompt, $userPrompt) {
+                return $this->openAiClient->chatCompletion([
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $userPrompt],
+                ]);
+            }, 1000);
+
+            $content = $response->choices[0]->message->content;
+            $result = $this->parseResponse($content, $type);
+
+            // Complete logging with token usage
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->completeAiLog(
+                $log,
+                $result,
+                $response->usage->promptTokens ?? 0,
+                $response->usage->completionTokens ?? 0,
+                $durationMs
+            );
+
+            return $result;
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            throw $e;
+        }
     }
 
     protected function buildSystemPrompt(): string
