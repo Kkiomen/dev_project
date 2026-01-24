@@ -212,6 +212,12 @@ const handleKeydown = (e) => {
             graphicsStore.sendBackward();
         }
     }
+
+    // Ctrl/Cmd + 0: Fit to view
+    if ((e.ctrlKey || e.metaKey) && e.key === '0') {
+        e.preventDefault();
+        canvasRef.value?.fitToView?.();
+    }
 };
 
 // Load fonts used by text layers
@@ -268,6 +274,7 @@ const handleOpenFonts = () => {
             @open-library="showLibraryModal = true"
             @add-to-library="showAddToLibraryModal = true"
             @unlink-from-library="handleUnlinkFromLibrary"
+            @fit-to-view="canvasRef?.fitToView?.()"
         />
 
         <!-- Main content -->

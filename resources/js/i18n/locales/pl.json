@@ -611,6 +611,7 @@
     "graphics": {
         "layerTypes": {
             "text": "Tekst",
+            "textbox": "Przycisk",
             "image": "Obraz",
             "rectangle": "Prostokąt",
             "ellipse": "Elipsa"
@@ -627,7 +628,8 @@
             "saved": "Szablon został zapisany.",
             "deleted": "Szablon został usunięty.",
             "noTemplates": "Brak szablonów",
-            "noTemplatesDescription": "Zacznij od utworzenia nowego szablonu."
+            "noTemplatesDescription": "Zacznij od utworzenia nowego szablonu.",
+            "presets": "Gotowe rozmiary"
         },
         "layers": {
             "title": "Warstwy",
@@ -719,7 +721,10 @@
             "gradientAngle": "Kąt",
             "lineStyle": "Styl linii",
             "lineCap": "Zakończenie linii",
-            "dashPattern": "Wzór przerywany"
+            "dashPattern": "Wzór przerywany",
+            "enterText": "Wprowadź tekst...",
+            "background": "Tło",
+            "padding": "Odstęp"
         },
         "export": {
             "title": "Eksportuj obraz",
@@ -751,6 +756,7 @@
         "tools": {
             "select": "Zaznacz",
             "text": "Tekst",
+            "textbox": "Przycisk",
             "image": "Obraz",
             "rectangle": "Prostokąt",
             "ellipse": "Elipsa",

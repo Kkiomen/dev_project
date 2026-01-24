@@ -610,6 +610,7 @@
     "graphics": {
         "layerTypes": {
             "text": "Text",
+            "textbox": "Text Box",
             "image": "Image",
             "rectangle": "Rectangle",
             "ellipse": "Ellipse"
@@ -626,7 +627,8 @@
             "saved": "Template saved successfully.",
             "deleted": "Template deleted successfully.",
             "noTemplates": "No templates",
-            "noTemplatesDescription": "Start by creating a new template."
+            "noTemplatesDescription": "Start by creating a new template.",
+            "presets": "Size presets"
         },
         "layers": {
             "title": "Layers",
@@ -718,7 +720,10 @@
             "gradientAngle": "Angle",
             "lineStyle": "Line Style",
             "lineCap": "Line Cap",
-            "dashPattern": "Dash Pattern"
+            "dashPattern": "Dash Pattern",
+            "enterText": "Enter text...",
+            "background": "Background",
+            "padding": "Padding"
         },
         "export": {
             "title": "Export Image",
@@ -750,6 +755,7 @@
         "tools": {
             "select": "Select",
             "text": "Text",
+            "textbox": "Text Box",
             "image": "Image",
             "rectangle": "Rectangle",
             "ellipse": "Ellipse",

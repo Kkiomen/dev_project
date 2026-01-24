@@ -21,6 +21,8 @@ const modifiableLayers = computed(() => {
         let modifiableProps = [];
         if (layer.type === 'text') {
             modifiableProps = ['text', 'fill', 'fontFamily', 'fontSize'];
+        } else if (layer.type === 'textbox') {
+            modifiableProps = ['text', 'fill', 'textColor', 'fontFamily', 'fontSize', 'padding', 'cornerRadius'];
         } else if (layer.type === 'image') {
             modifiableProps = ['src'];
         } else if (layer.type === 'rectangle' || layer.type === 'ellipse') {
@@ -50,6 +52,12 @@ const exampleModifications = computed(() => {
         if (layer.type === 'text') {
             mods[key] = {
                 text: 'Your text here',
+            };
+        } else if (layer.type === 'textbox') {
+            mods[key] = {
+                text: 'Button Text',
+                fill: '#3B82F6',
+                textColor: '#FFFFFF',
             };
         } else if (layer.type === 'image') {
             mods[key] = {
@@ -113,12 +121,16 @@ watch(() => selectedLayer.value?.properties?.text, (newText) => {
 const updateProperty = (key, value) => {
     if (!selectedLayer.value) return;
 
-    // Store handles deep merging of properties
-    graphicsStore.updateLayerLocally(selectedLayer.value.id, {
+    const updates = {
         properties: {
             [key]: value,
         },
-    });
+    };
+
+    // Note: Text layer auto-resize is handled by EditorCanvas watcher
+
+    // Store handles deep merging of properties
+    graphicsStore.updateLayerLocally(selectedLayer.value.id, updates);
 };
 
 const updateLayer = (key, value) => {
@@ -589,6 +601,11 @@ const toggleTextDecoration = (decoration) => {
                         <!-- Line icon -->
                         <svg v-else-if="selectedLayer.type === 'line'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M4 20L20 4" />
+                        </svg>
+                        <!-- Textbox icon -->
+                        <svg v-else-if="selectedLayer.type === 'textbox'" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <rect x="3" y="6" width="18" height="12" rx="2" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 12h10" />
                         </svg>
                     </div>
                     <input
@@ -1115,6 +1132,175 @@ const toggleTextDecoration = (decoration) => {
                             </button>
                         </div>
                     </div>
+                </div>
+            </template>
+
+            <!-- Textbox properties -->
+            <template v-if="selectedLayer.type === 'textbox'">
+                <!-- Text content -->
+                <div class="px-3 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">
+                            {{ t('graphics.layerTypes.textbox') }}
+                        </span>
+                    </div>
+                    <textarea
+                        v-model="localText"
+                        @blur="updateText"
+                        rows="3"
+                        class="w-full px-2.5 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white resize-none transition-colors"
+                        :placeholder="t('graphics.properties.enterText')"
+                    />
+                </div>
+
+                <!-- Typography section -->
+                <div class="px-3 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h8m-8 6h16" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">
+                            {{ t('graphics.properties.typography') }}
+                        </span>
+                    </div>
+
+                    <!-- Font family -->
+                    <div class="mb-2">
+                        <FontPicker
+                            :model-value="selectedLayer.properties?.fontFamily || 'Arial'"
+                            @update:model-value="updateProperty('fontFamily', $event)"
+                        />
+                    </div>
+
+                    <!-- Text color -->
+                    <div class="mb-2">
+                        <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.properties.textColor') }}</label>
+                        <div class="flex items-center gap-2">
+                            <input
+                                :value="selectedLayer.properties?.textColor || '#FFFFFF'"
+                                @input="updateProperty('textColor', $event.target.value)"
+                                type="color"
+                                class="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                                style="padding: 2px;"
+                            />
+                            <input
+                                :value="selectedLayer.properties?.textColor || '#FFFFFF'"
+                                @input="updateProperty('textColor', $event.target.value)"
+                                type="text"
+                                class="flex-1 px-2.5 py-1.5 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white uppercase transition-colors font-mono"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Font size and weight -->
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <ScrubberInput
+                            :model-value="selectedLayer.properties?.fontSize || 16"
+                            @update:model-value="updateProperty('fontSize', $event)"
+                            suffix="px"
+                            :min="1"
+                            :max="200"
+                            :sensitivity="0.5"
+                        />
+                        <select
+                            :value="selectedLayer.properties?.fontWeight || '600'"
+                            @change="updateProperty('fontWeight', $event.target.value)"
+                            class="w-full bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white px-2.5 py-2 transition-colors"
+                        >
+                            <option v-for="w in fontWeights" :key="w.value" :value="w.value">
+                                {{ w.label }}
+                            </option>
+                        </select>
+                    </div>
+
+                    <!-- Text align -->
+                    <div class="flex bg-gray-50 border border-gray-200 rounded overflow-hidden mb-3">
+                        <button
+                            v-for="align in textAligns"
+                            :key="align.value"
+                            @click="updateProperty('align', align.value)"
+                            :class="[
+                                'flex-1 py-2 transition-colors flex items-center justify-center border-r border-gray-200 last:border-r-0',
+                                (selectedLayer.properties?.align || 'center') === align.value
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                            ]"
+                        >
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" :d="align.icon" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Line height -->
+                    <div class="mb-3">
+                        <ScrubberInput
+                            :model-value="selectedLayer.properties?.lineHeight || 1.2"
+                            @update:model-value="updateProperty('lineHeight', $event)"
+                            :label="t('graphics.properties.lineHeight')"
+                            :step="0.1"
+                            :min="0.5"
+                            :max="5"
+                            :decimals="1"
+                            :sensitivity="0.01"
+                        />
+                    </div>
+                </div>
+
+                <!-- Background section -->
+                <div class="px-3 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">
+                            {{ t('graphics.properties.background') }}
+                        </span>
+                    </div>
+
+                    <!-- Background color -->
+                    <div class="flex items-center gap-2 mb-3">
+                        <input
+                            :value="selectedLayer.properties?.fill || '#3B82F6'"
+                            @input="updateProperty('fill', $event.target.value)"
+                            type="color"
+                            class="w-9 h-9 rounded cursor-pointer border border-gray-300"
+                            style="padding: 2px;"
+                        />
+                        <input
+                            :value="selectedLayer.properties?.fill || '#3B82F6'"
+                            @input="updateProperty('fill', $event.target.value)"
+                            type="text"
+                            class="flex-1 px-2.5 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white uppercase transition-colors font-mono"
+                        />
+                    </div>
+
+                    <!-- Padding -->
+                    <div class="mb-3">
+                        <ScrubberInput
+                            :model-value="selectedLayer.properties?.padding || 16"
+                            @update:model-value="updateProperty('padding', $event)"
+                            :label="t('graphics.properties.padding')"
+                            suffix="px"
+                            :min="0"
+                            :max="100"
+                            :sensitivity="0.5"
+                        />
+                    </div>
+
+                    <!-- Corner radius -->
+                    <ScrubberInput
+                        :model-value="selectedLayer.properties?.cornerRadius || 8"
+                        @update:model-value="updateProperty('cornerRadius', $event)"
+                        :label="t('graphics.properties.cornerRadius')"
+                        suffix="px"
+                        :min="0"
+                        :max="100"
+                        :sensitivity="0.5"
+                    />
                 </div>
             </template>
 

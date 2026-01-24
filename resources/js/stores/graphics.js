@@ -156,6 +156,7 @@ export const useGraphicsStore = defineStore('graphics', {
                 image: 'Image',
                 rectangle: 'Rectangle',
                 ellipse: 'Ellipse',
+                textbox: 'Text Box',
             };
 
             const data = {

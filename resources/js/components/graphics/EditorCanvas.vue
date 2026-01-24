@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
+import Konva from 'konva';
 import { useGraphicsStore } from '@/stores/graphics';
 
 const props = defineProps({
@@ -14,6 +15,82 @@ const emit = defineEmits(['edit-text', 'layer-added']);
 
 const { t } = useI18n();
 const graphicsStore = useGraphicsStore();
+
+// Helper function to measure text dimensions using Konva
+const measureTextDimensions = (textProps) => {
+    const tempText = new Konva.Text({
+        text: textProps.text || '',
+        fontSize: textProps.fontSize || 24,
+        fontFamily: textProps.fontFamily || 'Arial',
+        fontStyle: `${textProps.fontWeight || 'normal'} ${textProps.fontStyle || 'normal'}`,
+        lineHeight: textProps.lineHeight || 1.2,
+        letterSpacing: textProps.letterSpacing || 0,
+        width: textProps.width, // If width is set, text will wrap
+    });
+
+    const width = tempText.width();
+    const height = tempText.height();
+
+    tempText.destroy();
+
+    return { width, height };
+};
+
+// Auto-resize text layer based on content - expands width and wraps at canvas edge
+const autoResizeTextLayer = (layerId) => {
+    const layer = graphicsStore.layers.find(l => l.id === layerId);
+    if (!layer || layer.type !== 'text') return;
+
+    const layerProps = layer.properties || {};
+    const canvasWidth = props.template.width;
+    const canvasHeight = props.template.height;
+
+    // First, measure text without width constraint to get natural width
+    const naturalDimensions = measureTextDimensions({
+        text: layerProps.text || '',
+        fontSize: layerProps.fontSize || 24,
+        fontFamily: layerProps.fontFamily || 'Arial',
+        fontWeight: layerProps.fontWeight || 'normal',
+        fontStyle: layerProps.fontStyle || 'normal',
+        lineHeight: layerProps.lineHeight || 1.2,
+        letterSpacing: layerProps.letterSpacing || 0,
+        width: undefined, // No width constraint - get natural width
+    });
+
+    // Calculate max available width (from layer x position to canvas edge with padding)
+    const maxAvailableWidth = canvasWidth - layer.x - 20; // 20px padding from edge
+
+    let finalWidth, finalHeight;
+
+    if (naturalDimensions.width <= maxAvailableWidth) {
+        // Text fits without wrapping - use natural width
+        finalWidth = Math.ceil(naturalDimensions.width) + 5; // Small padding
+        finalHeight = Math.ceil(naturalDimensions.height);
+    } else {
+        // Text needs to wrap - constrain to available width
+        const wrappedDimensions = measureTextDimensions({
+            text: layerProps.text || '',
+            fontSize: layerProps.fontSize || 24,
+            fontFamily: layerProps.fontFamily || 'Arial',
+            fontWeight: layerProps.fontWeight || 'normal',
+            fontStyle: layerProps.fontStyle || 'normal',
+            lineHeight: layerProps.lineHeight || 1.2,
+            letterSpacing: layerProps.letterSpacing || 0,
+            width: maxAvailableWidth,
+        });
+        finalWidth = Math.ceil(maxAvailableWidth);
+        finalHeight = Math.ceil(wrappedDimensions.height);
+    }
+
+    // Update layer dimensions if changed
+    const updates = {};
+    if (finalWidth !== layer.width) updates.width = finalWidth;
+    if (finalHeight !== layer.height) updates.height = finalHeight;
+
+    if (Object.keys(updates).length > 0) {
+        graphicsStore.updateLayerLocally(layerId, updates);
+    }
+};
 
 // Context menu state
 const contextMenu = ref({
@@ -275,6 +352,42 @@ watch(() => graphicsStore.zoom, (newZoom, oldZoom) => {
     }
 });
 
+// Watch for text/textbox layer property changes to auto-resize
+const textLayerSnapshots = ref({});
+watch(() => graphicsStore.layers, (layers) => {
+    layers.forEach(layer => {
+        if (layer.type !== 'text' && layer.type !== 'textbox') return;
+
+        // Create a snapshot of properties that affect text size
+        const currentSnapshot = JSON.stringify({
+            text: layer.properties?.text,
+            fontSize: layer.properties?.fontSize,
+            fontFamily: layer.properties?.fontFamily,
+            fontWeight: layer.properties?.fontWeight,
+            lineHeight: layer.properties?.lineHeight,
+            letterSpacing: layer.properties?.letterSpacing,
+            padding: layer.properties?.padding,
+            x: layer.x,
+        });
+
+        const previousSnapshot = textLayerSnapshots.value[layer.id];
+
+        // If properties changed, trigger auto-resize
+        if (previousSnapshot && previousSnapshot !== currentSnapshot) {
+            // Use nextTick to avoid infinite loops
+            nextTick(() => {
+                if (layer.type === 'text') {
+                    autoResizeTextLayer(layer.id);
+                } else if (layer.type === 'textbox') {
+                    autoResizeTextbox(layer.id);
+                }
+            });
+        }
+
+        textLayerSnapshots.value[layer.id] = currentSnapshot;
+    });
+}, { deep: true });
+
 // Calculate snap position
 const calculateSnap = (pos, size, snapLines) => {
     let snappedPos = pos;
@@ -307,6 +420,22 @@ const updateContainerSize = () => {
     }
 };
 
+// Fit canvas to view (zoom to fit template in viewport)
+const fitToView = () => {
+    if (!containerRef.value || !props.template) return;
+
+    const padding = 40; // Padding around canvas
+    const availableWidth = containerWidth.value - padding * 2;
+    const availableHeight = containerHeight.value - padding * 2;
+
+    const scaleX = availableWidth / props.template.width;
+    const scaleY = availableHeight / props.template.height;
+    const newZoom = Math.min(scaleX, scaleY, 1); // Don't zoom in more than 100%
+
+    graphicsStore.setZoom(newZoom);
+    panOffset.value = { x: 0, y: 0 };
+};
+
 let resizeObserver = null;
 
 onMounted(() => {
@@ -315,7 +444,11 @@ onMounted(() => {
 
     // Delayed update to ensure layout is complete
     setTimeout(updateContainerSize, 0);
-    setTimeout(updateContainerSize, 100);
+    setTimeout(() => {
+        updateContainerSize();
+        // Auto fit-to-view after container size is known
+        fitToView();
+    }, 100);
 
     window.addEventListener('resize', updateContainerSize);
     window.addEventListener('keydown', handleKeyDown);
@@ -504,6 +637,7 @@ const handleTextDblClick = (e, layer) => {
     textarea.select();
 
     editingTextId.value = layer.id;
+    textareaRef.value = textarea;
 
     const finishEditing = () => {
         graphicsStore.updateLayerLocally(layer.id, {
@@ -513,9 +647,101 @@ const handleTextDblClick = (e, layer) => {
             },
         });
 
+        // Auto-resize text layer based on new content
+        nextTick(() => {
+            autoResizeTextLayer(layer.id);
+        });
+
         document.body.removeChild(textarea);
         textNode.show();
         editingTextId.value = null;
+        textareaRef.value = null;
+        updateTransformer();
+    };
+
+    textarea.addEventListener('blur', finishEditing);
+    textarea.addEventListener('keydown', (evt) => {
+        if (evt.key === 'Escape') {
+            textarea.blur();
+        }
+        if (evt.key === 'Enter' && !evt.shiftKey) {
+            textarea.blur();
+        }
+    });
+};
+
+// Handle double-click for textbox text editing
+const handleTextboxDblClick = (e, layer) => {
+    if (layer.locked) return;
+
+    const groupNode = e.target.parent || e.target;
+    const stage = stageRef.value?.getNode();
+    if (!stage) return;
+
+    // Hide the group and transformer
+    groupNode.hide();
+    const transformer = transformerRef.value?.getNode();
+    if (transformer) {
+        transformer.nodes([]);
+    }
+
+    // Get group position
+    const groupPosition = groupNode.absolutePosition();
+    const stageBox = stage.container().getBoundingClientRect();
+    const padding = layer.properties?.padding ?? 16;
+
+    // Create textarea at the text position (inside the box)
+    const textarea = document.createElement('textarea');
+    document.body.appendChild(textarea);
+
+    textarea.value = layer.properties?.text || 'Button';
+    textarea.style.position = 'absolute';
+    textarea.style.top = `${stageBox.top + groupPosition.y + padding * graphicsStore.zoom}px`;
+    textarea.style.left = `${stageBox.left + groupPosition.x + padding * graphicsStore.zoom}px`;
+    textarea.style.width = `${Math.max((layer.width - padding * 2) * graphicsStore.zoom, 60)}px`;
+    textarea.style.minHeight = `${(layer.height - padding * 2) * graphicsStore.zoom}px`;
+    textarea.style.fontSize = `${(layer.properties?.fontSize || 16) * graphicsStore.zoom}px`;
+    textarea.style.fontFamily = layer.properties?.fontFamily || 'Montserrat';
+    textarea.style.fontWeight = layer.properties?.fontWeight || '600';
+    textarea.style.fontStyle = layer.properties?.fontStyle || 'normal';
+    textarea.style.color = layer.properties?.textColor || '#FFFFFF';
+    textarea.style.textAlign = layer.properties?.align || 'center';
+    textarea.style.lineHeight = String(layer.properties?.lineHeight || 1.2);
+    textarea.style.border = '2px solid #0066ff';
+    textarea.style.padding = '4px';
+    textarea.style.margin = '0';
+    textarea.style.overflow = 'hidden';
+    textarea.style.background = layer.properties?.fill || '#3B82F6';
+    textarea.style.outline = 'none';
+    textarea.style.resize = 'none';
+    textarea.style.zIndex = '1000';
+    textarea.style.borderRadius = `${layer.properties?.cornerRadius || 8}px`;
+    textarea.style.transformOrigin = 'left top';
+    textarea.style.transform = `rotate(${layer.rotation || 0}deg)`;
+
+    textarea.focus();
+    textarea.select();
+
+    editingTextId.value = layer.id;
+    textareaRef.value = textarea;
+
+    const finishEditing = () => {
+        graphicsStore.updateLayerLocally(layer.id, {
+            properties: {
+                ...layer.properties,
+                text: textarea.value,
+            },
+        });
+
+        // Auto-resize textbox based on new content
+        nextTick(() => {
+            autoResizeTextbox(layer.id);
+        });
+
+        document.body.removeChild(textarea);
+        groupNode.show();
+        editingTextId.value = null;
+        textareaRef.value = null;
         updateTransformer();
     };
 
@@ -805,89 +1031,220 @@ const getShapeConfig = (layer) => {
     }
 };
 
-// Export functionality
+// Get textbox configs (returns separate rect and text configs)
+const getTextboxConfig = (layer) => {
+    const padding = layer.properties?.padding ?? 16;
+
+    // Apply text transform
+    let text = layer.properties?.text || 'Button';
+    const transform = layer.properties?.textTransform;
+    if (transform === 'uppercase') text = text.toUpperCase();
+    else if (transform === 'lowercase') text = text.toLowerCase();
+    else if (transform === 'capitalize') text = text.replace(/\b\w/g, (c) => c.toUpperCase());
+
+    const rectConfig = {
+        x: 0,
+        y: 0,
+        width: layer.width,
+        height: layer.height,
+        fill: layer.properties?.fill || '#3B82F6',
+        stroke: layer.properties?.stroke,
+        strokeWidth: layer.properties?.strokeWidth || 0,
+        cornerRadius: layer.properties?.cornerRadius || 8,
+        ...getShadowConfig(layer),
+    };
+
+    const textConfig = {
+        x: padding,
+        y: padding,
+        width: layer.width - padding * 2,
+        height: layer.height - padding * 2,
+        text,
+        fontSize: layer.properties?.fontSize || 16,
+        fontFamily: layer.properties?.fontFamily || 'Montserrat',
+        fontStyle: `${layer.properties?.fontWeight || '600'} ${layer.properties?.fontStyle || 'normal'}`,
+        fill: layer.properties?.textColor || '#FFFFFF',
+        align: layer.properties?.align || 'center',
+        verticalAlign: 'middle',
+        lineHeight: layer.properties?.lineHeight || 1.2,
+        letterSpacing: layer.properties?.letterSpacing || 0,
+    };
+
+    const groupConfig = {
+        id: layer.id,
+        x: layer.x,
+        y: layer.y,
+        rotation: layer.rotation,
+        scaleX: layer.scale_x,
+        scaleY: layer.scale_y,
+        draggable: !layer.locked,
+        visible: layer.visible,
+        opacity: layer.opacity ?? 1,
+    };
+
+    return { groupConfig, rectConfig, textConfig };
+};
+
+// Auto-resize textbox based on text content
+const autoResizeTextbox = (layerId) => {
+    const layer = graphicsStore.layers.find(l => l.id === layerId);
+    if (!layer || layer.type !== 'textbox') return;
+
+    const layerProps = layer.properties || {};
+    const padding = layerProps.padding ?? 16;
+    const minWidth = 80;
+    const minHeight = 40;
+
+    // Measure text without width constraint
+    const naturalDimensions = measureTextDimensions({
+        text: layerProps.text || 'Button',
+        fontSize: layerProps.fontSize || 16,
+        fontFamily: layerProps.fontFamily || 'Montserrat',
+        fontWeight: layerProps.fontWeight || '600',
+        fontStyle: layerProps.fontStyle || 'normal',
+        lineHeight: layerProps.lineHeight || 1.2,
+        letterSpacing: layerProps.letterSpacing || 0,
+        width: undefined,
+    });
+
+    // Calculate required size with padding
+    const requiredWidth = naturalDimensions.width + padding * 2;
+    const requiredHeight = naturalDimensions.height + padding * 2;
+
+    // Calculate max available width
+    const canvasWidth = props.template.width;
+    const maxAvailableWidth = canvasWidth - layer.x - 20;
+
+    let finalWidth, finalHeight;
+
+    if (requiredWidth <= maxAvailableWidth) {
+        // Text fits without wrapping
+        finalWidth = Math.max(minWidth, Math.ceil(requiredWidth));
+        finalHeight = Math.max(minHeight, Math.ceil(requiredHeight));
+    } else {
+        // Text needs to wrap
+        const wrappedDimensions = measureTextDimensions({
+            text: layerProps.text || 'Button',
+            fontSize: layerProps.fontSize || 16,
+            fontFamily: layerProps.fontFamily || 'Montserrat',
+            fontWeight: layerProps.fontWeight || '600',
+            fontStyle: layerProps.fontStyle || 'normal',
+            lineHeight: layerProps.lineHeight || 1.2,
+            letterSpacing: layerProps.letterSpacing || 0,
+            width: maxAvailableWidth - padding * 2,
+        });
+        finalWidth = Math.ceil(maxAvailableWidth);
+        finalHeight = Math.max(minHeight, Math.ceil(wrappedDimensions.height + padding * 2));
+    }
+
+    // Update dimensions if changed
+    const updates = {};
+    if (finalWidth !== layer.width) updates.width = finalWidth;
+    if (finalHeight !== layer.height) updates.height = finalHeight;
+
+    if (Object.keys(updates).length > 0) {
+        graphicsStore.updateLayerLocally(layerId, updates);
+    }
+};
+
+// Export functionality - creates offscreen stage for accurate export
 const exportImage = (options = {}) => {
     if (!stageRef.value) return null;
 
-    const stage = stageRef.value.getNode();
     const pixelRatio = options.pixelRatio || 2;
     const format = options.format || 'image/png';
     const quality = options.quality || 1;
 
-    // Store original values
-    const originalStageX = stage.x();
-    const originalStageY = stage.y();
-    const originalStageWidth = stage.width();
-    const originalStageHeight = stage.height();
+    // Log export dimensions for debugging
+    console.log(`Exporting template: ${props.template.width}x${props.template.height} at ${pixelRatio}x = ${props.template.width * pixelRatio}x${props.template.height * pixelRatio}px`);
 
-    // Get all layers and store their original scales
-    const layers = stage.getLayers();
-    const originalLayerScales = layers.map(layer => ({
-        scaleX: layer.scaleX(),
-        scaleY: layer.scaleY(),
-    }));
+    // Create offscreen container with exact template dimensions
+    const offscreenContainer = document.createElement('div');
+    offscreenContainer.style.position = 'absolute';
+    offscreenContainer.style.left = '-9999px';
+    offscreenContainer.style.top = '-9999px';
+    document.body.appendChild(offscreenContainer);
 
-    // Hide transformer and guides
-    const transformer = transformerRef.value?.getNode();
-    if (transformer) {
-        transformer.nodes([]);
+    let offscreenStage = null;
+    let dataURL = null;
+
+    try {
+        // Create offscreen stage with template dimensions
+        offscreenStage = new Konva.Stage({
+            container: offscreenContainer,
+            width: props.template.width,
+            height: props.template.height,
+        });
+
+        // Create background layer
+        const bgLayer = new Konva.Layer();
+        offscreenStage.add(bgLayer);
+
+        // Add background rect
+        const bgRect = new Konva.Rect({
+            x: 0,
+            y: 0,
+            width: props.template.width,
+            height: props.template.height,
+            fill: props.template.background_color || '#FFFFFF',
+        });
+        bgLayer.add(bgRect);
+
+        // Add background image if exists
+        if (backgroundImage.value) {
+            const bgImage = new Konva.Image({
+                x: 0,
+                y: 0,
+                width: props.template.width,
+                height: props.template.height,
+                image: backgroundImage.value,
+            });
+            bgLayer.add(bgImage);
+        }
+
+        // Create content layer
+        const contentLayer = new Konva.Layer();
+        offscreenStage.add(contentLayer);
+
+        // Clone all shapes from the original content layer (2nd layer, index 1)
+        const originalStage = stageRef.value.getNode();
+        const originalContentLayer = originalStage.getLayers()[1]; // Content layer is index 1
+
+        if (originalContentLayer) {
+            originalContentLayer.getChildren().forEach(shape => {
+                // Skip transformer
+                if (shape.className === 'Transformer') return;
+
+                // Clone the shape
+                const clone = shape.clone();
+                contentLayer.add(clone);
+            });
+        }
+
+        // Force draw
+        offscreenStage.draw();
+
+        // Export
+        dataURL = offscreenStage.toDataURL({
+            x: 0,
+            y: 0,
+            width: props.template.width,
+            height: props.template.height,
+            pixelRatio: pixelRatio,
+            mimeType: format,
+            quality: quality,
+        });
+    } catch (error) {
+        console.error('Export failed:', error);
+    } finally {
+        // Cleanup
+        if (offscreenStage) {
+            offscreenStage.destroy();
+        }
+        if (document.body.contains(offscreenContainer)) {
+            document.body.removeChild(offscreenContainer);
+        }
     }
-
-    // Hide guides layer
-    const guidesLayer = guidesLayerRef.value?.getNode();
-    const guidesWasVisible = guidesLayer?.visible();
-    if (guidesLayer) {
-        guidesLayer.visible(false);
-    }
-
-    // Reset stage position to origin
-    stage.x(0);
-    stage.y(0);
-    stage.width(props.template.width);
-    stage.height(props.template.height);
-
-    // Reset all layer scales to 1:1
-    layers.forEach(layer => {
-        layer.scaleX(1);
-        layer.scaleY(1);
-    });
-
-    // Force redraw
-    stage.batchDraw();
-
-    // Export at template's actual size
-    const dataURL = stage.toDataURL({
-        x: 0,
-        y: 0,
-        width: props.template.width,
-        height: props.template.height,
-        pixelRatio: pixelRatio,
-        mimeType: format,
-        quality: quality,
-    });
-
-    // Restore original values
-    stage.x(originalStageX);
-    stage.y(originalStageY);
-    stage.width(originalStageWidth);
-    stage.height(originalStageHeight);
-
-    // Restore layer scales
-    layers.forEach((layer, index) => {
-        layer.scaleX(originalLayerScales[index].scaleX);
-        layer.scaleY(originalLayerScales[index].scaleY);
-    });
-
-    // Restore guides visibility
-    if (guidesLayer) {
-        guidesLayer.visible(guidesWasVisible);
-    }
-
-    // Force redraw to restore view
-    stage.batchDraw();
-
-    // Restore transformer
-    updateTransformer();
 
     return dataURL;
 };
@@ -941,34 +1298,73 @@ const handleDrop = async (e) => {
 const addLayerAtPosition = async (type, x, y) => {
     // Default sizes for new shapes
     const defaultSizes = {
-        text: { width: 200, height: 40 },
         rectangle: { width: 150, height: 100 },
         ellipse: { width: 120, height: 120 },
         line: { width: 150, height: 0 },
     };
 
-    const size = defaultSizes[type] || { width: 100, height: 100 };
-
-    // Center the shape at drop position
-    const centeredX = Math.max(0, x - size.width / 2);
-    const centeredY = Math.max(0, y - size.height / 2);
-
-    // Build properties based on type
+    let size;
     let properties;
+
+    // Build properties and size based on type
     if (type === 'text') {
         properties = {
             text: 'Text',
             fontSize: 24,
-            fontFamily: 'Arial',
+            fontFamily: 'Montserrat',
             fill: '#000000',
         };
+
+        // Measure initial text size
+        const textDimensions = measureTextDimensions({
+            text: properties.text,
+            fontSize: properties.fontSize,
+            fontFamily: properties.fontFamily,
+        });
+
+        size = {
+            width: Math.ceil(textDimensions.width) + 10,
+            height: Math.ceil(textDimensions.height),
+        };
+    } else if (type === 'textbox') {
+        properties = {
+            text: 'Button',
+            fontSize: 16,
+            fontFamily: 'Montserrat',
+            fontWeight: '600',
+            fill: '#3B82F6',
+            textColor: '#FFFFFF',
+            cornerRadius: 8,
+            padding: 16,
+            align: 'center',
+        };
+
+        // Measure initial text size with padding
+        const textDimensions = measureTextDimensions({
+            text: properties.text,
+            fontSize: properties.fontSize,
+            fontFamily: properties.fontFamily,
+            fontWeight: properties.fontWeight,
+        });
+
+        size = {
+            width: Math.max(120, Math.ceil(textDimensions.width) + properties.padding * 2),
+            height: Math.max(48, Math.ceil(textDimensions.height) + properties.padding * 2),
+        };
     } else if (type === 'line') {
+        size = defaultSizes.line;
         properties = {
             points: [0, 0, size.width, 0],
             stroke: '#000000',
             strokeWidth: 2,
         };
+    } else {
+        size = defaultSizes[type] || { width: 100, height: 100 };
     }
+
+    // Center the shape at drop position
+    const centeredX = Math.max(0, x - size.width / 2);
+    const centeredY = Math.max(0, y - size.height / 2);
 
     // Create layer via store
     const layer = await graphicsStore.addLayer(type, {
@@ -1049,6 +1445,7 @@ const triggerTextEdit = (layer) => {
     textarea.select();
 
     editingTextId.value = layer.id;
+    textareaRef.value = textarea;
 
     const finishEditing = () => {
         graphicsStore.updateLayerLocally(layer.id, {
@@ -1058,9 +1455,15 @@ const triggerTextEdit = (layer) => {
             },
         });
 
+        // Auto-resize text layer based on new content
+        nextTick(() => {
+            autoResizeTextLayer(layer.id);
+        });
+
         document.body.removeChild(textarea);
         textNode.show();
         editingTextId.value = null;
+        textareaRef.value = null;
         updateTransformer();
     };
 
@@ -1100,6 +1503,9 @@ defineExpose({
     addLayerAtPosition,
     resetPan,
     resetView,
+    fitToView,
+    autoResizeTextLayer,
+    measureTextDimensions,
 });
 
 // Background image loading
@@ -1117,6 +1523,24 @@ watch(() => props.template.background_image, async (newSrc) => {
         backgroundImage.value = null;
     }
 }, { immediate: true });
+
+// Watch for changes to the currently editing text layer's properties
+watch(() => {
+    if (!editingTextId.value) return null;
+    const layer = graphicsStore.layers.find(l => l.id === editingTextId.value);
+    return layer?.properties;
+}, (newProps) => {
+    if (!textareaRef.value || !newProps) return;
+
+    // Update textarea styles when properties change
+    textareaRef.value.style.fontSize = `${(newProps.fontSize || 24) * graphicsStore.zoom}px`;
+    textareaRef.value.style.fontFamily = newProps.fontFamily || 'Arial';
+    textareaRef.value.style.fontWeight = newProps.fontWeight || 'normal';
+    textareaRef.value.style.fontStyle = newProps.fontStyle || 'normal';
+    textareaRef.value.style.color = newProps.fill || '#000000';
+    textareaRef.value.style.textAlign = newProps.align || 'left';
+    textareaRef.value.style.lineHeight = String(newProps.lineHeight || 1.2);
+}, { deep: true });
 
 // Layer images loading
 const layerImages = ref({});
@@ -1358,6 +1782,22 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                         @transform="(e) => handleTransform(e, layer)"
                         @transformend="(e) => handleTransformEnd(e, layer)"
                     />
+
+                    <!-- Textbox (Button) -->
+                    <v-group
+                        v-else-if="layer.type === 'textbox'"
+                        :config="getTextboxConfig(layer).groupConfig"
+                        @click="(e) => handleShapeClick(e, layer)"
+                        @contextmenu="(e) => handleContextMenu(e, layer)"
+                        @dblclick="(e) => handleTextboxDblClick(e, layer)"
+                        @dragmove="(e) => handleDragMove(e, layer)"
+                        @dragend="(e) => handleDragEnd(e, layer)"
+                        @transform="(e) => handleTransform(e, layer)"
+                        @transformend="(e) => handleTransformEnd(e, layer)"
+                    >
+                        <v-rect :config="getTextboxConfig(layer).rectConfig" />
+                        <v-text :config="getTextboxConfig(layer).textConfig" />
+                    </v-group>
                 </template>
 
                 <!-- Transformer -->

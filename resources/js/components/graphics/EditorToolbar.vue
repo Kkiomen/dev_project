@@ -15,7 +15,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at', 'open-library', 'add-to-library', 'unlink-from-library']);
+const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at', 'open-library', 'add-to-library', 'unlink-from-library', 'fit-to-view']);
 
 const authStore = useAuthStore();
 
@@ -39,6 +39,7 @@ const saveStatus = computed(() => {
 const tools = [
     { id: 'select', icon: 'cursor', label: 'tools.select', shortcut: 'V', draggable: false },
     { id: 'text', icon: 'type', label: 'tools.text', shortcut: 'T', draggable: true },
+    { id: 'textbox', icon: 'button', label: 'tools.textbox', shortcut: 'B', draggable: true },
     { id: 'rectangle', icon: 'square', label: 'tools.rectangle', shortcut: 'R', draggable: true },
     { id: 'ellipse', icon: 'circle', label: 'tools.ellipse', shortcut: 'O', draggable: true },
     { id: 'line', icon: 'line', label: 'tools.line', shortcut: 'L', draggable: true },
@@ -58,13 +59,43 @@ const handleToolClick = (toolId) => {
             if (file) {
                 const reader = new FileReader();
                 reader.onload = async (event) => {
-                    const layer = await graphicsStore.addLayer('image', {
-                        properties: {
-                            src: event.target.result,
-                            fit: 'cover',
-                        },
-                    });
-                    graphicsStore.setTool('select');
+                    // Load image to get natural dimensions
+                    const img = new Image();
+                    img.onload = async () => {
+                        const template = graphicsStore.currentTemplate;
+                        const maxWidth = template?.width ? template.width * 0.8 : 800;
+                        const maxHeight = template?.height ? template.height * 0.8 : 800;
+
+                        // Calculate dimensions maintaining aspect ratio
+                        let width = img.naturalWidth;
+                        let height = img.naturalHeight;
+
+                        // Scale down if larger than max
+                        if (width > maxWidth || height > maxHeight) {
+                            const scaleW = maxWidth / width;
+                            const scaleH = maxHeight / height;
+                            const scale = Math.min(scaleW, scaleH);
+                            width = Math.round(width * scale);
+                            height = Math.round(height * scale);
+                        }
+
+                        // Center the image on canvas
+                        const x = template?.width ? Math.round((template.width - width) / 2) : 100;
+                        const y = template?.height ? Math.round((template.height - height) / 2) : 100;
+
+                        const layer = await graphicsStore.addLayer('image', {
+                            x,
+                            y,
+                            width,
+                            height,
+                            properties: {
+                                src: event.target.result,
+                                fit: 'cover',
+                            },
+                        });
+                        graphicsStore.setTool('select');
+                    };
+                    img.src = event.target.result;
                 };
                 reader.readAsDataURL(file);
             }
@@ -180,6 +211,11 @@ const handleBack = () => {
                 <svg v-else-if="tool.icon === 'type'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"/>
                 </svg>
+                <!-- Button/Textbox icon -->
+                <svg v-else-if="tool.icon === 'button'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <rect x="3" y="6" width="18" height="12" rx="3" stroke-width="2"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12h10"/>
+                </svg>
                 <!-- Square icon -->
                 <svg v-else-if="tool.icon === 'square'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3h14a2 2 0 012 2v14a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2z"/>
@@ -225,9 +261,9 @@ const handleBack = () => {
                     </svg>
                 </button>
                 <button
-                    @click="graphicsStore.resetZoom()"
+                    @click="emit('fit-to-view')"
                     class="p-1 text-gray-600 hover:text-gray-900 ml-1"
-                    :title="t('graphics.editor.fitToScreen')"
+                    :title="t('graphics.editor.fitToScreen') + ' (Ctrl+0)'"
                 >
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/>

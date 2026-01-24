@@ -16,7 +16,25 @@ const { confirm } = useConfirm();
 const loading = ref(true);
 const showCreateModal = ref(false);
 const newTemplateName = ref('');
+const newTemplateWidth = ref(1080);
+const newTemplateHeight = ref(1080);
 const creating = ref(false);
+
+// Preset sizes
+const presetSizes = [
+    { label: 'Instagram Post', width: 1080, height: 1080 },
+    { label: 'Instagram Story', width: 1080, height: 1920 },
+    { label: 'Facebook Post', width: 1200, height: 630 },
+    { label: 'Twitter Post', width: 1200, height: 675 },
+    { label: 'YouTube Thumbnail', width: 1280, height: 720 },
+    { label: 'LinkedIn Post', width: 1200, height: 627 },
+    { label: 'Full HD', width: 1920, height: 1080 },
+];
+
+const applyPreset = (preset) => {
+    newTemplateWidth.value = preset.width;
+    newTemplateHeight.value = preset.height;
+};
 
 const fetchData = async () => {
     loading.value = true;
@@ -38,9 +56,13 @@ const handleCreate = async () => {
     try {
         const template = await graphicsStore.createTemplate({
             name: newTemplateName.value.trim(),
+            width: newTemplateWidth.value,
+            height: newTemplateHeight.value,
         });
         showCreateModal.value = false;
         newTemplateName.value = '';
+        newTemplateWidth.value = 1080;
+        newTemplateHeight.value = 1080;
         router.push({ name: 'template.editor', params: { templateId: template.id } });
     } catch (error) {
         console.error('Failed to create template:', error);
@@ -207,7 +229,9 @@ const handleDelete = async (template) => {
                         <h2 class="text-lg font-semibold text-gray-900 mb-4">
                             {{ t('graphics.templates.create') }}
                         </h2>
-                        <div>
+
+                        <!-- Name -->
+                        <div class="mb-4">
                             <label class="block text-sm font-medium text-gray-700 mb-1">
                                 {{ t('common.name') }}
                             </label>
@@ -216,8 +240,66 @@ const handleDelete = async (template) => {
                                 type="text"
                                 class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                 :placeholder="t('base.namePlaceholder')"
-                                @keyup.enter="handleCreate"
                             />
+                        </div>
+
+                        <!-- Size presets -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                {{ t('graphics.templates.presets') }}
+                            </label>
+                            <div class="flex flex-wrap gap-2">
+                                <button
+                                    v-for="preset in presetSizes"
+                                    :key="preset.label"
+                                    @click="applyPreset(preset)"
+                                    class="px-3 py-1.5 text-xs rounded-full border transition-colors"
+                                    :class="newTemplateWidth === preset.width && newTemplateHeight === preset.height
+                                        ? 'bg-blue-100 border-blue-500 text-blue-700'
+                                        : 'border-gray-300 text-gray-600 hover:border-gray-400'"
+                                >
+                                    {{ preset.label }}
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Custom size -->
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    {{ t('graphics.properties.width') }}
+                                </label>
+                                <div class="relative">
+                                    <input
+                                        v-model.number="newTemplateWidth"
+                                        type="number"
+                                        min="100"
+                                        max="4096"
+                                        class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">px</span>
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">
+                                    {{ t('graphics.properties.height') }}
+                                </label>
+                                <div class="relative">
+                                    <input
+                                        v-model.number="newTemplateHeight"
+                                        type="number"
+                                        min="100"
+                                        max="4096"
+                                        class="w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                    />
+                                    <span class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">px</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Size preview -->
+                        <div class="mt-4 text-center text-sm text-gray-500">
+                            {{ newTemplateWidth }} x {{ newTemplateHeight }} px
                         </div>
                     </div>
                     <div class="bg-gray-50 px-6 py-3 flex justify-end space-x-3 rounded-b-lg">
