@@ -5,18 +5,92 @@ namespace App\Services;
 use App\Enums\LayerType;
 use App\Models\Layer;
 use App\Models\Template;
+use App\Services\AI\CompositionArchetypeService;
+use App\Services\AI\ContrastValidator;
+use App\Services\AI\DesignTokensService;
+use App\Services\AI\ElevationService;
+use App\Services\AI\FormatService;
+use App\Services\AI\GridSnapService;
+use App\Services\AI\ImageAnalysisService;
+use App\Services\AI\LayoutPatternTracker;
+use App\Services\AI\PhotoRankingService;
+use App\Services\AI\PremiumQueryBuilder;
+use App\Services\AI\SelfCorrectionService;
+use App\Services\AI\TemplateValidator;
+use App\Services\AI\TypographyHierarchyValidator;
+use App\Services\AI\VisualCriticService;
 use App\Services\Concerns\LogsApiUsage;
+use App\Services\UnsplashService;
 use Illuminate\Support\Facades\Log;
 
 class AiChatService
 {
     use LogsApiUsage;
 
+    /**
+     * Track if plan_design was called in current session.
+     */
+    protected bool $designPlanApproved = false;
+
+    /**
+     * Current design plan data.
+     */
+    protected ?array $currentDesignPlan = null;
+
+    /**
+     * Language codes to language names mapping.
+     */
+    protected const LANGUAGE_NAMES = [
+        'pl' => 'Polish (Polski)',
+        'en' => 'English',
+        'de' => 'German (Deutsch)',
+        'fr' => 'French (Français)',
+        'es' => 'Spanish (Español)',
+        'it' => 'Italian (Italiano)',
+    ];
+
+    /**
+     * Example phrases in each language for the AI prompt.
+     */
+    protected const LANGUAGE_EXAMPLES = [
+        'pl' => [
+            'headline' => 'Odkryj Nową Erę Twojego Stylu',
+            'subtext' => 'Profesjonalna pielęgnacja dla wymagających',
+            'cta' => 'Sprawdź Teraz',
+        ],
+        'en' => [
+            'headline' => 'Discover Your Perfect Style',
+            'subtext' => 'Professional care for the discerning',
+            'cta' => 'Learn More',
+        ],
+        'de' => [
+            'headline' => 'Entdecke Deinen Perfekten Stil',
+            'subtext' => 'Professionelle Pflege für anspruchsvolle Kunden',
+            'cta' => 'Mehr Erfahren',
+        ],
+    ];
+
     public function __construct(
         protected OpenAiClientService $openAiClient,
         protected TemplateContextService $contextService,
-        protected PexelsService $pexelsService
-    ) {}
+        protected UnsplashService $stockPhotoService, // Switched from PexelsService to UnsplashService
+        protected LayoutPatternTracker $layoutTracker,
+        protected TemplateValidator $templateValidator,
+        protected GridSnapService $gridSnapService,
+        protected DesignTokensService $designTokensService,
+        protected ImageAnalysisService $imageAnalysisService,
+        protected SelfCorrectionService $selfCorrectionService,
+        protected ContrastValidator $contrastValidator,
+        protected TypographyHierarchyValidator $typographyValidator,
+        protected CompositionArchetypeService $compositionArchetypeService,
+        protected PremiumQueryBuilder $premiumQueryBuilder,
+        protected ElevationService $elevationService,
+        protected FormatService $formatService,
+        protected VisualCriticService $visualCriticService,
+        protected ?PhotoRankingService $photoRankingService = null
+    ) {
+        $this->photoRankingService = $photoRankingService ?? new PhotoRankingService($imageAnalysisService);
+    }
 
     /**
      * Process a chat message and return AI response with actions.
@@ -61,29 +135,127 @@ class AiChatService
             // Get available tools
             $tools = $this->getAvailableTools();
 
-            // Call OpenAI
-            $response = $this->openAiClient->chatCompletion($messages, $tools);
+            // Multi-turn loop - continue until we get a final response or create_full_template
+            $maxIterations = 3;
+            $iteration = 0;
+            $allActions = [];
+            $totalPromptTokens = 0;
+            $totalCompletionTokens = 0;
 
-            Log::channel('single')->info('=== OPENAI RAW RESPONSE ===', [
-                'has_tool_calls' => ! empty($response->choices[0]->message->toolCalls),
-                'content' => $response->choices[0]->message->content,
-                'finish_reason' => $response->choices[0]->finishReason,
-            ]);
+            while ($iteration < $maxIterations) {
+                $iteration++;
 
-            if (! empty($response->choices[0]->message->toolCalls)) {
-                foreach ($response->choices[0]->message->toolCalls as $idx => $toolCall) {
-                    Log::channel('single')->info("=== TOOL CALL #{$idx} ===", [
-                        'function_name' => $toolCall->function->name,
-                        'arguments_raw' => $toolCall->function->arguments,
-                        'arguments_decoded' => json_decode($toolCall->function->arguments, true),
-                    ]);
+                // Call OpenAI
+                $response = $this->openAiClient->chatCompletion($messages, $tools);
+
+                $totalPromptTokens += $response->usage->promptTokens ?? 0;
+                $totalCompletionTokens += $response->usage->completionTokens ?? 0;
+
+                Log::channel('single')->info("=== OPENAI RESPONSE (iteration {$iteration}) ===", [
+                    'has_tool_calls' => ! empty($response->choices[0]->message->toolCalls),
+                    'content' => $response->choices[0]->message->content,
+                    'finish_reason' => $response->choices[0]->finishReason,
+                ]);
+
+                $message = $response->choices[0]->message;
+
+                // If no tool calls, we're done
+                if (empty($message->toolCalls)) {
+                    $reply = $message->content ?? '';
+                    break;
                 }
+
+                // Process tool calls
+                $toolResults = [];
+                $hasPlanDesign = false;
+                $hasCreateTemplate = false;
+
+                foreach ($message->toolCalls as $idx => $toolCall) {
+                    $functionName = $toolCall->function->name;
+                    $arguments = json_decode($toolCall->function->arguments, true);
+
+                    Log::channel('single')->info("=== TOOL CALL #{$idx} (iteration {$iteration}) ===", [
+                        'function_name' => $functionName,
+                        'arguments' => $arguments,
+                    ]);
+
+                    if ($functionName === 'plan_design') {
+                        $hasPlanDesign = true;
+                    }
+                    if ($functionName === 'create_full_template') {
+                        $hasCreateTemplate = true;
+                    }
+
+                    $action = $this->executeToolCall($functionName, $arguments, $template);
+
+                    if ($action) {
+                        if (is_array($action) && isset($action[0])) {
+                            $allActions = array_merge($allActions, $action);
+                        } else {
+                            $allActions[] = $action;
+                        }
+                    }
+
+                    // Prepare tool result for next API call
+                    $toolResults[] = [
+                        'tool_call_id' => $toolCall->id,
+                        'function_name' => $functionName,
+                        'result' => json_encode($action['data'] ?? ['success' => true]),
+                    ];
+                }
+
+                // If we got create_full_template, we're done
+                if ($hasCreateTemplate) {
+                    $reply = $this->generateActionSummary($allActions, $template);
+                    break;
+                }
+
+                // If only plan_design was called, continue the conversation
+                if ($hasPlanDesign && ! $hasCreateTemplate) {
+                    // Add assistant message with tool calls
+                    $messages[] = [
+                        'role' => 'assistant',
+                        'content' => $message->content,
+                        'tool_calls' => array_map(fn($tc) => [
+                            'id' => $tc->id,
+                            'type' => 'function',
+                            'function' => [
+                                'name' => $tc->function->name,
+                                'arguments' => $tc->function->arguments,
+                            ],
+                        ], $message->toolCalls),
+                    ];
+
+                    // Add tool results
+                    foreach ($toolResults as $result) {
+                        $messages[] = [
+                            'role' => 'tool',
+                            'tool_call_id' => $result['tool_call_id'],
+                            'content' => $result['result'],
+                        ];
+                    }
+
+                    Log::channel('single')->info('=== CONTINUING CONVERSATION AFTER PLAN_DESIGN ===');
+                    continue;
+                }
+
+                // For other tools, we're done
+                $reply = $this->generateActionSummary($allActions, $template);
+                break;
             }
 
-            // Process response
-            $result = $this->processResponse($response, $template);
+            $result = [
+                'success' => true,
+                'reply' => $reply ?? $this->generateActionSummary($allActions, $template),
+                'actions' => $allActions,
+                'usage' => [
+                    'prompt_tokens' => $totalPromptTokens,
+                    'completion_tokens' => $totalCompletionTokens,
+                    'total_tokens' => $totalPromptTokens + $totalCompletionTokens,
+                ],
+            ];
 
-            // Complete logging with token usage - save full output
+            // Complete logging with token usage
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
             $this->completeAiLog(
                 $log,
@@ -92,8 +264,8 @@ class AiChatService
                     'actions' => $result['actions'] ?? [],
                     'actions_count' => count($result['actions'] ?? []),
                 ],
-                $response->usage->promptTokens ?? 0,
-                $response->usage->completionTokens ?? 0,
+                $totalPromptTokens,
+                $totalCompletionTokens,
                 $durationMs
             );
 
@@ -113,371 +285,255 @@ class AiChatService
     {
         $context = $this->contextService->getSimplifiedContext($template);
         $layerTypes = $this->contextService->getLayerTypeDefinitions();
-        $pexelsAvailable = $this->pexelsService->isConfigured() ? 'YES' : 'NO';
+        $pexelsAvailable = $this->stockPhotoService->isConfigured() ? 'YES' : 'NO';
+
+        // Get layout restrictions from tracker
+        $layoutInstructions = $this->layoutTracker->getPromptInstructions($template->brand);
+
+        // Get design tokens for brand
+        $designTokens = $this->designTokensService->getTokensForPrompt($template->brand);
 
         return <<<PROMPT
-You are a professional graphic designer, UX/UI EXPERT, and MARKETING SPECIALIST AI assistant. You create STUNNING, MODERN, and VISUALLY RICH templates for social media, marketing, and personal branding.
-
-Your design philosophy follows MODERN UX/UI BEST PRACTICES:
-- **Visual Hierarchy**: Guide the eye with size, color, and spacing - most important elements are largest and most contrasting
-- **Whitespace**: Strategic use of empty space for breathing room and focus
-- **Contrast**: High contrast for readability (WCAG standards), accent colors for CTAs
-- **Consistency**: Unified color palette (2-3 main colors + neutrals), consistent spacing
-- **Mobile-first mindset**: Bold, readable text even on small screens
-- **Micro-interactions feel**: Rounded corners, subtle shadows create depth
-- **Modern aesthetics**: Clean lines, geometric shapes, contemporary color palettes
-
-As a marketing expert, you understand:
-- How to create scroll-stopping content that grabs attention
-- Psychology of colors and their impact on conversion
-- Effective CTAs (Call-To-Action) that drive engagement - contrasting colors, clear action words
-- Visual storytelling and brand consistency
-- Social media trends and best practices for each platform
-- The 3-second rule: message must be clear within 3 seconds
-
-CURRENT TEMPLATE CONTEXT:
-{$context}
-
-AVAILABLE LAYER TYPES AND PROPERTIES:
-{$layerTypes}
-
-PEXELS STOCK PHOTOS AVAILABLE: {$pexelsAvailable}
-
-##############################################################################
-# CRITICAL: RESPECT TEMPLATE DIMENSIONS
-##############################################################################
-
-The template has FIXED dimensions: check the "Dimensions:" in CURRENT TEMPLATE CONTEXT above.
-DO NOT change width/height unless the user EXPLICITLY asks to resize.
-All layers must fit within the current template dimensions.
-Use the ACTUAL dimensions from the context, not default 1080x1080.
-
-##############################################################################
-# CRITICAL REQUIREMENT - PROPERTIES ARE MANDATORY FOR EVERY LAYER
-##############################################################################
-
-YOU MUST ALWAYS include the "properties" object for EVERY layer you create!
-Without properties, layers will have ugly default colors and placeholder text.
-
-FOR TEXT LAYERS - properties MUST include:
-- "text": actual marketing copy (NEVER placeholders like "Headline" or "Text here")
-- "fontSize": appropriate size in pixels (headlines: 40-72px, subtext: 18-32px, CTA: 20-28px)
-- "fontWeight": "bold" for headlines, "normal" for body text
-- "fill": hex color matching design palette
-- "align": "center", "left", or "right"
-
-FOR RECTANGLE/ELLIPSE LAYERS - properties MUST include:
-- "fill": hex color (NEVER omit this - shapes need color!)
-- "cornerRadius": for rectangles (0 for sharp, 10-30 for rounded)
-
-FOR LINE LAYERS - properties MUST include:
-- "points": array of coordinates [x1, y1, x2, y2] relative to layer position (e.g., [0, 0, 200, 0] for horizontal line)
-- "stroke": hex color for the line
-- "strokeWidth": line thickness in pixels (2-10)
-- "lineCap": "butt", "round", or "square" (optional, default "round")
-- "dash": array for dashed lines, e.g., [10, 5] for dashed, [2, 4] for dotted, [] for solid (optional)
-
-FOR IMAGE LAYERS - properties MUST include:
-- "fit": "cover" or "contain"
-
-IMAGE ASPECT RATIOS - CRITICAL!
-When creating image layers, use PROPER aspect ratios that match real photos:
-- **Square (1:1)**: width = height (e.g., 500x500, 600x600)
-- **Landscape 4:3**: width = height * 1.33 (e.g., 800x600, 600x450)
-- **Landscape 3:2**: width = height * 1.5 (e.g., 900x600, 600x400)
-- **Landscape 16:9**: width = height * 1.78 (e.g., 800x450, 640x360)
-- **Portrait 3:4**: height = width * 1.33 (e.g., 450x600, 600x800)
-- **Portrait 2:3**: height = width * 1.5 (e.g., 400x600, 500x750)
-- **Portrait 4:5** (Instagram): height = width * 1.25 (e.g., 480x600, 800x1000)
-
-MATCH image_searches orientation with layer dimensions:
-- orientation: "landscape" → use landscape ratio (wider than tall)
-- orientation: "portrait" → use portrait ratio (taller than wide)
-- orientation: "square" → use 1:1 ratio
-
-NEVER use random dimensions like 900x500 or 880x450 - these distort photos!
-
-##############################################################################
-
-MODERN DESIGN PRINCIPLES - FOLLOW THESE FOR EVERY TEMPLATE:
-1. **Multi-layered depth** - minimum 8-12 layers: background, accent shapes, images, content boxes, text layers
-2. **Strong visual hierarchy** - headline (largest, boldest), subtext (medium), CTA (contrasting color)
-3. **Modern shadows** - soft, diffused shadows (blur: 20-40, opacity: 0.1-0.2) for floating effect
-4. **Contemporary color schemes** - bold accent colors, dark or light backgrounds, high contrast CTAs
-5. **Geometric accent elements** - circles, rounded rectangles with low opacity (0.2-0.5) for depth
-6. **Modern typography** - large headlines (48-72px), generous letter-spacing (2-4), uppercase for impact
-7. **Whitespace is key** - don't overcrowd, leave breathing room around elements
-8. **Rounded corners everywhere** - cornerRadius 16-32 for modern feel
-9. **Stock photos when relevant** - include image_searches for professional imagery
-
-MODERN EFFECTS TOOLKIT:
-- **Floating cards**: shadowEnabled: true, shadowColor: "#000000", shadowBlur: 30, shadowOffsetX: 0, shadowOffsetY: 15, shadowOpacity: 0.12
-- **Glassmorphism-style boxes**: light fill (#FFFFFF or with opacity), strong rounded corners, subtle shadow
-- **Bold gradients for impact**: fillType: "gradient" for backgrounds or CTAs - creates energy and movement
-- **Accent blobs**: large ellipses with low opacity (0.2-0.4) partially off-canvas for modern aesthetic
-- **Typography hierarchy**: headlines uppercase with letterSpacing: 3-5, body text normal
-- **Contrasting CTA buttons**: bright/bold color that pops against background, rounded (cornerRadius: 25-35)
-- **Thin accent lines**: height: 2-4px, accent color, as visual separators
-
-TYPOGRAPHY BEST PRACTICES - USE GOOGLE FONTS!
-NEVER use "Arial" or "Helvetica" - these are boring system fonts!
-You have access to ALL Google Fonts! ALWAYS use stylish, modern fonts:
-
-**DISPLAY/HEADLINE FONTS** (bold, attention-grabbing):
-- "Bebas Neue" - condensed, all-caps impact
-- "Oswald" - modern condensed sans-serif
-- "Playfair Display" - elegant serif
-- "Abril Fatface" - bold display with personality
-- "Lobster" - script, playful
-- "Pacifico" - handwritten, friendly
-- "Dancing Script" - elegant cursive
-
-**BODY/READABLE FONTS** (clean, professional):
-- "Roboto" - Google's clean sans-serif
-- "Open Sans" - friendly, readable
-- "Montserrat" - geometric, modern
-- "Poppins" - rounded, contemporary
-- "Lato" - warm, stable
-- "Raleway" - elegant thin
-- "Nunito" - rounded, friendly
-
-**TYPOGRAPHY COMBINATIONS** (headline + body):
-- "Bebas Neue" + "Roboto" - modern impact
-- "Playfair Display" + "Lato" - elegant classic
-- "Oswald" + "Open Sans" - bold modern
-- "Montserrat" + "Montserrat" - consistent modern
-- "Abril Fatface" + "Poppins" - creative contrast
-
-**TEXT STYLING TIPS**:
-- Headlines: fontWeight 700-900, letterSpacing 2-5, textTransform "uppercase"
-- Subheadings: fontWeight 500-600, letterSpacing 1-2
-- Body text: fontWeight 400, letterSpacing 0, lineHeight 1.4-1.6
-- CTAs: fontWeight 600-700, textTransform "uppercase", letterSpacing 1-3
-
-IMPORTANT - CTA BUTTONS BEST PRACTICES:
-When creating CTA buttons (rectangle + text combo), ALWAYS:
-1. Make button width AT LEAST 60% of template width (e.g., 650px for 1080px template) to accommodate longer text
-2. Button text and button background MUST have SAME x, width values
-3. Use generous padding - button should be much wider than the text inside
-4. Center text horizontally (align: "center")
-5. Button height: 55-70px, text positioned vertically centered inside
-Example: For template 1080px wide, CTA button should be width: 650-700px, centered at x: 190-215
-
-DESIGN STYLES (DEFAULT IS MODERN - use others only when specifically requested):
-
-1. **MODERN** (DEFAULT) - Contemporary, trendy, professional
-   - Gradient backgrounds OR bold solid colors, rounded corners (16-32px), soft floating shadows
-   - Clean sans-serif fonts, geometric accent shapes, high contrast CTAs
-   - Color schemes: vibrant gradients, duotone, bold accent colors
-   - This is the DEFAULT style - use it unless user asks for something specific!
-
-2. **MINIMALIST** - Clean, lots of whitespace, simple typography
-   - Few layers, large text, subtle neutral colors, no decorative shapes
-   - Focus on content, maximum 6-8 layers
-   - Good for: luxury, tech, professional services
-
-3. **BOLD/VIBRANT** - Eye-catching, high contrast, energetic
-   - Bright saturated colors, large bold text, dynamic overlapping shapes
-   - Strong shadows, multiple accent elements
-   - Good for: fitness, food, entertainment, sales, promotions
-
-4. **ELEGANT/LUXURY** - Sophisticated, refined, premium feel
-   - Dark backgrounds (#0A0A0A, #1A1A2E), gold/champagne accents (#D4AF37, #C9A961)
-   - Thin elegant lines, serif fonts, minimal elements
-   - Good for: fashion, beauty, jewelry, high-end products
-
-5. **ORGANIC/NATURAL** - Earthy, warm, authentic feel
-   - Earth tones (#8B7355, #6B8E23), soft organic shapes, muted colors
-   - Rounded organic forms, natural textures
-   - Good for: eco, wellness, organic products, nature brands
-
-6. **PLAYFUL/CREATIVE** - Fun, colorful, expressive
-   - Multiple bright colors, irregular/playful shapes, patterns
-   - Mixed font weights, overlapping elements, high energy
-   - Good for: kids, events, creative industries, entertainment
-
-TEXT CONTENT BY INDUSTRY (generate similar creative text, not exact copies):
-- Beauty: "Odkryj Swój Blask", "Letnia Kolekcja Pielęgnacji", "Naturalne Piękno", "Zarezerwuj Wizytę"
-- Fitness: "Zmień Swoje Ciało", "Rozpocznij Transformację", "Dołącz Do Nas"
-- Food: "Świeżo i Pysznie", "Zamów Online", "Spróbuj Różnicy"
-- Fashion: "Nowa Kolekcja", "Stylowo i Elegancko", "Odkryj Trendy"
-- Tech: "Innowacyjne Rozwiązania", "Przyszłość Dziś", "Sprawdź Ofertę"
-
-SOCIAL MEDIA SIZES:
-- Instagram Post: 1080x1080
-- Instagram Story: 1080x1920
-- Facebook Post: 1200x630
-- Twitter/X Post: 1200x675
-- LinkedIn Post: 1200x627
-- Pinterest Pin: 1000x1500
-- YouTube Thumbnail: 1280x720
-
-MODERN COLOR PALETTES BY INDUSTRY (use these for contemporary designs):
-
-**BEAUTY/COSMETICS:**
-- Modern: gradient #667eea → #764ba2 (purple-violet), accent #f093fb (pink glow)
-- Soft: #FFE4EC, #FFC0CB, #B76E79 (rose gold), white cards
-- Dark luxury: #1A1A2E, #C9A961 (champagne gold), #FFFFFF
-
-**TECH/STARTUP:**
-- Vibrant: gradient #00d2ff → #3a7bd5 (cyan-blue), #1A1A2E dark, white
-- Modern: #6366F1 (indigo), #8B5CF6 (purple), #EC4899 (pink accent)
-- Clean: #3B82F6 (blue), #1E293B (slate dark), #F8FAFC (light)
-
-**FITNESS/HEALTH:**
-- Energy: gradient #f857a6 → #ff5858 (pink-red), #000000, #FFFFFF
-- Bold: #FF6B35 (orange), #22C55E (green), #1F2937 (dark)
-- Fresh: #10B981 (emerald), #3B82F6 (blue), #F0FDF4 (mint bg)
-
-**FOOD/RESTAURANT:**
-- Warm: #FF6B35 (coral), #FCD34D (yellow), #7C2D12 (brown), cream bg
-- Fresh: #22C55E (green), #FBBF24 (amber), #FFFFFF
-- Bold: gradient #ff416c → #ff4b2b (red), white cards, dark text
-
-**LUXURY/FASHION:**
-- Dark: #0A0A0A (black), #D4AF37 (gold), #FFFFFF (white accents)
-- Modern luxury: #1A1A2E, gradient gold #BF953F → #FCF6BA, white
-- Minimal: #F5F5F5, #1A1A1A, single accent color
-
-**NATURE/ECO:**
-- Organic: #22543D (forest), #86EFAC (mint), #FEF3C7 (cream)
-- Fresh: gradient #11998e → #38ef7d (teal-green), earthy browns
-- Soft: #D4E7C5 (sage), #8B7355 (earth), #FFFBEB (warm white)
-
-INSTRUCTIONS:
-1. When user asks to CREATE a template - use create_full_template with COMPLETE properties for every layer
-2. When user asks to MODIFY something - identify the layer by name and use modify_layer
-3. Always respond in the user's language (Polish if they write in Polish)
-4. Be creative with text content - generate compelling marketing copy for the specific industry
-
-##############################################################################
-# HOW TO MODIFY LAYERS - CRITICAL!
-##############################################################################
-
-When modifying a layer, you MUST include the "properties" object in changes!
-
-TO CHANGE COLOR of a rectangle/ellipse:
-- If layer has SOLID fill: set properties.fill to new color
-  Example: {"layer_name": "CTA Button", "changes": {"properties": {"fill": "#FFD700"}}}
-
-- If layer has GRADIENT: set properties.gradientStartColor and/or properties.gradientEndColor
-  Example: {"layer_name": "CTA Button", "changes": {"properties": {"gradientStartColor": "#FFD700", "gradientEndColor": "#FFA500"}}}
-
-- To change from gradient to solid: set properties.fillType to "solid" and properties.fill
-  Example: {"layer_name": "CTA Button", "changes": {"properties": {"fillType": "solid", "fill": "#FFD700"}}}
-
-TO CHANGE TEXT COLOR:
-  Example: {"layer_name": "Headline", "changes": {"properties": {"fill": "#FF0000"}}}
-
-TO CHANGE TEXT CONTENT:
-  Example: {"layer_name": "Headline", "changes": {"properties": {"text": "New Text Here"}}}
-
-TO CHANGE FONT FAMILY (use any Google Font!):
-  Example: {"layer_name": "Headline", "changes": {"properties": {"fontFamily": "Bebas Neue"}}}
-
-TO CHANGE FONT SIZE:
-  Example: {"layer_name": "Headline", "changes": {"properties": {"fontSize": 64}}}
-
-TO CHANGE FONT WEIGHT (use 100-900 or "normal"/"bold"):
-  Example: {"layer_name": "Headline", "changes": {"properties": {"fontWeight": "700"}}}
-
-TO MAKE TEXT UPPERCASE:
-  Example: {"layer_name": "Headline", "changes": {"properties": {"textTransform": "uppercase"}}}
-
-TO ADD LETTER SPACING:
-  Example: {"layer_name": "Headline", "changes": {"properties": {"letterSpacing": 3}}}
-
-TO MAKE TEXT ITALIC:
-  Example: {"layer_name": "Headline", "changes": {"properties": {"fontStyle": "italic"}}}
-
-TO CHANGE MULTIPLE TEXT PROPERTIES AT ONCE:
-  Example: {"layer_name": "Headline", "changes": {"properties": {"fontFamily": "Oswald", "fontSize": 56, "fontWeight": "700", "textTransform": "uppercase", "letterSpacing": 4, "fill": "#FFFFFF"}}}
-
-TO CHANGE LINE COLOR:
-  Example: {"layer_name": "Accent Line", "changes": {"properties": {"stroke": "#FF0000"}}}
-
-IMPORTANT: Look at the layer context to see if it has GRADIENT or solid fill!
-
-##############################################################################
-
-IMPORTANT RULES:
-- Layer names are case-sensitive
-- Colors must be hex format (#FF0000)
-- Font sizes in pixels
-- Coordinates (x, y) start from top-left corner - x is LEFT EDGE of layer!
-- For centered text (align: "center"): x should be small (40-100), width should span most of canvas
-  Example for 1080px: x: 40, width: 1000 (NOT x: 540!)
-- EVERY layer MUST have a properties object with appropriate values!
-
-##############################################################################
-# CRITICAL: BE CREATIVE AND VARY YOUR LAYOUTS!
-##############################################################################
-
-STOP USING THE SAME BORING LAYOUT! You keep creating:
-- Two ellipse blobs in corners (TOP-LEFT and BOTTOM-RIGHT) - STOP THIS!
-- Photo at top, content card below - CHANGE IT UP!
-- Always same accent positions - BE CREATIVE!
-
-MANDATORY: Each template MUST use a DIFFERENT layout pattern. Pick ONE randomly:
-
-1. **FULL-BLEED PHOTO** - Photo covers 100% canvas, dark overlay (opacity 0.4-0.6), text on top
-   - NO accent blobs! Photo IS the background
-   - Text directly on overlay, no content cards
-
-2. **SPLIT VERTICAL** - Left 50% = photo, Right 50% = solid color with text
-   - NO blobs! Clean geometric split
-   - Maybe a single accent line between sections
-
-3. **SPLIT HORIZONTAL** - Top 40% = content, Bottom 60% = photo
-   - Reverse the typical order! Text ABOVE photo
-   - Single accent rectangle or line, not ellipses
-
-4. **CENTER PRODUCT** - Product/photo centered (400x400), text around it
-   - Background: solid bold color or subtle gradient
-   - NO corner blobs! Maybe small rectangles as accents
-
-5. **TEXT DOMINANT** - 80% large bold text, small image or NO image
-   - Great for quotes, announcements, sales
-   - Geometric accent: single line or small rectangle
-
-6. **DIAGONAL COMPOSITION** - Elements arranged diagonally
-   - Photo rotated slightly or positioned diagonally
-   - Text aligned to diagonal flow
-
-7. **MINIMALIST** - Maximum whitespace, 3-5 layers ONLY
-   - One image, one headline, one CTA
-   - NO decorative shapes at all
-
-8. **BOLD TYPOGRAPHY** - Text IS the design
-   - Multiple text sizes creating visual interest
-   - Background gradient, minimal or no images
-
-9. **CARD STACK** - Multiple overlapping cards/rectangles
-   - Create depth with shadows and overlap
-   - Photo in one card, text in another
-
-10. **ASYMMETRIC** - Deliberately off-center composition
-    - Photo on far left or right edge
-    - Text positioned asymmetrically
-
-ACCENT ELEMENTS - STOP USING CORNER BLOBS!
-- NO MORE ellipses in top-left and bottom-right corners!
-- Instead use: horizontal lines, vertical bars, small squares, or NOTHING
-- If using shapes: ONE accent only, not two matching blobs
-- Best accents: thin lines (2-4px), small geometric shapes, subtle gradients
-
-EXAMPLE STRUCTURE (for syntax reference only - DO NOT copy this layout!):
-```json
-{
-  "template_settings": {"width": 1080, "height": 1080, "background_color": "#FFFFFF"},
-  "layers": [
-    {"name": "Layer Name", "type": "rectangle|ellipse|text|image|line", "x": 0, "y": 0, "width": 100, "height": 100, "properties": {...}}
-  ],
-  "image_searches": [{"layer_name": "Photo", "search_query": "search terms", "orientation": "landscape|portrait|square"}]
-}
-```
-##############################################################################
+You are a professional template designer using a DESIGN SYSTEM.
+
+TEMPLATE: {$context}
+LAYER TYPES: {$layerTypes}
+PEXELS: {$pexelsAvailable}
+
+################################################################################
+#                    DESIGN SYSTEM (enforced automatically)
+################################################################################
+
+GRID SYSTEM (8pt):
+- All coordinates MUST be multiples of 8
+- Valid positions: 0, 8, 16, 24, 32, 40, 48, 56, 64, 72, 80...
+- Valid sizes: 8, 16, 24, 32, 40, 48, 56, 64, 72, 80, 96, 120...
+- Margins: use 80px (10×8) for professional spacing
+
+{$designTokens}
+
+CONSTRAINTS (auto-validated):
+- Typography hierarchy: headline > subtext > CTA (font size)
+- Contrast: WCAG AA minimum (4.5:1 for text)
+- Grid snap: all values rounded to 8pt
+- Font sizes: from modular scale only
+
+################################################################################
+#                    COMPOSITION ARCHETYPES
+################################################################################
+
+CRITICAL POSITIONING RULE:
+- Canvas: 1080x1080
+- Safe margin: 80px (10% of canvas)
+- Usable width: 920px (1080 - 2*80)
+- ALL text layers must use x=80, width=920 (or less)
+- NEVER place text with x > 80 unless in a column layout
+
+Choose ONE archetype based on image focal point:
+
+1. hero_left: Text left column (40%), photo right (60%)
+   - Use when: focal point is on RIGHT side of image
+   - Text zone: x=80, y=200, width=400 (left column only)
+
+2. hero_right: Photo left (60%), text right column (40%)
+   - Use when: focal point is on LEFT side of image
+   - Text zone: x=600, y=200, width=400 (right column only)
+
+3. split_diagonal: Diagonal split with overlay
+   - Use when: centered focal point
+   - Text zone: x=80, width=920 (full usable width)
+   - Requires semi-transparent overlay for text readability
+
+4. bottom_focus: Photo top (60%), text block bottom (40%)
+   - Use when: focal point is in UPPER half
+   - Text zone: x=80, y=650, width=920 (full usable width)
+   - ALL text layers (headline, subtext, CTA) use same x=80
+
+5. centered_minimal: Full-bleed photo, centered text
+   - Default when unsure
+   - Text zone: x=80, width=920, align=center
+   - Requires overlay (opacity 0.6) for readability
+
+################################################################################
+#                    LAYER ORDER (CRITICAL!)
+################################################################################
+
+- FIRST layer in array = BOTTOM (behind everything)
+- LAST layer in array = TOP (in front of everything)
+- Correct order: background → photo → overlay → accent → headline → subtext → CTA
+
+################################################################################
+#                    MANDATORY ELEMENTS (5-7 layers)
+################################################################################
+
+1. ✅ BACKGROUND (type: "rectangle") - FIRST IN ARRAY
+   - Full canvas size, dark color (#1E3A5F, #0F2544, #1A1A2E)
+
+2. ✅ PHOTO (type: "image") - AFTER BACKGROUND
+   - Main visual, fit: "cover"
+
+3. ✅ ACCENT (type: "line" or "rectangle")
+   - Thin decorative elements, NOT blobs
+
+4. ✅ HEADLINE (type: "text")
+   - 4-8 creative words
+   - fontSize: 39-61px (from scale), fontWeight: "bold"
+   - fill: #FFFFFF
+
+5. ✅ SUBTEXT (type: "text")
+   - Supporting text, fontSize: 16-25px
+   - fill: Use 30% lighter tint of background (NOT #CCCCCC - too generic!)
+
+6. ✅ CTA BUTTON (type: "textbox") - LAST IN ARRAY
+   - cornerRadius: 500 (pill), fill: accent color
+
+################################################################################
+#                           VISUAL GUIDELINES
+################################################################################
+
+TYPOGRAPHY:
+- Google Fonts ONLY: Montserrat, Poppins, Playfair Display, Oswald, Lora, Inter
+- NEVER Arial, Helvetica, Times
+
+LAYOUT VARIETY:
+{$layoutInstructions}
+
+################################################################################
+#                              HOW TO CREATE
+################################################################################
+
+Step 1: Call plan_design with:
+  - composition_archetype: Choose based on expected image focal point
+  - headline, subtext, cta_text: Creative content
+
+Step 2: Call create_full_template with:
+  - template_settings: {background_color: "#1E3A5F"}
+  - layers: 5-7 layers IN CORRECT ORDER
+  - image_searches: Pexels search for photos
+
+################################################################################
+#                              BANNED
+################################################################################
+
+❌ White text on white/light background
+❌ Less than 5 layers
+❌ Wrong layer order
+❌ Corner blobs/decorative circles
+❌ Headlines shorter than 4 words
+❌ Arial, Helvetica, Times fonts
+❌ Arbitrary font sizes (use scale only)
+
+{$this->getLanguageInstructions($template)}
 PROMPT;
+    }
+
+    /**
+     * Detect user language from template context.
+     */
+    protected function detectUserLanguage(Template $template): string
+    {
+        $detectionMethod = 'default';
+        $detectedLanguage = 'pl';
+
+        // Check template language setting
+        $templateLanguage = $template->language ?? null;
+        if ($templateLanguage && isset(self::LANGUAGE_NAMES[$templateLanguage])) {
+            $detectedLanguage = $templateLanguage;
+            $detectionMethod = 'template_setting';
+        }
+        // Check brand language setting
+        elseif (($brandLanguage = $template->brand?->language ?? null) && isset(self::LANGUAGE_NAMES[$brandLanguage])) {
+            $detectedLanguage = $brandLanguage;
+            $detectionMethod = 'brand_setting';
+        }
+        // Check template name for language hints
+        else {
+            $templateName = strtolower($template->name ?? '');
+            if (preg_match('/[ąćęłńóśźż]/u', $templateName)) {
+                $detectedLanguage = 'pl';
+                $detectionMethod = 'name_characters_polish';
+            } elseif (preg_match('/[äöüß]/u', $templateName)) {
+                $detectedLanguage = 'de';
+                $detectionMethod = 'name_characters_german';
+            }
+        }
+
+        Log::channel('single')->info('Language: Detected user language', [
+            'detected_language' => $detectedLanguage,
+            'detection_method' => $detectionMethod,
+            'language_name' => self::LANGUAGE_NAMES[$detectedLanguage] ?? 'Unknown',
+            'template_id' => $template->public_id,
+        ]);
+
+        return $detectedLanguage;
+    }
+
+    /**
+     * Get language instructions for the system prompt.
+     */
+    protected function getLanguageInstructions(Template $template): string
+    {
+        $language = $this->detectUserLanguage($template);
+        $languageName = self::LANGUAGE_NAMES[$language] ?? 'Polish (Polski)';
+        $examples = self::LANGUAGE_EXAMPLES[$language] ?? self::LANGUAGE_EXAMPLES['pl'];
+
+        return <<<LANG
+################################################################################
+#                    LANGUAGE REQUIREMENTS (CRITICAL!)
+################################################################################
+
+USER LANGUAGE: {$languageName}
+
+CRITICAL: All generated text content MUST be in {$languageName}!
+- Headlines: Write in {$languageName} (e.g., "{$examples['headline']}")
+- Subtext: Write in {$languageName} (e.g., "{$examples['subtext']}")
+- CTA buttons: Write in {$languageName} (e.g., "{$examples['cta']}")
+
+DO NOT generate English text for non-English speaking users!
+If the user writes in Polish, respond with Polish text content.
+LANG;
+    }
+
+    /**
+     * Validate that text is in the expected language.
+     */
+    protected function isTextInLanguage(string $text, string $expectedLanguage): bool
+    {
+        $text = strtolower($text);
+
+        if ($expectedLanguage === 'pl') {
+            // Check for Polish-specific characters or common Polish words
+            if (preg_match('/[ąćęłńóśźż]/u', $text)) {
+                return true;
+            }
+            // Common Polish words
+            $polishWords = ['nowy', 'twój', 'twoja', 'odkryj', 'sprawdź', 'teraz', 'więcej', 'profesjonalna'];
+            foreach ($polishWords as $word) {
+                if (str_contains($text, $word)) {
+                    return true;
+                }
+            }
+            // Reject common English words
+            $englishWords = ['discover', 'your', 'new', 'check', 'learn', 'more', 'the', 'and', 'for'];
+            $englishCount = 0;
+            foreach ($englishWords as $word) {
+                if (str_contains($text, $word)) {
+                    $englishCount++;
+                }
+            }
+            if ($englishCount >= 2) {
+                return false;
+            }
+        }
+
+        if ($expectedLanguage === 'de') {
+            if (preg_match('/[äöüß]/u', $text)) {
+                return true;
+            }
+        }
+
+        // For other languages or if uncertain, assume valid
+        return true;
     }
 
     /**
@@ -486,6 +542,44 @@ PROMPT;
     protected function getAvailableTools(): array
     {
         $tools = [
+            [
+                'type' => 'function',
+                'function' => [
+                    'name' => 'plan_design',
+                    'description' => 'REQUIRED FIRST STEP before create_full_template. Plan ALL mandatory elements: headline, CTA, photo, subtext. Choose a composition archetype based on image focal point.',
+                    'parameters' => [
+                        'type' => 'object',
+                        'properties' => [
+                            'layout_description' => [
+                                'type' => 'string',
+                                'description' => 'Describe your unique layout idea. Where will photo be? Where headline? Where CTA button? Example: "Photo full-bleed at top 60%, headline overlaid at bottom with semi-transparent navy bar, CTA button centered below"',
+                            ],
+                            'composition_archetype' => [
+                                'type' => 'string',
+                                'description' => 'Choose composition archetype based on image focal point. hero_left: text left (40%), photo right (60%). hero_right: photo left (60%), text right (40%). split_diagonal: diagonal split with overlay. bottom_focus: photo top, text block bottom. centered_minimal: full-bleed photo with centered text.',
+                                'enum' => ['hero_left', 'hero_right', 'split_diagonal', 'bottom_focus', 'centered_minimal'],
+                            ],
+                            'color_scheme' => [
+                                'type' => 'string',
+                                'description' => 'Color scheme with hex values. Example: "Navy background #1E3A5F, gold CTA button #D4AF37, white text #FFFFFF"',
+                            ],
+                            'headline' => [
+                                'type' => 'string',
+                                'description' => 'Creative headline 4-8 words. NOT just "Nowa"! Example: "Odkryj Nową Erę Twojego Stylu"',
+                            ],
+                            'subtext' => [
+                                'type' => 'string',
+                                'description' => 'Supporting text/tagline. Example: "Profesjonalna pielęgnacja dla wymagających"',
+                            ],
+                            'cta_text' => [
+                                'type' => 'string',
+                                'description' => 'CTA button text. Example: "Sprawdź Teraz", "Rezerwuj Wizytę", "Dowiedz Się Więcej"',
+                            ],
+                        ],
+                        'required' => ['layout_description', 'composition_archetype', 'color_scheme', 'headline', 'subtext', 'cta_text'],
+                    ],
+                ],
+            ],
             [
                 'type' => 'function',
                 'function' => [
@@ -837,6 +931,7 @@ PROMPT;
     protected function executeToolCall(string $functionName, array $arguments, Template $template): mixed
     {
         return match ($functionName) {
+            'plan_design' => $this->handlePlanDesign($arguments, $template),
             'create_full_template' => $this->handleCreateFullTemplate($arguments, $template),
             'modify_layer' => $this->handleModifyLayer($arguments, $template),
             'add_layer' => $this->handleAddLayer($arguments, $template),
@@ -849,14 +944,290 @@ PROMPT;
     }
 
     /**
+     * Handle plan_design - validates and stores the design plan before template creation.
+     */
+    protected function handlePlanDesign(array $arguments, Template $template): array
+    {
+        $layoutDescription = $arguments['layout_description'] ?? '';
+        $compositionArchetype = $arguments['composition_archetype'] ?? 'centered_minimal';
+        $colorScheme = $arguments['color_scheme'] ?? '';
+        $headline = $arguments['headline'] ?? '';
+        $subtext = $arguments['subtext'] ?? '';
+        $ctaText = $arguments['cta_text'] ?? 'Sprawdź Teraz';
+
+        Log::channel('single')->info('=== PLAN DESIGN CALLED ===', [
+            'layout_description' => $layoutDescription,
+            'composition_archetype' => $compositionArchetype,
+            'color_scheme' => $colorScheme,
+            'headline' => $headline,
+            'subtext' => $subtext,
+            'cta_text' => $ctaText,
+        ]);
+
+        // Check if archetype was recently used
+        $forbiddenArchetypes = $this->layoutTracker->getForbiddenLayouts($template->brand);
+        if (in_array($compositionArchetype, $forbiddenArchetypes)) {
+            $allowedArchetypes = array_diff(
+                $this->compositionArchetypeService->getArchetypeNames(),
+                $forbiddenArchetypes
+            );
+            Log::channel('single')->warning('Composition archetype recently used - rejecting', [
+                'tried' => $compositionArchetype,
+                'forbidden' => $forbiddenArchetypes,
+                'allowed' => $allowedArchetypes,
+            ]);
+
+            return [
+                'type' => 'plan_design_rejected',
+                'data' => [
+                    'success' => false,
+                    'message' => "Archetype '{$compositionArchetype}' was recently used! Try a different one: " . implode(', ', $allowedArchetypes),
+                    'allowed_archetypes' => array_values($allowedArchetypes),
+                ],
+            ];
+        }
+
+        // Validate headline - reject if too short or boring
+        $boringHeadlines = ['nowa', 'new', 'sale', 'nowość', 'oferta', 'promocja'];
+        if (strlen($headline) < 15 || in_array(strtolower(trim($headline)), $boringHeadlines)) {
+            return [
+                'type' => 'plan_design_rejected',
+                'data' => [
+                    'success' => false,
+                    'message' => "Headline '{$headline}' is too short or boring! Must be 4-8 creative words. Try again!",
+                ],
+            ];
+        }
+
+        // Validate language - reject English text for Polish users
+        $expectedLanguage = $this->detectUserLanguage($template);
+        if ($expectedLanguage === 'pl' && !$this->isTextInLanguage($headline, 'pl')) {
+            Log::channel('single')->warning('Headline in wrong language - rejecting', [
+                'headline' => $headline,
+                'expected_language' => $expectedLanguage,
+            ]);
+
+            return [
+                'type' => 'plan_design_rejected',
+                'data' => [
+                    'success' => false,
+                    'message' => "Headline must be in Polish! '{$headline}' appears to be in English. Rewrite in Polish, e.g., 'Odkryj Nową Erę Twojego Stylu'",
+                    'expected_language' => 'Polish',
+                ],
+            ];
+        }
+
+        // Record this archetype as used
+        $this->layoutTracker->recordLayoutUsage($template->brand, $compositionArchetype);
+
+        // Get archetype constraints
+        $archetype = $this->compositionArchetypeService->getArchetype($compositionArchetype);
+        $archetypePrompt = $this->compositionArchetypeService->getArchetypeForPrompt($compositionArchetype);
+
+        // Store the approved design plan
+        $this->designPlanApproved = true;
+        $this->currentDesignPlan = [
+            'layout_description' => $layoutDescription,
+            'composition_archetype' => $compositionArchetype,
+            'archetype_definition' => $archetype,
+            'color_scheme' => $colorScheme,
+            'headline' => $headline,
+            'subtext' => $subtext,
+            'cta_text' => $ctaText,
+        ];
+
+        return [
+            'type' => 'plan_design_approved',
+            'data' => [
+                'success' => true,
+                'message' => "Creative plan approved! Archetype: {$archetype['name']}. Now create a unique template based on your vision: {$layoutDescription}",
+                'plan' => $this->currentDesignPlan,
+                'archetype_constraints' => $archetypePrompt,
+            ],
+        ];
+    }
+
+    /**
+     * Build image constraints for AI prompt based on image analysis.
+     */
+    protected function buildImageConstraints(array $imageAnalysis): string
+    {
+        if (empty($imageAnalysis) || !($imageAnalysis['success'] ?? false)) {
+            return '';
+        }
+
+        $busyZones = $imageAnalysis['busy_zones'] ?? [];
+        $safeZones = $imageAnalysis['safe_zones'] ?? [];
+        $suggestedPosition = $imageAnalysis['suggested_text_position'] ?? 'bottom';
+        $colors = $imageAnalysis['colors'] ?? [];
+
+        $constraints = "IMAGE ANALYSIS CONSTRAINTS:\n";
+        $constraints .= "- Suggested text position: {$suggestedPosition}\n";
+
+        // Forbidden zones (where the subject is)
+        foreach ($busyZones as $zone) {
+            $constraints .= "- FORBIDDEN ZONE (contains main subject): ";
+            $constraints .= "x:{$zone['x']}-" . ($zone['x'] + $zone['width']) . ", ";
+            $constraints .= "y:{$zone['y']}-" . ($zone['y'] + $zone['height']) . "\n";
+        }
+
+        // Safe zones for text
+        $constraints .= "- SAFE ZONES for text:\n";
+        foreach ($safeZones as $zone) {
+            $constraints .= "  * {$zone['position']}: x:{$zone['x']}, y:{$zone['y']}, ";
+            $constraints .= "w:{$zone['width']}, h:{$zone['height']}\n";
+        }
+
+        // Image-extracted colors for accents
+        if (!empty($colors['accent_candidates'])) {
+            $constraints .= "\nIMAGE-EXTRACTED COLORS (harmonize with photo):\n";
+            foreach ($colors['accent_candidates'] as $idx => $color) {
+                $constraints .= "- Accent option " . ($idx + 1) . ": {$color}\n";
+            }
+            $constraints .= "Use these colors for decorative accents/lines to create visual harmony.\n";
+        }
+
+        return $constraints;
+    }
+
+    /**
+     * Apply archetype constraints to layers (ensure text is within text zone, etc.).
+     */
+    protected function applyArchetypeConstraints(array $layers, string $archetypeName, int $templateWidth, int $templateHeight): array
+    {
+        $archetype = $this->compositionArchetypeService->getArchetype($archetypeName);
+        $textZone = $archetype['text_zone'];
+        $photoZone = $archetype['photo_zone'];
+
+        Log::channel('single')->info('Applying archetype constraints', [
+            'archetype' => $archetypeName,
+            'text_zone' => $textZone,
+            'photo_zone' => $photoZone,
+        ]);
+
+        $fixedLayers = [];
+
+        foreach ($layers as $layer) {
+            $type = $layer['type'] ?? '';
+            $name = strtolower($layer['name'] ?? '');
+
+            // Text layers should be within text zone
+            if (in_array($type, ['text', 'textbox'])) {
+                // Check if layer is outside text zone
+                $layerX = $layer['x'] ?? 0;
+                $layerY = $layer['y'] ?? 0;
+                $layerWidth = $layer['width'] ?? 200;
+
+                // Move text into text zone if it's significantly outside
+                $textZoneRight = $textZone['x'] + $textZone['width'];
+                $textZoneBottom = $textZone['y'] + $textZone['height'];
+
+                // If headline or subtext is outside text zone, move it
+                if (str_contains($name, 'headline') || str_contains($name, 'title') || str_contains($name, 'subtext') || str_contains($name, 'desc')) {
+                    // Ensure X is within text zone
+                    if ($layerX < $textZone['x'] || $layerX > $textZoneRight) {
+                        $layer['x'] = $textZone['x'];
+                        Log::channel('single')->debug("Moved {$name} X to text zone", ['new_x' => $layer['x']]);
+                    }
+
+                    // Ensure width fits text zone
+                    if ($layerWidth > $textZone['width']) {
+                        $layer['width'] = $textZone['width'];
+                    }
+
+                    // Ensure Y is within text zone
+                    if ($layerY < $textZone['y'] || $layerY > $textZoneBottom) {
+                        // Headlines go at top of text zone, subtext below
+                        if (str_contains($name, 'headline') || str_contains($name, 'title')) {
+                            $layer['y'] = $textZone['y'];
+                        } else {
+                            $layer['y'] = $textZone['y'] + 100; // Offset for subtext
+                        }
+                        Log::channel('single')->debug("Moved {$name} Y to text zone", ['new_y' => $layer['y']]);
+                    }
+                }
+
+                // CTA button positioning based on archetype
+                if (str_contains($name, 'cta') || str_contains($name, 'button') || $type === 'textbox') {
+                    $ctaPos = $this->compositionArchetypeService->getCtaPosition($archetypeName, $templateWidth, $templateHeight);
+                    $layer['x'] = (int) $ctaPos['x'];
+                    $layer['y'] = (int) $ctaPos['y'];
+                }
+            }
+
+            // Image layers should fit photo zone
+            if ($type === 'image') {
+                // Apply photo zone dimensions
+                if (!str_contains($name, 'background')) {
+                    $layer['x'] = $photoZone['x'];
+                    $layer['y'] = $photoZone['y'];
+                    $layer['width'] = $photoZone['width'];
+                    $layer['height'] = $photoZone['height'];
+                }
+            }
+
+            $fixedLayers[] = $layer;
+        }
+
+        // Add overlay if archetype requires it
+        if ($this->compositionArchetypeService->requiresOverlay($archetypeName)) {
+            $hasOverlay = false;
+            foreach ($fixedLayers as $layer) {
+                $name = strtolower($layer['name'] ?? '');
+                if (str_contains($name, 'overlay')) {
+                    $hasOverlay = true;
+                    break;
+                }
+            }
+
+            if (!$hasOverlay) {
+                $overlayOpacity = $archetype['overlay_opacity'] ?? 0.5;
+                // Insert overlay after photo, before text
+                $overlayLayer = [
+                    'name' => 'overlay',
+                    'type' => 'rectangle',
+                    'x' => 0,
+                    'y' => 0,
+                    'width' => $templateWidth,
+                    'height' => $templateHeight,
+                    'properties' => [
+                        'fill' => '#000000',
+                        'opacity' => $overlayOpacity,
+                    ],
+                ];
+
+                // Find position to insert (after image layers)
+                $insertPos = 1;
+                foreach ($fixedLayers as $idx => $layer) {
+                    if (($layer['type'] ?? '') === 'image') {
+                        $insertPos = $idx + 1;
+                    }
+                }
+
+                array_splice($fixedLayers, $insertPos, 0, [$overlayLayer]);
+                Log::channel('single')->info('Added required overlay for archetype', ['opacity' => $overlayOpacity]);
+            }
+        }
+
+        return $fixedLayers;
+    }
+
+    /**
      * Handle create_full_template - creates a complete template with multiple layers.
      */
     protected function handleCreateFullTemplate(array $arguments, Template $template): array
     {
-        Log::channel('single')->info('=== CREATE FULL TEMPLATE ===', [
+        $pipelineStartTime = microtime(true);
+
+        Log::channel('single')->info('╔══════════════════════════════════════════════════════════════════╗');
+        Log::channel('single')->info('║           CREATE FULL TEMPLATE - PIPELINE START                   ║');
+        Log::channel('single')->info('╚══════════════════════════════════════════════════════════════════╝');
+
+        Log::channel('single')->info('[STEP 0] RAW INPUT FROM AI', [
             'template_settings' => $arguments['template_settings'] ?? [],
             'layers_count' => count($arguments['layers'] ?? []),
             'image_searches_count' => count($arguments['image_searches'] ?? []),
+            'raw_layers_json' => json_encode($arguments['layers'] ?? [], JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
         ]);
 
         $actions = [];
@@ -864,16 +1235,42 @@ PROMPT;
         $layers = $arguments['layers'] ?? [];
         $imageSearches = $arguments['image_searches'] ?? [];
 
-        // Log each layer
+        // Log each layer in detail
+        Log::channel('single')->info('[STEP 0.1] DETAILED LAYER INSPECTION');
         foreach ($layers as $idx => $layer) {
-            Log::channel('single')->info("=== LAYER #{$idx} ===", [
-                'name' => $layer['name'] ?? 'unnamed',
-                'type' => $layer['type'] ?? 'unknown',
-                'x' => $layer['x'] ?? 'not set',
-                'y' => $layer['y'] ?? 'not set',
-                'width' => $layer['width'] ?? 'not set',
-                'height' => $layer['height'] ?? 'not set',
-                'properties' => $layer['properties'] ?? [],
+            $layerName = $layer['name'] ?? 'unnamed';
+            $layerType = $layer['type'] ?? 'unknown';
+            $hasProperties = !empty($layer['properties']);
+            $properties = $layer['properties'] ?? [];
+
+            // Check for common issues
+            $issues = [];
+            if (!isset($layer['x']) || !isset($layer['y'])) {
+                $issues[] = 'MISSING_POSITION';
+            }
+            if (!isset($layer['width']) || !isset($layer['height'])) {
+                $issues[] = 'MISSING_DIMENSIONS';
+            }
+            if (!$hasProperties) {
+                $issues[] = 'EMPTY_PROPERTIES';
+            }
+            if (in_array($layerType, ['text', 'textbox']) && empty($properties['text'])) {
+                $issues[] = 'TEXT_LAYER_NO_TEXT';
+            }
+            if (in_array($layerType, ['text', 'textbox']) && empty($properties['fontSize'])) {
+                $issues[] = 'TEXT_LAYER_NO_FONTSIZE';
+            }
+            if ($layerType === 'image' && empty($properties['src']) && empty($properties['fit'])) {
+                $issues[] = 'IMAGE_NO_FIT_OR_SRC';
+            }
+
+            Log::channel('single')->info("  └─ Layer #{$idx}: {$layerName} ({$layerType})", [
+                'position' => ['x' => $layer['x'] ?? null, 'y' => $layer['y'] ?? null],
+                'dimensions' => ['w' => $layer['width'] ?? null, 'h' => $layer['height'] ?? null],
+                'has_properties' => $hasProperties,
+                'properties_keys' => array_keys($properties),
+                'issues' => $issues,
+                'full_properties' => $properties,
             ]);
         }
 
@@ -907,25 +1304,385 @@ PROMPT;
             }
         }
 
-        // Search for images if needed - use current template dimensions
+        // STEP 1: Search for images with premium queries and analyze them
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 1] IMAGE SEARCH & ANALYSIS');
+
         $imageUrls = [];
-        foreach ($imageSearches as $search) {
+        $imageAnalysis = [];
+        $industry = $template->brand?->industry;
+
+        Log::channel('single')->info('[STEP 1.0] Image search config', [
+            'searches_count' => count($imageSearches),
+            'industry' => $industry,
+            'template_dimensions' => "{$currentWidth}x{$currentHeight}",
+            'image_analysis_available' => $this->imageAnalysisService->isAvailable(),
+        ]);
+
+        foreach ($imageSearches as $searchIdx => $search) {
             $layerName = $search['layer_name'] ?? '';
             $query = $search['search_query'] ?? '';
             $orientation = $search['orientation'] ?? null;
 
+            Log::channel('single')->info("[STEP 1.{$searchIdx}] Processing image search", [
+                'layer_name' => $layerName,
+                'original_query' => $query,
+                'orientation' => $orientation,
+            ]);
+
             if ($query && $layerName) {
-                $result = $this->pexelsService->searchPhotos($query, 1, $orientation);
-                if ($result['success'] && ! empty($result['photos'])) {
-                    $photo = $result['photos'][0];
-                    // Use CURRENT template dimensions, not AI-provided ones
-                    $imageUrls[$layerName] = $this->pexelsService->getBestImageUrl($photo, $currentWidth, $currentHeight);
+                // Auto-detect industry from query if not set
+                $effectiveIndustry = $industry ?? $this->premiumQueryBuilder->detectIndustryFromQuery($query);
+
+                // Build premium query with industry modifiers and composition hints
+                $premiumQuery = $this->premiumQueryBuilder->buildQueryWithComposition(
+                    $query,
+                    $this->currentDesignPlan['composition_archetype'] ?? 'centered_minimal',
+                    $effectiveIndustry,
+                    $this->premiumQueryBuilder->getSuggestedLighting($effectiveIndustry)
+                );
+
+                Log::channel('single')->info("[STEP 1.{$searchIdx}] Premium query built", [
+                    'original' => $query,
+                    'premium' => $premiumQuery,
+                    'archetype' => $this->currentDesignPlan['composition_archetype'] ?? 'centered_minimal',
+                    'brand_industry' => $industry,
+                    'detected_industry' => $effectiveIndustry,
+                ]);
+
+                $result = $this->stockPhotoService->searchPhotos($premiumQuery, 5, $orientation);
+
+                Log::channel('single')->info("[STEP 1.{$searchIdx}] Stock photo search result (premium)", [
+                    'success' => $result['success'],
+                    'photos_found' => count($result['photos'] ?? []),
+                    'error' => $result['error'] ?? null,
+                ]);
+
+                // Fallback to original query if premium query returns no results
+                if (!$result['success'] || empty($result['photos'])) {
+                    Log::channel('single')->warning("[STEP 1.{$searchIdx}] Premium query failed, trying original");
+                    $result = $this->stockPhotoService->searchPhotos($query, 5, $orientation);
+
+                    Log::channel('single')->info("[STEP 1.{$searchIdx}] Stock photo search result (fallback)", [
+                        'success' => $result['success'],
+                        'photos_found' => count($result['photos'] ?? []),
+                        'error' => $result['error'] ?? null,
+                    ]);
+                }
+
+                if ($result['success'] && !empty($result['photos'])) {
+                    // Select best photo using PhotoRankingService
+                    $photo = $this->selectBestPhotoForTemplate(
+                        $result['photos'],
+                        $orientation,
+                        $currentWidth,
+                        $currentHeight,
+                        $this->currentDesignPlan['composition_archetype'] ?? null
+                    );
+                    $imageUrl = $this->stockPhotoService->getBestImageUrl($photo, $currentWidth, $currentHeight);
+                    $imageUrls[$layerName] = $imageUrl;
+
+                    Log::channel('single')->info("[STEP 1.{$searchIdx}] Photo selected", [
+                        'photo_id' => $photo['id'] ?? 'unknown',
+                        'photographer' => $photo['photographer'] ?? 'unknown',
+                        'dimensions' => ($photo['width'] ?? 0) . 'x' . ($photo['height'] ?? 0),
+                        'image_url' => substr($imageUrl, 0, 100) . '...',
+                    ]);
+
+                    // Analyze the image for composition
+                    if ($this->imageAnalysisService->isAvailable()) {
+                        Log::channel('single')->info("[STEP 1.{$searchIdx}] Analyzing image...");
+                        $imageAnalysis[$layerName] = $this->imageAnalysisService->analyzeImage(
+                            $imageUrl,
+                            $currentWidth,
+                            $currentHeight
+                        );
+
+                        Log::channel('single')->info("[STEP 1.{$searchIdx}] Image analysis result", [
+                            'success' => $imageAnalysis[$layerName]['success'] ?? false,
+                            'busy_zones_count' => count($imageAnalysis[$layerName]['busy_zones'] ?? []),
+                            'safe_zones_count' => count($imageAnalysis[$layerName]['safe_zones'] ?? []),
+                            'suggested_text_position' => $imageAnalysis[$layerName]['suggested_text_position'] ?? 'unknown',
+                            'colors' => $imageAnalysis[$layerName]['colors'] ?? [],
+                        ]);
+                    }
+                } else {
+                    Log::channel('single')->error("[STEP 1.{$searchIdx}] NO PHOTOS FOUND for layer: {$layerName}");
                 }
             }
         }
 
-        // Create all layers
-        foreach ($layers as $layer) {
+        Log::channel('single')->info('[STEP 1] Image search complete', [
+            'images_found' => count($imageUrls),
+            'layers_with_images' => array_keys($imageUrls),
+        ]);
+
+        // STEP 2: Apply Grid Snap (8pt grid)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 2] GRID SNAP (8pt grid)');
+        $layersBeforeGridSnap = json_encode($this->extractLayerPositions($layers));
+        $layers = $this->gridSnapService->snapAllLayers($layers);
+        $layersAfterGridSnap = json_encode($this->extractLayerPositions($layers));
+        Log::channel('single')->info('[STEP 2] Grid snap applied', [
+            'before' => $layersBeforeGridSnap,
+            'after' => $layersAfterGridSnap,
+            'changed' => $layersBeforeGridSnap !== $layersAfterGridSnap,
+        ]);
+
+        // STEP 3: Apply Design Tokens (modular scale for fonts, etc.)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 3] DESIGN TOKENS (modular scale)');
+        $fontSizesBefore = $this->extractFontSizes($layers);
+        $layers = $this->designTokensService->snapAllLayersToTokens($layers);
+        $fontSizesAfter = $this->extractFontSizes($layers);
+        Log::channel('single')->info('[STEP 3] Design tokens applied', [
+            'font_sizes_before' => $fontSizesBefore,
+            'font_sizes_after' => $fontSizesAfter,
+        ]);
+
+        // STEP 3.5: Apply Vertical Rhythm & Tracking (Phase 3.2)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 3.5] VERTICAL RHYTHM & TRACKING');
+        $typoBefore = $this->extractTypographyDetails($layers);
+        $layers = $this->designTokensService->applyVerticalRhythmToLayers($layers);
+        $typoAfter = $this->extractTypographyDetails($layers);
+        Log::channel('single')->info('[STEP 3.5] Vertical rhythm applied', [
+            'before' => $typoBefore,
+            'after' => $typoAfter,
+        ]);
+
+        // STEP 4: Validate and fix layers using TemplateValidator
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 4] TEMPLATE VALIDATOR');
+        $layersBeforeValidation = count($layers);
+        $layers = $this->templateValidator->validateAndFix($layers, $currentWidth);
+        Log::channel('single')->info('[STEP 4] Template validation complete', [
+            'layers_before' => $layersBeforeValidation,
+            'layers_after' => count($layers),
+        ]);
+
+        // STEP 5: Fix typography hierarchy
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 5] TYPOGRAPHY HIERARCHY');
+        $fontSizesBeforeTypo = $this->extractFontSizes($layers);
+        $layers = $this->typographyValidator->fixHierarchy($layers);
+        $fontSizesAfterTypo = $this->extractFontSizes($layers);
+        Log::channel('single')->info('[STEP 5] Typography hierarchy fixed', [
+            'font_sizes_before' => $fontSizesBeforeTypo,
+            'font_sizes_after' => $fontSizesAfterTypo,
+        ]);
+
+        // STEP 6: Fix contrast issues
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 6] CONTRAST VALIDATION');
+        $backgroundColor = $templateSettings['background_color'] ?? '#FFFFFF';
+        $colorsBeforeContrast = $this->extractTextColors($layers);
+        $layers = $this->contrastValidator->fixContrastIssues($layers, $backgroundColor);
+        $colorsAfterContrast = $this->extractTextColors($layers);
+        Log::channel('single')->info('[STEP 6] Contrast validation complete', [
+            'background_color' => $backgroundColor,
+            'colors_before' => $colorsBeforeContrast,
+            'colors_after' => $colorsAfterContrast,
+        ]);
+
+        // STEP 7: Check completeness - auto-add missing required elements
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 7] COMPLETENESS CHECK');
+        $missing = $this->templateValidator->checkCompleteness($layers, $currentWidth, $currentHeight);
+        Log::channel('single')->info('[STEP 7] Completeness check result', [
+            'missing_elements' => $missing,
+            'layers_before' => count($layers),
+        ]);
+
+        if (!empty($missing)) {
+            Log::channel('single')->warning('[STEP 7] Template incomplete, auto-adding elements', [
+                'missing' => $missing,
+            ]);
+            $layers = $this->templateValidator->addMissingElements(
+                $layers,
+                $missing,
+                $currentWidth,
+                $currentHeight,
+                $this->currentDesignPlan
+            );
+            Log::channel('single')->info('[STEP 7] Elements added', [
+                'layers_after' => count($layers),
+            ]);
+        }
+
+        // STEP 7.5: Apply archetype constraints to layers
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 7.5] ARCHETYPE CONSTRAINTS');
+        if ($this->currentDesignPlan && isset($this->currentDesignPlan['composition_archetype'])) {
+            $archetype = $this->currentDesignPlan['composition_archetype'];
+            $positionsBefore = $this->extractLayerPositions($layers);
+            $layers = $this->applyArchetypeConstraints(
+                $layers,
+                $archetype,
+                $currentWidth,
+                $currentHeight
+            );
+            $positionsAfter = $this->extractLayerPositions($layers);
+            Log::channel('single')->info('[STEP 7.5] Archetype constraints applied', [
+                'archetype' => $archetype,
+                'positions_before' => $positionsBefore,
+                'positions_after' => $positionsAfter,
+            ]);
+        } else {
+            Log::channel('single')->info('[STEP 7.5] No design plan - skipping archetype constraints');
+        }
+
+        // STEP 8: Adjust layers based on image analysis (avoid focal point)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 8] IMAGE ANALYSIS ADJUSTMENTS');
+        if (!empty($imageAnalysis)) {
+            $primaryAnalysis = reset($imageAnalysis);
+            if ($primaryAnalysis && ($primaryAnalysis['success'] ?? false)) {
+                $positionsBefore = $this->extractLayerPositions($layers);
+                $layers = $this->imageAnalysisService->adjustLayersToAnalysis($layers, $primaryAnalysis);
+                $positionsAfter = $this->extractLayerPositions($layers);
+                Log::channel('single')->info('[STEP 8] Layers adjusted for image composition', [
+                    'busy_zones' => $primaryAnalysis['busy_zones'] ?? [],
+                    'positions_before' => $positionsBefore,
+                    'positions_after' => $positionsAfter,
+                ]);
+            } else {
+                Log::channel('single')->info('[STEP 8] Image analysis unsuccessful - skipping');
+            }
+        } else {
+            Log::channel('single')->info('[STEP 8] No image analysis data - skipping');
+        }
+
+        // STEP 9: Self-correction pass (final review)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 9] SELF-CORRECTION PASS');
+        $primaryAnalysis = !empty($imageAnalysis) ? reset($imageAnalysis) : [];
+        $correctionResult = $this->selfCorrectionService->reviewAndCorrect(
+            $layers,
+            $primaryAnalysis,
+            $currentWidth,
+            $currentHeight
+        );
+        $layers = $correctionResult['layers'];
+
+        Log::channel('single')->info('[STEP 9] Self-correction result', [
+            'corrections_applied' => $correctionResult['corrections_applied'],
+            'corrections' => $correctionResult['corrections'] ?? [],
+        ]);
+
+        // STEP 9.5: Apply Elevation Shadows (Phase 3.3 - Multi-layer Shadow Physics)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 9.5] ELEVATION SHADOWS');
+        $shadowsBefore = $this->extractShadowInfo($layers);
+        $layers = $this->elevationService->applyElevationToLayers($layers);
+        $shadowsAfter = $this->extractShadowInfo($layers);
+        Log::channel('single')->info('[STEP 9.5] Elevation shadows applied', [
+            'shadows_before' => $shadowsBefore,
+            'shadows_after' => $shadowsAfter,
+        ]);
+
+        // STEP 10: Final grid snap to ensure everything is aligned
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 10] FINAL GRID SNAP');
+        $positionsBefore = $this->extractLayerPositions($layers);
+        $layers = $this->gridSnapService->snapAllLayers($layers);
+        $positionsAfter = $this->extractLayerPositions($layers);
+        Log::channel('single')->info('[STEP 10] Final grid snap complete', [
+            'positions_before' => $positionsBefore,
+            'positions_after' => $positionsAfter,
+        ]);
+
+        // STEP 11: Sort layers by z-order (background first, CTA last)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 11] LAYER SORTING (z-order)');
+        $orderBefore = array_map(fn($l) => $l['name'] ?? 'unnamed', $layers);
+        $layers = $this->templateValidator->sortLayersByZOrder($layers);
+        $orderAfter = array_map(fn($l) => $l['name'] ?? 'unnamed', $layers);
+        Log::channel('single')->info('[STEP 11] Layer order sorted', [
+            'order_before' => $orderBefore,
+            'order_after' => $orderAfter,
+        ]);
+
+        // STEP 12: Visual Critic Review with Retry Loop (Phase 3.1 - Premium Quality Check)
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 12] VISUAL CRITIC REVIEW (with retry loop)');
+
+        $maxRetries = 2;
+        $attempt = 0;
+        $critique = null;
+
+        do {
+            $attempt++;
+
+            $critique = $this->visualCriticService->critique(
+                $layers,
+                $primaryAnalysis,
+                $currentWidth,
+                $currentHeight
+            );
+
+            Log::channel('single')->info("[STEP 12] Visual Critic scores (attempt {$attempt})", [
+                'passed' => $critique['passed'],
+                'total_score' => $critique['total_score'],
+                'scores' => $critique['scores'],
+                'issues' => $critique['issues'],
+                'suggestions' => $critique['suggestions'],
+                'verdict' => $critique['verdict'],
+            ]);
+
+            if ($critique['passed']) {
+                Log::channel('single')->info("[STEP 12] Visual Critic APPROVED design on attempt {$attempt}");
+                break;
+            }
+
+            if ($attempt >= $maxRetries) {
+                Log::channel('single')->warning("[STEP 12] Max retries reached ({$maxRetries}), proceeding with best effort");
+                break;
+            }
+
+            Log::channel('single')->warning("[STEP 12] Visual Critic REJECTED design (attempt {$attempt}) - applying fixes and retrying");
+
+            // Apply auto-fixes based on critique
+            $layersBeforeFix = json_encode($layers, JSON_PRETTY_PRINT);
+            $layers = $this->visualCriticService->applyFixes($layers, $critique, $currentWidth, $currentHeight);
+            $layersAfterFix = json_encode($layers, JSON_PRETTY_PRINT);
+
+            Log::channel('single')->info("[STEP 12] Fixes applied (attempt {$attempt})", [
+                'layers_changed' => $layersBeforeFix !== $layersAfterFix,
+            ]);
+
+            // Re-run self-correction pass after fixes
+            $correctionResult = $this->selfCorrectionService->reviewAndCorrect(
+                $layers,
+                $primaryAnalysis,
+                $currentWidth,
+                $currentHeight
+            );
+            $layers = $correctionResult['layers'];
+
+            // Re-apply elevation shadows
+            $layers = $this->elevationService->applyElevationToLayers($layers);
+
+            // Final grid snap
+            $layers = $this->gridSnapService->snapAllLayers($layers);
+
+            // Re-sort after fixes
+            $layers = $this->templateValidator->sortLayersByZOrder($layers);
+
+        } while (true);
+
+        // Log final attempt summary
+        Log::channel('single')->info('[STEP 12] Producer-Critic loop complete', [
+            'total_attempts' => $attempt,
+            'final_score' => $critique['total_score'] ?? 0,
+            'final_passed' => $critique['passed'] ?? false,
+        ]);
+
+        // STEP 13: Create final layer actions
+        Log::channel('single')->info('────────────────────────────────────────────────────────────────────');
+        Log::channel('single')->info('[STEP 13] FINAL LAYER CREATION');
+
+        foreach ($layers as $idx => $layer) {
             $type = $layer['type'] ?? 'rectangle';
             $name = $layer['name'] ?? ucfirst($type);
             $properties = $layer['properties'] ?? [];
@@ -933,11 +1690,15 @@ PROMPT;
             // If this is an image layer and we have a URL for it, add the src
             if ($type === 'image' && isset($imageUrls[$name])) {
                 $properties['src'] = $imageUrls[$name];
+                Log::channel('single')->info("[STEP 13.{$idx}] Image src assigned", [
+                    'layer_name' => $name,
+                    'src' => substr($imageUrls[$name], 0, 80) . '...',
+                ]);
             }
 
             $defaultProperties = $this->getDefaultLayerProperties($type, $properties);
 
-            $actions[] = [
+            $layerAction = [
                 'type' => 'add_layer',
                 'data' => [
                     'name' => $name,
@@ -952,9 +1713,203 @@ PROMPT;
                     'properties' => $defaultProperties,
                 ],
             ];
+
+            $actions[] = $layerAction;
+
+            Log::channel('single')->info("[STEP 13.{$idx}] Layer action created: {$name}", [
+                'type' => $type,
+                'position' => ['x' => $layerAction['data']['x'], 'y' => $layerAction['data']['y']],
+                'dimensions' => ['w' => $layerAction['data']['width'], 'h' => $layerAction['data']['height']],
+                'properties_keys' => array_keys($defaultProperties),
+            ]);
         }
 
+        // Pipeline complete
+        $pipelineDuration = round((microtime(true) - $pipelineStartTime) * 1000, 2);
+
+        Log::channel('single')->info('╔══════════════════════════════════════════════════════════════════╗');
+        Log::channel('single')->info('║           CREATE FULL TEMPLATE - PIPELINE COMPLETE               ║');
+        Log::channel('single')->info('╚══════════════════════════════════════════════════════════════════╝');
+
+        Log::channel('single')->info('[PIPELINE SUMMARY]', [
+            'total_duration_ms' => $pipelineDuration,
+            'total_actions' => count($actions),
+            'layers_created' => count($layers),
+            'images_found' => count($imageUrls),
+            'visual_critic_passed' => $critique['passed'] ?? false,
+            'visual_critic_score' => $critique['total_score'] ?? 0,
+            'design_plan_used' => $this->currentDesignPlan !== null,
+            'composition_archetype' => $this->currentDesignPlan['composition_archetype'] ?? 'none',
+        ]);
+
+        // Log final output JSON for debugging
+        Log::channel('single')->info('[FINAL OUTPUT] Actions JSON', [
+            'actions_json' => json_encode($actions, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE),
+        ]);
+
         return $actions;
+    }
+
+    /**
+     * Extract layer positions for logging comparison.
+     */
+    protected function extractLayerPositions(array $layers): array
+    {
+        $positions = [];
+        foreach ($layers as $layer) {
+            $name = $layer['name'] ?? 'unnamed';
+            $positions[$name] = [
+                'x' => $layer['x'] ?? null,
+                'y' => $layer['y'] ?? null,
+                'w' => $layer['width'] ?? null,
+                'h' => $layer['height'] ?? null,
+            ];
+        }
+        return $positions;
+    }
+
+    /**
+     * Extract font sizes from text layers for logging.
+     */
+    protected function extractFontSizes(array $layers): array
+    {
+        $fontSizes = [];
+        foreach ($layers as $layer) {
+            $type = $layer['type'] ?? '';
+            if (in_array($type, ['text', 'textbox'])) {
+                $name = $layer['name'] ?? 'unnamed';
+                $fontSizes[$name] = $layer['properties']['fontSize'] ?? null;
+            }
+        }
+        return $fontSizes;
+    }
+
+    /**
+     * Extract typography details from text layers for logging.
+     */
+    protected function extractTypographyDetails(array $layers): array
+    {
+        $typo = [];
+        foreach ($layers as $layer) {
+            $type = $layer['type'] ?? '';
+            if (in_array($type, ['text', 'textbox'])) {
+                $name = $layer['name'] ?? 'unnamed';
+                $props = $layer['properties'] ?? [];
+                $typo[$name] = [
+                    'fontSize' => $props['fontSize'] ?? null,
+                    'lineHeight' => $props['lineHeight'] ?? null,
+                    'letterSpacing' => $props['letterSpacing'] ?? null,
+                ];
+            }
+        }
+        return $typo;
+    }
+
+    /**
+     * Extract text colors from layers for logging.
+     */
+    protected function extractTextColors(array $layers): array
+    {
+        $colors = [];
+        foreach ($layers as $layer) {
+            $type = $layer['type'] ?? '';
+            if (in_array($type, ['text', 'textbox'])) {
+                $name = $layer['name'] ?? 'unnamed';
+                $props = $layer['properties'] ?? [];
+                $colors[$name] = [
+                    'fill' => $props['fill'] ?? null,
+                    'textColor' => $props['textColor'] ?? null,
+                ];
+            }
+        }
+        return $colors;
+    }
+
+    /**
+     * Extract shadow information from layers for logging.
+     */
+    protected function extractShadowInfo(array $layers): array
+    {
+        $shadows = [];
+        foreach ($layers as $layer) {
+            $name = $layer['name'] ?? 'unnamed';
+            $props = $layer['properties'] ?? [];
+            if (isset($props['shadowEnabled'])) {
+                $shadows[$name] = [
+                    'enabled' => $props['shadowEnabled'],
+                    'blur' => $props['shadowBlur'] ?? null,
+                    'offsetY' => $props['shadowOffsetY'] ?? null,
+                    'opacity' => $props['shadowOpacity'] ?? null,
+                ];
+            }
+        }
+        return $shadows;
+    }
+
+    /**
+     * Select the best photo for template composition.
+     * Uses PhotoRankingService to score and rank photos based on composition quality.
+     */
+    protected function selectBestPhotoForTemplate(
+        array $photos,
+        ?string $orientation,
+        int $targetWidth = 1080,
+        int $targetHeight = 1080,
+        ?string $archetype = null
+    ): array {
+        if (empty($photos)) {
+            return [];
+        }
+
+        // Filter by orientation first if specified
+        if ($orientation) {
+            $orientedPhotos = array_filter($photos, function ($photo) use ($orientation) {
+                return $this->getPhotoOrientation($photo) === $orientation;
+            });
+
+            if (!empty($orientedPhotos)) {
+                $photos = array_values($orientedPhotos);
+            }
+        }
+
+        // Use PhotoRankingService for intelligent selection
+        $archetype = $archetype ?? $this->currentDesignPlan['composition_archetype'] ?? 'centered_minimal';
+
+        $bestPhoto = $this->photoRankingService->getBestPhoto(
+            $photos,
+            $archetype,
+            $targetWidth,
+            $targetHeight
+        );
+
+        if ($bestPhoto) {
+            Log::channel('single')->info('PhotoRankingService selected best photo', [
+                'photo_id' => $bestPhoto['id'] ?? 'unknown',
+                'archetype' => $archetype,
+            ]);
+
+            return $bestPhoto;
+        }
+
+        // Fallback to first photo if ranking fails
+        return $photos[0];
+    }
+
+    /**
+     * Determine photo orientation based on dimensions.
+     */
+    protected function getPhotoOrientation(array $photo): string
+    {
+        $width = $photo['width'] ?? 0;
+        $height = $photo['height'] ?? 0;
+
+        if ($width > $height * 1.2) {
+            return 'landscape';
+        } elseif ($height > $width * 1.2) {
+            return 'portrait';
+        }
+
+        return 'square';
     }
 
     /**
@@ -977,7 +1932,7 @@ PROMPT;
             ];
         }
 
-        $result = $this->pexelsService->searchPhotos($query, $count, $orientation);
+        $result = $this->stockPhotoService->searchPhotos($query, $count, $orientation);
 
         $images = [];
         if ($result['success']) {
@@ -1169,18 +2124,28 @@ PROMPT;
             ]);
         }
 
+        // Calculate optimal line height and tracking for text layers
+        $fontSize = $customProperties['fontSize'] ?? 24;
+        $lineHeight = $customProperties['lineHeight']
+            ?? $this->designTokensService->calculateLineHeight($fontSize, 'body_normal');
+        $tracking = $customProperties['letterSpacing']
+            ?? round($this->designTokensService->calculateTracking($fontSize) * $fontSize, 1);
+
+        // Get elevation shadow for CTA buttons
+        $ctaShadow = $this->elevationService->getShadowForElevation(3);
+
         $defaults = match ($type) {
             'text' => [
                 'text' => $customProperties['text'] ?? '[Text content needed]',
                 'fontFamily' => $customProperties['fontFamily'] ?? 'Montserrat',
-                'fontSize' => $customProperties['fontSize'] ?? 24,
+                'fontSize' => $fontSize,
                 'fontWeight' => $customProperties['fontWeight'] ?? 'normal',
                 'fontStyle' => $customProperties['fontStyle'] ?? 'normal',
                 'fill' => $customProperties['fill'] ?? '#000000',
                 'align' => $customProperties['align'] ?? 'left',
                 'verticalAlign' => $customProperties['verticalAlign'] ?? 'top',
-                'lineHeight' => $customProperties['lineHeight'] ?? 1.2,
-                'letterSpacing' => $customProperties['letterSpacing'] ?? 0,
+                'lineHeight' => $lineHeight,
+                'letterSpacing' => $tracking,
             ],
             'textbox' => [
                 'text' => $customProperties['text'] ?? 'Button',
@@ -1192,18 +2157,33 @@ PROMPT;
                 'textColor' => $customProperties['textColor'] ?? '#FFFFFF',
                 'align' => $customProperties['align'] ?? 'center',
                 'padding' => $customProperties['padding'] ?? 16,
-                'cornerRadius' => $customProperties['cornerRadius'] ?? 8,
-                'lineHeight' => $customProperties['lineHeight'] ?? 1.2,
+                'cornerRadius' => $customProperties['cornerRadius'] ?? 500, // Pill shape for premium
+                'lineHeight' => $customProperties['lineHeight'] ?? 1.1, // Tight for buttons
+                // Apply elevation shadow for floating CTA effect
+                'shadowEnabled' => $customProperties['shadowEnabled'] ?? $ctaShadow['shadowEnabled'],
+                'shadowColor' => $customProperties['shadowColor'] ?? $ctaShadow['shadowColor'],
+                'shadowBlur' => $customProperties['shadowBlur'] ?? $ctaShadow['shadowBlur'],
+                'shadowOffsetX' => $customProperties['shadowOffsetX'] ?? $ctaShadow['shadowOffsetX'],
+                'shadowOffsetY' => $customProperties['shadowOffsetY'] ?? $ctaShadow['shadowOffsetY'],
+                'shadowOpacity' => $customProperties['shadowOpacity'] ?? $ctaShadow['shadowOpacity'],
             ],
             'image' => [
                 'src' => $customProperties['src'] ?? null,
                 'fit' => $customProperties['fit'] ?? 'cover',
             ],
             'rectangle' => [
-                'fill' => $customProperties['fill'] ?? '#CCCCCC',
+                // For gradient overlays, preserve gradient properties and use transparent fill
+                'fill' => isset($customProperties['fillType']) && $customProperties['fillType'] === 'gradient'
+                    ? 'transparent'
+                    : ($customProperties['fill'] ?? '#CCCCCC'),
+                'fillType' => $customProperties['fillType'] ?? 'solid',
+                'gradientStartColor' => $customProperties['gradientStartColor'] ?? null,
+                'gradientEndColor' => $customProperties['gradientEndColor'] ?? null,
+                'gradientAngle' => $customProperties['gradientAngle'] ?? null,
                 'stroke' => $customProperties['stroke'] ?? null,
                 'strokeWidth' => $customProperties['strokeWidth'] ?? 0,
                 'cornerRadius' => $customProperties['cornerRadius'] ?? 0,
+                'opacity' => $customProperties['opacity'] ?? 1,
             ],
             'ellipse' => [
                 'fill' => $customProperties['fill'] ?? '#CCCCCC',
@@ -1257,6 +2237,11 @@ PROMPT;
                 $summaries[] = $this->getDeleteLayerSummary($action['data']);
             } elseif ($type === 'api_info') {
                 return $action['data']['documentation'];
+            } elseif ($type === 'plan_design_approved') {
+                $archetype = $action['data']['plan']['composition_archetype'] ?? 'custom';
+                $summaries[] = "Design plan approved: {$archetype} archetype";
+            } elseif ($type === 'plan_design_rejected') {
+                $summaries[] = $action['data']['message'] ?? 'Design plan rejected';
             } elseif ($type === 'error') {
                 $summaries[] = $action['message'] ?? 'An error occurred';
             }

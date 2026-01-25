@@ -112,10 +112,15 @@ const copyToClipboard = async (text, section) => {
     }
 };
 
-// Local state for text editing (to avoid too many updates)
+// Local state for text editing (synced with layer)
 const localText = ref('');
+const isTextFocused = ref(false);
+
 watch(() => selectedLayer.value?.properties?.text, (newText) => {
-    localText.value = newText || '';
+    // Only update local text if not currently editing (to avoid cursor jumping)
+    if (!isTextFocused.value) {
+        localText.value = newText || '';
+    }
 }, { immediate: true });
 
 const updateProperty = (key, value) => {
@@ -152,6 +157,14 @@ const updateNumeric = (key, value) => {
 const updateText = () => {
     if (!selectedLayer.value) return;
     updateProperty('text', localText.value);
+};
+
+const onTextFocus = () => {
+    isTextFocused.value = true;
+};
+
+const onTextBlur = () => {
+    isTextFocused.value = false;
 };
 
 // Template/Canvas updates
@@ -202,6 +215,11 @@ const textAligns = [
     { value: 'left', icon: 'M3 4h18M3 8h12M3 12h18M3 16h8' },
     { value: 'center', icon: 'M3 4h18M6 8h12M3 12h18M8 16h8' },
     { value: 'right', icon: 'M3 4h18M9 8h12M3 12h18M13 16h8' },
+];
+
+const textDirections = [
+    { value: 'horizontal', icon: 'M4 6h16M4 10h16M4 14h16M4 18h16' },
+    { value: 'vertical', icon: 'M6 4v16M10 4v16M14 4v16M18 4v16' },
 ];
 
 const textTransforms = [
@@ -960,7 +978,9 @@ const toggleTextDecoration = (decoration) => {
                     </div>
                     <textarea
                         v-model="localText"
-                        @blur="updateText"
+                        @input="updateText"
+                        @focus="onTextFocus"
+                        @blur="onTextBlur"
                         rows="3"
                         class="w-full px-2.5 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white resize-none transition-colors"
                         placeholder="Enter text..."
@@ -1044,6 +1064,30 @@ const toggleTextDecoration = (decoration) => {
                                 <path stroke-linecap="round" stroke-linejoin="round" :d="align.icon" />
                             </svg>
                         </button>
+                    </div>
+
+                    <!-- Text direction (horizontal/vertical) -->
+                    <div class="mb-3">
+                        <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.properties.textDirection') }}</label>
+                        <div class="flex bg-gray-50 border border-gray-200 rounded overflow-hidden">
+                            <button
+                                v-for="direction in textDirections"
+                                :key="direction.value"
+                                @click="updateProperty('textDirection', direction.value)"
+                                :class="[
+                                    'flex-1 py-2 transition-colors flex items-center justify-center gap-1.5 border-r border-gray-200 last:border-r-0',
+                                    (selectedLayer.properties?.textDirection || 'horizontal') === direction.value
+                                        ? 'bg-blue-600 text-white'
+                                        : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+                                ]"
+                                :title="t('graphics.properties.' + direction.value)"
+                            >
+                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" :d="direction.icon" />
+                                </svg>
+                                <span class="text-xs">{{ t('graphics.properties.' + direction.value) }}</span>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Line height and Letter spacing -->
@@ -1149,7 +1193,9 @@ const toggleTextDecoration = (decoration) => {
                     </div>
                     <textarea
                         v-model="localText"
-                        @blur="updateText"
+                        @input="updateText"
+                        @focus="onTextFocus"
+                        @blur="onTextBlur"
                         rows="3"
                         class="w-full px-2.5 py-2 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white resize-none transition-colors"
                         :placeholder="t('graphics.properties.enterText')"

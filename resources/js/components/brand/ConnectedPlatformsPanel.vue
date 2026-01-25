@@ -6,7 +6,7 @@ import { useToast } from '@/composables/useToast';
 import Button from '@/components/common/Button.vue';
 import Modal from '@/components/common/Modal.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
-import api from '@/api';
+import axios from 'axios';
 
 const props = defineProps({
     brandId: {
@@ -38,7 +38,7 @@ const instagramIcon = `<svg class="w-6 h-6" viewBox="0 0 24 24" fill="currentCol
 const loadPlatforms = async () => {
     loading.value = true;
     try {
-        const response = await api.get(`/v1/brands/${props.brandId}/platforms`);
+        const response = await axios.get(`/api/v1/brands/${props.brandId}/platforms`);
         platforms.value = response.data.platforms;
     } catch (error) {
         console.error('Failed to load platforms:', error);
@@ -50,7 +50,7 @@ const loadPlatforms = async () => {
 const connectFacebook = async () => {
     connecting.value = true;
     try {
-        const response = await api.get(`/v1/brands/${props.brandId}/platforms/facebook/auth-url`);
+        const response = await axios.get(`/api/v1/brands/${props.brandId}/platforms/facebook/auth-url`);
         // Redirect to Facebook OAuth
         window.location.href = response.data.auth_url;
     } catch (error) {
@@ -62,7 +62,7 @@ const connectFacebook = async () => {
 const loadAvailablePages = async () => {
     loadingPages.value = true;
     try {
-        const response = await api.get(`/v1/brands/${props.brandId}/platforms/facebook/pages`);
+        const response = await axios.get(`/api/v1/brands/${props.brandId}/platforms/facebook/pages`);
         availablePages.value = response.data.pages;
         if (availablePages.value.length === 1) {
             selectedPageId.value = availablePages.value[0].id;
@@ -80,7 +80,7 @@ const confirmPageSelection = async () => {
 
     connecting.value = true;
     try {
-        const response = await api.post(`/v1/brands/${props.brandId}/platforms/facebook/select-page`, {
+        const response = await axios.post(`/api/v1/brands/${props.brandId}/platforms/facebook/select-page`, {
             page_id: selectedPageId.value,
         });
 
@@ -100,7 +100,7 @@ const disconnectPlatform = async (platform) => {
     }
 
     try {
-        await api.delete(`/v1/brands/${props.brandId}/platforms/${platform}`);
+        await axios.delete(`/api/v1/brands/${props.brandId}/platforms/${platform}`);
         toast.success(t('connectedPlatforms.disconnectSuccess'));
         await loadPlatforms();
     } catch (error) {

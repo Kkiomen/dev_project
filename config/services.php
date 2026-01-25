@@ -40,6 +40,11 @@ return [
         'timeout' => env('RAYSO_TIMEOUT', 30),
     ],
 
+    'image_analysis' => [
+        'url' => env('IMAGE_ANALYSIS_URL', 'http://image-analysis:3334'),
+        'timeout' => env('IMAGE_ANALYSIS_TIMEOUT', 30),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
         'model' => env('OPENAI_MODEL', 'gpt-4o'),

@@ -3,6 +3,7 @@
 return [
     'layer_types' => [
         'text' => 'Tekst',
+        'textbox' => 'Pole tekstowe',
         'image' => 'Obraz',
         'rectangle' => 'Prostokąt',
         'ellipse' => 'Elipsa',
@@ -67,6 +68,9 @@ return [
         'text_align' => 'Wyrównanie tekstu',
         'line_height' => 'Wysokość linii',
         'letter_spacing' => 'Odstępy między literami',
+        'text_direction' => 'Kierunek tekstu',
+        'horizontal' => 'Poziomo',
+        'vertical' => 'Pionowo',
     ],
 
     'export' => [

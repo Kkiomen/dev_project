@@ -5,6 +5,7 @@ namespace App\Enums;
 enum LayerType: string
 {
     case TEXT = 'text';
+    case TEXTBOX = 'textbox';
     case IMAGE = 'image';
     case RECTANGLE = 'rectangle';
     case ELLIPSE = 'ellipse';
@@ -14,6 +15,7 @@ enum LayerType: string
     {
         return match ($this) {
             self::TEXT => __('graphics.layer_types.text'),
+            self::TEXTBOX => __('graphics.layer_types.textbox'),
             self::IMAGE => __('graphics.layer_types.image'),
             self::RECTANGLE => __('graphics.layer_types.rectangle'),
             self::ELLIPSE => __('graphics.layer_types.ellipse'),
@@ -25,6 +27,7 @@ enum LayerType: string
     {
         return match ($this) {
             self::TEXT => 'type',
+            self::TEXTBOX => 'square-text',
             self::IMAGE => 'image',
             self::RECTANGLE => 'square',
             self::ELLIPSE => 'circle',
@@ -37,7 +40,7 @@ enum LayerType: string
         return match ($this) {
             self::TEXT => [
                 'text' => '',
-                'fontFamily' => 'Arial',
+                'fontFamily' => 'Montserrat',
                 'fontSize' => 24,
                 'fontWeight' => 'normal',
                 'fontStyle' => 'normal',
@@ -46,6 +49,21 @@ enum LayerType: string
                 'fill' => '#000000',
                 'align' => 'left',
                 'verticalAlign' => 'top',
+                'textDirection' => 'horizontal',
+            ],
+            self::TEXTBOX => [
+                'text' => 'Button',
+                'fontFamily' => 'Montserrat',
+                'fontSize' => 16,
+                'fontWeight' => '600',
+                'fontStyle' => 'normal',
+                'lineHeight' => 1.1,
+                'letterSpacing' => 0,
+                'fill' => '#3B82F6',
+                'textColor' => '#FFFFFF',
+                'align' => 'center',
+                'padding' => 16,
+                'cornerRadius' => 25,
             ],
             self::IMAGE => [
                 'src' => null,

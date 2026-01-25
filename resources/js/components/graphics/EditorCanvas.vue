@@ -45,14 +45,26 @@ const autoResizeTextLayer = (layerId) => {
     const canvasWidth = props.template.width;
     const canvasHeight = props.template.height;
 
+    // Prepare text - convert to vertical format if needed
+    let text = layerProps.text || '';
+    const textDirection = layerProps.textDirection || 'horizontal';
+    if (textDirection === 'vertical') {
+        // Space = empty line (word separator), newline = double line gap
+        text = text.split('').map(char => {
+            if (char === ' ') return '';
+            if (char === '\n') return '\n';
+            return char;
+        }).join('\n');
+    }
+
     // First, measure text without width constraint to get natural width
     const naturalDimensions = measureTextDimensions({
-        text: layerProps.text || '',
+        text,
         fontSize: layerProps.fontSize || 24,
         fontFamily: layerProps.fontFamily || 'Arial',
         fontWeight: layerProps.fontWeight || 'normal',
         fontStyle: layerProps.fontStyle || 'normal',
-        lineHeight: layerProps.lineHeight || 1.2,
+        lineHeight: textDirection === 'vertical' ? 0.9 : (layerProps.lineHeight || 1.2),
         letterSpacing: layerProps.letterSpacing || 0,
         width: undefined, // No width constraint - get natural width
     });
@@ -69,12 +81,12 @@ const autoResizeTextLayer = (layerId) => {
     } else {
         // Text needs to wrap - constrain to available width
         const wrappedDimensions = measureTextDimensions({
-            text: layerProps.text || '',
+            text,
             fontSize: layerProps.fontSize || 24,
             fontFamily: layerProps.fontFamily || 'Arial',
             fontWeight: layerProps.fontWeight || 'normal',
             fontStyle: layerProps.fontStyle || 'normal',
-            lineHeight: layerProps.lineHeight || 1.2,
+            lineHeight: textDirection === 'vertical' ? 0.9 : (layerProps.lineHeight || 1.2),
             letterSpacing: layerProps.letterSpacing || 0,
             width: maxAvailableWidth,
         });
@@ -367,6 +379,7 @@ watch(() => graphicsStore.layers, (layers) => {
             lineHeight: layer.properties?.lineHeight,
             letterSpacing: layer.properties?.letterSpacing,
             padding: layer.properties?.padding,
+            textDirection: layer.properties?.textDirection,
             x: layer.x,
         });
 
@@ -609,19 +622,17 @@ const handleTextDblClick = (e, layer) => {
     const textarea = document.createElement('textarea');
     document.body.appendChild(textarea);
 
+    const isVertical = layer.properties?.textDirection === 'vertical';
+
     textarea.value = layer.properties?.text || '';
     textarea.style.position = 'absolute';
     textarea.style.top = `${stageBox.top + textPosition.y}px`;
     textarea.style.left = `${stageBox.left + textPosition.x}px`;
-    textarea.style.width = `${Math.max(textNode.width() * graphicsStore.zoom, 100)}px`;
-    textarea.style.minHeight = `${textNode.height() * graphicsStore.zoom}px`;
     textarea.style.fontSize = `${(layer.properties?.fontSize || 24) * graphicsStore.zoom}px`;
     textarea.style.fontFamily = layer.properties?.fontFamily || 'Arial';
     textarea.style.fontWeight = layer.properties?.fontWeight || 'normal';
     textarea.style.fontStyle = layer.properties?.fontStyle || 'normal';
     textarea.style.color = layer.properties?.fill || '#000000';
-    textarea.style.textAlign = layer.properties?.align || 'left';
-    textarea.style.lineHeight = String(layer.properties?.lineHeight || 1.2);
     textarea.style.border = '2px solid #0066ff';
     textarea.style.padding = '4px';
     textarea.style.margin = '0';
@@ -632,6 +643,21 @@ const handleTextDblClick = (e, layer) => {
     textarea.style.zIndex = '1000';
     textarea.style.transformOrigin = 'left top';
     textarea.style.transform = `rotate(${layer.rotation || 0}deg)`;
+
+    // Handle vertical text direction
+    if (isVertical) {
+        textarea.style.writingMode = 'vertical-rl';
+        textarea.style.textOrientation = 'mixed';
+        textarea.style.minWidth = `${Math.max(textNode.width() * graphicsStore.zoom, 50)}px`;
+        textarea.style.height = `${Math.max(textNode.height() * graphicsStore.zoom, 100)}px`;
+        textarea.style.textAlign = 'left';
+        textarea.style.lineHeight = '1';
+    } else {
+        textarea.style.width = `${Math.max(textNode.width() * graphicsStore.zoom, 100)}px`;
+        textarea.style.minHeight = `${textNode.height() * graphicsStore.zoom}px`;
+        textarea.style.textAlign = layer.properties?.align || 'left';
+        textarea.style.lineHeight = String(layer.properties?.lineHeight || 1.2);
+    }
 
     textarea.focus();
     textarea.select();
@@ -694,19 +720,17 @@ const handleTextboxDblClick = (e, layer) => {
     const textarea = document.createElement('textarea');
     document.body.appendChild(textarea);
 
+    const isVertical = layer.properties?.textDirection === 'vertical';
+
     textarea.value = layer.properties?.text || 'Button';
     textarea.style.position = 'absolute';
     textarea.style.top = `${stageBox.top + groupPosition.y + padding * graphicsStore.zoom}px`;
     textarea.style.left = `${stageBox.left + groupPosition.x + padding * graphicsStore.zoom}px`;
-    textarea.style.width = `${Math.max((layer.width - padding * 2) * graphicsStore.zoom, 60)}px`;
-    textarea.style.minHeight = `${(layer.height - padding * 2) * graphicsStore.zoom}px`;
     textarea.style.fontSize = `${(layer.properties?.fontSize || 16) * graphicsStore.zoom}px`;
     textarea.style.fontFamily = layer.properties?.fontFamily || 'Montserrat';
     textarea.style.fontWeight = layer.properties?.fontWeight || '600';
     textarea.style.fontStyle = layer.properties?.fontStyle || 'normal';
     textarea.style.color = layer.properties?.textColor || '#FFFFFF';
-    textarea.style.textAlign = layer.properties?.align || 'center';
-    textarea.style.lineHeight = String(layer.properties?.lineHeight || 1.2);
     textarea.style.border = '2px solid #0066ff';
     textarea.style.padding = '4px';
     textarea.style.margin = '0';
@@ -718,6 +742,21 @@ const handleTextboxDblClick = (e, layer) => {
     textarea.style.borderRadius = `${layer.properties?.cornerRadius || 8}px`;
     textarea.style.transformOrigin = 'left top';
     textarea.style.transform = `rotate(${layer.rotation || 0}deg)`;
+
+    // Handle vertical text direction
+    if (isVertical) {
+        textarea.style.writingMode = 'vertical-rl';
+        textarea.style.textOrientation = 'mixed';
+        textarea.style.minWidth = `${Math.max((layer.width - padding * 2) * graphicsStore.zoom, 40)}px`;
+        textarea.style.height = `${Math.max((layer.height - padding * 2) * graphicsStore.zoom, 60)}px`;
+        textarea.style.textAlign = 'left';
+        textarea.style.lineHeight = '1';
+    } else {
+        textarea.style.width = `${Math.max((layer.width - padding * 2) * graphicsStore.zoom, 60)}px`;
+        textarea.style.minHeight = `${(layer.height - padding * 2) * graphicsStore.zoom}px`;
+        textarea.style.textAlign = layer.properties?.align || 'center';
+        textarea.style.lineHeight = String(layer.properties?.lineHeight || 1.2);
+    }
 
     textarea.focus();
     textarea.select();
@@ -944,6 +983,18 @@ const getShapeConfig = (layer) => {
             else if (transform === 'lowercase') text = text.toLowerCase();
             else if (transform === 'capitalize') text = text.replace(/\b\w/g, (c) => c.toUpperCase());
 
+            // Handle vertical text direction
+            const textDirection = layer.properties?.textDirection || 'horizontal';
+            if (textDirection === 'vertical') {
+                // Convert text to vertical format (each character on new line)
+                // Space = empty line (word separator), newline = double empty line (paragraph)
+                text = text.split('').map(char => {
+                    if (char === ' ') return ''; // Space becomes empty (single line gap via join)
+                    if (char === '\n') return '\n'; // Original newline = double line gap
+                    return char;
+                }).join('\n');
+            }
+
             return {
                 ...baseConfig,
                 text,
@@ -951,8 +1002,8 @@ const getShapeConfig = (layer) => {
                 fontFamily: layer.properties?.fontFamily || 'Arial',
                 fontStyle: `${layer.properties?.fontWeight || 'normal'} ${layer.properties?.fontStyle || 'normal'}`,
                 fill: layer.properties?.fill || '#000000',
-                align: layer.properties?.align || 'left',
-                lineHeight: layer.properties?.lineHeight || 1.2,
+                align: textDirection === 'vertical' ? 'center' : (layer.properties?.align || 'left'),
+                lineHeight: textDirection === 'vertical' ? 0.9 : (layer.properties?.lineHeight || 1.2),
                 letterSpacing: layer.properties?.letterSpacing || 0,
                 textDecoration: layer.properties?.textDecoration || '',
             };
@@ -1042,6 +1093,18 @@ const getTextboxConfig = (layer) => {
     else if (transform === 'lowercase') text = text.toLowerCase();
     else if (transform === 'capitalize') text = text.replace(/\b\w/g, (c) => c.toUpperCase());
 
+    // Handle vertical text direction
+    const textDirection = layer.properties?.textDirection || 'horizontal';
+    if (textDirection === 'vertical') {
+        // Convert text to vertical format (each character on new line)
+        // Space = empty line (word separator), newline = double line gap
+        text = text.split('').map(char => {
+            if (char === ' ') return '';
+            if (char === '\n') return '\n';
+            return char;
+        }).join('\n');
+    }
+
     const rectConfig = {
         x: 0,
         y: 0,
@@ -1064,9 +1127,9 @@ const getTextboxConfig = (layer) => {
         fontFamily: layer.properties?.fontFamily || 'Montserrat',
         fontStyle: `${layer.properties?.fontWeight || '600'} ${layer.properties?.fontStyle || 'normal'}`,
         fill: layer.properties?.textColor || '#FFFFFF',
-        align: layer.properties?.align || 'center',
+        align: textDirection === 'vertical' ? 'center' : (layer.properties?.align || 'center'),
         verticalAlign: 'middle',
-        lineHeight: layer.properties?.lineHeight || 1.2,
+        lineHeight: textDirection === 'vertical' ? 0.9 : (layer.properties?.lineHeight || 1.2),
         letterSpacing: layer.properties?.letterSpacing || 0,
     };
 

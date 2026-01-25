@@ -3,6 +3,7 @@
 return [
     'layer_types' => [
         'text' => 'Text',
+        'textbox' => 'Text Box',
         'image' => 'Image',
         'rectangle' => 'Rectangle',
         'ellipse' => 'Ellipse',
@@ -67,6 +68,9 @@ return [
         'text_align' => 'Text Align',
         'line_height' => 'Line Height',
         'letter_spacing' => 'Letter Spacing',
+        'text_direction' => 'Text Direction',
+        'horizontal' => 'Horizontal',
+        'vertical' => 'Vertical',
     ],
 
     'export' => [
