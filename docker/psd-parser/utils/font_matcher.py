@@ -1,97 +1,14 @@
 """
 Font matcher utility for matching PSD fonts to Google Fonts.
-Uses fuzzy matching with rapidfuzz library.
+Uses dynamic font loading approach - preserves original font names and lets
+the frontend try to load them from Google Fonts API.
 """
 
 from rapidfuzz import fuzz, process
 
-# Popular Google Fonts list for matching
-GOOGLE_FONTS = [
-    "Roboto",
-    "Open Sans",
-    "Lato",
-    "Montserrat",
-    "Oswald",
-    "Source Sans Pro",
-    "Raleway",
-    "PT Sans",
-    "Merriweather",
-    "Nunito",
-    "Playfair Display",
-    "Poppins",
-    "Ubuntu",
-    "Rubik",
-    "Work Sans",
-    "Noto Sans",
-    "Inter",
-    "Quicksand",
-    "Karla",
-    "Fira Sans",
-    "Barlow",
-    "Mulish",
-    "Josefin Sans",
-    "Cabin",
-    "DM Sans",
-    "Manrope",
-    "Arimo",
-    "Teko",
-    "Libre Franklin",
-    "Archivo",
-    "IBM Plex Sans",
-    "Outfit",
-    "Sora",
-    "Space Grotesk",
-    "Lexend",
-    "Plus Jakarta Sans",
-    "Red Hat Display",
-    "Figtree",
-    "Gabarito",
-    "Geist",
-    # Serif fonts
-    "Roboto Slab",
-    "Lora",
-    "PT Serif",
-    "Noto Serif",
-    "Libre Baskerville",
-    "Cormorant Garamond",
-    "Crimson Text",
-    "Bitter",
-    "Source Serif Pro",
-    "Zilla Slab",
-    "IBM Plex Serif",
-    "Playfair Display",
-    "Spectral",
-    "EB Garamond",
-    "Vollkorn",
-    # Display / decorative fonts
-    "Bebas Neue",
-    "Permanent Marker",
-    "Pacifico",
-    "Dancing Script",
-    "Lobster",
-    "Caveat",
-    "Satisfy",
-    "Great Vibes",
-    "Abril Fatface",
-    "Alfa Slab One",
-    "Anton",
-    "Righteous",
-    "Bangers",
-    "Fredoka One",
-    "Comfortaa",
-    # Monospace fonts
-    "Roboto Mono",
-    "Source Code Pro",
-    "Fira Code",
-    "JetBrains Mono",
-    "IBM Plex Mono",
-    "Space Mono",
-    "Ubuntu Mono",
-    "Inconsolata",
-]
-
-# Common font name mappings (system fonts to Google Fonts)
-FONT_MAPPINGS = {
+# System fonts that need to be mapped to Google Fonts equivalents
+# (these fonts are not available on Google Fonts)
+SYSTEM_FONT_MAPPINGS = {
     "arial": "Open Sans",
     "helvetica": "Inter",
     "helvetica neue": "Inter",
@@ -137,6 +54,23 @@ FONT_MAPPINGS = {
     "frutiger": "Noto Sans",
 }
 
+# Common font name corrections (for fonts with different naming on Google Fonts)
+# Maps PSD naming conventions to Google Fonts naming
+FONT_NAME_CORRECTIONS = {
+    "rounded mplus": "M PLUS Rounded 1c",
+    "mplus rounded": "M PLUS Rounded 1c",
+    "m plus rounded": "M PLUS Rounded 1c",
+    "mplus": "M PLUS 1p",
+    "m plus": "M PLUS 1p",
+    "noto sans jp": "Noto Sans JP",
+    "noto serif jp": "Noto Serif JP",
+    "source han sans": "Noto Sans JP",
+    "source han serif": "Noto Serif JP",
+    "open sans condensed": "Open Sans Condensed",
+    "pt sans narrow": "PT Sans Narrow",
+    "ubuntu condensed": "Ubuntu Condensed",
+}
+
 DEFAULT_FONT = "Montserrat"
 
 
@@ -170,12 +104,20 @@ def match_font(psd_font_name) -> dict:
     """
     Match a PSD font name to a Google Font.
 
+    Strategy (like Photopea):
+    1. Normalize the font name (remove style suffixes)
+    2. Check if it's a system font that needs mapping
+    3. Apply name corrections for known fonts with different naming
+    4. Otherwise, return the normalized name - let frontend try to load it from Google Fonts
+    5. Fallback only if the font name is empty/invalid
+
     Returns:
         dict with keys:
             - original: original PSD font name
-            - matched: matched Google Font name
+            - matched: matched Google Font name (to use)
             - confidence: matching confidence (0-100)
             - is_fallback: whether fallback font was used
+            - is_dynamic: whether frontend should try dynamic loading
     """
     if not psd_font_name or not isinstance(psd_font_name, str):
         return {
@@ -183,6 +125,7 @@ def match_font(psd_font_name) -> dict:
             "matched": DEFAULT_FONT,
             "confidence": 0,
             "is_fallback": True,
+            "is_dynamic": False,
         }
 
     normalized = normalize_font_name(psd_font_name)
@@ -192,52 +135,40 @@ def match_font(psd_font_name) -> dict:
             "matched": DEFAULT_FONT,
             "confidence": 0,
             "is_fallback": True,
+            "is_dynamic": False,
         }
 
     normalized_lower = normalized.lower()
 
-    # Check direct mappings first
-    if normalized_lower in FONT_MAPPINGS:
+    # 1. Check if it's a system font that needs mapping to Google equivalent
+    if normalized_lower in SYSTEM_FONT_MAPPINGS:
         return {
             "original": psd_font_name,
-            "matched": FONT_MAPPINGS[normalized_lower],
+            "matched": SYSTEM_FONT_MAPPINGS[normalized_lower],
             "confidence": 100,
             "is_fallback": False,
+            "is_dynamic": False,
         }
 
-    # Check if already a Google Font
-    for gf in GOOGLE_FONTS:
-        if normalized_lower == gf.lower():
+    # 2. Check for known name corrections (fonts with different naming on Google Fonts)
+    for pattern, correct_name in FONT_NAME_CORRECTIONS.items():
+        if pattern in normalized_lower:
             return {
                 "original": psd_font_name,
-                "matched": gf,
-                "confidence": 100,
+                "matched": correct_name,
+                "confidence": 95,
                 "is_fallback": False,
+                "is_dynamic": True,
             }
 
-    # Fuzzy match against Google Fonts
-    result = process.extractOne(
-        normalized,
-        GOOGLE_FONTS,
-        scorer=fuzz.token_sort_ratio,
-        score_cutoff=60
-    )
-
-    if result:
-        matched_font, score, _ = result
-        return {
-            "original": psd_font_name,
-            "matched": matched_font,
-            "confidence": int(score),
-            "is_fallback": False,
-        }
-
-    # Use fallback
+    # 3. Use the normalized font name directly - let frontend try to load it
+    # Google Fonts has 1000+ fonts, so we give it a chance
     return {
         "original": psd_font_name,
-        "matched": DEFAULT_FONT,
-        "confidence": 0,
-        "is_fallback": True,
+        "matched": normalized,  # Use the cleaned-up name
+        "confidence": 80,       # Medium confidence - frontend will verify
+        "is_fallback": False,
+        "is_dynamic": True,     # Signal that frontend should try dynamic loading
     }
 
 
@@ -248,25 +179,27 @@ def extract_font_weight(psd_font_name) -> str:
 
     name_lower = psd_font_name.lower()
 
-    weight_map = {
-        "thin": "100",
-        "hairline": "100",
-        "extralight": "200",
-        "ultralight": "200",
-        "light": "300",
-        "regular": "normal",
-        "normal": "normal",
-        "medium": "500",
-        "semibold": "600",
-        "demibold": "600",
-        "bold": "bold",
-        "extrabold": "800",
-        "ultrabold": "800",
-        "black": "900",
-        "heavy": "900",
-    }
+    # Order matters: check longer/more specific variants first
+    # to avoid "bold" matching before "extrabold"
+    weight_checks = [
+        ("extrabold", "800"),
+        ("ultrabold", "800"),
+        ("semibold", "600"),
+        ("demibold", "600"),
+        ("extralight", "200"),
+        ("ultralight", "200"),
+        ("hairline", "100"),
+        ("thin", "100"),
+        ("light", "300"),
+        ("medium", "500"),
+        ("regular", "normal"),
+        ("normal", "normal"),
+        ("bold", "bold"),  # Check after extrabold/semibold
+        ("black", "900"),
+        ("heavy", "900"),
+    ]
 
-    for weight_name, weight_value in weight_map.items():
+    for weight_name, weight_value in weight_checks:
         if weight_name in name_lower:
             return weight_value
 

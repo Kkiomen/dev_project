@@ -138,6 +138,46 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
     """Map text layer properties."""
     try:
         text = layer.text or ""
+        # Normalize line endings - Photoshop uses \r for paragraph breaks
+        text = text.replace('\r\n', '\n').replace('\r', '\n')
+
+        # Try to extract text bounding box from engine_dict
+        # Photoshop stores paragraph text box dimensions in Rendered.Shapes.Children[0].Cookie.Photoshop.BoxBounds
+        text_box_bounds = None
+        try:
+            if hasattr(layer, 'engine_dict') and layer.engine_dict:
+                engine = layer.engine_dict
+                if "Rendered" in engine:
+                    rendered = engine["Rendered"]
+                    if "Shapes" in rendered:
+                        shapes = rendered["Shapes"]
+                        if "Children" in shapes and shapes["Children"]:
+                            children = shapes["Children"]
+                            if len(children) > 0:
+                                first_shape = children[0]
+                                if "Cookie" in first_shape:
+                                    cookie = first_shape["Cookie"]
+                                    if "Photoshop" in cookie:
+                                        ps_data = cookie["Photoshop"]
+                                        if "BoxBounds" in ps_data:
+                                            bounds = ps_data["BoxBounds"]
+                                            # BoxBounds is [x, y, width, height]
+                                            if len(bounds) >= 4:
+                                                text_box_bounds = {
+                                                    "x": float(bounds[0]),
+                                                    "y": float(bounds[1]),
+                                                    "width": float(bounds[2]),
+                                                    "height": float(bounds[3]),
+                                                }
+        except Exception:
+            pass  # BoxBounds extraction failed, use layer bounds
+
+        # Update layer dimensions with text box bounds if available
+        # This gives us the actual paragraph text box size, not just rendered text bounds
+        if text_box_bounds and text_box_bounds["width"] > 0:
+            data["width"] = text_box_bounds["width"]
+        if text_box_bounds and text_box_bounds["height"] > 0:
+            data["height"] = text_box_bounds["height"]
 
         # Get text engine data for detailed properties
         font_family = "Montserrat"  # Default
@@ -147,27 +187,36 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
         text_color = "#000000"
         text_align = "left"
         line_height = 1.2
+        original_font_name = None  # Original font name from PSD
+        is_dynamic_font = False    # Whether frontend should try dynamic loading
 
         # Try to get font info from text engine
         if hasattr(layer, "engine_dict") and layer.engine_dict:
             engine = layer.engine_dict
 
-            # Build font list from DocumentResources
+            # Build font list from resource_dict (psd-tools uses this)
             font_list = []
-            if "DocumentResources" in engine:
-                doc_res = engine["DocumentResources"]
-                if "FontSet" in doc_res:
-                    for font_entry in doc_res["FontSet"]:
-                        font_name = font_entry.get("Name", "")
-                        if isinstance(font_name, str):
-                            font_list.append(font_name)
-                        else:
-                            font_list.append("")
+            try:
+                if hasattr(layer, 'resource_dict') and layer.resource_dict:
+                    res_dict = layer.resource_dict
+                    if "FontSet" in res_dict:
+                        for font_entry in res_dict["FontSet"]:
+                            # Access Name directly
+                            # psd_tools.psd.engine_data.String has .value property
+                            font_name = font_entry["Name"] if "Name" in font_entry else ""
+                            # Get the actual string value
+                            if hasattr(font_name, 'value'):
+                                font_list.append(font_name.value)
+                            else:
+                                font_list.append(str(font_name).strip("'\""))
+            except Exception:
+                pass  # Font list extraction failed, will use defaults
 
             # Get font info from style runs
             if "StyleRun" in engine:
                 style_run = engine["StyleRun"]
-                run_array = style_run.get("RunArray", [])
+                # psd-tools Dict may not have .get() method, access directly
+                run_array = style_run["RunArray"] if "RunArray" in style_run else []
 
                 # Warn if multiple style runs (mixed formatting not fully supported)
                 if len(run_array) > 1:
@@ -175,21 +224,18 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                         "Text has mixed styles (partial bold/italic). Only primary style will be used."
                     )
 
-                # Find the longest run (most text) to use as primary style
-                longest_run = None
-                longest_length = 0
-                for run in run_array:
-                    run_length = run.get("Length", 0)
-                    if run_length > longest_length:
-                        longest_length = run_length
-                        longest_run = run
+                # Use first run as primary style
+                primary_run = run_array[0] if run_array else None
 
-                if longest_run and "StyleSheet" in longest_run:
-                    style = longest_run["StyleSheet"].get("StyleSheetData", {})
+                if primary_run and "StyleSheet" in primary_run:
+                    stylesheet = primary_run["StyleSheet"]
+                    style = stylesheet["StyleSheetData"] if "StyleSheetData" in stylesheet else {}
 
                     # Font family - Font is an index into FontSet
                     if "Font" in style:
-                        font_index = style["Font"]
+                        font_index_raw = style["Font"]
+                        # Convert psd_tools Integer to native int
+                        font_index = int(font_index_raw) if hasattr(font_index_raw, '__int__') else font_index_raw
                         psd_font_name = None
                         if isinstance(font_index, int) and font_index < len(font_list):
                             psd_font_name = font_list[font_index]
@@ -201,10 +247,21 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                             font_family = font_info["matched"]
                             font_weight = extract_font_weight(psd_font_name)
                             font_style = extract_font_style(psd_font_name)
+                            # Store original font info for frontend
+                            original_font_name = font_info["original"]
+                            is_dynamic_font = font_info.get("is_dynamic", False)
 
                     # Font size
                     if "FontSize" in style:
-                        font_size = float(style["FontSize"])
+                        raw_font_size = float(style["FontSize"])
+
+                        # Get scale factors from style
+                        vertical_scale = style["VerticalScale"] if "VerticalScale" in style else 1.0
+
+                        # PSD stores font size in points at document resolution
+                        # For web canvas (72 DPI logical), use the value directly
+                        # The pt value in PSD corresponds to px in web at 72 DPI
+                        font_size = raw_font_size * vertical_scale
 
                     # Color
                     if "FillColor" in style:
@@ -251,6 +308,8 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
             "verticalAlign": "top",
             "textDirection": "horizontal",
             "fixedWidth": has_fixed_width,  # Preserve original width from PSD
+            "originalFontName": original_font_name,  # Original font name from PSD
+            "isDynamicFont": is_dynamic_font,  # Whether to try dynamic Google Fonts loading
         }
 
     except Exception as e:

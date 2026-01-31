@@ -26,6 +26,7 @@ const measureTextDimensions = (textProps) => {
         lineHeight: textProps.lineHeight || 1.2,
         letterSpacing: textProps.letterSpacing || 0,
         width: textProps.width, // If width is set, text will wrap
+        wrap: textProps.width ? 'word' : 'none', // Enable word wrapping when width is set
     });
 
     const width = tempText.width();

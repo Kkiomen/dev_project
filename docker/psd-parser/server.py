@@ -87,6 +87,7 @@ def parse_psd():
         width = psd.width
         height = psd.height
 
+
         # Try to get background color
         background_color = "#FFFFFF"
         try:

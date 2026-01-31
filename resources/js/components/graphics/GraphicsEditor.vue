@@ -230,13 +230,26 @@ const handleKeydown = (e) => {
     }
 };
 
-// Load fonts used by text layers
+// Load fonts used by text layers and recalculate dimensions after loading
 watch(
     () => graphicsStore.layers,
-    (layers) => {
+    async (layers) => {
         const textLayers = layers.filter((l) => l.type === 'text');
         const fonts = new Set(textLayers.map((l) => l.properties?.fontFamily).filter(Boolean));
-        fonts.forEach((font) => loadFont(font));
+
+        // Load all fonts and wait for them
+        const fontLoadPromises = [...fonts].map((font) => loadFont(font));
+        await Promise.all(fontLoadPromises);
+
+        // After fonts are loaded, recalculate text layer heights (for wrapped text)
+        // This is important for PSD imports where fixedWidth is true
+        if (canvasRef.value?.autoResizeTextLayer) {
+            textLayers.forEach((layer) => {
+                if (layer.properties?.fixedWidth === true) {
+                    canvasRef.value.autoResizeTextLayer(layer.id);
+                }
+            });
+        }
     },
     { immediate: true, deep: true }
 );

@@ -841,7 +841,12 @@
             "system": "Czcionki systemowe",
             "popular": "Popularne czcionki",
             "searchResults": "Wyniki wyszukiwania",
-            "noFontsFound": "Nie znaleziono czcionek"
+            "noFontsFound": "Nie znaleziono czcionek",
+            "tryGoogleFont": "Spróbuj z Google Fonts",
+            "loadFont": "Załaduj \"{font}\"",
+            "fontNotAvailable": "Czcionka \"{font}\" nie jest dostępna w Google Fonts",
+            "fontLoaded": "Czcionka \"{font}\" załadowana pomyślnie",
+            "usingFallback": "Używam czcionki zastępczej"
         },
         "tools": {
             "select": "Zaznacz",

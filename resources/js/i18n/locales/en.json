@@ -840,7 +840,12 @@
             "system": "System Fonts",
             "popular": "Popular Fonts",
             "searchResults": "Search Results",
-            "noFontsFound": "No fonts found"
+            "noFontsFound": "No fonts found",
+            "tryGoogleFont": "Try from Google Fonts",
+            "loadFont": "Load \"{font}\"",
+            "fontNotAvailable": "Font \"{font}\" is not available on Google Fonts",
+            "fontLoaded": "Font \"{font}\" loaded successfully",
+            "usingFallback": "Using fallback font"
         },
         "tools": {
             "select": "Select",

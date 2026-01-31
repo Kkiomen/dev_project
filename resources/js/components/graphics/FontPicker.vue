@@ -4,7 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useGoogleFonts } from '@/composables/useGoogleFonts';
 
 const { t } = useI18n();
-const { loadFont, searchFonts, isFontLoaded, isFontLoading, systemFonts, popularFonts } = useGoogleFonts();
+const { loadFont, loadFontWithFallback, searchFonts, isFontLoaded, isFontLoading, isFontFailed, systemFonts, popularFonts, defaultFallbackFont } = useGoogleFonts();
 
 const props = defineProps({
     modelValue: {
@@ -20,6 +20,9 @@ const searchQuery = ref('');
 const containerRef = ref(null);
 const searchInputRef = ref(null);
 const highlightedIndex = ref(-1);
+const customFontInput = ref('');
+const isLoadingCustomFont = ref(false);
+const customFontError = ref('');
 
 // Filtered fonts based on search
 const filteredFonts = computed(() => {
@@ -39,6 +42,39 @@ const filteredFonts = computed(() => {
 const flatFontList = computed(() => {
     return filteredFonts.value.flatMap((group) => group.fonts);
 });
+
+// Check if custom font option should be shown
+const showCustomFontOption = computed(() => {
+    const query = searchQuery.value.trim();
+    if (!query) return false;
+    // Show custom font option if search query doesn't match any existing font exactly
+    const lowerQuery = query.toLowerCase();
+    return !flatFontList.value.some(f => f.toLowerCase() === lowerQuery);
+});
+
+// Try to load a custom font from Google Fonts
+const tryCustomFont = async () => {
+    const fontName = searchQuery.value.trim();
+    if (!fontName) return;
+
+    isLoadingCustomFont.value = true;
+    customFontError.value = '';
+
+    try {
+        const success = await loadFont(fontName);
+        if (success) {
+            emit('update:modelValue', fontName);
+            isOpen.value = false;
+            searchQuery.value = '';
+        } else {
+            customFontError.value = t('graphics.fonts.fontNotAvailable', { font: fontName });
+        }
+    } catch (error) {
+        customFontError.value = t('graphics.fonts.fontNotAvailable', { font: fontName });
+    } finally {
+        isLoadingCustomFont.value = false;
+    }
+};
 
 // Load the current font
 watch(
@@ -168,6 +204,34 @@ onUnmounted(() => {
 
             <!-- Font list -->
             <div class="max-h-64 overflow-y-auto">
+                <!-- Custom font option - shown when search doesn't match existing fonts -->
+                <template v-if="showCustomFontOption">
+                    <div class="px-2 py-1 bg-blue-50 text-[10px] font-medium text-blue-600 uppercase tracking-wider sticky top-0">
+                        {{ t('graphics.fonts.tryGoogleFont') }}
+                    </div>
+                    <button
+                        @click="tryCustomFont"
+                        :disabled="isLoadingCustomFont"
+                        class="w-full px-3 py-2 text-left text-sm transition-colors flex items-center justify-between text-blue-700 hover:bg-blue-50 border-b border-gray-100"
+                    >
+                        <span class="truncate flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+                            </svg>
+                            {{ t('graphics.fonts.loadFont', { font: searchQuery.trim() }) }}
+                        </span>
+                        <span v-if="isLoadingCustomFont" class="ml-2">
+                            <svg class="w-3 h-3 animate-spin text-blue-400" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                        </span>
+                    </button>
+                    <div v-if="customFontError" class="px-3 py-1.5 text-xs text-red-600 bg-red-50">
+                        {{ customFontError }}
+                    </div>
+                </template>
+
                 <template v-for="(group, groupIndex) in filteredFonts" :key="groupIndex">
                     <div class="px-2 py-1 bg-gray-50 text-[10px] font-medium text-gray-500 uppercase tracking-wider sticky top-0">
                         {{ group.label }}

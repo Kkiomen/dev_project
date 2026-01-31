@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 // Google Fonts API key (free tier)
 const GOOGLE_FONTS_API_URL = 'https://fonts.googleapis.com/css2';
 
-// Popular fonts list (curated for better UX)
+// Popular fonts list (curated for better UX in font picker)
 const POPULAR_FONTS = [
     'Roboto',
     'Open Sans',
@@ -45,6 +45,17 @@ const POPULAR_FONTS = [
     'Bangers',
     'Fredoka One',
     'Bungee',
+    // Additional popular fonts for broader coverage
+    'M PLUS Rounded 1c',
+    'M PLUS 1p',
+    'Noto Sans JP',
+    'Noto Serif JP',
+    'DM Sans',
+    'Space Grotesk',
+    'Plus Jakarta Sans',
+    'Outfit',
+    'Sora',
+    'Figtree',
 ];
 
 // System fonts fallback
@@ -59,17 +70,37 @@ const SYSTEM_FONTS = [
     'Comic Sans MS',
 ];
 
+// Default fallback font when a font cannot be loaded
+const DEFAULT_FALLBACK_FONT = 'Montserrat';
+
 // State
 const loadedFonts = ref(new Set(SYSTEM_FONTS));
 const loadingFonts = ref(new Set());
+const failedFonts = ref(new Set()); // Track fonts that failed to load
 
 /**
- * Load a Google Font dynamically
+ * Load a Google Font dynamically.
+ * Unlike before, this now attempts to load ANY font from Google Fonts,
+ * not just fonts from a predefined list (like Photopea does).
+ *
+ * @param {string} fontFamily - The font family name to load
+ * @param {string[]} weights - Font weights to load (default: ['400', '700'])
+ * @returns {Promise<boolean>} - True if font loaded successfully, false otherwise
  */
 const loadFont = async (fontFamily, weights = ['400', '700']) => {
+    // Skip empty or invalid font names
+    if (!fontFamily || typeof fontFamily !== 'string') {
+        return false;
+    }
+
     // Already loaded
     if (loadedFonts.value.has(fontFamily)) {
         return true;
+    }
+
+    // Previously failed to load - don't retry
+    if (failedFonts.value.has(fontFamily)) {
+        return false;
     }
 
     // System font - already available
@@ -78,15 +109,24 @@ const loadFont = async (fontFamily, weights = ['400', '700']) => {
         return true;
     }
 
-    // Currently loading
+    // Currently loading - wait for it
     if (loadingFonts.value.has(fontFamily)) {
         return new Promise((resolve) => {
             const checkLoaded = setInterval(() => {
                 if (loadedFonts.value.has(fontFamily)) {
                     clearInterval(checkLoaded);
                     resolve(true);
+                } else if (failedFonts.value.has(fontFamily)) {
+                    clearInterval(checkLoaded);
+                    resolve(false);
                 }
             }, 100);
+
+            // Timeout after 10 seconds
+            setTimeout(() => {
+                clearInterval(checkLoaded);
+                resolve(false);
+            }, 10000);
         });
     }
 
@@ -110,7 +150,7 @@ const loadFont = async (fontFamily, weights = ['400', '700']) => {
         link.rel = 'stylesheet';
         link.href = fontUrl;
 
-        return new Promise((resolve, reject) => {
+        return new Promise((resolve) => {
             link.onload = () => {
                 loadedFonts.value.add(fontFamily);
                 loadingFonts.value.delete(fontFamily);
@@ -118,15 +158,51 @@ const loadFont = async (fontFamily, weights = ['400', '700']) => {
             };
             link.onerror = () => {
                 loadingFonts.value.delete(fontFamily);
-                reject(new Error(`Failed to load font: ${fontFamily}`));
+                failedFonts.value.add(fontFamily);
+                console.warn(`Font "${fontFamily}" not available on Google Fonts. Using fallback.`);
+                resolve(false);
             };
             document.head.appendChild(link);
         });
     } catch (error) {
         loadingFonts.value.delete(fontFamily);
-        console.error('Error loading font:', error);
+        failedFonts.value.add(fontFamily);
+        console.warn(`Error loading font "${fontFamily}":`, error.message);
         return false;
     }
+};
+
+/**
+ * Try to load a font with automatic fallback.
+ * If the primary font fails, loads the fallback font instead.
+ *
+ * @param {string} fontFamily - The font family name to load
+ * @param {string} fallbackFont - Fallback font if primary fails (default: Montserrat)
+ * @returns {Promise<string>} - The font family that was successfully loaded
+ */
+const loadFontWithFallback = async (fontFamily, fallbackFont = DEFAULT_FALLBACK_FONT) => {
+    const success = await loadFont(fontFamily);
+    if (success) {
+        return fontFamily;
+    }
+
+    // Try fallback
+    await loadFont(fallbackFont);
+    return fallbackFont;
+};
+
+/**
+ * Check if a font is available (loaded or system font)
+ */
+const isFontAvailable = (fontFamily) => {
+    return loadedFonts.value.has(fontFamily) || SYSTEM_FONTS.includes(fontFamily);
+};
+
+/**
+ * Check if a font failed to load
+ */
+const isFontFailed = (fontFamily) => {
+    return failedFonts.value.has(fontFamily);
 };
 
 /**
@@ -171,13 +247,18 @@ export function useGoogleFonts() {
     return {
         loadFont,
         loadFonts,
+        loadFontWithFallback,
         isFontLoaded,
         isFontLoading,
+        isFontAvailable,
+        isFontFailed,
         getAllFonts,
         searchFonts,
         loadedFonts: computed(() => loadedFonts.value),
         loadingFonts: computed(() => loadingFonts.value),
+        failedFonts: computed(() => failedFonts.value),
         popularFonts: POPULAR_FONTS,
         systemFonts: SYSTEM_FONTS,
+        defaultFallbackFont: DEFAULT_FALLBACK_FONT,
     };
 }
