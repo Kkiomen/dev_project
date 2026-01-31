@@ -11,7 +11,7 @@ class TemplateContextService
      */
     public function getTemplateAsJson(Template $template): array
     {
-        $template->load(['layers', 'fonts']);
+        $template->load(['layers.parent', 'fonts']);
 
         return [
             'id' => $template->public_id,
@@ -44,7 +44,7 @@ class TemplateContextService
      */
     public function getSimplifiedContext(Template $template): string
     {
-        $template->load('layers');
+        $template->load('layers.parent');
 
         $context = "Template: {$template->name}\n";
         $context .= "Dimensions: {$template->width}x{$template->height}px\n";

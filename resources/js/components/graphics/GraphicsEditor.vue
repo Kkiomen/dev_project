@@ -1,5 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, onUnmounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import axios from 'axios';
 import { useGraphicsStore } from '@/stores/graphics';
@@ -11,10 +12,12 @@ import PropertiesPanel from './PropertiesPanel.vue';
 import AiChatPanel from './AiChatPanel.vue';
 import ExportModal from './modals/ExportModal.vue';
 import FontUploadModal from './modals/FontUploadModal.vue';
+import PsdUploadModal from './modals/PsdUploadModal.vue';
 import TemplateLibraryModal from './TemplateLibraryModal.vue';
 import AddToLibraryModal from './AddToLibraryModal.vue';
 
 const { t } = useI18n();
+const router = useRouter();
 const { loadFont } = useGoogleFonts();
 
 const props = defineProps({
@@ -33,6 +36,7 @@ const showExportModal = ref(false);
 const showFontModal = ref(false);
 const showLibraryModal = ref(false);
 const showAddToLibraryModal = ref(false);
+const showPsdUploadModal = ref(false);
 
 // Resizable panel
 const DEFAULT_PANEL_WIDTH = 384; // w-96 = 24rem = 384px
@@ -66,7 +70,7 @@ const stopResize = () => {
 const handleTemplateCopied = (newTemplate) => {
     showLibraryModal.value = false;
     // Redirect to the new template
-    window.location.href = `/graphics/${newTemplate.id}`;
+    router.push({ name: 'template.editor', params: { templateId: newTemplate.id } });
 };
 
 const handleAppliedToCurrent = (updatedTemplate) => {
@@ -78,6 +82,12 @@ const handleAppliedToCurrent = (updatedTemplate) => {
 const handleAddedToLibrary = (template) => {
     showAddToLibraryModal.value = false;
     // Optionally refresh template data
+};
+
+const handlePsdImported = (newTemplate) => {
+    showPsdUploadModal.value = false;
+    // Navigate to the new template
+    router.push({ name: 'template.editor', params: { templateId: newTemplate.id } });
 };
 
 const handleUnlinkFromLibrary = async () => {
@@ -275,6 +285,7 @@ const handleOpenFonts = () => {
             @add-to-library="showAddToLibraryModal = true"
             @unlink-from-library="handleUnlinkFromLibrary"
             @fit-to-view="canvasRef?.fitToView?.()"
+            @import-psd="showPsdUploadModal = true"
         />
 
         <!-- Main content -->
@@ -351,6 +362,13 @@ const handleOpenFonts = () => {
             :canvas-ref="canvasRef"
             @close="showAddToLibraryModal = false"
             @added="handleAddedToLibrary"
+        />
+
+        <!-- PSD Upload modal (admin only) -->
+        <PsdUploadModal
+            :show="showPsdUploadModal"
+            @close="showPsdUploadModal = false"
+            @imported="handlePsdImported"
         />
     </div>
 </template>

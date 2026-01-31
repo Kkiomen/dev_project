@@ -914,6 +914,28 @@
             "removed": "Template removed from library",
             "confirmRemove": "Remove this template from the library? The template will remain in your collection.",
             "adminOnly": "Admin only"
+        },
+        "psd": {
+            "uploadButton": "Import PSD",
+            "uploadTitle": "Import PSD File",
+            "selectFile": "Select file",
+            "orDragDrop": "or drag and drop",
+            "maxSize": "Maximum size: 100MB",
+            "processing": "Processing PSD file...",
+            "analyzing": "Analyzing structure...",
+            "import": "Import",
+            "addToLibrary": "Add to template library",
+            "dimensions": "Dimensions",
+            "layersToImport": "Layers to import",
+            "hiddenLayersInfo": "Only visible layers from visible groups will be imported",
+            "errors": {
+                "invalidFormat": "File must be in PSD format",
+                "fileTooLarge": "File is too large (max 100MB)",
+                "uploadFailed": "Failed to import PSD file",
+                "analyzeFailed": "Failed to analyze PSD file",
+                "noFile": "No file selected",
+                "parseFailed": "Failed to parse PSD file"
+            }
         }
     },
     "calendar": {

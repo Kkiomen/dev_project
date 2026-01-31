@@ -1,0 +1,326 @@
+<?php
+
+namespace App\Services;
+
+use App\Enums\LayerType;
+use App\Models\Layer;
+use App\Models\Template;
+use App\Models\TemplateFont;
+use App\Models\User;
+use Exception;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+
+class PsdImportService
+{
+    protected string $baseUrl;
+    protected int $timeout;
+
+    public function __construct()
+    {
+        $this->baseUrl = config('services.psd_parser.url', 'http://psd-parser:3335');
+        $this->timeout = config('services.psd_parser.timeout', 120);
+    }
+
+    /**
+     * Import a PSD file and create a template with layers.
+     *
+     * @param UploadedFile $file The PSD file
+     * @param User $user The user who owns the template
+     * @param string|null $name Optional template name
+     * @param bool $addToLibrary Whether to add the template to the library
+     * @return Template
+     * @throws Exception
+     */
+    public function import(UploadedFile $file, User $user, ?string $name = null, bool $addToLibrary = false): Template
+    {
+        // Parse the PSD file using Python service
+        $parsedData = $this->parseWithPythonService($file);
+
+        // Use transaction for atomic creation
+        return DB::transaction(function () use ($parsedData, $user, $name, $addToLibrary, $file) {
+            // Create the template
+            $template = $this->createTemplate($parsedData, $user, $name ?? $this->generateTemplateName($file));
+
+            // Set library flag if requested
+            if ($addToLibrary) {
+                $template->is_library = true;
+                $template->save();
+            }
+
+            // Create layers
+            $this->createLayers($template, $parsedData['layers'], $parsedData['images'] ?? []);
+
+            // Create fonts
+            $this->createFonts($template, $parsedData['fonts'] ?? []);
+
+            return $template->load('layers.parent', 'fonts');
+        });
+    }
+
+    /**
+     * Send PSD file to Python parser service.
+     *
+     * @param UploadedFile $file
+     * @return array
+     * @throws Exception
+     */
+    public function parseWithPythonService(UploadedFile $file): array
+    {
+        $response = Http::timeout($this->timeout)
+            ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
+            ->post("{$this->baseUrl}/parse");
+
+        if ($response->failed()) {
+            $error = $response->json();
+            $message = $error['error'] ?? $response->body();
+            Log::error('PSD parsing failed', ['error' => $message]);
+            throw new Exception(__('graphics.psd.errors.parseFailed') . ': ' . $message);
+        }
+
+        $data = $response->json();
+
+        // Log warnings if any
+        if (!empty($data['warnings'])) {
+            Log::info('PSD import warnings', ['warnings' => $data['warnings']]);
+        }
+
+        return $data;
+    }
+
+    /**
+     * Create a template from parsed PSD data.
+     *
+     * @param array $data
+     * @param User $user
+     * @param string $name
+     * @return Template
+     */
+    protected function createTemplate(array $data, User $user, string $name): Template
+    {
+        return Template::create([
+            'user_id' => $user->id,
+            'name' => $name,
+            'width' => $data['width'],
+            'height' => $data['height'],
+            'background_color' => $data['background_color'] ?? '#FFFFFF',
+            'settings' => [
+                'imported_from' => 'psd',
+                'warnings' => $data['warnings'] ?? [],
+            ],
+        ]);
+    }
+
+    /**
+     * Create layers for a template (with hierarchy support).
+     *
+     * @param Template $template
+     * @param array $layers
+     * @param array $images
+     */
+    protected function createLayers(Template $template, array $layers, array $images): void
+    {
+        // Index images by layer_index for quick lookup
+        $imagesByLayerIndex = collect($images)->keyBy('layer_index')->all();
+
+        Log::info('PSD Import: Creating layers', [
+            'template_id' => $template->id,
+            'layer_count' => count($layers),
+            'image_count' => count($images),
+        ]);
+
+        // Recursively create layers with parent-child relationships
+        $this->createLayersRecursive($template, $layers, $imagesByLayerIndex, null);
+    }
+
+    /**
+     * Recursively create layers with hierarchy.
+     *
+     * @param Template $template
+     * @param array $layers
+     * @param array $imagesByLayerIndex
+     * @param int|null $parentId
+     */
+    protected function createLayersRecursive(
+        Template $template,
+        array $layers,
+        array $imagesByLayerIndex,
+        ?int $parentId
+    ): void {
+        foreach ($layers as $layerData) {
+            // Map type string to enum
+            $layerType = $this->mapLayerType($layerData['type']);
+            if (!$layerType) {
+                continue;
+            }
+
+            // Handle image layers - save image and update src
+            $properties = $layerData['properties'] ?? [];
+            if ($layerType === LayerType::IMAGE && isset($layerData['image_id'])) {
+                $layerIndex = $layerData['position'];
+                if (isset($imagesByLayerIndex[$layerIndex])) {
+                    $imageData = $imagesByLayerIndex[$layerIndex];
+                    $savedPath = $this->saveImage($imageData['data'], $template->id);
+                    if ($savedPath) {
+                        $properties['src'] = $savedPath;
+                    }
+                }
+            }
+
+            // Create the layer
+            $layer = $template->layers()->create([
+                'parent_id' => $parentId,
+                'name' => $layerData['name'],
+                'type' => $layerType,
+                'position' => $layerData['position'],
+                'visible' => $layerData['visible'] ?? true,
+                'locked' => $layerData['locked'] ?? false,
+                'x' => $layerData['x'] ?? 0,
+                'y' => $layerData['y'] ?? 0,
+                'width' => $layerData['width'] ?? 100,
+                'height' => $layerData['height'] ?? 100,
+                'rotation' => $layerData['rotation'] ?? 0,
+                'scale_x' => $layerData['scale_x'] ?? 1,
+                'scale_y' => $layerData['scale_y'] ?? 1,
+                'properties' => $properties,
+            ]);
+
+            // If this is a group, recursively create children
+            if ($layerType === LayerType::GROUP && !empty($layerData['children'])) {
+                $this->createLayersRecursive($template, $layerData['children'], $imagesByLayerIndex, $layer->id);
+            }
+        }
+    }
+
+    /**
+     * Create font records for a template.
+     *
+     * @param Template $template
+     * @param array $fonts
+     */
+    protected function createFonts(Template $template, array $fonts): void
+    {
+        foreach ($fonts as $fontData) {
+            // Check if font already exists for this template
+            $exists = $template->fonts()
+                ->where('font_family', $fontData['fontFamily'])
+                ->where('font_weight', $fontData['fontWeight'] ?? 'normal')
+                ->where('font_style', $fontData['fontStyle'] ?? 'normal')
+                ->exists();
+
+            if (!$exists) {
+                $template->fonts()->create([
+                    'font_family' => $fontData['fontFamily'],
+                    'font_file' => '', // Empty for Google Fonts - loaded via URL
+                    'font_weight' => $fontData['fontWeight'] ?? 'normal',
+                    'font_style' => $fontData['fontStyle'] ?? 'normal',
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Save a base64 image to storage.
+     *
+     * @param string $base64Data
+     * @param int $templateId
+     * @return string|null The storage path or null on failure
+     */
+    protected function saveImage(string $base64Data, int $templateId): ?string
+    {
+        try {
+            // Extract actual base64 data (remove data:image/png;base64, prefix)
+            $data = $base64Data;
+            if (str_contains($base64Data, ',')) {
+                $data = explode(',', $base64Data, 2)[1];
+            }
+
+            $imageData = base64_decode($data);
+            if ($imageData === false) {
+                return null;
+            }
+
+            // Generate unique filename
+            $filename = 'psd-imports/' . $templateId . '/' . Str::uuid() . '.png';
+
+            // Save to storage
+            Storage::disk('public')->put($filename, $imageData);
+
+            return '/storage/' . $filename;
+        } catch (Exception $e) {
+            Log::error('Failed to save PSD image', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
+     * Map PSD layer type string to LayerType enum.
+     *
+     * @param string $type
+     * @return LayerType|null
+     */
+    protected function mapLayerType(string $type): ?LayerType
+    {
+        return match ($type) {
+            'text' => LayerType::TEXT,
+            'image' => LayerType::IMAGE,
+            'rectangle' => LayerType::RECTANGLE,
+            'ellipse' => LayerType::ELLIPSE,
+            'group' => LayerType::GROUP,
+            default => null,
+        };
+    }
+
+    /**
+     * Generate template name from file.
+     *
+     * @param UploadedFile $file
+     * @return string
+     */
+    protected function generateTemplateName(UploadedFile $file): string
+    {
+        $name = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
+        return Str::title(str_replace(['_', '-'], ' ', $name));
+    }
+
+    /**
+     * Check if the PSD parser service is healthy.
+     *
+     * @return bool
+     */
+    public function isHealthy(): bool
+    {
+        try {
+            $response = Http::timeout(5)->get("{$this->baseUrl}/health");
+            return $response->successful() && $response->json('status') === 'ok';
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    /**
+     * Analyze a PSD file structure without importing.
+     *
+     * @param UploadedFile $file
+     * @return array
+     * @throws Exception
+     */
+    public function analyze(UploadedFile $file): array
+    {
+        $response = Http::timeout($this->timeout)
+            ->attach('file', file_get_contents($file->getRealPath()), $file->getClientOriginalName())
+            ->post("{$this->baseUrl}/analyze");
+
+        if ($response->failed()) {
+            $error = $response->json();
+            $message = $error['error'] ?? $response->body();
+            throw new Exception(__('graphics.psd.errors.analyzeFailed') . ': ' . $message);
+        }
+
+        return $response->json();
+    }
+}

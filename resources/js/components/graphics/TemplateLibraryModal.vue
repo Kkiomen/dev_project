@@ -1,9 +1,11 @@
 <script setup>
 import { ref, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import axios from 'axios';
 import Button from '@/components/common/Button.vue';
+import PsdUploadModal from './modals/PsdUploadModal.vue';
 
 const props = defineProps({
     show: {
@@ -19,6 +21,7 @@ const props = defineProps({
 const emit = defineEmits(['close', 'template-copied', 'applied-to-current']);
 
 const { t } = useI18n();
+const router = useRouter();
 const authStore = useAuthStore();
 
 const loading = ref(false);
@@ -26,6 +29,13 @@ const templates = ref([]);
 const copying = ref(null);
 const applying = ref(null);
 const deleting = ref(null);
+const showPsdUploadModal = ref(false);
+
+const handlePsdImported = (newTemplate) => {
+    showPsdUploadModal.value = false;
+    // Navigate to the new template
+    router.push({ name: 'template.editor', params: { templateId: newTemplate.id } });
+};
 
 const fetchLibrary = async () => {
     loading.value = true;
@@ -120,14 +130,28 @@ watch(() => props.show, (newVal) => {
                         <h2 class="text-lg font-semibold text-gray-900">
                             {{ t('graphics.library.title') }}
                         </h2>
-                        <button
-                            @click="$emit('close')"
-                            class="text-gray-400 hover:text-gray-600"
-                        >
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                            </svg>
-                        </button>
+                        <div class="flex items-center gap-3">
+                            <!-- Import PSD button (Admin only) -->
+                            <button
+                                v-if="authStore.isAdmin"
+                                @click="showPsdUploadModal = true"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-all"
+                                :title="t('graphics.psd.uploadButton')"
+                            >
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <span>{{ t('graphics.psd.uploadButton') }}</span>
+                            </button>
+                            <button
+                                @click="$emit('close')"
+                                class="text-gray-400 hover:text-gray-600"
+                            >
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Content -->
@@ -221,6 +245,13 @@ watch(() => props.show, (newVal) => {
                     </div>
                 </div>
             </div>
+
+            <!-- PSD Upload modal (admin only) -->
+            <PsdUploadModal
+                :show="showPsdUploadModal"
+                @close="showPsdUploadModal = false"
+                @imported="handlePsdImported"
+            />
         </div>
     </Teleport>
 </template>

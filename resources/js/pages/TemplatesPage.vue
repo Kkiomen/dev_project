@@ -3,14 +3,18 @@ import { ref, onMounted } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useGraphicsStore } from '@/stores/graphics';
+import { useAuthStore } from '@/stores/auth';
 import { useConfirm } from '@/composables/useConfirm';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import Button from '@/components/common/Button.vue';
+import TemplateLibraryModal from '@/components/graphics/TemplateLibraryModal.vue';
+import PsdUploadModal from '@/components/graphics/modals/PsdUploadModal.vue';
 
 const { t } = useI18n();
 
 const router = useRouter();
 const graphicsStore = useGraphicsStore();
+const authStore = useAuthStore();
 const { confirm } = useConfirm();
 
 const loading = ref(true);

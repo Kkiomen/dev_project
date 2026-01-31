@@ -12,6 +12,7 @@ class LayerResource extends JsonResource
         return [
             'id' => $this->public_id,
             'template_id' => $this->template->public_id,
+            'parent_id' => $this->parent?->public_id,
             'layer_key' => $this->layer_key,
             'name' => $this->name,
             'type' => $this->type->value,

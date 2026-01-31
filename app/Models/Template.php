@@ -80,7 +80,7 @@ class Template extends Model
     // Scopes
     public function scopeWithLayers($query)
     {
-        return $query->with('layers');
+        return $query->with('layers.parent');
     }
 
     public function scopeWithFonts($query)
@@ -114,11 +114,8 @@ class Template extends Model
         $newTemplate->thumbnail_path = null;
         $newTemplate->save();
 
-        foreach ($this->layers as $layer) {
-            $newLayer = $layer->replicate(['public_id']);
-            $newLayer->template_id = $newTemplate->id;
-            $newLayer->save();
-        }
+        // Copy layers with parent_id remapping
+        $this->copyLayersTo($newTemplate);
 
         foreach ($this->fonts as $font) {
             $newFont = $font->replicate();
@@ -126,7 +123,7 @@ class Template extends Model
             $newFont->save();
         }
 
-        return $newTemplate->load('layers', 'fonts');
+        return $newTemplate->load('layers.parent', 'fonts');
     }
 
     /**
@@ -141,11 +138,8 @@ class Template extends Model
         $newTemplate->thumbnail_path = null;
         $newTemplate->save();
 
-        foreach ($this->layers as $layer) {
-            $newLayer = $layer->replicate(['public_id']);
-            $newLayer->template_id = $newTemplate->id;
-            $newLayer->save();
-        }
+        // Copy layers with parent_id remapping
+        $this->copyLayersTo($newTemplate);
 
         foreach ($this->fonts as $font) {
             $newFont = $font->replicate();
@@ -153,7 +147,7 @@ class Template extends Model
             $newFont->save();
         }
 
-        return $newTemplate->load('layers', 'fonts');
+        return $newTemplate->load('layers.parent', 'fonts');
     }
 
     /**
@@ -169,12 +163,8 @@ class Template extends Model
         $libraryTemplate->thumbnail_path = $thumbnailPath;
         $libraryTemplate->save();
 
-        // Copy all layers
-        foreach ($this->layers as $layer) {
-            $newLayer = $layer->replicate(['public_id']);
-            $newLayer->template_id = $libraryTemplate->id;
-            $newLayer->save();
-        }
+        // Copy layers with parent_id remapping
+        $this->copyLayersTo($libraryTemplate);
 
         // Copy all fonts
         foreach ($this->fonts as $font) {
@@ -183,7 +173,36 @@ class Template extends Model
             $newFont->save();
         }
 
-        return $libraryTemplate->load('layers', 'fonts');
+        return $libraryTemplate->load('layers.parent', 'fonts');
+    }
+
+    /**
+     * Copy all layers to another template with proper parent_id remapping.
+     */
+    protected function copyLayersTo(Template $targetTemplate): void
+    {
+        // Build mapping from old layer ID to new layer ID
+        $idMapping = [];
+
+        // First pass: create all layers without parent_id
+        foreach ($this->layers as $layer) {
+            $newLayer = $layer->replicate(['public_id', 'parent_id']);
+            $newLayer->template_id = $targetTemplate->id;
+            $newLayer->parent_id = null;
+            $newLayer->save();
+
+            $idMapping[$layer->id] = $newLayer->id;
+        }
+
+        // Second pass: update parent_id using the mapping
+        foreach ($this->layers as $layer) {
+            if ($layer->parent_id && isset($idMapping[$layer->parent_id])) {
+                $newLayerId = $idMapping[$layer->id];
+                Layer::where('id', $newLayerId)->update([
+                    'parent_id' => $idMapping[$layer->parent_id],
+                ]);
+            }
+        }
     }
 
     /**

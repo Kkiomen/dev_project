@@ -73,4 +73,9 @@ return [
         'graph_version' => 'v18.0',
     ],
 
+    'psd_parser' => [
+        'url' => env('PSD_PARSER_URL', 'http://psd-parser:3335'),
+        'timeout' => env('PSD_PARSER_TIMEOUT', 120),
+    ],
+
 ];

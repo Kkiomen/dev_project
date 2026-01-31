@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\ClientApprovalController;
 use App\Http\Controllers\Api\V1\ContentPlanController;
 use App\Http\Controllers\Api\V1\PostAiController;
+use App\Http\Controllers\Api\V1\PsdImportController;
 use App\Http\Controllers\Api\V1\StockPhotoController;
 use App\Http\Controllers\Api\V1\TableController;
 use App\Http\Controllers\Api\V1\FieldController;
@@ -253,6 +254,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('templates/{template}/remove-from-library', [TemplateLibraryController::class, 'removeFromLibrary']);
         Route::post('templates/{template}/unlink-from-library', [TemplateLibraryController::class, 'unlinkFromLibrary']);
         Route::delete('library/templates/{template}', [TemplateLibraryController::class, 'destroy']);
+
+        // === PSD IMPORT ===
+        Route::prefix('psd')->group(function () {
+            Route::post('import', [PsdImportController::class, 'import']);
+            Route::post('analyze', [PsdImportController::class, 'analyze']);
+            Route::get('health', [PsdImportController::class, 'health']);
+        });
     });
 
     // === SOCIAL POSTS ===

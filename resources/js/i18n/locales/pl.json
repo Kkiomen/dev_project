@@ -915,6 +915,28 @@
             "removed": "Szablon usunięty z biblioteki",
             "confirmRemove": "Usunąć ten szablon z biblioteki? Szablon pozostanie w Twojej kolekcji.",
             "adminOnly": "Tylko administrator"
+        },
+        "psd": {
+            "uploadButton": "Import PSD",
+            "uploadTitle": "Importuj plik PSD",
+            "selectFile": "Wybierz plik",
+            "orDragDrop": "lub przeciągnij i upuść",
+            "maxSize": "Maksymalny rozmiar: 100MB",
+            "processing": "Przetwarzanie pliku PSD...",
+            "analyzing": "Analizowanie struktury...",
+            "import": "Importuj",
+            "addToLibrary": "Dodaj do biblioteki szablonów",
+            "dimensions": "Wymiary",
+            "layersToImport": "Warstw do importu",
+            "hiddenLayersInfo": "Tylko widoczne warstwy z widocznych grup zostaną zaimportowane",
+            "errors": {
+                "invalidFormat": "Plik musi być w formacie PSD",
+                "fileTooLarge": "Plik jest zbyt duży (max 100MB)",
+                "uploadFailed": "Nie udało się zaimportować pliku PSD",
+                "analyzeFailed": "Nie udało się przeanalizować pliku PSD",
+                "noFile": "Nie wybrano pliku",
+                "parseFailed": "Nie udało się przetworzyć pliku PSD"
+            }
         }
     },
     "calendar": {

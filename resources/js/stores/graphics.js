@@ -35,7 +35,73 @@ export const useGraphicsStore = defineStore('graphics', {
 
         hasMultipleSelection: (state) => state.selectedLayerIds.length > 1,
 
+        // Flat sorted layers for canvas rendering
         sortedLayers: (state) => [...state.layers].sort((a, b) => a.position - b.position),
+
+        // Build tree structure from flat layers (for layer panel)
+        layerTree: (state) => {
+            const buildTree = (parentId = null) => {
+                return state.layers
+                    .filter(l => l.parent_id === parentId)
+                    .sort((a, b) => a.position - b.position)
+                    .map(layer => ({
+                        ...layer,
+                        children: layer.type === 'group' ? buildTree(layer.id) : [],
+                    }));
+            };
+            return buildTree();
+        },
+
+        // Get layers for rendering (respecting group visibility)
+        visibleLayers: (state) => {
+            // Build a map of layer visibility based on parent group visibility
+            const visibilityMap = new Map();
+
+            // First pass: determine effective visibility
+            const determineVisibility = (layerId) => {
+                if (visibilityMap.has(layerId)) return visibilityMap.get(layerId);
+
+                const layer = state.layers.find(l => l.id === layerId);
+                if (!layer) return false;
+
+                // If layer itself is not visible, it's not visible
+                if (!layer.visible) {
+                    visibilityMap.set(layerId, false);
+                    return false;
+                }
+
+                // If no parent, visibility is determined by own visible flag
+                if (!layer.parent_id) {
+                    visibilityMap.set(layerId, true);
+                    return true;
+                }
+
+                // Check parent visibility
+                const parentVisible = determineVisibility(layer.parent_id);
+                visibilityMap.set(layerId, parentVisible);
+                return parentVisible;
+            };
+
+            // Determine visibility for all layers
+            state.layers.forEach(l => determineVisibility(l.id));
+
+            // Return layers that are effectively visible and not groups
+            return state.layers
+                .filter(l => l.type !== 'group' && visibilityMap.get(l.id))
+                .sort((a, b) => a.position - b.position);
+        },
+
+        // Check if a layer is effectively visible (considering parent groups)
+        isLayerEffectivelyVisible: (state) => (layerId) => {
+            const checkVisibility = (id) => {
+                const layer = state.layers.find(l => l.id === id);
+                if (!layer) return false;
+                if (!layer.visible) return false;
+                if (!layer.parent_id) return true;
+                return checkVisibility(layer.parent_id);
+            };
+            return checkVisibility(layerId);
+        },
 
         canUndo: (state) => state.historyIndex > 0,
 
@@ -474,6 +540,40 @@ export const useGraphicsStore = defineStore('graphics', {
             if (!layer) return;
             const newY = this.currentTemplate.height - (layer.height || 0);
             this.updateLayerLocally(this.selectedLayerId, { y: newY });
+        },
+
+        // Group actions
+        toggleGroupExpanded(groupId) {
+            const index = this.layers.findIndex(l => l.id === groupId);
+            if (index !== -1 && this.layers[index].type === 'group') {
+                const layer = this.layers[index];
+                const expanded = !(layer.properties?.expanded ?? true);
+                this.layers.splice(index, 1, {
+                    ...layer,
+                    properties: {
+                        ...layer.properties,
+                        expanded,
+                    },
+                });
+            }
+        },
+
+        isGroupExpanded(groupId) {
+            const layer = this.layers.find(l => l.id === groupId);
+            return layer?.properties?.expanded ?? true;
+        },
+
+        // Toggle visibility of a layer (including groups)
+        toggleLayerVisibility(layerId) {
+            const index = this.layers.findIndex(l => l.id === layerId);
+            if (index !== -1) {
+                const layer = this.layers[index];
+                this.layers.splice(index, 1, {
+                    ...layer,
+                    visible: !layer.visible,
+                });
+                this.isDirty = true;
+            }
         },
 
         // Tools

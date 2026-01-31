@@ -67,7 +67,7 @@ class TemplateController extends Controller
     {
         $this->authorize('view', $template);
 
-        $template->load(['layers', 'fonts']);
+        $template->load(['layers.parent', 'fonts']);
 
         return new TemplateResource($template);
     }
@@ -171,7 +171,7 @@ class TemplateController extends Controller
     {
         $this->authorize('view', $template);
 
-        $template->load(['layers', 'fonts']);
+        $template->load(['layers.parent', 'fonts']);
 
         $modifications = $request->input('modifications', []);
         $format = $request->input('format', 'png');

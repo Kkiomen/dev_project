@@ -8,6 +8,7 @@ return [
         'rectangle' => 'Prostokąt',
         'ellipse' => 'Elipsa',
         'line' => 'Linia',
+        'group' => 'Grupa',
     ],
 
     'templates' => [
@@ -109,6 +110,14 @@ return [
             'layerAdded' => 'Nowa warstwa ":name" dodana',
             'layerDeleted' => 'Warstwa ":name" usunięta',
             'templateUpdated' => 'Szablon zaktualizowany',
+        ],
+    ],
+
+    'psd' => [
+        'errors' => [
+            'uploadFailed' => 'Nie udało się zaimportować pliku PSD',
+            'analyzeFailed' => 'Nie udało się przeanalizować pliku PSD',
+            'parseFailed' => 'Nie udało się przetworzyć pliku PSD',
         ],
     ],
 ];

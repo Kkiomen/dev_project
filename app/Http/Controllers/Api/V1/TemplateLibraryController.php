@@ -62,11 +62,26 @@ class TemplateLibraryController extends Controller
         // Delete existing layers from target template
         $targetTemplate->layers()->delete();
 
-        // Copy layers from library template to target
+        // Copy layers from library template with parent_id remapping
+        $idMapping = [];
+
+        // First pass: create all layers without parent_id
         foreach ($libraryTemplate->layers as $layer) {
-            $newLayer = $layer->replicate(['public_id']);
+            $newLayer = $layer->replicate(['public_id', 'parent_id']);
             $newLayer->template_id = $targetTemplate->id;
+            $newLayer->parent_id = null;
             $newLayer->save();
+
+            $idMapping[$layer->id] = $newLayer->id;
+        }
+
+        // Second pass: update parent_id using the mapping
+        foreach ($libraryTemplate->layers as $layer) {
+            if ($layer->parent_id && isset($idMapping[$layer->parent_id])) {
+                \App\Models\Layer::where('id', $idMapping[$layer->id])->update([
+                    'parent_id' => $idMapping[$layer->parent_id],
+                ]);
+            }
         }
 
         // Update template settings (dimensions, background) from library template
@@ -77,7 +92,7 @@ class TemplateLibraryController extends Controller
             'background_image' => $libraryTemplate->background_image,
         ]);
 
-        return new TemplateResource($targetTemplate->fresh()->load('layers', 'fonts'));
+        return new TemplateResource($targetTemplate->fresh()->load('layers.parent', 'fonts'));
     }
 
     /**

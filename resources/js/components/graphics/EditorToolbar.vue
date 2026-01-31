@@ -15,7 +15,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at', 'open-library', 'add-to-library', 'unlink-from-library', 'fit-to-view']);
+const emit = defineEmits(['save', 'export', 'open-fonts', 'toggle-layers', 'toggle-properties', 'add-layer-at', 'open-library', 'add-to-library', 'unlink-from-library', 'fit-to-view', 'import-psd']);
 
 const authStore = useAuthStore();
 
@@ -358,6 +358,19 @@ const handleBack = () => {
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"/>
                 </svg>
                 <span>{{ t('graphics.library.titleShort') }}</span>
+            </button>
+
+            <!-- Import PSD (Admin only) -->
+            <button
+                v-if="authStore.isAdmin"
+                @click="$emit('import-psd')"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-medium text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-all"
+                :title="t('graphics.psd.uploadButton')"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <span>PSD</span>
             </button>
 
             <!-- Add to Library (Admin only) - creates a copy -->

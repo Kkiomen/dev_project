@@ -1605,16 +1605,22 @@ watch(() => {
     textareaRef.value.style.lineHeight = String(newProps.lineHeight || 1.2);
 }, { deep: true });
 
-// Layer images loading
+// Layer images loading with error tracking
 const layerImages = ref({});
+const imageLoadErrors = ref({});
 watch(() => graphicsStore.layers, (layers) => {
     layers.forEach(layer => {
-        if (layer.type === 'image' && layer.properties?.src && !layerImages.value[layer.id]) {
+        if (layer.type === 'image' && layer.properties?.src && !layerImages.value[layer.id] && !imageLoadErrors.value[layer.id]) {
             const img = new window.Image();
             img.crossOrigin = 'anonymous'; // Enable CORS for export
             img.src = layer.properties.src;
             img.onload = () => {
                 layerImages.value[layer.id] = img;
+                delete imageLoadErrors.value[layer.id];
+            };
+            img.onerror = (e) => {
+                console.error(`Failed to load image for layer ${layer.id}:`, layer.properties.src, e);
+                imageLoadErrors.value[layer.id] = true;
             };
         }
     });
@@ -1781,7 +1787,7 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
 
             <!-- Content layer -->
             <v-layer :config="{ scaleX: graphicsStore.zoom, scaleY: graphicsStore.zoom }">
-                <template v-for="layer in graphicsStore.sortedLayers" :key="layer.id">
+                <template v-for="layer in graphicsStore.visibleLayers" :key="layer.id">
                     <!-- Text -->
                     <v-text
                         v-if="layer.type === 'text'"
@@ -1819,7 +1825,7 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                         @transformend="(e) => handleTransformEnd(e, layer)"
                     />
 
-                    <!-- Image -->
+                    <!-- Image (loaded) -->
                     <v-image
                         v-else-if="layer.type === 'image' && layerImages[layer.id]"
                         :config="{
@@ -1833,6 +1839,48 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                         @transform="(e) => handleTransform(e, layer)"
                         @transformend="(e) => handleTransformEnd(e, layer)"
                     />
+
+                    <!-- Image placeholder (loading or error) -->
+                    <v-group
+                        v-else-if="layer.type === 'image' && !layerImages[layer.id]"
+                        :config="{
+                            id: layer.id,
+                            x: layer.x,
+                            y: layer.y,
+                            rotation: layer.rotation,
+                            scaleX: layer.scale_x,
+                            scaleY: layer.scale_y,
+                            draggable: !layer.locked,
+                            visible: layer.visible,
+                        }"
+                        @click="(e) => handleShapeClick(e, layer)"
+                        @contextmenu="(e) => handleContextMenu(e, layer)"
+                        @dragmove="(e) => handleDragMove(e, layer)"
+                        @dragend="(e) => handleDragEnd(e, layer)"
+                        @transform="(e) => handleTransform(e, layer)"
+                        @transformend="(e) => handleTransformEnd(e, layer)"
+                    >
+                        <v-rect
+                            :config="{
+                                width: layer.width || 100,
+                                height: layer.height || 100,
+                                fill: imageLoadErrors[layer.id] ? '#ffcccc' : '#f3f4f6',
+                                stroke: imageLoadErrors[layer.id] ? '#ef4444' : '#d1d5db',
+                                strokeWidth: 1,
+                            }"
+                        />
+                        <v-text
+                            :config="{
+                                text: imageLoadErrors[layer.id] ? '!' : '...',
+                                width: layer.width || 100,
+                                height: layer.height || 100,
+                                align: 'center',
+                                verticalAlign: 'middle',
+                                fontSize: 24,
+                                fill: imageLoadErrors[layer.id] ? '#ef4444' : '#9ca3af',
+                            }"
+                        />
+                    </v-group>
 
                     <!-- Line -->
                     <v-line

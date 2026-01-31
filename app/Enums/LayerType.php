@@ -10,6 +10,7 @@ enum LayerType: string
     case RECTANGLE = 'rectangle';
     case ELLIPSE = 'ellipse';
     case LINE = 'line';
+    case GROUP = 'group';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum LayerType: string
             self::RECTANGLE => __('graphics.layer_types.rectangle'),
             self::ELLIPSE => __('graphics.layer_types.ellipse'),
             self::LINE => __('graphics.layer_types.line'),
+            self::GROUP => __('graphics.layer_types.group'),
         };
     }
 
@@ -32,6 +34,7 @@ enum LayerType: string
             self::RECTANGLE => 'square',
             self::ELLIPSE => 'circle',
             self::LINE => 'line',
+            self::GROUP => 'folder',
         };
     }
 
@@ -87,6 +90,9 @@ enum LayerType: string
                 'lineCap' => 'round',
                 'lineJoin' => 'round',
                 'dash' => [],
+            ],
+            self::GROUP => [
+                'expanded' => true,
             ],
         };
     }

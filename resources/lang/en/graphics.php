@@ -8,6 +8,7 @@ return [
         'rectangle' => 'Rectangle',
         'ellipse' => 'Ellipse',
         'line' => 'Line',
+        'group' => 'Group',
     ],
 
     'templates' => [
@@ -109,6 +110,14 @@ return [
             'layerAdded' => 'New layer ":name" added',
             'layerDeleted' => 'Layer ":name" deleted',
             'templateUpdated' => 'Template updated',
+        ],
+    ],
+
+    'psd' => [
+        'errors' => [
+            'uploadFailed' => 'Failed to import PSD file',
+            'analyzeFailed' => 'Failed to analyze PSD file',
+            'parseFailed' => 'Failed to parse PSD file',
         ],
     ],
 ];
