@@ -814,7 +814,10 @@
             "replaceImage": "Podmień obraz",
             "imageFit": "Dopasowanie",
             "fitFill": "Wypełnij",
-            "fixedWidth": "Stała szerokość"
+            "fixedWidth": "Stała szerokość",
+            "masked": "Z maską",
+            "removeMask": "Usuń maskę",
+            "maskDescription": "Obraz ma zastosowaną maskę wektorową. Podmiana obrazu zachowa kształt maski."
         },
         "export": {
             "title": "Eksportuj obraz",

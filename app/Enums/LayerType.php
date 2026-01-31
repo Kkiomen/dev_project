@@ -71,6 +71,7 @@ enum LayerType: string
             self::IMAGE => [
                 'src' => null,
                 'fit' => 'cover',
+                'clipPath' => null,
             ],
             self::RECTANGLE => [
                 'fill' => '#CCCCCC',

@@ -7,7 +7,7 @@ from psd_tools.api.layers import TypeLayer, PixelLayer, ShapeLayer, SmartObjectL
 from psd_tools.api.adjustments import SolidColorFill
 
 from .font_matcher import match_font, extract_font_weight, extract_font_style
-from .image_extractor import extract_layer_image, extract_smart_object_image, rgba_to_hex
+from .image_extractor import extract_layer_image, extract_smart_object_image, extract_layer_image_without_mask, rgba_to_hex
 
 
 # Canvas layer types matching LayerType enum
@@ -16,6 +16,447 @@ LAYER_TYPE_IMAGE = "image"
 LAYER_TYPE_RECTANGLE = "rectangle"
 LAYER_TYPE_ELLIPSE = "ellipse"
 LAYER_TYPE_GROUP = "group"
+
+
+def extract_vector_mask(layer, width: float, height: float) -> str | None:
+    """
+    Extract vector mask from a PSD layer and convert to SVG path.
+
+    Args:
+        layer: psd-tools layer object
+        width: layer width in pixels
+        height: layer height in pixels
+
+    Returns:
+        SVG path string (e.g., "M0,50 C... Z") or None if no vector mask
+    """
+    try:
+        if not hasattr(layer, "vector_mask") or not layer.vector_mask:
+            return None
+
+        paths = layer.vector_mask.paths
+        if not paths:
+            return None
+
+        svg_path_parts = []
+
+        for path in paths:
+            if not hasattr(path, "knots"):
+                continue
+
+            knots = list(path.knots)
+            if len(knots) < 2:
+                continue
+
+            # Photoshop stores coordinates as fractions (0.0-1.0) of the layer size
+            # Convert to pixel coordinates
+            path_commands = []
+
+            for i, knot in enumerate(knots):
+                # Knot has: anchor (the point), leaving (control point for next curve),
+                # preceding (control point from previous curve)
+                # Coordinates are stored as (y, x) tuples normalized to 0-1
+                anchor_y, anchor_x = knot.anchor
+                leaving_y, leaving_x = knot.leaving
+                preceding_y, preceding_x = knot.preceding
+
+                # Convert to pixel coordinates
+                ax = anchor_x * width
+                ay = anchor_y * height
+                lx = leaving_x * width
+                ly = leaving_y * height
+                px = preceding_x * width
+                py = preceding_y * height
+
+                if i == 0:
+                    # Move to first point
+                    path_commands.append(f"M{ax:.2f},{ay:.2f}")
+                else:
+                    # Get previous knot's leaving control point
+                    prev_knot = knots[i - 1]
+                    prev_leaving_y, prev_leaving_x = prev_knot.leaving
+                    plx = prev_leaving_x * width
+                    ply = prev_leaving_y * height
+
+                    # Cubic Bezier curve: C control1_x,control1_y control2_x,control2_y end_x,end_y
+                    path_commands.append(f"C{plx:.2f},{ply:.2f} {px:.2f},{py:.2f} {ax:.2f},{ay:.2f}")
+
+            # Close the path - connect last point back to first
+            if len(knots) > 2:
+                first_knot = knots[0]
+                first_ay, first_ax = first_knot.anchor
+                first_px, first_py = first_knot.preceding[1] * width, first_knot.preceding[0] * height
+
+                last_knot = knots[-1]
+                last_ly, last_lx = last_knot.leaving
+                last_lx_px = last_lx * width
+                last_ly_px = last_ly * height
+
+                # Curve back to first point
+                path_commands.append(
+                    f"C{last_lx_px:.2f},{last_ly_px:.2f} {first_px:.2f},{first_py:.2f} {first_ax * width:.2f},{first_ay * height:.2f}"
+                )
+                path_commands.append("Z")
+
+            if path_commands:
+                svg_path_parts.append(" ".join(path_commands))
+
+        if svg_path_parts:
+            return " ".join(svg_path_parts)
+
+        return None
+
+    except Exception as e:
+        print(f"Failed to extract vector mask: {e}")
+        return None
+
+
+def has_vector_mask(layer) -> bool:
+    """Check if a layer has a vector mask."""
+    try:
+        return hasattr(layer, "vector_mask") and layer.vector_mask is not None and len(list(layer.vector_mask.paths)) > 0
+    except Exception:
+        return False
+
+
+def extract_alpha_contour_path(layer, width: float, height: float) -> str | None:
+    """
+    Extract SVG path from alpha channel contour for any shape.
+    Uses marching squares algorithm to find the boundary of opaque pixels.
+
+    Always uses the REAL contour shape (not approximated ellipse) but smooths it
+    with Bezier curves for round shapes.
+
+    Returns SVG path string or None if no valid contour found.
+    """
+    try:
+        import numpy as np
+        from skimage import measure
+
+        # Get composite image
+        comp = layer.composite()
+        if comp is None or comp.mode != 'RGBA':
+            return None
+
+        arr = np.array(comp)
+        alpha = arr[:, :, 3]
+        h, w = alpha.shape
+
+        # Check if there's meaningful transparency
+        transparent_count = np.sum(alpha < 128)
+        total = alpha.size
+        transparent_ratio = transparent_count / total
+
+        # Need some transparency (5-50%) to be considered a shaped mask
+        if transparent_ratio < 0.05 or transparent_ratio > 0.50:
+            return None
+
+        # Check if corners are transparent (rectangular images don't need masks)
+        margin = max(3, int(min(w, h) * 0.03))
+        corners = [
+            alpha[0:margin, 0:margin],
+            alpha[0:margin, w-margin:w],
+            alpha[h-margin:h, 0:margin],
+            alpha[h-margin:h, w-margin:w],
+        ]
+        corners_transparent = sum(
+            1 for region in corners
+            if np.sum(region < 128) / region.size > 0.80
+        )
+
+        # At least 3 corners should be transparent for non-rectangular shape
+        if corners_transparent < 3:
+            return None
+
+        # Create binary mask
+        binary = (alpha >= 128).astype(np.uint8)
+
+        # Find contours using marching squares
+        contours = measure.find_contours(binary, 0.5)
+
+        if not contours:
+            return None
+
+        # Get the largest contour (main shape boundary)
+        largest_contour = max(contours, key=len)
+
+        # Need enough points for a meaningful shape
+        if len(largest_contour) < 10:
+            return None
+
+        # Calculate circularity to decide smoothing strategy
+        from skimage.measure import regionprops, label
+
+        labeled = label(binary)
+        regions = regionprops(labeled)
+
+        circularity = 0
+        if regions:
+            largest_region = max(regions, key=lambda r: r.area)
+            area = largest_region.area
+            perimeter = largest_region.perimeter
+            if perimeter > 0:
+                circularity = (4 * np.pi * area) / (perimeter ** 2)
+
+        # Simplify contour - use fewer points for round shapes, more for complex
+        from skimage.measure import approximate_polygon
+
+        if circularity > 0.75:
+            # Round shape - use more points for accuracy, will smooth with Bezier
+            tolerance = max(0.5, min(w, h) * 0.002)  # 0.2% - finer detail
+            simplified = approximate_polygon(largest_contour, tolerance)
+            use_bezier = True
+            print(f"  Detected round shape (circularity={circularity:.2f}), using {len(simplified)} points with Bezier smoothing")
+        else:
+            # Angular shape - use polygon
+            tolerance = max(1, min(w, h) * 0.005)  # 0.5%
+            simplified = approximate_polygon(largest_contour, tolerance)
+            use_bezier = False
+            print(f"  Detected angular shape (circularity={circularity:.2f}), using {len(simplified)} points as polygon")
+
+        if len(simplified) < 4:
+            return None
+
+        # Convert to SVG path
+        # Note: contour points are in (row, col) = (y, x) format
+        points = [(point[1], point[0]) for point in simplified]  # Convert to (x, y)
+
+        if use_bezier and len(points) >= 4:
+            # Generate smooth Bezier curve through points using Catmull-Rom to Bezier conversion
+            svg_path = _points_to_smooth_bezier(points)
+        else:
+            # Simple polygon
+            path_parts = []
+            for i, (x, y) in enumerate(points):
+                if i == 0:
+                    path_parts.append(f"M{x:.2f},{y:.2f}")
+                else:
+                    path_parts.append(f"L{x:.2f},{y:.2f}")
+            path_parts.append("Z")
+            svg_path = " ".join(path_parts)
+
+        print(f"  Generated clipPath: {len(svg_path)} chars, transparency={transparent_ratio*100:.1f}%")
+
+        return svg_path
+
+    except ImportError:
+        # scikit-image not available
+        return None
+    except Exception as e:
+        print(f"Failed to extract alpha contour: {e}")
+        return None
+
+
+def _points_to_smooth_bezier(points):
+    """
+    Convert a list of points to a smooth closed SVG path using cubic Bezier curves.
+    Uses Catmull-Rom spline converted to Bezier control points.
+    """
+    if len(points) < 4:
+        # Fall back to polygon
+        parts = [f"M{points[0][0]:.2f},{points[0][1]:.2f}"]
+        for x, y in points[1:]:
+            parts.append(f"L{x:.2f},{y:.2f}")
+        parts.append("Z")
+        return " ".join(parts)
+
+    # Close the loop by adding first points at the end
+    closed_points = list(points) + [points[0], points[1], points[2]]
+
+    path_parts = [f"M{points[0][0]:.2f},{points[0][1]:.2f}"]
+
+    # Generate Bezier curves using Catmull-Rom to Bezier conversion
+    # For each segment, we need 4 points: p0, p1, p2, p3
+    # The curve goes from p1 to p2
+    for i in range(len(points)):
+        p0 = closed_points[i]
+        p1 = closed_points[i + 1]
+        p2 = closed_points[i + 2]
+        p3 = closed_points[i + 3]
+
+        # Catmull-Rom to Bezier control points
+        # tension = 0 gives Catmull-Rom, we use 1/6 factor
+        cp1x = p1[0] + (p2[0] - p0[0]) / 6
+        cp1y = p1[1] + (p2[1] - p0[1]) / 6
+        cp2x = p2[0] - (p3[0] - p1[0]) / 6
+        cp2y = p2[1] - (p3[1] - p1[1]) / 6
+
+        path_parts.append(f"C{cp1x:.2f},{cp1y:.2f} {cp2x:.2f},{cp2y:.2f} {p2[0]:.2f},{p2[1]:.2f}")
+
+    path_parts.append("Z")
+    return " ".join(path_parts)
+
+
+def detect_alpha_mask_shape(layer, width: float, height: float) -> dict | None:
+    """
+    Detect mask shape from alpha channel (for images with "baked-in" transparency).
+    Only detects ellipse/circle shapes - not rectangles or complex shapes.
+
+    Returns dict with shape info or None if no mask detected:
+        - type: "ellipse"
+        - clipPath: SVG path string
+        - rx, ry: radii for ellipse
+        - cx, cy: center for ellipse
+    """
+    try:
+        import numpy as np
+
+        # Get composite image
+        comp = layer.composite()
+        if comp is None or comp.mode != 'RGBA':
+            return None
+
+        arr = np.array(comp)
+        alpha = arr[:, :, 3]
+
+        h, w = alpha.shape
+
+        # Check if there's meaningful transparency
+        transparent_count = np.sum(alpha < 128)
+        opaque_count = np.sum(alpha >= 128)
+        total = alpha.size
+
+        transparent_ratio = transparent_count / total
+
+        # Need significant transparency (10-40%) to be considered a shaped mask
+        # Too little = no mask, too much = probably just sparse content
+        if transparent_ratio < 0.10 or transparent_ratio > 0.40:
+            return None
+
+        # Find bounding box of visible (opaque) area
+        opaque_rows = np.any(alpha >= 128, axis=1)
+        opaque_cols = np.any(alpha >= 128, axis=0)
+
+        if not np.any(opaque_rows) or not np.any(opaque_cols):
+            return None
+
+        first_y = np.argmax(opaque_rows)
+        last_y = h - 1 - np.argmax(opaque_rows[::-1])
+        first_x = np.argmax(opaque_cols)
+        last_x = w - 1 - np.argmax(opaque_cols[::-1])
+
+        visible_width = last_x - first_x
+        visible_height = last_y - first_y
+
+        # Must fill most of the layer (at least 80% in both dimensions)
+        # This filters out logos and sparse images
+        if visible_width < w * 0.8 or visible_height < h * 0.8:
+            return None
+
+        # Check corners - must ALL be transparent for ellipse
+        margin = max(5, int(min(w, h) * 0.05))  # 5% margin or at least 5px
+        corner_regions = [
+            alpha[0:margin, 0:margin],              # top-left
+            alpha[0:margin, w-margin:w],            # top-right
+            alpha[h-margin:h, 0:margin],            # bottom-left
+            alpha[h-margin:h, w-margin:w],          # bottom-right
+        ]
+
+        # All corners must be mostly transparent (>90% transparent pixels)
+        corners_transparent = all(
+            np.sum(region < 128) / region.size > 0.90
+            for region in corner_regions
+        )
+
+        if not corners_transparent:
+            return None
+
+        # Check edge centers - must be mostly opaque for ellipse
+        cx_int = w // 2
+        cy_int = h // 2
+        edge_margin = max(10, int(min(w, h) * 0.1))
+
+        edge_centers = [
+            alpha[0:margin, cx_int-edge_margin:cx_int+edge_margin],      # top center
+            alpha[h-margin:h, cx_int-edge_margin:cx_int+edge_margin],    # bottom center
+            alpha[cy_int-edge_margin:cy_int+edge_margin, 0:margin],      # left center
+            alpha[cy_int-edge_margin:cy_int+edge_margin, w-margin:w],    # right center
+        ]
+
+        # Edge centers must be mostly opaque (>70% opaque pixels)
+        edges_opaque = all(
+            np.sum(region >= 128) / region.size > 0.70
+            for region in edge_centers
+        )
+
+        if not edges_opaque:
+            return None
+
+        # This looks like an ellipse - generate the path
+        cx = w / 2
+        cy = h / 2
+        rx = visible_width / 2
+        ry = visible_height / 2
+
+        # Generate SVG ellipse path using bezier curves
+        # Approximation of ellipse using 4 cubic bezier curves
+        # Magic number for control points: ~0.5523
+        k = 0.5523
+
+        svg_path = (
+            f"M{cx + rx:.2f},{cy:.2f} "
+            f"C{cx + rx:.2f},{cy + ry * k:.2f} {cx + rx * k:.2f},{cy + ry:.2f} {cx:.2f},{cy + ry:.2f} "
+            f"C{cx - rx * k:.2f},{cy + ry:.2f} {cx - rx:.2f},{cy + ry * k:.2f} {cx - rx:.2f},{cy:.2f} "
+            f"C{cx - rx:.2f},{cy - ry * k:.2f} {cx - rx * k:.2f},{cy - ry:.2f} {cx:.2f},{cy - ry:.2f} "
+            f"C{cx + rx * k:.2f},{cy - ry:.2f} {cx + rx:.2f},{cy - ry * k:.2f} {cx + rx:.2f},{cy:.2f} Z"
+        )
+
+        print(f"  Detected ellipse mask: center=({cx:.0f},{cy:.0f}), radii=({rx:.0f},{ry:.0f}), transparency={transparent_ratio*100:.1f}%")
+
+        return {
+            "type": "ellipse",
+            "clipPath": svg_path,
+            "cx": cx,
+            "cy": cy,
+            "rx": rx,
+            "ry": ry,
+        }
+
+    except Exception as e:
+        print(f"Failed to detect alpha mask shape: {e}")
+        return None
+
+
+def extract_mask_from_layer(layer, width: float, height: float) -> str | None:
+    """
+    Extract mask from a layer - tries vector mask first, then alpha channel detection.
+
+    Returns SVG path string or None.
+    """
+    layer_name = getattr(layer, 'name', 'unknown')
+
+    # Debug: Check what mask types are available
+    has_vm = hasattr(layer, "vector_mask") and layer.vector_mask is not None
+    has_mask = hasattr(layer, "mask") and layer.mask is not None
+    has_clip = hasattr(layer, "clip_layers") and layer.clip_layers
+    is_clipping = getattr(layer, "clipping_layer", False)
+
+    # Always log for image layers
+    import sys
+    layer_type = type(layer).__name__
+    print(f"  [MASK DEBUG] Layer '{layer_name}' ({layer_type}): vector_mask={has_vm}, mask={has_mask}, clip_layers={has_clip}, is_clipping={is_clipping}")
+    sys.stdout.flush()
+
+    # First try vector mask
+    clip_path = extract_vector_mask(layer, width, height)
+    if clip_path:
+        print(f"  [MASK] Layer '{layer_name}': Got vector_mask clipPath")
+        return clip_path
+
+    # Then try general contour extraction (accurate, any shape)
+    # This extracts the actual shape from alpha channel using marching squares
+    contour_path = extract_alpha_contour_path(layer, width, height)
+    if contour_path:
+        print(f"  [MASK] Layer '{layer_name}': Got alpha contour path")
+        return contour_path
+
+    # Finally try ellipse detection as fallback (approximation)
+    alpha_mask = detect_alpha_mask_shape(layer, width, height)
+    if alpha_mask:
+        print(f"  [MASK] Layer '{layer_name}': Got alpha channel ellipse")
+        return alpha_mask.get("clipPath")
+
+    return None
 
 
 def get_layer_type(layer) -> str | None:
@@ -333,30 +774,88 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
 def _map_image_layer(layer, data: dict, opacity: float):
     """Map image/pixel layer properties."""
     try:
+        clip_path = None
+
+        # Try to extract mask - but only use it if the shape is "closed"
+        # (for image placeholders like photos in circles/ellipses)
+        # Don't use clipPath for decorative elements that have content at edges
+        # (like blobs, waves) - they already have their shape in alpha channel
+        potential_clip_path = extract_mask_from_layer(layer, data["width"], data["height"])
+
+        if potential_clip_path:
+            # Check if this is a "closed" shape (like ellipse) vs "open" decorative element
+            # Decorative elements typically have content touching the bottom edge
+            # Image placeholders have the shape floating (all edges have transparency)
+            import numpy as np
+
+            try:
+                comp = layer.composite()
+                if comp and comp.mode == 'RGBA':
+                    arr = np.array(comp)
+                    alpha = arr[:, :, 3]
+                    h, w = alpha.shape
+
+                    # Check if bottom edge has significant opaque content
+                    bottom_edge = alpha[h-5:h, :]  # Last 5 rows
+                    bottom_opaque_ratio = np.sum(bottom_edge >= 128) / bottom_edge.size
+
+                    # If bottom edge is mostly opaque (>30%), it's a decorative element
+                    # that extends to the bottom - don't clip it
+                    if bottom_opaque_ratio > 0.30:
+                        print(f"  Skipping clipPath for '{data.get('name', 'unknown')}' - decorative element (bottom edge {bottom_opaque_ratio*100:.0f}% opaque)")
+                        clip_path = None
+                    else:
+                        clip_path = potential_clip_path
+                        print(f"  Using clipPath for '{data.get('name', 'unknown')}' - image placeholder (bottom edge {bottom_opaque_ratio*100:.0f}% opaque)")
+                else:
+                    clip_path = potential_clip_path
+            except Exception as e:
+                print(f"  Could not check bottom edge, using clipPath: {e}")
+                clip_path = potential_clip_path
+
+        layer_has_mask = clip_path is not None
+
         # Extract the image
         if isinstance(layer, SmartObjectLayer):
-            image_data = extract_smart_object_image(layer)
+            # For SmartObjects with mask, try to get unmasked image
+            if layer_has_mask:
+                image_data = extract_layer_image_without_mask(layer)
+                if not image_data:
+                    image_data = extract_smart_object_image(layer)
+            else:
+                image_data = extract_smart_object_image(layer)
         else:
-            image_data = extract_layer_image(layer)
+            # For PixelLayers with mask, extract without baked-in mask
+            if layer_has_mask:
+                image_data = extract_layer_image_without_mask(layer)
+                if not image_data:
+                    image_data = extract_layer_image(layer)
+            else:
+                image_data = extract_layer_image(layer)
 
         if image_data:
             data["image_data"] = image_data
             data["properties"] = {
                 "src": None,  # Will be set after image is saved
                 "fit": "cover",
+                "clipPath": clip_path,  # SVG path for vector mask clipping
             }
+            print(f"  [DEBUG] Image layer '{data.get('name', 'unknown')}' properties: clipPath={'YES' if clip_path else 'NO'}")
         else:
             data["warnings"].append("Could not extract image from layer")
             data["properties"] = {
                 "src": None,
                 "fit": "cover",
+                "clipPath": clip_path,
             }
+            print(f"  [DEBUG] Image layer '{data.get('name', 'unknown')}' (no image_data) properties: clipPath={'YES' if clip_path else 'NO'}")
 
     except Exception as e:
         data["warnings"].append(f"Failed to extract image: {str(e)}")
         data["properties"] = {
             "src": None,
             "fit": "cover",
+            "clipPath": None,
         }
 
 

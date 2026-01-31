@@ -813,7 +813,10 @@
             "replaceImage": "Replace image",
             "imageFit": "Fit mode",
             "fitFill": "Fill",
-            "fixedWidth": "Fixed width"
+            "fixedWidth": "Fixed width",
+            "masked": "Masked",
+            "removeMask": "Remove mask",
+            "maskDescription": "Image has a vector mask applied. Replacing the image will preserve the mask shape."
         },
         "export": {
             "title": "Export Image",

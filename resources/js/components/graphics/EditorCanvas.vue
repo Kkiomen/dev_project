@@ -1246,6 +1246,152 @@ const getTextboxConfig = (layer) => {
     return { groupConfig, rectConfig, textConfig };
 };
 
+// Parse SVG path and draw it on canvas context
+const drawSvgPath = (ctx, svgPath) => {
+    // Parse SVG path commands
+    // Supports: M (moveTo), L (lineTo), C (bezierCurveTo), Z (closePath)
+    const commands = svgPath.match(/[MLCZ][^MLCZ]*/gi);
+    if (!commands) return false;
+
+    ctx.beginPath();
+
+    for (const cmd of commands) {
+        const type = cmd[0].toUpperCase();
+        const args = cmd.slice(1).trim().split(/[\s,]+/).map(parseFloat).filter(n => !isNaN(n));
+
+        switch (type) {
+            case 'M':
+                if (args.length >= 2) {
+                    ctx.moveTo(args[0], args[1]);
+                }
+                break;
+            case 'L':
+                if (args.length >= 2) {
+                    ctx.lineTo(args[0], args[1]);
+                }
+                break;
+            case 'C':
+                if (args.length >= 6) {
+                    ctx.bezierCurveTo(args[0], args[1], args[2], args[3], args[4], args[5]);
+                }
+                break;
+            case 'Z':
+                ctx.closePath();
+                break;
+        }
+    }
+
+    return true;
+};
+
+// Create a clip function from SVG path for masked images
+const createClipFunc = (svgPath, width, height) => {
+    if (!svgPath) return null;
+
+    return (ctx) => {
+        try {
+            if (drawSvgPath(ctx, svgPath)) {
+                ctx.clip();
+            }
+        } catch (e) {
+            console.warn('Failed to create clip path:', e, 'svgPath:', svgPath?.substring(0, 100));
+        }
+    };
+};
+
+// Check if an image layer has a clip path (mask)
+const hasClipPath = (layer) => {
+    const has = layer.type === 'image' && !!layer.properties?.clipPath;
+    if (layer.type === 'image') {
+        console.log(`[DEBUG hasClipPath] layer="${layer.name}" clipPath=${!!layer.properties?.clipPath} result=${has}`);
+        if (layer.properties?.clipPath) {
+            console.log(`[DEBUG clipPath value]`, layer.properties.clipPath.substring(0, 100));
+        }
+    }
+    return has;
+};
+
+// Get config for clipped image group (with mask)
+const getClippedImageGroupConfig = (layer) => {
+    const clipPath = layer.properties?.clipPath;
+
+    return {
+        id: layer.id,
+        x: layer.x,
+        y: layer.y,
+        width: layer.width,
+        height: layer.height,
+        rotation: layer.rotation,
+        scaleX: layer.scale_x,
+        scaleY: layer.scale_y,
+        draggable: !layer.locked,
+        visible: layer.visible,
+        opacity: layer.opacity ?? 1,
+        clipFunc: clipPath ? createClipFunc(clipPath, layer.width, layer.height) : undefined,
+    };
+};
+
+// Get config for clipped image (inside the group)
+const getClippedImageConfig = (layer, image) => {
+    const fitMode = layer.properties?.fit || 'cover';
+    let imageConfig = {
+        x: 0,
+        y: 0,
+        width: layer.width,
+        height: layer.height,
+        image: image,
+    };
+
+    if (image && fitMode !== 'fill') {
+        const imgWidth = image.width || 1;
+        const imgHeight = image.height || 1;
+        const layerWidth = layer.width || 100;
+        const layerHeight = layer.height || 100;
+
+        const imgRatio = imgWidth / imgHeight;
+        const layerRatio = layerWidth / layerHeight;
+
+        if (fitMode === 'cover') {
+            let cropWidth, cropHeight, cropX, cropY;
+
+            if (imgRatio > layerRatio) {
+                cropHeight = imgHeight;
+                cropWidth = imgHeight * layerRatio;
+                cropX = (imgWidth - cropWidth) / 2;
+                cropY = 0;
+            } else {
+                cropWidth = imgWidth;
+                cropHeight = imgWidth / layerRatio;
+                cropX = 0;
+                cropY = (imgHeight - cropHeight) / 2;
+            }
+
+            imageConfig.crop = { x: cropX, y: cropY, width: cropWidth, height: cropHeight };
+        } else if (fitMode === 'contain') {
+            let drawWidth, drawHeight, offsetX, offsetY;
+
+            if (imgRatio > layerRatio) {
+                drawWidth = layerWidth;
+                drawHeight = layerWidth / imgRatio;
+                offsetX = 0;
+                offsetY = (layerHeight - drawHeight) / 2;
+            } else {
+                drawHeight = layerHeight;
+                drawWidth = layerHeight * imgRatio;
+                offsetX = (layerWidth - drawWidth) / 2;
+                offsetY = 0;
+            }
+
+            imageConfig.x = offsetX;
+            imageConfig.y = offsetY;
+            imageConfig.width = drawWidth;
+            imageConfig.height = drawHeight;
+        }
+    }
+
+    return imageConfig;
+};
+
 // Auto-resize textbox based on text content
 const autoResizeTextbox = (layerId) => {
     const layer = graphicsStore.layers.find(l => l.id === layerId);
@@ -1707,6 +1853,7 @@ watch(() => {
 const layerImages = ref({});
 const imageLoadErrors = ref({});
 const imageSources = ref({}); // Track sources to detect changes (for image replacement)
+const imageVersions = ref({}); // Version counter for forcing re-render on image change
 watch(() => graphicsStore.layers, (layers) => {
     layers.forEach(layer => {
         if (layer.type === 'image' && layer.properties?.src) {
@@ -1714,6 +1861,7 @@ watch(() => graphicsStore.layers, (layers) => {
             // Load if: no image loaded yet, or source has changed (image replaced)
             if (imageSources.value[layer.id] !== currentSrc) {
                 imageSources.value[layer.id] = currentSrc;
+                imageVersions.value[layer.id] = (imageVersions.value[layer.id] || 0) + 1;
                 delete imageLoadErrors.value[layer.id];
 
                 const img = new window.Image();
@@ -1724,7 +1872,7 @@ watch(() => graphicsStore.layers, (layers) => {
                     delete imageLoadErrors.value[layer.id];
                 };
                 img.onerror = (e) => {
-                    console.error(`Failed to load image for layer ${layer.id}:`, currentSrc, e);
+                    console.error(`Failed to load image for layer ${layer.id}:`, e);
                     imageLoadErrors.value[layer.id] = true;
                 };
             }
@@ -1931,9 +2079,24 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                         @transformend="(e) => handleTransformEnd(e, layer)"
                     />
 
-                    <!-- Image (loaded) -->
+                    <!-- Image with mask/clipPath -->
+                    <v-group
+                        v-else-if="layer.type === 'image' && layerImages[layer.id] && hasClipPath(layer)"
+                        :key="`clipped-${layer.id}-v${imageVersions[layer.id] || 0}`"
+                        :config="getClippedImageGroupConfig(layer)"
+                        @click="(e) => handleShapeClick(e, layer)"
+                        @contextmenu="(e) => handleContextMenu(e, layer)"
+                        @dragmove="(e) => handleDragMove(e, layer)"
+                        @dragend="(e) => handleDragEnd(e, layer)"
+                        @transform="(e) => handleTransform(e, layer)"
+                        @transformend="(e) => handleTransformEnd(e, layer)"
+                    >
+                        <v-image :config="getClippedImageConfig(layer, layerImages[layer.id])" />
+                    </v-group>
+
+                    <!-- Image without mask (loaded) -->
                     <v-image
-                        v-else-if="layer.type === 'image' && layerImages[layer.id]"
+                        v-else-if="layer.type === 'image' && layerImages[layer.id] && !hasClipPath(layer)"
                         :config="{
                             ...getShapeConfig(layer),
                             image: layerImages[layer.id],

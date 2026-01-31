@@ -207,9 +207,15 @@ const handleImageReplace = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    console.log('[DEBUG handleImageReplace] Before update - clipPath:', selectedLayer.value?.properties?.clipPath?.substring(0, 100));
+
     const reader = new FileReader();
     reader.onload = (e) => {
         updateProperty('src', e.target.result);
+        // Debug: check clipPath after update
+        setTimeout(() => {
+            console.log('[DEBUG handleImageReplace] After update - clipPath:', selectedLayer.value?.properties?.clipPath?.substring(0, 100));
+        }, 100);
     };
     reader.readAsDataURL(file);
 };
@@ -1729,6 +1735,28 @@ const toggleTextDecoration = (decoration) => {
                                 {{ t('graphics.properties.fitFill') }}
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Mask indicator -->
+                    <div v-if="selectedLayer.properties?.clipPath" class="mt-3 p-2 bg-purple-50 border border-purple-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2">
+                                <svg class="w-4 h-4 text-purple-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+                                </svg>
+                                <span class="text-xs font-medium text-purple-700">{{ t('graphics.properties.masked') }}</span>
+                            </div>
+                            <button
+                                @click="updateProperty('clipPath', null)"
+                                class="text-[10px] text-purple-600 hover:text-purple-800 font-medium"
+                                :title="t('graphics.properties.removeMask')"
+                            >
+                                {{ t('graphics.properties.removeMask') }}
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-purple-600 mt-1">
+                            {{ t('graphics.properties.maskDescription') }}
+                        </p>
                     </div>
                 </div>
             </template>

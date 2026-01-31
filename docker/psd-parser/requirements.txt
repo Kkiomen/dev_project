@@ -4,3 +4,5 @@ psd-tools==1.9.28
 Pillow==10.2.0
 rapidfuzz==3.6.1
 gunicorn==21.2.0
+numpy==1.26.4
+scikit-image==0.22.0

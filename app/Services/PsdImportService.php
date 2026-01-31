@@ -160,6 +160,17 @@ class PsdImportService
 
             // Handle image layers - save image and update src
             $properties = $layerData['properties'] ?? [];
+
+            // Debug: Log if clipPath is present
+            if ($layerType === LayerType::IMAGE) {
+                Log::info('PSD Import: Image layer properties', [
+                    'layer_name' => $layerData['name'],
+                    'has_clipPath' => isset($properties['clipPath']),
+                    'clipPath_preview' => isset($properties['clipPath']) ? substr($properties['clipPath'], 0, 100) : null,
+                    'properties_keys' => array_keys($properties),
+                ]);
+            }
+
             if ($layerType === LayerType::IMAGE && isset($layerData['image_id'])) {
                 $layerIndex = $layerData['position'];
                 if (isset($imagesByLayerIndex[$layerIndex])) {

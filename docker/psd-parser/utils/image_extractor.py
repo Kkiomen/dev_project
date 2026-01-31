@@ -63,6 +63,80 @@ def extract_layer_image(layer, max_dimension: int = 4096) -> dict | None:
         return None
 
 
+def extract_layer_image_without_mask(layer, max_dimension: int = 4096) -> dict | None:
+    """
+    Extract image from a PSD layer WITHOUT applying the vector mask.
+    This gives us the full rectangular image that can be clipped by CSS/Canvas.
+
+    Args:
+        layer: psd-tools layer object
+        max_dimension: Maximum width/height for the extracted image
+
+    Returns:
+        dict with image data or None if extraction fails
+    """
+    try:
+        pil_image = None
+
+        # Try to get the raw pixel data without mask applied
+        # Method 1: Use topil() which gets raw layer pixels
+        if hasattr(layer, "topil"):
+            try:
+                pil_image = layer.topil()
+            except Exception:
+                pass
+
+        # Method 2: For SmartObjects, try to extract embedded data
+        if pil_image is None and hasattr(layer, "smart_object") and layer.smart_object:
+            try:
+                data = layer.smart_object.data
+                if data:
+                    pil_image = Image.open(io.BytesIO(data))
+            except Exception:
+                pass
+
+        # Method 3: Fall back to composite (will have mask baked in)
+        if pil_image is None:
+            try:
+                pil_image = layer.composite()
+            except Exception:
+                pass
+
+        if pil_image is None:
+            return None
+
+        # Ensure RGBA mode for transparency support
+        if pil_image.mode != "RGBA":
+            pil_image = pil_image.convert("RGBA")
+
+        # Resize if too large
+        width, height = pil_image.size
+        if width > max_dimension or height > max_dimension:
+            ratio = min(max_dimension / width, max_dimension / height)
+            new_width = int(width * ratio)
+            new_height = int(height * ratio)
+            pil_image = pil_image.resize((new_width, new_height), Image.LANCZOS)
+            width, height = new_width, new_height
+
+        # Convert to base64
+        buffer = io.BytesIO()
+        pil_image.save(buffer, format="PNG", optimize=True)
+        buffer.seek(0)
+
+        base64_data = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+        return {
+            "data": f"data:image/png;base64,{base64_data}",
+            "mime_type": "image/png",
+            "width": width,
+            "height": height,
+        }
+
+    except Exception as e:
+        print(f"Failed to extract layer image without mask: {e}")
+        return None
+
+
 def extract_smart_object_image(layer, max_dimension: int = 4096) -> dict | None:
     """
     Extract image from a Smart Object layer.
