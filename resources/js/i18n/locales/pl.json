@@ -809,7 +809,12 @@
             "dashPattern": "Wzór przerywany",
             "enterText": "Wprowadź tekst...",
             "background": "Tło",
-            "padding": "Odstęp"
+            "padding": "Odstęp",
+            "image": "Obraz",
+            "replaceImage": "Podmień obraz",
+            "imageFit": "Dopasowanie",
+            "fitFill": "Wypełnij",
+            "fixedWidth": "Stała szerokość"
         },
         "export": {
             "title": "Eksportuj obraz",

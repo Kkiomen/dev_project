@@ -36,20 +36,24 @@ const measureTextDimensions = (textProps) => {
     return { width, height };
 };
 
-// Auto-resize text layer based on content - expands width and wraps at canvas edge
+// Auto-resize text layer based on content
+// If layer has fixedWidth (from PSD import), only adjust height
+// Otherwise, expands width and wraps at canvas edge
 const autoResizeTextLayer = (layerId) => {
     const layer = graphicsStore.layers.find(l => l.id === layerId);
     if (!layer || layer.type !== 'text') return;
 
     const layerProps = layer.properties || {};
     const canvasWidth = props.template.width;
-    const canvasHeight = props.template.height;
+
+    // Check if this layer has fixed width (imported from PSD or explicitly set)
+    const hasFixedWidth = layerProps.fixedWidth === true;
+    const fixedWidthValue = hasFixedWidth ? layer.width : null;
 
     // Prepare text - convert to vertical format if needed
     let text = layerProps.text || '';
     const textDirection = layerProps.textDirection || 'horizontal';
     if (textDirection === 'vertical') {
-        // Space = empty line (word separator), newline = double line gap
         text = text.split('').map(char => {
             if (char === ' ') return '';
             if (char === '\n') return '\n';
@@ -57,29 +61,10 @@ const autoResizeTextLayer = (layerId) => {
         }).join('\n');
     }
 
-    // First, measure text without width constraint to get natural width
-    const naturalDimensions = measureTextDimensions({
-        text,
-        fontSize: layerProps.fontSize || 24,
-        fontFamily: layerProps.fontFamily || 'Arial',
-        fontWeight: layerProps.fontWeight || 'normal',
-        fontStyle: layerProps.fontStyle || 'normal',
-        lineHeight: textDirection === 'vertical' ? 0.9 : (layerProps.lineHeight || 1.2),
-        letterSpacing: layerProps.letterSpacing || 0,
-        width: undefined, // No width constraint - get natural width
-    });
-
-    // Calculate max available width (from layer x position to canvas edge with padding)
-    const maxAvailableWidth = canvasWidth - layer.x - 20; // 20px padding from edge
-
     let finalWidth, finalHeight;
 
-    if (naturalDimensions.width <= maxAvailableWidth) {
-        // Text fits without wrapping - use natural width
-        finalWidth = Math.ceil(naturalDimensions.width) + 5; // Small padding
-        finalHeight = Math.ceil(naturalDimensions.height);
-    } else {
-        // Text needs to wrap - constrain to available width
+    if (hasFixedWidth && fixedWidthValue) {
+        // Use fixed width, only calculate height based on wrapped text
         const wrappedDimensions = measureTextDimensions({
             text,
             fontSize: layerProps.fontSize || 24,
@@ -88,15 +73,47 @@ const autoResizeTextLayer = (layerId) => {
             fontStyle: layerProps.fontStyle || 'normal',
             lineHeight: textDirection === 'vertical' ? 0.9 : (layerProps.lineHeight || 1.2),
             letterSpacing: layerProps.letterSpacing || 0,
-            width: maxAvailableWidth,
+            width: fixedWidthValue,
         });
-        finalWidth = Math.ceil(maxAvailableWidth);
+        finalWidth = fixedWidthValue;
         finalHeight = Math.ceil(wrappedDimensions.height);
+    } else {
+        // Dynamic width - measure natural width first
+        const naturalDimensions = measureTextDimensions({
+            text,
+            fontSize: layerProps.fontSize || 24,
+            fontFamily: layerProps.fontFamily || 'Arial',
+            fontWeight: layerProps.fontWeight || 'normal',
+            fontStyle: layerProps.fontStyle || 'normal',
+            lineHeight: textDirection === 'vertical' ? 0.9 : (layerProps.lineHeight || 1.2),
+            letterSpacing: layerProps.letterSpacing || 0,
+            width: undefined,
+        });
+
+        const maxAvailableWidth = canvasWidth - layer.x - 20;
+
+        if (naturalDimensions.width <= maxAvailableWidth) {
+            finalWidth = Math.ceil(naturalDimensions.width) + 5;
+            finalHeight = Math.ceil(naturalDimensions.height);
+        } else {
+            const wrappedDimensions = measureTextDimensions({
+                text,
+                fontSize: layerProps.fontSize || 24,
+                fontFamily: layerProps.fontFamily || 'Arial',
+                fontWeight: layerProps.fontWeight || 'normal',
+                fontStyle: layerProps.fontStyle || 'normal',
+                lineHeight: textDirection === 'vertical' ? 0.9 : (layerProps.lineHeight || 1.2),
+                letterSpacing: layerProps.letterSpacing || 0,
+                width: maxAvailableWidth,
+            });
+            finalWidth = Math.ceil(maxAvailableWidth);
+            finalHeight = Math.ceil(wrappedDimensions.height);
+        }
     }
 
     // Update layer dimensions if changed
     const updates = {};
-    if (finalWidth !== layer.width) updates.width = finalWidth;
+    if (!hasFixedWidth && finalWidth !== layer.width) updates.width = finalWidth;
     if (finalHeight !== layer.height) updates.height = finalHeight;
 
     if (Object.keys(updates).length > 0) {
@@ -240,6 +257,17 @@ const stageConfig = computed(() => {
         y: offsetY,
     };
 });
+
+// Content layer config with clipping to canvas bounds
+const contentLayerConfig = computed(() => ({
+    scaleX: graphicsStore.zoom,
+    scaleY: graphicsStore.zoom,
+    // Clip content to canvas bounds - hides elements outside the canvas
+    clipX: 0,
+    clipY: 0,
+    clipWidth: props.template.width,
+    clipHeight: props.template.height,
+}));
 
 // Handle wheel zoom (Ctrl/Cmd + scroll) and pan (scroll without modifier)
 const handleWheel = (e) => {
@@ -995,6 +1023,9 @@ const getShapeConfig = (layer) => {
                 }).join('\n');
             }
 
+            // Check if text has fixed width (for word wrapping)
+            const hasFixedWidth = layer.properties?.fixedWidth === true;
+
             return {
                 ...baseConfig,
                 text,
@@ -1006,6 +1037,8 @@ const getShapeConfig = (layer) => {
                 lineHeight: textDirection === 'vertical' ? 0.9 : (layer.properties?.lineHeight || 1.2),
                 letterSpacing: layer.properties?.letterSpacing || 0,
                 textDecoration: layer.properties?.textDecoration || '',
+                // Enable word wrapping for fixed-width text
+                wrap: hasFixedWidth ? 'word' : 'none',
             };
         }
 
@@ -1052,10 +1085,74 @@ const getShapeConfig = (layer) => {
             };
         }
 
-        case 'image':
-            return {
-                ...baseConfig,
-            };
+        case 'image': {
+            // Image fit mode support
+            const fitMode = layer.properties?.fit || 'cover';
+            const img = layerImages.value[layer.id];
+
+            let imageConfig = { ...baseConfig };
+
+            if (img && fitMode !== 'fill') {
+                const imgWidth = img.width || 1;
+                const imgHeight = img.height || 1;
+                const layerWidth = layer.width || 100;
+                const layerHeight = layer.height || 100;
+
+                const imgRatio = imgWidth / imgHeight;
+                const layerRatio = layerWidth / layerHeight;
+
+                if (fitMode === 'cover') {
+                    // Scale to cover, crop excess
+                    let cropWidth, cropHeight, cropX, cropY;
+
+                    if (imgRatio > layerRatio) {
+                        // Image is wider - crop sides
+                        cropHeight = imgHeight;
+                        cropWidth = imgHeight * layerRatio;
+                        cropX = (imgWidth - cropWidth) / 2;
+                        cropY = 0;
+                    } else {
+                        // Image is taller - crop top/bottom
+                        cropWidth = imgWidth;
+                        cropHeight = imgWidth / layerRatio;
+                        cropX = 0;
+                        cropY = (imgHeight - cropHeight) / 2;
+                    }
+
+                    imageConfig = {
+                        ...imageConfig,
+                        crop: { x: cropX, y: cropY, width: cropWidth, height: cropHeight },
+                    };
+                } else if (fitMode === 'contain') {
+                    // Scale to fit inside, center
+                    let drawWidth, drawHeight, offsetX, offsetY;
+
+                    if (imgRatio > layerRatio) {
+                        // Image is wider - fit to width
+                        drawWidth = layerWidth;
+                        drawHeight = layerWidth / imgRatio;
+                        offsetX = 0;
+                        offsetY = (layerHeight - drawHeight) / 2;
+                    } else {
+                        // Image is taller - fit to height
+                        drawHeight = layerHeight;
+                        drawWidth = layerHeight * imgRatio;
+                        offsetX = (layerWidth - drawWidth) / 2;
+                        offsetY = 0;
+                    }
+
+                    imageConfig = {
+                        ...imageConfig,
+                        x: layer.x + offsetX,
+                        y: layer.y + offsetY,
+                        width: drawWidth,
+                        height: drawHeight,
+                    };
+                }
+            }
+
+            return imageConfig;
+        }
 
         case 'line':
             return {
@@ -1608,20 +1705,28 @@ watch(() => {
 // Layer images loading with error tracking
 const layerImages = ref({});
 const imageLoadErrors = ref({});
+const imageSources = ref({}); // Track sources to detect changes (for image replacement)
 watch(() => graphicsStore.layers, (layers) => {
     layers.forEach(layer => {
-        if (layer.type === 'image' && layer.properties?.src && !layerImages.value[layer.id] && !imageLoadErrors.value[layer.id]) {
-            const img = new window.Image();
-            img.crossOrigin = 'anonymous'; // Enable CORS for export
-            img.src = layer.properties.src;
-            img.onload = () => {
-                layerImages.value[layer.id] = img;
+        if (layer.type === 'image' && layer.properties?.src) {
+            const currentSrc = layer.properties.src;
+            // Load if: no image loaded yet, or source has changed (image replaced)
+            if (imageSources.value[layer.id] !== currentSrc) {
+                imageSources.value[layer.id] = currentSrc;
                 delete imageLoadErrors.value[layer.id];
-            };
-            img.onerror = (e) => {
-                console.error(`Failed to load image for layer ${layer.id}:`, layer.properties.src, e);
-                imageLoadErrors.value[layer.id] = true;
-            };
+
+                const img = new window.Image();
+                img.crossOrigin = 'anonymous'; // Enable CORS for export
+                img.src = currentSrc;
+                img.onload = () => {
+                    layerImages.value = { ...layerImages.value, [layer.id]: img };
+                    delete imageLoadErrors.value[layer.id];
+                };
+                img.onerror = (e) => {
+                    console.error(`Failed to load image for layer ${layer.id}:`, currentSrc, e);
+                    imageLoadErrors.value[layer.id] = true;
+                };
+            }
         }
     });
 }, { immediate: true, deep: true });
@@ -1785,8 +1890,8 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                 />
             </v-layer>
 
-            <!-- Content layer -->
-            <v-layer :config="{ scaleX: graphicsStore.zoom, scaleY: graphicsStore.zoom }">
+            <!-- Content layer (clipped to canvas bounds) -->
+            <v-layer :config="contentLayerConfig">
                 <template v-for="layer in graphicsStore.visibleLayers" :key="layer.id">
                     <!-- Text -->
                     <v-text

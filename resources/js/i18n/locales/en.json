@@ -808,7 +808,12 @@
             "dashPattern": "Dash Pattern",
             "enterText": "Enter text...",
             "background": "Background",
-            "padding": "Padding"
+            "padding": "Padding",
+            "image": "Image",
+            "replaceImage": "Replace image",
+            "imageFit": "Fit mode",
+            "fitFill": "Fill",
+            "fixedWidth": "Fixed width"
         },
         "export": {
             "title": "Export Image",

@@ -164,44 +164,59 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                         else:
                             font_list.append("")
 
-            # Get font info
+            # Get font info from style runs
             if "StyleRun" in engine:
                 style_run = engine["StyleRun"]
-                if "RunArray" in style_run and style_run["RunArray"]:
-                    first_run = style_run["RunArray"][0]
-                    if "StyleSheet" in first_run:
-                        style = first_run["StyleSheet"].get("StyleSheetData", {})
+                run_array = style_run.get("RunArray", [])
 
-                        # Font family - Font is an index into FontSet
-                        if "Font" in style:
-                            font_index = style["Font"]
-                            psd_font_name = None
-                            if isinstance(font_index, int) and font_index < len(font_list):
-                                psd_font_name = font_list[font_index]
-                            elif isinstance(font_index, str):
-                                psd_font_name = font_index
+                # Warn if multiple style runs (mixed formatting not fully supported)
+                if len(run_array) > 1:
+                    data["warnings"].append(
+                        "Text has mixed styles (partial bold/italic). Only primary style will be used."
+                    )
 
-                            if psd_font_name:
-                                font_info = match_font(psd_font_name)
-                                font_family = font_info["matched"]
-                                font_weight = extract_font_weight(psd_font_name)
-                                font_style = extract_font_style(psd_font_name)
+                # Find the longest run (most text) to use as primary style
+                longest_run = None
+                longest_length = 0
+                for run in run_array:
+                    run_length = run.get("Length", 0)
+                    if run_length > longest_length:
+                        longest_length = run_length
+                        longest_run = run
 
-                        # Font size
-                        if "FontSize" in style:
-                            font_size = float(style["FontSize"])
+                if longest_run and "StyleSheet" in longest_run:
+                    style = longest_run["StyleSheet"].get("StyleSheetData", {})
 
-                        # Color
-                        if "FillColor" in style:
-                            fill_color = style["FillColor"]
-                            if "Values" in fill_color:
-                                values = fill_color["Values"]
-                                if len(values) >= 4:
-                                    # CMYK or RGB values
-                                    r = int(values[1] * 255) if len(values) > 1 else 0
-                                    g = int(values[2] * 255) if len(values) > 2 else 0
-                                    b = int(values[3] * 255) if len(values) > 3 else 0
-                                    text_color = f"#{r:02x}{g:02x}{b:02x}"
+                    # Font family - Font is an index into FontSet
+                    if "Font" in style:
+                        font_index = style["Font"]
+                        psd_font_name = None
+                        if isinstance(font_index, int) and font_index < len(font_list):
+                            psd_font_name = font_list[font_index]
+                        elif isinstance(font_index, str):
+                            psd_font_name = font_index
+
+                        if psd_font_name:
+                            font_info = match_font(psd_font_name)
+                            font_family = font_info["matched"]
+                            font_weight = extract_font_weight(psd_font_name)
+                            font_style = extract_font_style(psd_font_name)
+
+                    # Font size
+                    if "FontSize" in style:
+                        font_size = float(style["FontSize"])
+
+                    # Color
+                    if "FillColor" in style:
+                        fill_color = style["FillColor"]
+                        if "Values" in fill_color:
+                            values = fill_color["Values"]
+                            if len(values) >= 4:
+                                # CMYK or RGB values
+                                r = int(values[1] * 255) if len(values) > 1 else 0
+                                g = int(values[2] * 255) if len(values) > 2 else 0
+                                b = int(values[3] * 255) if len(values) > 3 else 0
+                                text_color = f"#{r:02x}{g:02x}{b:02x}"
 
             # Get paragraph style
             if "ParagraphRun" in engine:
@@ -220,6 +235,9 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                         elif justify == 2:
                             text_align = "center"
 
+        # Check if text has a defined bounding box (for multi-line/wrapped text)
+        has_fixed_width = data.get("width", 0) > 0
+
         data["properties"] = {
             "text": text,
             "fontFamily": font_family,
@@ -232,6 +250,7 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
             "align": text_align,
             "verticalAlign": "top",
             "textDirection": "horizontal",
+            "fixedWidth": has_fixed_width,  # Preserve original width from PSD
         }
 
     except Exception as e:
@@ -248,6 +267,7 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
             "align": "left",
             "verticalAlign": "top",
             "textDirection": "horizontal",
+            "fixedWidth": False,
         }
 
 

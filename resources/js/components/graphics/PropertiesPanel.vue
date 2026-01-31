@@ -202,6 +202,23 @@ const handleFillImageUpload = (event) => {
     reader.readAsDataURL(file);
 };
 
+// Handle image replacement for image layers
+const handleImageReplace = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        updateProperty('src', e.target.result);
+    };
+    reader.readAsDataURL(file);
+};
+
+// Handle image fit mode change
+const updateImageFit = (fit) => {
+    updateProperty('fit', fit);
+};
+
 const fontWeights = [
     { value: 'normal', label: 'Regular' },
     { value: '300', label: 'Light' },
@@ -1090,6 +1107,27 @@ const toggleTextDecoration = (decoration) => {
                         </div>
                     </div>
 
+                    <!-- Fixed width toggle -->
+                    <div class="flex items-center justify-between mb-3">
+                        <label class="text-xs text-gray-700">{{ t('graphics.properties.fixedWidth') }}</label>
+                        <button
+                            @click="updateProperty('fixedWidth', !selectedLayer.properties?.fixedWidth)"
+                            :class="[
+                                'relative w-10 h-5 rounded-full transition-colors',
+                                selectedLayer.properties?.fixedWidth
+                                    ? 'bg-blue-600'
+                                    : 'bg-gray-300'
+                            ]"
+                        >
+                            <span
+                                :class="[
+                                    'absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform',
+                                    selectedLayer.properties?.fixedWidth ? 'translate-x-5' : ''
+                                ]"
+                            />
+                        </button>
+                    </div>
+
                     <!-- Line height and Letter spacing -->
                     <div class="grid grid-cols-2 gap-2 mb-3">
                         <!-- Line height -->
@@ -1615,6 +1653,83 @@ const toggleTextDecoration = (decoration) => {
                         :max="200"
                         :sensitivity="0.5"
                     />
+                </div>
+            </template>
+
+            <!-- Image layer properties -->
+            <template v-if="selectedLayer.type === 'image'">
+                <div class="px-3 py-4 border-b border-gray-200">
+                    <div class="flex items-center gap-2 mb-3">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">
+                            {{ t('graphics.properties.image') }}
+                        </span>
+                    </div>
+
+                    <!-- Current image preview -->
+                    <div v-if="selectedLayer.properties?.src" class="relative rounded-lg overflow-hidden border border-gray-200 mb-3">
+                        <img
+                            :src="selectedLayer.properties.src"
+                            alt="Layer image"
+                            class="w-full h-24 object-contain bg-gray-50"
+                        />
+                    </div>
+
+                    <!-- Replace image button -->
+                    <label class="flex items-center justify-center gap-2 px-3 py-2.5 border border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-colors">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span class="text-xs text-gray-600">{{ t('graphics.properties.replaceImage') }}</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            @change="handleImageReplace"
+                            class="hidden"
+                        />
+                    </label>
+
+                    <!-- Image fit mode -->
+                    <div class="mt-3">
+                        <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.properties.imageFit') }}</label>
+                        <div class="flex bg-gray-50 border border-gray-200 rounded overflow-hidden">
+                            <button
+                                @click="updateImageFit('cover')"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors border-r border-gray-200',
+                                    (selectedLayer.properties?.fit || 'cover') === 'cover'
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                ]"
+                            >
+                                {{ t('graphics.properties.fitCover') }}
+                            </button>
+                            <button
+                                @click="updateImageFit('contain')"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors border-r border-gray-200',
+                                    selectedLayer.properties?.fit === 'contain'
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                ]"
+                            >
+                                {{ t('graphics.properties.fitContain') }}
+                            </button>
+                            <button
+                                @click="updateImageFit('fill')"
+                                :class="[
+                                    'flex-1 py-1.5 text-[10px] font-medium transition-colors',
+                                    selectedLayer.properties?.fit === 'fill'
+                                        ? 'bg-white text-gray-900 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                ]"
+                            >
+                                {{ t('graphics.properties.fitFill') }}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </template>
 
