@@ -21,6 +21,7 @@ return [
         'duplicated' => 'Template duplicated successfully.',
         'saved' => 'Template saved successfully.',
         'deleted' => 'Template deleted successfully.',
+        'newFromGroup' => 'Template from Group',
     ],
 
     'layers' => [
@@ -30,6 +31,9 @@ return [
         'visible' => 'Visible',
         'locked' => 'Locked',
         'properties' => 'Properties',
+        'notAGroup' => 'Selected layer is not a group',
+        'groupEmpty' => 'Group has no children layers',
+        'createTemplateFromGroup' => 'Create Template from Group',
     ],
 
     'editor' => [
@@ -119,5 +123,26 @@ return [
             'analyzeFailed' => 'Failed to analyze PSD file',
             'parseFailed' => 'Failed to parse PSD file',
         ],
+    ],
+
+    'semantic_tags' => [
+        'header' => 'Header',
+        'subtitle' => 'Subtitle',
+        'paragraph' => 'Paragraph',
+        'primary_color' => 'Primary Color',
+        'secondary_color' => 'Secondary Color',
+        'text_primary_color' => 'Text Primary Color',
+        'text_secondary_color' => 'Text Secondary Color',
+        'social_handle' => 'Social Handle (@)',
+        'main_image' => 'Main Image',
+    ],
+
+    'template_preview' => [
+        'no_tagged_templates' => 'No templates with semantic tags found in library',
+        'render_failed' => 'Failed to generate preview',
+    ],
+
+    'library' => [
+        'groupTemplateCreated' => 'New template created from group',
     ],
 ];

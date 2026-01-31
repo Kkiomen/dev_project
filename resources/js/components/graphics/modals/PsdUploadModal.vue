@@ -55,8 +55,8 @@ const validateAndSetFile = async (selectedFile) => {
         return;
     }
 
-    // Check file size (100MB)
-    if (selectedFile.size > 100 * 1024 * 1024) {
+    // Check file size (500MB)
+    if (selectedFile.size > 500 * 1024 * 1024) {
         error.value = t('graphics.psd.errors.fileTooLarge');
         return;
     }

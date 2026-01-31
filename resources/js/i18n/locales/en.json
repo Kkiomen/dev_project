@@ -816,7 +816,10 @@
             "fixedWidth": "Fixed width",
             "masked": "Masked",
             "removeMask": "Remove mask",
-            "maskDescription": "Image has a vector mask applied. Replacing the image will preserve the mask shape."
+            "maskDescription": "Image has a vector mask applied. Replacing the image will preserve the mask shape.",
+            "semantic_tag": "Semantic Tag",
+            "no_tag": "No tag",
+            "semantic_tag_help": "Tag this layer for template preview with custom content."
         },
         "export": {
             "title": "Export Image",
@@ -926,14 +929,17 @@
             "added": "Template added to library",
             "removed": "Template removed from library",
             "confirmRemove": "Remove this template from the library? The template will remain in your collection.",
-            "adminOnly": "Admin only"
+            "adminOnly": "Admin only",
+            "edit": "Edit",
+            "createFromGroup": "Create Template from Group",
+            "groupTemplateCreated": "New template created from group"
         },
         "psd": {
             "uploadButton": "Import PSD",
             "uploadTitle": "Import PSD File",
             "selectFile": "Select file",
             "orDragDrop": "or drag and drop",
-            "maxSize": "Maximum size: 100MB",
+            "maxSize": "Maximum size: 500MB",
             "processing": "Processing PSD file...",
             "analyzing": "Analyzing structure...",
             "import": "Import",
@@ -943,12 +949,23 @@
             "hiddenLayersInfo": "Only visible layers from visible groups will be imported",
             "errors": {
                 "invalidFormat": "File must be in PSD format",
-                "fileTooLarge": "File is too large (max 100MB)",
+                "fileTooLarge": "File is too large (max 500MB)",
                 "uploadFailed": "Failed to import PSD file",
                 "analyzeFailed": "Failed to analyze PSD file",
                 "noFile": "No file selected",
                 "parseFailed": "Failed to parse PSD file"
             }
+        },
+        "semantic_tags": {
+            "header": "Header",
+            "subtitle": "Subtitle",
+            "paragraph": "Paragraph",
+            "primary_color": "Primary Color",
+            "secondary_color": "Secondary Color",
+            "text_primary_color": "Text Primary Color",
+            "text_secondary_color": "Text Secondary Color",
+            "social_handle": "Social Handle ({'@'})",
+            "main_image": "Main Image"
         }
     },
     "calendar": {
@@ -1097,6 +1114,36 @@
             "resumeEditing": "Resume Editing",
             "discardTemplate": "Discard"
         },
+        "template_preview": {
+            "title": "Preview Templates with Your Content",
+            "preview_button": "Preview with Content",
+            "your_content": "Your Content",
+            "header_text": "Header Text",
+            "header_placeholder": "Enter your main headline...",
+            "subtitle_text": "Subtitle Text",
+            "subtitle_placeholder": "Enter subtitle...",
+            "paragraph_text": "Paragraph Text",
+            "paragraph_placeholder": "Enter your paragraph text...",
+            "social_handle": "Social Handle",
+            "social_handle_placeholder": "{'@'}yourprofile",
+            "primary_color": "Primary Color",
+            "secondary_color": "Secondary Color",
+            "main_image": "Main Image",
+            "upload_image": "Click to upload image",
+            "generate": "Generate Previews",
+            "generating": "Generating...",
+            "generating_message": "Creating your previews, this may take a moment...",
+            "empty_state": "No previews yet",
+            "empty_state_hint": "Fill in your content and click Generate to see templates with your data.",
+            "selected": "Selected: {name}",
+            "add_to_post": "Add to Post",
+            "edit_in_editor": "Edit in Editor",
+            "fill_at_least_one": "Please fill in at least one field",
+            "no_tagged_templates": "No templates with semantic tags found in library",
+            "generation_failed": "Failed to generate preview",
+            "service_unavailable": "Template preview service is currently unavailable",
+            "add_failed": "Failed to add preview image to post"
+        },
         "preview": {
             "title": "Preview"
         },
@@ -1135,7 +1182,7 @@
         "clientName": "Client Name",
         "clientNamePlaceholder": "E.g. Acme Corp",
         "clientEmail": "Client Email",
-        "clientEmailPlaceholder": "client@example.com",
+        "clientEmailPlaceholder": "client{'@'}example.com",
         "clientEmailHint": "Optional - for reference only",
         "expiresAt": "Expires At",
         "expiresAtHint": "Leave empty for no expiration",
@@ -1244,7 +1291,7 @@
         "tokenExpiringSoon": "Token will expire soon. Consider reconnecting.",
         "verifying": "Verifying connection...",
         "reconnect": "Reconnect",
-        "withInstagram": "with Instagram: @{username}",
+        "withInstagram": "with Instagram: {'@'}{username}",
         "publishingMethod": "Publishing method",
         "directApi": "Direct API",
         "webhook": "Via webhook (n8n)",

@@ -28,6 +28,7 @@ class LayerResource extends JsonResource
             'rotation' => $this->rotation,
             'scale_x' => $this->scale_x,
             'scale_y' => $this->scale_y,
+            'opacity' => $this->opacity ?? 1,
             'properties' => $this->effective_properties,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

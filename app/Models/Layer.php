@@ -28,6 +28,7 @@ class Layer extends Model
         'rotation',
         'scale_x',
         'scale_y',
+        'opacity',
         'properties',
     ];
 
@@ -43,6 +44,7 @@ class Layer extends Model
         'rotation' => 'float',
         'scale_x' => 'float',
         'scale_y' => 'float',
+        'opacity' => 'float',
         'properties' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

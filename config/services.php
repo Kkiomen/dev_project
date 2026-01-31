@@ -78,4 +78,9 @@ return [
         'timeout' => env('PSD_PARSER_TIMEOUT', 120),
     ],
 
+    'template_renderer' => [
+        'url' => env('TEMPLATE_RENDERER_URL', 'http://template-renderer:3336'),
+        'timeout' => env('TEMPLATE_RENDERER_TIMEOUT', 60),
+    ],
+
 ];

@@ -7,7 +7,16 @@ from psd_tools.api.layers import TypeLayer, PixelLayer, ShapeLayer, SmartObjectL
 from psd_tools.api.adjustments import SolidColorFill
 
 from .font_matcher import match_font, extract_font_weight, extract_font_style
-from .image_extractor import extract_layer_image, extract_smart_object_image, extract_layer_image_without_mask, rgba_to_hex
+from .image_extractor import (
+    extract_layer_image,
+    extract_smart_object_image,
+    extract_layer_image_without_mask,
+    extract_smart_object_source,
+    rgba_to_hex,
+    extract_layer_mask,
+    analyze_smart_object_transform,
+    apply_mask_to_image,
+)
 
 
 # Canvas layer types matching LayerType enum
@@ -132,6 +141,7 @@ def extract_alpha_contour_path(layer, width: float, height: float) -> str | None
     try:
         import numpy as np
         from skimage import measure
+        from scipy.ndimage import binary_dilation, binary_erosion, binary_fill_holes
 
         # Get composite image
         comp = layer.composite()
@@ -171,14 +181,53 @@ def extract_alpha_contour_path(layer, width: float, height: float) -> str | None
         # Create binary mask
         binary = (alpha >= 128).astype(np.uint8)
 
-        # Find contours using marching squares
-        contours = measure.find_contours(binary, 0.5)
+        # Apply morphological closing to connect disconnected regions
+        # This is important for irregular "blob" shapes where marching squares
+        # may find multiple separate contours instead of one continuous boundary
+        struct = np.ones((5, 5))
+        # Fill holes first
+        filled = binary_fill_holes(binary).astype(np.uint8)
+        # Then dilate and erode to close gaps between regions
+        closed = binary_erosion(binary_dilation(filled, struct, iterations=3), struct, iterations=3).astype(np.uint8)
+
+        # Find contours using marching squares on the closed mask
+        contours = measure.find_contours(closed, 0.5)
+
+        if not contours:
+            # Fallback to original binary if closing didn't help
+            contours = measure.find_contours(binary, 0.5)
 
         if not contours:
             return None
 
         # Get the largest contour (main shape boundary)
         largest_contour = max(contours, key=len)
+
+        # Verify the contour covers a reasonable portion of the layer
+        contour_ys = [p[0] for p in largest_contour]
+        contour_xs = [p[1] for p in largest_contour]
+        contour_height = max(contour_ys) - min(contour_ys)
+        contour_width = max(contour_xs) - min(contour_xs)
+
+        # If contour doesn't cover at least 70% of the opaque region, something is wrong
+        opaque_rows = np.any(binary > 0, axis=1)
+        opaque_cols = np.any(binary > 0, axis=0)
+        expected_height = np.sum(opaque_rows)
+        expected_width = np.sum(opaque_cols)
+
+        if contour_height < expected_height * 0.7 or contour_width < expected_width * 0.7:
+            print(f"  [CONTOUR] Warning: contour covers only {contour_height:.0f}x{contour_width:.0f} but opaque region is {expected_height}x{expected_width}")
+            # Try with stronger closing
+            struct_large = np.ones((9, 9))
+            closed_strong = binary_erosion(binary_dilation(filled, struct_large, iterations=5), struct_large, iterations=5).astype(np.uint8)
+            contours_strong = measure.find_contours(closed_strong, 0.5)
+            if contours_strong:
+                largest_strong = max(contours_strong, key=len)
+                strong_ys = [p[0] for p in largest_strong]
+                strong_height = max(strong_ys) - min(strong_ys)
+                if strong_height > contour_height:
+                    largest_contour = largest_strong
+                    print(f"  [CONTOUR] Using stronger closing, improved to {strong_height:.0f}px height")
 
         # Need enough points for a meaningful shape
         if len(largest_contour) < 10:
@@ -429,7 +478,7 @@ def extract_mask_from_layer(layer, width: float, height: float) -> str | None:
     has_vm = hasattr(layer, "vector_mask") and layer.vector_mask is not None
     has_mask = hasattr(layer, "mask") and layer.mask is not None
     has_clip = hasattr(layer, "clip_layers") and layer.clip_layers
-    is_clipping = getattr(layer, "clipping_layer", False)
+    is_clipping = getattr(layer, "clipping", False)  # Use 'clipping' not deprecated 'clipping_layer'
 
     # Always log for image layers
     import sys
@@ -459,6 +508,267 @@ def extract_mask_from_layer(layer, width: float, height: float) -> str | None:
     return None
 
 
+def extract_rotation_from_vector_mask(layer) -> float:
+    """
+    Try to extract rotation from a layer's vector mask.
+
+    For rotated rectangles, the vector mask contains the actual corners of the shape.
+    We can calculate rotation from the angle of the top edge.
+
+    Returns:
+        Rotation in degrees, or 0.0 if not determinable
+    """
+    try:
+        import math
+
+        if not hasattr(layer, 'vector_mask') or not layer.vector_mask:
+            return 0.0
+
+        paths = layer.vector_mask.paths
+        if not paths:
+            return 0.0
+
+        # Find the first path with enough knots (rectangle has 4 corners)
+        for path in paths:
+            knots = list(path)
+            if len(knots) >= 4:
+                # Get the first two points (top-left and top-right for a rectangle)
+                # Knots are bezier points with anchor coordinates
+                if hasattr(knots[0], 'anchor'):
+                    # anchor is (y, x) normalized to image size
+                    p1 = knots[0].anchor
+                    p2 = knots[1].anchor
+
+                    # Calculate angle of top edge (from p1 to p2)
+                    # Note: anchor coordinates are (y, x) not (x, y)
+                    dy = p2[0] - p1[0]  # y difference
+                    dx = p2[1] - p1[1]  # x difference
+
+                    angle = math.degrees(math.atan2(dy, dx))
+
+                    # Only report significant rotation (> 1 degree)
+                    if abs(angle) > 1.0:
+                        print(f"    [ROTATION] Detected rotation from vector_mask: {angle:.1f}°")
+                        return angle
+
+        return 0.0
+
+    except Exception as e:
+        print(f"    [ROTATION] Error extracting rotation from vector_mask: {e}")
+        return 0.0
+
+
+def extract_rotation_from_origination(layer) -> float:
+    """
+    Try to extract rotation from a layer's origination data.
+
+    Origination data often contains transform information for shapes.
+
+    Returns:
+        Rotation in degrees, or 0.0 if not determinable
+    """
+    try:
+        import math
+
+        if not hasattr(layer, 'origination') or not layer.origination:
+            return 0.0
+
+        for orig in layer.origination:
+            # Check for transform data
+            if hasattr(orig, 'transform'):
+                transform = orig.transform
+                if transform and len(transform) >= 4:
+                    xx, xy = transform[0], transform[1]
+                    angle = math.degrees(math.atan2(xy, xx))
+                    if abs(angle) > 1.0:
+                        print(f"    [ROTATION] Detected rotation from origination transform: {angle:.1f}°")
+                        return angle
+
+            # Check for bounds that might indicate rotation
+            if hasattr(orig, 'bounds'):
+                bounds = orig.bounds
+                print(f"    [ROTATION] origination bounds: {bounds}")
+
+        return 0.0
+
+    except Exception as e:
+        print(f"    [ROTATION] Error extracting rotation from origination: {e}")
+        return 0.0
+
+
+def collect_clipping_base_layers(clipping_layer, sibling_layers: list, layer_offset_x: float, layer_offset_y: float) -> list:
+    """
+    Collect information about clipping base layers for complex clipping mask rendering.
+
+    Each base layer can have its own rotation, opacity, and position.
+    The frontend will render the image multiple times, once for each base layer.
+
+    Args:
+        clipping_layer: The layer with clipping=True
+        sibling_layers: All sibling layers in the same group (in order)
+        layer_offset_x: X offset of the clipping layer
+        layer_offset_y: Y offset of the clipping layer
+
+    Returns:
+        List of base layer info dicts with: x, y, width, height, rotation, opacity, name
+    """
+    try:
+        # Find index of clipping layer
+        clipping_index = None
+        for i, layer in enumerate(sibling_layers):
+            if layer is clipping_layer:
+                clipping_index = i
+                break
+
+        if clipping_index is None or clipping_index == 0:
+            return []
+
+        # Collect base layers (non-clipping layers before this one)
+        base_layers = []
+        for i in range(clipping_index - 1, -1, -1):
+            layer = sibling_layers[i]
+            # Stop at another clipping layer
+            if getattr(layer, "clipping", False):
+                break
+            base_layers.append(layer)
+
+        if not base_layers:
+            return []
+
+        print(f"  [CLIPPING] Found {len(base_layers)} base layers for clipping")
+
+        # Collect info about each base layer
+        clipping_bases = []
+
+        for base_layer in base_layers:
+            # Calculate absolute position (not relative to clipping layer)
+            abs_x = base_layer.left
+            abs_y = base_layer.top
+            w = base_layer.width
+            h = base_layer.height
+
+            # Get opacity from layer (0-255 -> 0.0-1.0)
+            base_opacity = base_layer.opacity / 255.0 if hasattr(base_layer, 'opacity') else 1.0
+
+            # Try multiple methods to get rotation
+            rotation = 0.0
+
+            # Method 1: Try vector_mask (for shapes)
+            rotation = extract_rotation_from_vector_mask(base_layer)
+
+            # Method 2: Try origination data
+            if abs(rotation) < 0.1:
+                rotation = extract_rotation_from_origination(base_layer)
+
+            # Method 3: For SmartObjectLayers, use transform analysis
+            if abs(rotation) < 0.1 and isinstance(base_layer, SmartObjectLayer):
+                transform_info = analyze_smart_object_transform(base_layer)
+                if transform_info and transform_info.get("rotation"):
+                    rotation = transform_info["rotation"]
+                    print(f"    [ROTATION] Base layer '{base_layer.name}': rotation from SmartObject = {rotation}°")
+
+            base_info = {
+                "name": base_layer.name,
+                "x": abs_x,
+                "y": abs_y,
+                "width": w,
+                "height": h,
+                "rotation": rotation,
+                "opacity": base_opacity,
+            }
+
+            clipping_bases.append(base_info)
+            print(f"    [CLIPPING] Base layer '{base_layer.name}': pos=({abs_x}, {abs_y}) size={w}x{h} rotation={rotation}° opacity={base_opacity:.2f}")
+
+        print(f"  [CLIPPING] Collected {len(clipping_bases)} clipping bases with full properties")
+
+        return clipping_bases
+
+    except Exception as e:
+        print(f"  [CLIPPING] Error collecting clipping base layers: {e}")
+        import traceback
+        traceback.print_exc()
+        return []
+
+
+def generate_clipping_base_path(clipping_layer, sibling_layers: list, layer_offset_x: float, layer_offset_y: float) -> str | None:
+    """
+    Generate SVG path from clipping base layers (layers that a clipped layer clips to).
+
+    NOTE: This generates simple rectangles WITHOUT rotation. For rotated clipping masks,
+    use collect_clipping_base_layers() and render multiple images in frontend.
+
+    In Photoshop, a clipping mask clips to ALL non-clipping layers below it until
+    the first clipping layer or end of group.
+
+    Args:
+        clipping_layer: The layer with clipping=True
+        sibling_layers: All sibling layers in the same group (in order)
+        layer_offset_x: X offset of the clipping layer
+        layer_offset_y: Y offset of the clipping layer
+
+    Returns:
+        Combined SVG path string or None
+    """
+    try:
+        # Find index of clipping layer
+        clipping_index = None
+        for i, layer in enumerate(sibling_layers):
+            if layer is clipping_layer:
+                clipping_index = i
+                break
+
+        if clipping_index is None or clipping_index == 0:
+            return None
+
+        # Collect base layers (non-clipping layers before this one)
+        base_layers = []
+        for i in range(clipping_index - 1, -1, -1):
+            layer = sibling_layers[i]
+            # Stop at another clipping layer
+            if getattr(layer, "clipping", False):
+                break
+            base_layers.append(layer)
+
+        if not base_layers:
+            return None
+
+        print(f"  [CLIPPING] Found {len(base_layers)} base layers for clipping")
+
+        # Generate SVG paths from base layers
+        svg_paths = []
+
+        for base_layer in base_layers:
+            # Calculate relative position to clipping layer
+            rel_x = base_layer.left - layer_offset_x
+            rel_y = base_layer.top - layer_offset_y
+
+            # For rectangles, generate simple rect path
+            if isinstance(base_layer, ShapeLayer) or hasattr(base_layer, 'width'):
+                w = base_layer.width
+                h = base_layer.height
+
+                # Simple rectangle path (relative to clipping layer origin)
+                rect_path = f"M{rel_x},{rel_y} L{rel_x + w},{rel_y} L{rel_x + w},{rel_y + h} L{rel_x},{rel_y + h} Z"
+                svg_paths.append(rect_path)
+                print(f"    [CLIPPING] Base layer '{base_layer.name}': rect at ({rel_x}, {rel_y}) size {w}x{h}")
+
+        if not svg_paths:
+            return None
+
+        # Combine all paths
+        combined_path = " ".join(svg_paths)
+        print(f"  [CLIPPING] Generated combined clipPath with {len(svg_paths)} shapes")
+
+        return combined_path
+
+    except Exception as e:
+        print(f"  [CLIPPING] Error generating clipping base path: {e}")
+        import traceback
+        traceback.print_exc()
+        return None
+
+
 def get_layer_type(layer) -> str | None:
     """Determine the canvas layer type for a PSD layer."""
     if isinstance(layer, TypeLayer):
@@ -468,7 +778,12 @@ def get_layer_type(layer) -> str | None:
         return LAYER_TYPE_IMAGE
 
     if isinstance(layer, ShapeLayer):
-        # Try to determine shape type from path data
+        # Check if this is a complex shape (rotated, combined paths, etc.)
+        # Complex shapes have "Invalidated" origination and should be rendered as images
+        if _is_complex_shape(layer):
+            print(f"  [COMPLEX_SHAPE] Layer '{layer.name}' has complex path - treating as image")
+            return LAYER_TYPE_IMAGE
+        # Simple shapes (Rectangle, Ellipse) can be rendered as shapes
         shape_type = _detect_shape_type(layer)
         return shape_type
 
@@ -477,6 +792,23 @@ def get_layer_type(layer) -> str | None:
         return LAYER_TYPE_RECTANGLE
 
     return None
+
+
+def _is_complex_shape(layer: ShapeLayer) -> bool:
+    """
+    Check if a shape layer is complex (rotated, combined paths, etc.)
+    Complex shapes have "Invalidated" origination entries and cannot be
+    accurately represented as simple rectangles/ellipses.
+    """
+    try:
+        if hasattr(layer, 'origination') and layer.origination:
+            for orig in layer.origination:
+                orig_type = type(orig).__name__
+                if orig_type == 'Invalidated':
+                    return True
+        return False
+    except Exception:
+        return False
 
 
 def _detect_shape_type(layer: ShapeLayer) -> str:
@@ -505,7 +837,7 @@ def _detect_shape_type(layer: ShapeLayer) -> str:
         return LAYER_TYPE_RECTANGLE
 
 
-def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group: bool = False, is_root: bool = True) -> dict | None:
+def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group: bool = False, is_root: bool = True, sibling_layers: list = None, psd_dpi: int = 72) -> dict | None:
     """
     Map a PSD layer to a canvas layer structure.
 
@@ -516,6 +848,8 @@ def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group
         psd_height: PSD document height
         is_group: whether this layer is a group
         is_root: whether this layer is at the root level (not inside a group)
+        sibling_layers: list of sibling layers (for clipping mask detection)
+        psd_dpi: PSD document resolution in DPI (for font size scaling)
 
     Returns:
         dict with layer data or None if layer should be skipped
@@ -536,6 +870,9 @@ def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group
     if not layer_type:
         return None
 
+    # Get opacity (0.0 - 1.0)
+    opacity = layer.opacity / 255.0 if hasattr(layer, "opacity") else 1.0
+
     # Base layer data
     base_data = {
         "name": layer.name or f"Layer {layer_index + 1}",
@@ -550,13 +887,12 @@ def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group
         "rotation": 0,
         "scale_x": 1.0,
         "scale_y": 1.0,
+        "opacity": opacity,  # Pass opacity to frontend
         "properties": {},
         "image_data": None,
+        "mask_data": None,  # Layer mask image data
         "warnings": [],
     }
-
-    # Get opacity
-    opacity = layer.opacity / 255.0 if hasattr(layer, "opacity") else 1.0
 
     # Check for unsupported blend modes
     if hasattr(layer, "blend_mode") and layer.blend_mode != BlendMode.NORMAL:
@@ -564,9 +900,9 @@ def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group
 
     # Map specific layer type properties
     if layer_type == LAYER_TYPE_TEXT:
-        _map_text_layer(layer, base_data, opacity)
+        _map_text_layer(layer, base_data, opacity, psd_dpi)
     elif layer_type == LAYER_TYPE_IMAGE:
-        _map_image_layer(layer, base_data, opacity)
+        _map_image_layer(layer, base_data, opacity, sibling_layers)
     elif isinstance(layer, SolidColorFill):
         _map_solid_color_fill_layer(layer, base_data, opacity)
     elif layer_type in (LAYER_TYPE_RECTANGLE, LAYER_TYPE_ELLIPSE):
@@ -575,50 +911,88 @@ def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group
     return base_data
 
 
-def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
-    """Map text layer properties."""
+def _map_text_layer(layer: TypeLayer, data: dict, opacity: float, psd_dpi: int = 72):
+    """Map text layer properties.
+
+    Args:
+        layer: psd-tools TypeLayer object
+        data: Layer data dict to populate
+        opacity: Layer opacity
+        psd_dpi: Document DPI for font size scaling (default 72)
+    """
     try:
         text = layer.text or ""
+        print(f"  [TEXT] Layer '{layer.name}': raw text = {repr(text[:100])}..." if len(text) > 100 else f"  [TEXT] Layer '{layer.name}': raw text = {repr(text)}")
         # Normalize line endings - Photoshop uses \r for paragraph breaks
         text = text.replace('\r\n', '\n').replace('\r', '\n')
 
         # Try to extract text bounding box from engine_dict
         # Photoshop stores paragraph text box dimensions in Rendered.Shapes.Children[0].Cookie.Photoshop.BoxBounds
         text_box_bounds = None
+        is_point_text = True  # Assume point text (no bounding box) by default
         try:
             if hasattr(layer, 'engine_dict') and layer.engine_dict:
                 engine = layer.engine_dict
+                print(f"  [TEXT DEBUG] Layer '{layer.name}': engine_dict keys = {list(engine.keys()) if hasattr(engine, 'keys') else 'N/A'}")
                 if "Rendered" in engine:
                     rendered = engine["Rendered"]
+                    print(f"  [TEXT DEBUG] Rendered keys = {list(rendered.keys()) if hasattr(rendered, 'keys') else 'N/A'}")
                     if "Shapes" in rendered:
                         shapes = rendered["Shapes"]
+                        print(f"  [TEXT DEBUG] Shapes keys = {list(shapes.keys()) if hasattr(shapes, 'keys') else 'N/A'}")
                         if "Children" in shapes and shapes["Children"]:
                             children = shapes["Children"]
+                            print(f"  [TEXT DEBUG] Children count = {len(children)}")
                             if len(children) > 0:
                                 first_shape = children[0]
+                                print(f"  [TEXT DEBUG] first_shape keys = {list(first_shape.keys()) if hasattr(first_shape, 'keys') else 'N/A'}")
                                 if "Cookie" in first_shape:
                                     cookie = first_shape["Cookie"]
+                                    print(f"  [TEXT DEBUG] Cookie keys = {list(cookie.keys()) if hasattr(cookie, 'keys') else 'N/A'}")
                                     if "Photoshop" in cookie:
                                         ps_data = cookie["Photoshop"]
+                                        print(f"  [TEXT DEBUG] Photoshop keys = {list(ps_data.keys()) if hasattr(ps_data, 'keys') else 'N/A'}")
                                         if "BoxBounds" in ps_data:
                                             bounds = ps_data["BoxBounds"]
-                                            # BoxBounds is [x, y, width, height]
+                                            print(f"  [TEXT DEBUG] BoxBounds raw = {list(bounds)}")
+                                            # BoxBounds is [left, top, right, bottom] - NOT width/height!
                                             if len(bounds) >= 4:
+                                                left = float(bounds[0])
+                                                top = float(bounds[1])
+                                                right = float(bounds[2])
+                                                bottom = float(bounds[3])
                                                 text_box_bounds = {
-                                                    "x": float(bounds[0]),
-                                                    "y": float(bounds[1]),
-                                                    "width": float(bounds[2]),
-                                                    "height": float(bounds[3]),
+                                                    "x": left,
+                                                    "y": top,
+                                                    "width": right - left,
+                                                    "height": bottom - top,
                                                 }
-        except Exception:
-            pass  # BoxBounds extraction failed, use layer bounds
+                                                is_point_text = False
+                                                print(f"  [TEXT BOX] BoxBounds: left={left}, top={top}, right={right}, bottom={bottom} -> width={right-left}, height={bottom-top}")
+                                        else:
+                                            print(f"  [TEXT DEBUG] No BoxBounds in Photoshop - this is POINT TEXT (no text box)")
+        except Exception as e:
+            print(f"  [TEXT DEBUG] Exception during BoxBounds extraction: {e}")
 
         # Update layer dimensions with text box bounds if available
         # This gives us the actual paragraph text box size, not just rendered text bounds
+        # IMPORTANT: BoxBounds is in UNTRANSFORMED space, but we need the TRANSFORMED size for rendering
+        # The transform is already applied to font size, so we need to also apply it to the box dimensions
         if text_box_bounds and text_box_bounds["width"] > 0:
-            data["width"] = text_box_bounds["width"]
-        if text_box_bounds and text_box_bounds["height"] > 0:
-            data["height"] = text_box_bounds["height"]
+            # Apply transform scale to BoxBounds to get final rendered dimensions
+            transform_scale_x = 1.0
+            transform_scale_y = 1.0
+            if hasattr(layer, 'transform') and layer.transform and len(layer.transform) >= 4:
+                import math
+                xx, xy, yx, yy = layer.transform[0], layer.transform[1], layer.transform[2], layer.transform[3]
+                transform_scale_x = math.sqrt(xx * xx + xy * xy)
+                transform_scale_y = math.sqrt(yx * yx + yy * yy)
+
+            scaled_width = text_box_bounds["width"] * transform_scale_x
+            scaled_height = text_box_bounds["height"] * transform_scale_y
+            data["width"] = scaled_width
+            data["height"] = scaled_height
+            print(f"  [TEXT BOX] Scaled dimensions: {text_box_bounds['width']:.1f} * {transform_scale_x:.3f} = {scaled_width:.1f}w, {text_box_bounds['height']:.1f} * {transform_scale_y:.3f} = {scaled_height:.1f}h")
 
         # Get text engine data for detailed properties
         font_family = "Montserrat"  # Default
@@ -631,9 +1005,21 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
         original_font_name = None  # Original font name from PSD
         is_dynamic_font = False    # Whether frontend should try dynamic loading
 
+        # Debug: Log layer attributes that might contain transform info
+        print(f"  [FONT DEBUG] Layer '{layer.name}':")
+        print(f"    - has transform: {hasattr(layer, 'transform')}")
+        if hasattr(layer, 'transform'):
+            print(f"    - transform value: {layer.transform}")
+        print(f"    - layer bounds: ({layer.left}, {layer.top}) size {layer.width}x{layer.height}")
+
         # Try to get font info from text engine
         if hasattr(layer, "engine_dict") and layer.engine_dict:
             engine = layer.engine_dict
+
+            # Debug: Check for DocumentResources which may contain transform info
+            if "DocumentResources" in engine:
+                doc_res = engine["DocumentResources"]
+                print(f"    - DocumentResources keys: {list(doc_res.keys()) if hasattr(doc_res, 'keys') else 'N/A'}")
 
             # Build font list from resource_dict (psd-tools uses this)
             font_list = []
@@ -671,6 +1057,7 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                 if primary_run and "StyleSheet" in primary_run:
                     stylesheet = primary_run["StyleSheet"]
                     style = stylesheet["StyleSheetData"] if "StyleSheetData" in stylesheet else {}
+                    print(f"  [FONT DEBUG] StyleSheetData keys: {list(style.keys()) if hasattr(style, 'keys') else 'empty/invalid'}")
 
                     # Font family - Font is an index into FontSet
                     if "Font" in style:
@@ -699,10 +1086,40 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                         # Get scale factors from style
                         vertical_scale = style["VerticalScale"] if "VerticalScale" in style else 1.0
 
-                        # PSD stores font size in points at document resolution
-                        # For web canvas (72 DPI logical), use the value directly
-                        # The pt value in PSD corresponds to px in web at 72 DPI
-                        font_size = raw_font_size * vertical_scale
+                        # PSD stores font size in points
+                        # Convert to pixels based on document DPI
+                        # Formula: pixels = points * (dpi / 72)
+                        # At 72 DPI: 1pt = 1px
+                        # At 300 DPI: 1pt = 4.17px
+                        dpi_scale = psd_dpi / 72.0 if psd_dpi > 0 else 1.0
+
+                        # Check for layer transform matrix (scaling applied to text)
+                        # TypeLayer.transform is a 2D affine matrix: [xx, xy, yx, yy, tx, ty]
+                        # xx and yy contain the scale factors (when no rotation)
+                        transform_scale = 1.0
+                        if hasattr(layer, 'transform') and layer.transform:
+                            transform = layer.transform
+                            print(f"  [FONT] Layer transform: {transform}")
+                            if len(transform) >= 4:
+                                import math
+                                # Extract scale from transform matrix
+                                # For affine matrix [xx, xy, yx, yy, tx, ty]:
+                                # scale_x = sqrt(xx^2 + yx^2)
+                                # scale_y = sqrt(xy^2 + yy^2)
+                                xx, xy, yx, yy = transform[0], transform[1], transform[2], transform[3]
+                                scale_x = math.sqrt(xx * xx + xy * xy)
+                                scale_y = math.sqrt(yx * yx + yy * yy)
+                                # Use average of x/y scale for font size
+                                # (typically they're the same for uniform scaling)
+                                transform_scale = (scale_x + scale_y) / 2.0
+                                print(f"  [FONT] Transform scale: xx={xx:.3f}, yy={yy:.3f} -> scale_x={scale_x:.3f}, scale_y={scale_y:.3f}, avg={transform_scale:.3f}")
+
+                        # Ensure all values are native Python floats
+                        raw_font_size = float(raw_font_size)
+                        vertical_scale = float(vertical_scale)
+                        print(f"  [FONT DEBUG] raw_font_size={raw_font_size}, vertical_scale={vertical_scale}, dpi_scale={dpi_scale}, transform_scale={transform_scale}")
+                        font_size = raw_font_size * vertical_scale * dpi_scale * transform_scale
+                        print(f"  [FONT] Font size: {raw_font_size}pt * {dpi_scale:.2f} (DPI) * {transform_scale:.2f} (transform) = {font_size:.1f}px")
 
                     # Color
                     if "FillColor" in style:
@@ -715,6 +1132,20 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                                 g = int(values[2] * 255) if len(values) > 2 else 0
                                 b = int(values[3] * 255) if len(values) > 3 else 0
                                 text_color = f"#{r:02x}{g:02x}{b:02x}"
+
+                    # FontCaps - text case transformation
+                    # 0 = Normal, 1 = Small Caps, 2 = All Caps
+                    if "FontCaps" in style:
+                        font_caps = int(style["FontCaps"])
+                        print(f"  [TEXT] FontCaps: {font_caps}")
+                        if font_caps == 2:
+                            # All Caps - transform text to uppercase
+                            text = text.upper()
+                            print(f"  [TEXT] Applied ALL CAPS transformation")
+                        elif font_caps == 1:
+                            # Small Caps - approximate with uppercase (CSS small-caps is complex)
+                            text = text.upper()
+                            print(f"  [TEXT] Applied SMALL CAPS (approximated as uppercase)")
 
             # Get paragraph style
             if "ParagraphRun" in engine:
@@ -734,7 +1165,10 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
                             text_align = "center"
 
         # Check if text has a defined bounding box (for multi-line/wrapped text)
-        has_fixed_width = data.get("width", 0) > 0
+        # POINT TEXT should NOT have fixedWidth - it displays as single line
+        # PARAGRAPH TEXT (with BoxBounds) should have fixedWidth for word wrapping
+        has_fixed_width = not is_point_text and data.get("width", 0) > 0
+        print(f"  [TEXT] Layer '{layer.name}': is_point_text={is_point_text}, has_fixed_width={has_fixed_width}")
 
         data["properties"] = {
             "text": text,
@@ -748,7 +1182,7 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
             "align": text_align,
             "verticalAlign": "top",
             "textDirection": "horizontal",
-            "fixedWidth": has_fixed_width,  # Preserve original width from PSD
+            "fixedWidth": has_fixed_width,  # Only true for paragraph text (with BoxBounds)
             "originalFontName": original_font_name,  # Original font name from PSD
             "isDynamicFont": is_dynamic_font,  # Whether to try dynamic Google Fonts loading
         }
@@ -771,132 +1205,205 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float):
         }
 
 
-def _map_image_layer(layer, data: dict, opacity: float):
-    """Map image/pixel layer properties."""
+def _map_image_layer(layer, data: dict, opacity: float, sibling_layers: list = None):
+    """Map image/pixel layer properties.
+
+    Args:
+        layer: The PSD layer
+        data: Layer data dict to populate
+        opacity: Layer opacity
+        sibling_layers: Optional list of sibling layers (for clipping mask detection)
+    """
     try:
         clip_path = None
+        smart_object_source_id = None
+        layer_name = data.get('name', 'unknown')
+        is_clipping = getattr(layer, "clipping", False)
 
-        # Try to extract mask - but only use it if the shape is "closed"
-        # (for image placeholders like photos in circles/ellipses)
-        # Don't use clipPath for decorative elements that have content at edges
-        # (like blobs, waves) - they already have their shape in alpha channel
-        potential_clip_path = extract_mask_from_layer(layer, data["width"], data["height"])
+        # Check if this is a SmartObjectLayer and get unique_id for linked asset support
+        if isinstance(layer, SmartObjectLayer):
+            if hasattr(layer, "smart_object") and layer.smart_object:
+                so = layer.smart_object
+                if hasattr(so, "unique_id") and so.unique_id:
+                    smart_object_source_id = so.unique_id
+                    print(f"  [SMART_OBJECT] Layer '{layer_name}' has unique_id: {smart_object_source_id}")
 
-        if potential_clip_path:
-            # Check if this is a "closed" shape (like ellipse) vs "open" decorative element
-            # Decorative elements typically have content touching the bottom edge
-            # Image placeholders have the shape floating (all edges have transparency)
-            import numpy as np
+            # Analyze Smart Object transformations (flip, rotation, scale)
+            transform_info = analyze_smart_object_transform(layer)
+            if transform_info:
+                # Apply flip through negative scale values
+                if transform_info.get("flip_x"):
+                    data["scale_x"] = -1.0
+                    print(f"  [TRANSFORM] Layer '{layer_name}': Horizontal flip detected")
+                if transform_info.get("flip_y"):
+                    data["scale_y"] = -1.0
+                    print(f"  [TRANSFORM] Layer '{layer_name}': Vertical flip detected")
 
-            try:
-                comp = layer.composite()
-                if comp and comp.mode == 'RGBA':
-                    arr = np.array(comp)
-                    alpha = arr[:, :, 3]
-                    h, w = alpha.shape
+        # Check for CLIPPING MASK first
+        # If layer is clipping, collect full base layer info (with rotation, opacity)
+        clipping_bases = []
+        if is_clipping and sibling_layers:
+            print(f"  [CLIPPING] Layer '{layer_name}' is a clipping layer")
 
-                    # Check if bottom edge has significant opaque content
-                    bottom_edge = alpha[h-5:h, :]  # Last 5 rows
-                    bottom_opaque_ratio = np.sum(bottom_edge >= 128) / bottom_edge.size
+            # Collect full info about each base layer
+            clipping_bases = collect_clipping_base_layers(
+                layer,
+                sibling_layers,
+                layer.left,
+                layer.top
+            )
 
-                    # If bottom edge is mostly opaque (>30%), it's a decorative element
-                    # that extends to the bottom - don't clip it
-                    if bottom_opaque_ratio > 0.30:
-                        print(f"  Skipping clipPath for '{data.get('name', 'unknown')}' - decorative element (bottom edge {bottom_opaque_ratio*100:.0f}% opaque)")
-                        clip_path = None
+            # Also generate simple clipPath for fallback (without rotation)
+            clipping_clip_path = generate_clipping_base_path(
+                layer,
+                sibling_layers,
+                layer.left,
+                layer.top
+            )
+            if clipping_clip_path:
+                clip_path = clipping_clip_path
+                print(f"  [CLIPPING] Generated clipPath from base layers for '{layer_name}'")
+
+        # Extract layer mask (raster mask) - this is separate from vector mask/clipPath
+        layer_mask_data = extract_layer_mask(layer)
+        has_raster_mask = layer_mask_data is not None
+
+        if has_raster_mask:
+            print(f"  [LAYER_MASK] Layer '{layer_name}': Found raster mask {layer_mask_data['width']}x{layer_mask_data['height']}")
+            data["mask_data"] = layer_mask_data
+
+        # If no clipping clipPath, try to extract vector mask
+        if clip_path is None:
+            potential_clip_path = extract_mask_from_layer(layer, data["width"], data["height"])
+
+            if potential_clip_path:
+                # Check if this is a "closed" shape (like ellipse) vs "open" decorative element
+                import numpy as np
+
+                try:
+                    comp = layer.composite()
+                    if comp and comp.mode == 'RGBA':
+                        arr = np.array(comp)
+                        alpha = arr[:, :, 3]
+                        h, w = alpha.shape
+
+                        # Check if bottom edge has significant opaque content
+                        bottom_edge = alpha[h-5:h, :]
+                        bottom_opaque_ratio = np.sum(bottom_edge >= 128) / bottom_edge.size
+
+                        if bottom_opaque_ratio > 0.30:
+                            print(f"  Skipping clipPath for '{layer_name}' - decorative element")
+                        else:
+                            clip_path = potential_clip_path
+                            print(f"  Using clipPath for '{layer_name}' - image placeholder")
                     else:
                         clip_path = potential_clip_path
-                        print(f"  Using clipPath for '{data.get('name', 'unknown')}' - image placeholder (bottom edge {bottom_opaque_ratio*100:.0f}% opaque)")
-                else:
+                except Exception as e:
+                    print(f"  Could not check bottom edge, using clipPath: {e}")
                     clip_path = potential_clip_path
-            except Exception as e:
-                print(f"  Could not check bottom edge, using clipPath: {e}")
-                clip_path = potential_clip_path
 
-        layer_has_mask = clip_path is not None
-
-        # Extract the image
+        # Extract the image WITHOUT mask applied
+        # Mask will be applied dynamically in frontend - this allows user to replace image
+        # and have the same mask applied to the new image
         if isinstance(layer, SmartObjectLayer):
-            # For SmartObjects with mask, try to get unmasked image
-            if layer_has_mask:
+            # For SmartObjects: use extract_smart_object_source to get CLEAN original image
+            # This bypasses any layer masks or transformations
+            image_data = extract_smart_object_source(layer)
+            if image_data:
+                print(f"  [IMAGE] Extracted clean source image for SmartObject '{layer_name}'")
+            else:
+                # Fallback: try without mask
                 image_data = extract_layer_image_without_mask(layer)
                 if not image_data:
-                    image_data = extract_smart_object_image(layer)
-            else:
-                image_data = extract_smart_object_image(layer)
+                    image_data = extract_layer_image(layer, apply_mask=False)
         else:
-            # For PixelLayers with mask, extract without baked-in mask
-            if layer_has_mask:
-                image_data = extract_layer_image_without_mask(layer)
-                if not image_data:
-                    image_data = extract_layer_image(layer)
-            else:
-                image_data = extract_layer_image(layer)
+            # For PixelLayers: extract without baked-in mask
+            image_data = extract_layer_image_without_mask(layer)
+            if not image_data:
+                image_data = extract_layer_image(layer, apply_mask=False)
 
         if image_data:
             data["image_data"] = image_data
             data["properties"] = {
-                "src": None,  # Will be set after image is saved
+                "src": None,
                 "fit": "cover",
-                "clipPath": clip_path,  # SVG path for vector mask clipping
+                "clipPath": clip_path,
+                "clippingBases": clipping_bases if clipping_bases else None,  # Full base layer info for complex clipping
+                "smartObjectSourceId": smart_object_source_id,
+                "hasMask": has_raster_mask,
+                "isClipping": is_clipping,  # Mark as clipping layer
             }
-            print(f"  [DEBUG] Image layer '{data.get('name', 'unknown')}' properties: clipPath={'YES' if clip_path else 'NO'}")
+            print(f"  [DEBUG] Image layer '{layer_name}': clipPath={'YES' if clip_path else 'NO'}, clippingBases={len(clipping_bases) if clipping_bases else 0}, hasMask={has_raster_mask}, isClipping={is_clipping}")
         else:
             data["warnings"].append("Could not extract image from layer")
             data["properties"] = {
                 "src": None,
                 "fit": "cover",
                 "clipPath": clip_path,
+                "clippingBases": clipping_bases if clipping_bases else None,
+                "smartObjectSourceId": smart_object_source_id,
+                "hasMask": has_raster_mask,
+                "isClipping": is_clipping,
             }
-            print(f"  [DEBUG] Image layer '{data.get('name', 'unknown')}' (no image_data) properties: clipPath={'YES' if clip_path else 'NO'}")
+            print(f"  [DEBUG] Image layer '{layer_name}' (no image_data): clipPath={'YES' if clip_path else 'NO'}, clippingBases={len(clipping_bases) if clipping_bases else 0}, hasMask={has_raster_mask}, isClipping={is_clipping}")
 
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         data["warnings"].append(f"Failed to extract image: {str(e)}")
         data["properties"] = {
             "src": None,
             "fit": "cover",
             "clipPath": None,
+            "clippingBases": None,
+            "hasMask": False,
+            "isClipping": False,
         }
 
 
 def _map_shape_layer(layer: ShapeLayer, data: dict, opacity: float):
     """Map shape layer properties."""
+    from psd_tools.constants import Tag
+
     try:
         fill_color = "#CCCCCC"
         stroke_color = None
         stroke_width = 0
         corner_radius = 0
 
-        # Try to get fill color
-        if hasattr(layer, "vector_mask") and layer.vector_mask:
-            pass  # Shape colors are complex in PSD
-
-        # Try to get from layer effects or direct fill
+        # Priority 1: Try to get fill color from SOLID_COLOR_SHEET_SETTING
+        # This is the most reliable source for shape fill colors
         if hasattr(layer, "tagged_blocks"):
-            for block in layer.tagged_blocks:
-                if hasattr(block, "data"):
-                    # Look for solid color fill
-                    if hasattr(block.data, "color"):
-                        color = block.data.color
-                        if hasattr(color, "red"):
-                            fill_color = f"#{int(color.red):02x}{int(color.green):02x}{int(color.blue):02x}"
+            try:
+                solid_color_data = layer.tagged_blocks.get_data(Tag.SOLID_COLOR_SHEET_SETTING)
+                if solid_color_data:
+                    # Data structure: {b'Clr ': {b'Rd  ': R, b'Grn ': G, b'Bl  ': B}}
+                    color_data = solid_color_data.get(b'Clr ')
+                    if color_data:
+                        r = int(color_data.get(b'Rd  ', 0))
+                        g = int(color_data.get(b'Grn ', 0))
+                        b = int(color_data.get(b'Bl  ', 0))
+                        fill_color = f"#{r:02x}{g:02x}{b:02x}"
+                        print(f"  [SHAPE COLOR] Layer '{layer.name}': extracted from SOLID_COLOR_SHEET_SETTING: {fill_color}")
+            except Exception as e:
+                print(f"  [SHAPE COLOR] Could not extract from SOLID_COLOR_SHEET_SETTING: {e}")
 
-        # Try composite approach - sample dominant color from rendered layer
-        try:
-            composite = layer.composite()
-            if composite:
-                # Get a sample pixel from the center
-                composite_rgba = composite.convert("RGBA")
-                w, h = composite_rgba.size
-                if w > 0 and h > 0:
-                    center_pixel = composite_rgba.getpixel((w // 2, h // 2))
-                    if center_pixel and len(center_pixel) >= 4 and center_pixel[3] > 0:  # If not fully transparent
-                        extracted_color = rgba_to_hex(center_pixel, fill_color)
-                        # Only use if we got a valid color
-                        if extracted_color and extracted_color != "#000000":
-                            fill_color = extracted_color
-        except Exception as e:
-            print(f"Could not extract shape color: {e}")
+        # Priority 2: If still default, try composite approach (for complex shapes)
+        if fill_color == "#CCCCCC":
+            try:
+                composite = layer.composite()
+                if composite:
+                    composite_rgba = composite.convert("RGBA")
+                    w, h = composite_rgba.size
+                    if w > 0 and h > 0:
+                        center_pixel = composite_rgba.getpixel((w // 2, h // 2))
+                        if center_pixel and len(center_pixel) >= 4 and center_pixel[3] > 0:
+                            extracted_color = rgba_to_hex(center_pixel, fill_color)
+                            if extracted_color and extracted_color != "#000000":
+                                fill_color = extracted_color
+                                print(f"  [SHAPE COLOR] Layer '{layer.name}': extracted from composite: {fill_color}")
+            except Exception as e:
+                print(f"  [SHAPE COLOR] Could not extract from composite: {e}")
 
         if data["type"] == LAYER_TYPE_RECTANGLE:
             data["properties"] = {

@@ -32,3 +32,8 @@ Schedule::command('posts:publish-due')
 Schedule::command('automation:init-week')
     ->weeklyOn(1, '00:00')
     ->withoutOverlapping();
+
+// Clean up old template preview files every hour
+Schedule::command('previews:cleanup')
+    ->hourly()
+    ->withoutOverlapping();

@@ -817,7 +817,10 @@
             "fixedWidth": "Stała szerokość",
             "masked": "Z maską",
             "removeMask": "Usuń maskę",
-            "maskDescription": "Obraz ma zastosowaną maskę wektorową. Podmiana obrazu zachowa kształt maski."
+            "maskDescription": "Obraz ma zastosowaną maskę wektorową. Podmiana obrazu zachowa kształt maski.",
+            "semantic_tag": "Tag semantyczny",
+            "no_tag": "Brak tagu",
+            "semantic_tag_help": "Oznacz tę warstwę do podglądu szablonu z własną treścią."
         },
         "export": {
             "title": "Eksportuj obraz",
@@ -927,14 +930,17 @@
             "added": "Szablon dodany do biblioteki",
             "removed": "Szablon usunięty z biblioteki",
             "confirmRemove": "Usunąć ten szablon z biblioteki? Szablon pozostanie w Twojej kolekcji.",
-            "adminOnly": "Tylko administrator"
+            "adminOnly": "Tylko administrator",
+            "edit": "Edytuj",
+            "createFromGroup": "Utwórz szablon z grupy",
+            "groupTemplateCreated": "Utworzono nowy szablon z grupy"
         },
         "psd": {
             "uploadButton": "Import PSD",
             "uploadTitle": "Importuj plik PSD",
             "selectFile": "Wybierz plik",
             "orDragDrop": "lub przeciągnij i upuść",
-            "maxSize": "Maksymalny rozmiar: 100MB",
+            "maxSize": "Maksymalny rozmiar: 500MB",
             "processing": "Przetwarzanie pliku PSD...",
             "analyzing": "Analizowanie struktury...",
             "import": "Importuj",
@@ -944,12 +950,23 @@
             "hiddenLayersInfo": "Tylko widoczne warstwy z widocznych grup zostaną zaimportowane",
             "errors": {
                 "invalidFormat": "Plik musi być w formacie PSD",
-                "fileTooLarge": "Plik jest zbyt duży (max 100MB)",
+                "fileTooLarge": "Plik jest zbyt duży (max 500MB)",
                 "uploadFailed": "Nie udało się zaimportować pliku PSD",
                 "analyzeFailed": "Nie udało się przeanalizować pliku PSD",
                 "noFile": "Nie wybrano pliku",
                 "parseFailed": "Nie udało się przetworzyć pliku PSD"
             }
+        },
+        "semantic_tags": {
+            "header": "Nagłówek",
+            "subtitle": "Podtytuł",
+            "paragraph": "Akapit",
+            "primary_color": "Kolor główny",
+            "secondary_color": "Kolor dodatkowy",
+            "text_primary_color": "Tekst - kolor główny",
+            "text_secondary_color": "Tekst - kolor dodatkowy",
+            "social_handle": "Nazwa profilu ({'@'})",
+            "main_image": "Główny obraz"
         }
     },
     "calendar": {
@@ -1100,6 +1117,36 @@
             "resumeEditing": "Wznów edycję",
             "discardTemplate": "Odrzuć"
         },
+        "template_preview": {
+            "title": "Podgląd szablonów z Twoją treścią",
+            "preview_button": "Podgląd z treścią",
+            "your_content": "Twoja treść",
+            "header_text": "Nagłówek",
+            "header_placeholder": "Wpisz główny nagłówek...",
+            "subtitle_text": "Podtytuł",
+            "subtitle_placeholder": "Wpisz podtytuł...",
+            "paragraph_text": "Akapit",
+            "paragraph_placeholder": "Wpisz treść akapitu...",
+            "social_handle": "Nazwa profilu",
+            "social_handle_placeholder": "{'@'}twojprofil",
+            "primary_color": "Kolor główny",
+            "secondary_color": "Kolor dodatkowy",
+            "main_image": "Główny obraz",
+            "upload_image": "Kliknij, aby wgrać obraz",
+            "generate": "Generuj podglądy",
+            "generating": "Generowanie...",
+            "generating_message": "Tworzenie podglądów, może to chwilę potrwać...",
+            "empty_state": "Brak podglądów",
+            "empty_state_hint": "Wypełnij treść i kliknij Generuj, aby zobaczyć szablony z Twoimi danymi.",
+            "selected": "Wybrano: {name}",
+            "add_to_post": "Dodaj do posta",
+            "edit_in_editor": "Edytuj w edytorze",
+            "fill_at_least_one": "Wypełnij przynajmniej jedno pole",
+            "no_tagged_templates": "Brak szablonów z tagami semantycznymi w bibliotece",
+            "generation_failed": "Nie udało się wygenerować podglądu",
+            "service_unavailable": "Usługa podglądu szablonów jest obecnie niedostępna",
+            "add_failed": "Nie udało się dodać obrazu podglądu do posta"
+        },
         "preview": {
             "title": "Podgląd"
         },
@@ -1138,7 +1185,7 @@
         "clientName": "Nazwa klienta",
         "clientNamePlaceholder": "Np. Firma ABC",
         "clientEmail": "Email klienta",
-        "clientEmailPlaceholder": "klient@example.com",
+        "clientEmailPlaceholder": "klient{'@'}example.com",
         "clientEmailHint": "Opcjonalnie - tylko do celów informacyjnych",
         "expiresAt": "Wygasa",
         "expiresAtHint": "Pozostaw puste, aby nie wygasał",
@@ -1247,7 +1294,7 @@
         "tokenExpiringSoon": "Token wkrótce wygaśnie. Rozważ ponowne połączenie.",
         "verifying": "Weryfikacja połączenia...",
         "reconnect": "Połącz ponownie",
-        "withInstagram": "z Instagram: @{username}",
+        "withInstagram": "z Instagram: {'@'}{username}",
         "publishingMethod": "Metoda publikacji",
         "directApi": "Bezpośrednio przez API",
         "webhook": "Przez webhook (n8n)",

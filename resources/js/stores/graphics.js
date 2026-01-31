@@ -106,6 +106,14 @@ export const useGraphicsStore = defineStore('graphics', {
         canUndo: (state) => state.historyIndex > 0,
 
         canRedo: (state) => state.historyIndex < state.history.length - 1,
+
+        // Get all layers that share the same smartObjectSourceId (linked smart objects)
+        getLinkedSmartObjectLayers: (state) => (smartObjectSourceId) => {
+            if (!smartObjectSourceId) return [];
+            return state.layers.filter(
+                l => l.type === 'image' && l.properties?.smartObjectSourceId === smartObjectSourceId
+            );
+        },
     },
 
     actions: {
@@ -289,6 +297,44 @@ export const useGraphicsStore = defineStore('graphics', {
                 this.layers.splice(index, 1, updatedLayer);
                 this.isDirty = true;
             }
+        },
+
+        /**
+         * Update image source for all linked smart object instances.
+         * When one smart object's image is changed, all instances with the same
+         * smartObjectSourceId are updated to maintain Photoshop-like linked behavior.
+         *
+         * @param {number} layerId - The ID of the layer being updated
+         * @param {string} newSrc - The new image source (base64 or URL)
+         * @returns {number} Number of layers updated
+         */
+        updateLinkedSmartObjectImage(layerId, newSrc) {
+            const layer = this.layers.find(l => l.id === layerId);
+            if (!layer) return 0;
+
+            const smartObjectSourceId = layer.properties?.smartObjectSourceId;
+
+            // If no smartObjectSourceId, just update the single layer
+            if (!smartObjectSourceId) {
+                this.updateLayerLocally(layerId, {
+                    properties: { src: newSrc },
+                });
+                return 1;
+            }
+
+            // Find all linked layers with the same smartObjectSourceId
+            const linkedLayers = this.getLinkedSmartObjectLayers(smartObjectSourceId);
+
+            // Update all linked layers
+            linkedLayers.forEach(linkedLayer => {
+                this.updateLayerLocally(linkedLayer.id, {
+                    properties: { src: newSrc },
+                });
+            });
+
+            console.log(`[SmartObject] Updated ${linkedLayers.length} linked layers with smartObjectSourceId: ${smartObjectSourceId}`);
+
+            return linkedLayers.length;
         },
 
         async deleteLayer(id) {

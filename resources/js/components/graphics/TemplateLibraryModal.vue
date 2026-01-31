@@ -97,6 +97,12 @@ const removeFromLibrary = async (template) => {
     }
 };
 
+// Edit template directly (admin only)
+const editTemplate = (template) => {
+    emit('close');
+    router.push({ name: 'template.editor', params: { templateId: template.id } });
+};
+
 onMounted(() => {
     if (props.show) {
         fetchLibrary();
@@ -217,22 +223,34 @@ watch(() => props.show, (newVal) => {
                                             <span v-else>{{ t('graphics.library.createNew') }}</span>
                                         </button>
 
-                                        <!-- Admin remove from library button -->
-                                        <button
-                                            v-if="authStore.isAdmin"
-                                            @click="removeFromLibrary(template)"
-                                            :disabled="deleting === template.id"
-                                            class="absolute top-1 right-1 p-1 bg-amber-600 hover:bg-amber-700 text-white rounded transition-colors disabled:opacity-50"
-                                            :title="t('graphics.library.removeFromLibrary')"
-                                        >
-                                            <svg v-if="deleting === template.id" class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
-                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
-                                            </svg>
-                                            <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-                                            </svg>
-                                        </button>
+                                        <!-- Admin buttons (top right) -->
+                                        <div v-if="authStore.isAdmin" class="absolute top-1 right-1 flex gap-1">
+                                            <!-- Edit template -->
+                                            <button
+                                                @click="editTemplate(template)"
+                                                class="p-1 bg-blue-600 hover:bg-blue-700 text-white rounded transition-colors"
+                                                :title="t('graphics.library.edit')"
+                                            >
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                                </svg>
+                                            </button>
+                                            <!-- Remove from library -->
+                                            <button
+                                                @click="removeFromLibrary(template)"
+                                                :disabled="deleting === template.id"
+                                                class="p-1 bg-amber-600 hover:bg-amber-700 text-white rounded transition-colors disabled:opacity-50"
+                                                :title="t('graphics.library.removeFromLibrary')"
+                                            >
+                                                <svg v-if="deleting === template.id" class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                                                </svg>
+                                                <svg v-else class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                                </svg>
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
 

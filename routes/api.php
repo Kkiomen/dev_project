@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AiChatController;
+use App\Http\Controllers\Api\V1\DebugRenderController;
 use App\Http\Controllers\Api\V1\ApprovalTokenController;
 use App\Http\Controllers\Api\V1\BaseController;
 use App\Http\Controllers\Api\V1\BrandController;
@@ -19,6 +20,7 @@ use App\Http\Controllers\Api\V1\PostMediaController;
 use App\Http\Controllers\Api\V1\SocialPostController;
 use App\Http\Controllers\Api\V1\TemplateController;
 use App\Http\Controllers\Api\V1\TemplateLibraryController;
+use App\Http\Controllers\Api\V1\TemplatePreviewController;
 use App\Http\Controllers\Api\V1\LayerController;
 use App\Http\Controllers\Api\V1\GeneratedImageController;
 use App\Http\Controllers\Api\V1\TemplateFontController;
@@ -248,6 +250,11 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('library/templates/{template}/copy', [TemplateLibraryController::class, 'copy']);
     Route::post('library/templates/{template}/apply', [TemplateLibraryController::class, 'applyToCurrent']);
 
+    // === TEMPLATE PREVIEW ===
+    Route::post('library/templates/preview', [TemplatePreviewController::class, 'preview']);
+    Route::get('library/templates/preview/health', [TemplatePreviewController::class, 'health']);
+    Route::get('library/templates/semantic-tags', [TemplatePreviewController::class, 'semanticTags']);
+
     // === TEMPLATE LIBRARY ADMIN ===
     Route::middleware('admin')->group(function () {
         Route::post('templates/{template}/add-to-library', [TemplateLibraryController::class, 'addToLibrary']);
@@ -255,11 +262,22 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('templates/{template}/unlink-from-library', [TemplateLibraryController::class, 'unlinkFromLibrary']);
         Route::delete('library/templates/{template}', [TemplateLibraryController::class, 'destroy']);
 
+        // Create template from group layer
+        Route::post('layers/{layer}/create-template', [LayerController::class, 'createTemplateFromGroup']);
+
         // === PSD IMPORT ===
         Route::prefix('psd')->group(function () {
             Route::post('import', [PsdImportController::class, 'import']);
             Route::post('analyze', [PsdImportController::class, 'analyze']);
             Route::get('health', [PsdImportController::class, 'health']);
+        });
+
+        // === DEBUG RENDER (for AI/Cursor testing) ===
+        Route::prefix('debug')->group(function () {
+            Route::post('render', [DebugRenderController::class, 'render']);
+            Route::post('render-psd', [DebugRenderController::class, 'renderPsd']);
+            Route::post('psd-original', [DebugRenderController::class, 'psdOriginal']);
+            Route::post('compare', [DebugRenderController::class, 'compare']);
         });
     });
 

@@ -21,6 +21,7 @@ return [
         'duplicated' => 'Szablon został zduplikowany.',
         'saved' => 'Szablon został zapisany.',
         'deleted' => 'Szablon został usunięty.',
+        'newFromGroup' => 'Szablon z grupy',
     ],
 
     'layers' => [
@@ -30,6 +31,9 @@ return [
         'visible' => 'Widoczny',
         'locked' => 'Zablokowany',
         'properties' => 'Właściwości',
+        'notAGroup' => 'Wybrana warstwa nie jest grupą',
+        'groupEmpty' => 'Grupa nie posiada warstw podrzędnych',
+        'createTemplateFromGroup' => 'Utwórz szablon z grupy',
     ],
 
     'editor' => [
@@ -119,5 +123,26 @@ return [
             'analyzeFailed' => 'Nie udało się przeanalizować pliku PSD',
             'parseFailed' => 'Nie udało się przetworzyć pliku PSD',
         ],
+    ],
+
+    'semantic_tags' => [
+        'header' => 'Nagłówek',
+        'subtitle' => 'Podtytuł',
+        'paragraph' => 'Akapit',
+        'primary_color' => 'Kolor główny',
+        'secondary_color' => 'Kolor dodatkowy',
+        'text_primary_color' => 'Tekst - kolor główny',
+        'text_secondary_color' => 'Tekst - kolor dodatkowy',
+        'social_handle' => 'Nazwa profilu (@)',
+        'main_image' => 'Główny obraz',
+    ],
+
+    'template_preview' => [
+        'no_tagged_templates' => 'Brak szablonów z tagami semantycznymi w bibliotece',
+        'render_failed' => 'Nie udało się wygenerować podglądu',
+    ],
+
+    'library' => [
+        'groupTemplateCreated' => 'Utworzono nowy szablon z grupy',
     ],
 ];

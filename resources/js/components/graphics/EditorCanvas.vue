@@ -1299,11 +1299,102 @@ const createClipFunc = (svgPath, width, height) => {
     };
 };
 
+// Check if an image layer has clipping bases (multiple rotated/opacity clipping regions)
+const hasClippingBases = (layer) => {
+    const bases = layer.properties?.clippingBases;
+    return layer.type === 'image' && Array.isArray(bases) && bases.length > 0;
+};
+
+// Get clipping bases for a layer
+const getClippingBases = (layer) => {
+    return layer.properties?.clippingBases || [];
+};
+
+// Calculate rotated rectangle corners
+const getRotatedRectCorners = (cx, cy, width, height, rotation) => {
+    const radians = (rotation * Math.PI) / 180;
+    const cos = Math.cos(radians);
+    const sin = Math.sin(radians);
+    const hw = width / 2;
+    const hh = height / 2;
+
+    // Corners relative to center, then rotate
+    const corners = [
+        [-hw, -hh], // top-left
+        [hw, -hh],  // top-right
+        [hw, hh],   // bottom-right
+        [-hw, hh],  // bottom-left
+    ];
+
+    return corners.map(([x, y]) => ({
+        x: cx + x * cos - y * sin,
+        y: cy + x * sin + y * cos,
+    }));
+};
+
+// Get config for a single clipping base region
+const getClippingBaseConfig = (layer, base, image, index) => {
+    // Each clipping base defines a region where the image is visible
+    // The region can be rotated and have its own opacity
+    //
+    // Strategy: Draw the image at its original position, but clip it to
+    // the rotated rectangle defined by the base layer
+
+    // Calculate center of base rectangle
+    const baseCenterX = base.x + base.width / 2;
+    const baseCenterY = base.y + base.height / 2;
+
+    // Get the corners of the rotated rectangle (in absolute coordinates)
+    const corners = getRotatedRectCorners(
+        baseCenterX,
+        baseCenterY,
+        base.width,
+        base.height,
+        base.rotation || 0
+    );
+
+    // Convert to coordinates relative to the image's position
+    const relativeCorners = corners.map(c => ({
+        x: c.x - layer.x,
+        y: c.y - layer.y,
+    }));
+
+    return {
+        groupConfig: {
+            x: layer.x,
+            y: layer.y,
+            width: layer.width,
+            height: layer.height,
+            opacity: base.opacity ?? 1,
+            // Clip to the rotated rectangle
+            clipFunc: (ctx) => {
+                ctx.beginPath();
+                ctx.moveTo(relativeCorners[0].x, relativeCorners[0].y);
+                ctx.lineTo(relativeCorners[1].x, relativeCorners[1].y);
+                ctx.lineTo(relativeCorners[2].x, relativeCorners[2].y);
+                ctx.lineTo(relativeCorners[3].x, relativeCorners[3].y);
+                ctx.closePath();
+            },
+        },
+        imageConfig: {
+            x: 0,
+            y: 0,
+            width: layer.width,
+            height: layer.height,
+            image: image,
+        },
+    };
+};
+
 // Check if an image layer has a clip path (mask)
 const hasClipPath = (layer) => {
+    // If layer has clippingBases, use that instead of simple clipPath
+    if (hasClippingBases(layer)) {
+        return false; // Use clippingBases rendering instead
+    }
     const has = layer.type === 'image' && !!layer.properties?.clipPath;
     if (layer.type === 'image') {
-        console.log(`[DEBUG hasClipPath] layer="${layer.name}" clipPath=${!!layer.properties?.clipPath} result=${has}`);
+        console.log(`[DEBUG hasClipPath] layer="${layer.name}" clipPath=${!!layer.properties?.clipPath} clippingBases=${hasClippingBases(layer)} result=${has}`);
         if (layer.properties?.clipPath) {
             console.log(`[DEBUG clipPath value]`, layer.properties.clipPath.substring(0, 100));
         }
@@ -1314,82 +1405,135 @@ const hasClipPath = (layer) => {
 // Get config for clipped image group (with mask)
 const getClippedImageGroupConfig = (layer) => {
     const clipPath = layer.properties?.clipPath;
+    const scaleX = layer.scale_x ?? 1;
+    const scaleY = layer.scale_y ?? 1;
 
-    return {
+    // For flip (negative scale), we need to set offset to flip around center
+    const config = {
         id: layer.id,
         x: layer.x,
         y: layer.y,
         width: layer.width,
         height: layer.height,
         rotation: layer.rotation,
-        scaleX: layer.scale_x,
-        scaleY: layer.scale_y,
+        scaleX: scaleX,
+        scaleY: scaleY,
         draggable: !layer.locked,
         visible: layer.visible,
         opacity: layer.opacity ?? 1,
         clipFunc: clipPath ? createClipFunc(clipPath, layer.width, layer.height) : undefined,
     };
+
+    // Handle horizontal flip - offset and adjust position
+    if (scaleX < 0) {
+        config.offsetX = layer.width;
+        config.x = layer.x + layer.width;
+    }
+    // Handle vertical flip - offset and adjust position
+    if (scaleY < 0) {
+        config.offsetY = layer.height;
+        config.y = layer.y + layer.height;
+    }
+
+    return config;
 };
 
 // Get config for clipped image (inside the group)
-const getClippedImageConfig = (layer, image) => {
+// Helper function to calculate crop/fit for images
+const getImageFitCrop = (layer, image) => {
     const fitMode = layer.properties?.fit || 'cover';
-    let imageConfig = {
+    const layerWidth = layer.width || 100;
+    const layerHeight = layer.height || 100;
+
+    if (!image || fitMode === 'fill') {
+        return {}; // No crop needed for fill mode
+    }
+
+    const imgWidth = image.width || 1;
+    const imgHeight = image.height || 1;
+    const imgRatio = imgWidth / imgHeight;
+    const layerRatio = layerWidth / layerHeight;
+
+    if (fitMode === 'cover') {
+        let cropWidth, cropHeight, cropX, cropY;
+
+        if (imgRatio > layerRatio) {
+            cropHeight = imgHeight;
+            cropWidth = imgHeight * layerRatio;
+            cropX = (imgWidth - cropWidth) / 2;
+            cropY = 0;
+        } else {
+            cropWidth = imgWidth;
+            cropHeight = imgWidth / layerRatio;
+            cropX = 0;
+            cropY = (imgHeight - cropHeight) / 2;
+        }
+
+        return { crop: { x: cropX, y: cropY, width: cropWidth, height: cropHeight } };
+    } else if (fitMode === 'contain') {
+        let drawWidth, drawHeight, offsetX, offsetY;
+
+        if (imgRatio > layerRatio) {
+            drawWidth = layerWidth;
+            drawHeight = layerWidth / imgRatio;
+            offsetX = 0;
+            offsetY = (layerHeight - drawHeight) / 2;
+        } else {
+            drawHeight = layerHeight;
+            drawWidth = layerHeight * imgRatio;
+            offsetX = (layerWidth - drawWidth) / 2;
+            offsetY = 0;
+        }
+
+        return { x: offsetX, y: offsetY, width: drawWidth, height: drawHeight };
+    }
+
+    return {};
+};
+
+const getClippedImageConfig = (layer, image) => {
+    const fitConfig = getImageFitCrop(layer, image);
+
+    return {
         x: 0,
         y: 0,
         width: layer.width,
         height: layer.height,
         image: image,
+        ...fitConfig,
     };
+};
 
-    if (image && fitMode !== 'fill') {
-        const imgWidth = image.width || 1;
-        const imgHeight = image.height || 1;
-        const layerWidth = layer.width || 100;
-        const layerHeight = layer.height || 100;
+// Get config for image without clipPath (still needs fit/crop)
+const getImageConfig = (layer, image) => {
+    const fitConfig = getImageFitCrop(layer, image);
+    const baseConfig = getShapeConfig(layer);
+    const scaleX = layer.scale_x ?? 1;
+    const scaleY = layer.scale_y ?? 1;
 
-        const imgRatio = imgWidth / imgHeight;
-        const layerRatio = layerWidth / layerHeight;
-
-        if (fitMode === 'cover') {
-            let cropWidth, cropHeight, cropX, cropY;
-
-            if (imgRatio > layerRatio) {
-                cropHeight = imgHeight;
-                cropWidth = imgHeight * layerRatio;
-                cropX = (imgWidth - cropWidth) / 2;
-                cropY = 0;
-            } else {
-                cropWidth = imgWidth;
-                cropHeight = imgWidth / layerRatio;
-                cropX = 0;
-                cropY = (imgHeight - cropHeight) / 2;
-            }
-
-            imageConfig.crop = { x: cropX, y: cropY, width: cropWidth, height: cropHeight };
-        } else if (fitMode === 'contain') {
-            let drawWidth, drawHeight, offsetX, offsetY;
-
-            if (imgRatio > layerRatio) {
-                drawWidth = layerWidth;
-                drawHeight = layerWidth / imgRatio;
-                offsetX = 0;
-                offsetY = (layerHeight - drawHeight) / 2;
-            } else {
-                drawHeight = layerHeight;
-                drawWidth = layerHeight * imgRatio;
-                offsetX = (layerWidth - drawWidth) / 2;
-                offsetY = 0;
-            }
-
-            imageConfig.x = offsetX;
-            imageConfig.y = offsetY;
-            imageConfig.width = drawWidth;
-            imageConfig.height = drawHeight;
-        }
+    // Debug: log opacity
+    if (layer.opacity !== 1 && layer.opacity !== undefined) {
+        console.log(`[getImageConfig] Layer ${layer.id} "${layer.name}" has opacity=${layer.opacity}`);
     }
 
-    return imageConfig;
+    const config = {
+        ...baseConfig,
+        image: image,
+        ...fitConfig,
+    };
+
+    // Handle horizontal flip - offset and adjust position
+    if (scaleX < 0) {
+        config.offsetX = layer.width;
+        config.x = layer.x + layer.width;
+    }
+    // Handle vertical flip - offset and adjust position
+    if (scaleY < 0) {
+        config.offsetY = layer.height;
+        config.y = layer.y + layer.height;
+    }
+
+    return config;
 };
 
 // Auto-resize textbox based on text content
@@ -1853,28 +1997,190 @@ watch(() => {
 const layerImages = ref({});
 const imageLoadErrors = ref({});
 const imageSources = ref({}); // Track sources to detect changes (for image replacement)
+const maskSources = ref({}); // Track mask sources
 const imageVersions = ref({}); // Version counter for forcing re-render on image change
-watch(() => graphicsStore.layers, (layers) => {
-    layers.forEach(layer => {
-        if (layer.type === 'image' && layer.properties?.src) {
-            const currentSrc = layer.properties.src;
-            // Load if: no image loaded yet, or source has changed (image replaced)
-            if (imageSources.value[layer.id] !== currentSrc) {
-                imageSources.value[layer.id] = currentSrc;
-                imageVersions.value[layer.id] = (imageVersions.value[layer.id] || 0) + 1;
-                delete imageLoadErrors.value[layer.id];
 
-                const img = new window.Image();
-                img.crossOrigin = 'anonymous'; // Enable CORS for export
-                img.src = currentSrc;
-                img.onload = () => {
-                    layerImages.value = { ...layerImages.value, [layer.id]: img };
+/**
+ * Apply a grayscale mask to an image using offscreen canvas.
+ * White pixels in mask = visible, black pixels = hidden.
+ *
+ * The mask is a grayscale image where luminance determines visibility.
+ * We convert luminance to alpha channel for proper compositing.
+ *
+ * Handles mask offset for proper alignment when mask doesn't start at (0,0).
+ *
+ * @param {HTMLImageElement} img - The source image
+ * @param {HTMLImageElement} mask - The grayscale mask image
+ * @param {number} layerWidth - Layer width (output canvas width)
+ * @param {number} layerHeight - Layer height (output canvas height)
+ * @param {Object} maskInfo - Mask metadata (optional)
+ * @param {number} maskInfo.maskWidth - Original mask width
+ * @param {number} maskInfo.maskHeight - Original mask height
+ * @param {number} maskInfo.maskOffsetX - Mask X offset relative to layer
+ * @param {number} maskInfo.maskOffsetY - Mask Y offset relative to layer
+ * @returns {HTMLCanvasElement} Canvas with masked image
+ */
+const applyMaskToImage = (img, mask, layerWidth, layerHeight, maskInfo = {}) => {
+    const canvas = document.createElement('canvas');
+    canvas.width = layerWidth;
+    canvas.height = layerHeight;
+    const ctx = canvas.getContext('2d');
+
+    // Draw the image first, scaled to fit the layer
+    ctx.drawImage(img, 0, 0, layerWidth, layerHeight);
+
+    // Get mask positioning info
+    const maskOffsetX = maskInfo.maskOffsetX || 0;
+    const maskOffsetY = maskInfo.maskOffsetY || 0;
+    const maskWidth = maskInfo.maskWidth || layerWidth;
+    const maskHeight = maskInfo.maskHeight || layerHeight;
+
+    // Create a canvas to convert grayscale mask to alpha mask
+    // The mask PNG is grayscale where white=visible, black=hidden
+    // We need to convert this to an alpha channel for destination-in compositing
+    const alphaMaskCanvas = document.createElement('canvas');
+    alphaMaskCanvas.width = layerWidth;
+    alphaMaskCanvas.height = layerHeight;
+    const alphaMaskCtx = alphaMaskCanvas.getContext('2d');
+
+    // Start with fully transparent (alpha = 0, meaning hidden)
+    alphaMaskCtx.clearRect(0, 0, layerWidth, layerHeight);
+
+    // Draw the grayscale mask at its position
+    alphaMaskCtx.drawImage(mask, maskOffsetX, maskOffsetY, maskWidth, maskHeight);
+
+    // Get image data and convert luminance to alpha
+    const imageData = alphaMaskCtx.getImageData(0, 0, layerWidth, layerHeight);
+    const data = imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+        // The mask is grayscale, so R=G=B
+        // Use the red channel (or any channel) as luminance
+        const luminance = data[i]; // R channel
+
+        // Set alpha based on luminance (white = opaque, black = transparent)
+        data[i + 3] = luminance;
+
+        // Set RGB to white so only alpha matters for destination-in
+        data[i] = 255;     // R
+        data[i + 1] = 255; // G
+        data[i + 2] = 255; // B
+    }
+
+    alphaMaskCtx.putImageData(imageData, 0, 0);
+
+    // Apply the alpha mask using destination-in
+    // This keeps image pixels only where mask alpha > 0
+    ctx.globalCompositeOperation = 'destination-in';
+    ctx.drawImage(alphaMaskCanvas, 0, 0);
+
+    // Reset composite operation
+    ctx.globalCompositeOperation = 'source-over';
+
+    return canvas;
+};
+
+/**
+ * Load image with optional mask applied.
+ * If maskSrc is provided, the mask will be applied to the image.
+ * Supports mask offset for proper alignment.
+ */
+const loadImageWithMask = (layer) => {
+    const currentSrc = layer.properties.src;
+    const maskSrc = layer.properties.maskSrc;
+    const cacheKey = `${currentSrc?.substring(0, 50)}|${maskSrc || ''}`;
+
+    console.log(`[loadImageWithMask] Layer ${layer.id}: checking cache, hasMaskSrc=${!!maskSrc}`);
+
+    // Check if we need to reload (source or mask changed)
+    if (imageSources.value[layer.id] === cacheKey) {
+        return; // Already loaded with same src and mask
+    }
+
+    imageSources.value[layer.id] = cacheKey;
+    imageVersions.value[layer.id] = (imageVersions.value[layer.id] || 0) + 1;
+    delete imageLoadErrors.value[layer.id];
+
+    const img = new window.Image();
+    img.crossOrigin = 'anonymous';
+    img.src = currentSrc;
+
+    img.onload = () => {
+        console.log(`[loadImageWithMask] Layer ${layer.id}: image loaded, will apply mask=${!!maskSrc}`);
+        // If layer has a mask, load and apply it
+        if (maskSrc) {
+            const maskImg = new window.Image();
+            maskImg.crossOrigin = 'anonymous';
+            maskImg.src = maskSrc;
+
+            maskImg.onload = () => {
+                // Get mask metadata from layer properties
+                const maskInfo = {
+                    maskWidth: layer.properties.maskWidth || layer.width,
+                    maskHeight: layer.properties.maskHeight || layer.height,
+                    maskOffsetX: layer.properties.maskOffsetX || 0,
+                    maskOffsetY: layer.properties.maskOffsetY || 0,
+                };
+
+                console.log(`[MASK] Layer ${layer.id} "${layer.name}": applying mask`, {
+                    layerSize: `${layer.width}x${layer.height}`,
+                    maskSize: `${maskInfo.maskWidth}x${maskInfo.maskHeight}`,
+                    maskOffset: `(${maskInfo.maskOffsetX}, ${maskInfo.maskOffsetY})`,
+                    maskSrc: maskSrc,
+                });
+
+                // Apply mask to image using offscreen canvas
+                const maskedCanvas = applyMaskToImage(
+                    img,
+                    maskImg,
+                    layer.width || img.width,
+                    layer.height || img.height,
+                    maskInfo
+                );
+
+                // Create an image from the canvas for Konva
+                const maskedImg = new window.Image();
+                const dataUrl = maskedCanvas.toDataURL('image/png');
+                maskedImg.src = dataUrl;
+                maskedImg.onload = () => {
+                    layerImages.value = { ...layerImages.value, [layer.id]: maskedImg };
                     delete imageLoadErrors.value[layer.id];
+                    // Log unique identifier for the masked image to verify different masks
+                    const dataUrlHash = dataUrl.length + '-' + dataUrl.substring(100, 150);
+                    console.log(`[MASK] Layer ${layer.id} "${layer.name}" DONE:`, {
+                        maskOffset: `(${maskInfo.maskOffsetX}, ${maskInfo.maskOffsetY})`,
+                        dataUrlHash: dataUrlHash,
+                        imgSize: `${maskedImg.width}x${maskedImg.height}`,
+                    });
                 };
-                img.onerror = (e) => {
-                    console.error(`Failed to load image for layer ${layer.id}:`, e);
-                    imageLoadErrors.value[layer.id] = true;
-                };
+            };
+
+            maskImg.onerror = (e) => {
+                console.warn(`Failed to load mask for layer ${layer.id}, using image without mask:`, e);
+                // Fallback: use image without mask
+                layerImages.value = { ...layerImages.value, [layer.id]: img };
+                delete imageLoadErrors.value[layer.id];
+            };
+        } else {
+            // No mask, use image directly
+            layerImages.value = { ...layerImages.value, [layer.id]: img };
+            delete imageLoadErrors.value[layer.id];
+        }
+    };
+
+    img.onerror = (e) => {
+        console.error(`Failed to load image for layer ${layer.id}:`, e);
+        imageLoadErrors.value[layer.id] = true;
+    };
+};
+
+watch(() => graphicsStore.layers, (layers) => {
+    console.log('[WATCH] Layers changed, processing', layers.length, 'layers');
+    layers.forEach(layer => {
+        if (layer.type === 'image') {
+            console.log(`[WATCH] Image layer ${layer.id} "${layer.name}": src=${!!layer.properties?.src}, maskSrc=${!!layer.properties?.maskSrc}`);
+            if (layer.properties?.src) {
+                loadImageWithMask(layer);
             }
         }
     });
@@ -2079,7 +2385,20 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                         @transformend="(e) => handleTransformEnd(e, layer)"
                     />
 
-                    <!-- Image with mask/clipPath -->
+                    <!-- Image with clipping bases (multiple rotated/opacity regions) -->
+                    <template v-if="layer.type === 'image' && layerImages[layer.id] && hasClippingBases(layer)">
+                        <v-group
+                            v-for="(base, baseIndex) in getClippingBases(layer)"
+                            :key="`clip-base-${layer.id}-${baseIndex}-v${imageVersions[layer.id] || 0}`"
+                            :config="getClippingBaseConfig(layer, base, layerImages[layer.id], baseIndex).groupConfig"
+                            @click="(e) => handleShapeClick(e, layer)"
+                            @contextmenu="(e) => handleContextMenu(e, layer)"
+                        >
+                            <v-image :config="getClippingBaseConfig(layer, base, layerImages[layer.id], baseIndex).imageConfig" />
+                        </v-group>
+                    </template>
+
+                    <!-- Image with mask/clipPath (simple, no rotation) -->
                     <v-group
                         v-else-if="layer.type === 'image' && layerImages[layer.id] && hasClipPath(layer)"
                         :key="`clipped-${layer.id}-v${imageVersions[layer.id] || 0}`"
@@ -2094,13 +2413,10 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                         <v-image :config="getClippedImageConfig(layer, layerImages[layer.id])" />
                     </v-group>
 
-                    <!-- Image without mask (loaded) -->
+                    <!-- Image without mask (loaded) - still uses fit/crop -->
                     <v-image
-                        v-else-if="layer.type === 'image' && layerImages[layer.id] && !hasClipPath(layer)"
-                        :config="{
-                            ...getShapeConfig(layer),
-                            image: layerImages[layer.id],
-                        }"
+                        v-else-if="layer.type === 'image' && layerImages[layer.id] && !hasClipPath(layer) && !hasClippingBases(layer)"
+                        :config="getImageConfig(layer, layerImages[layer.id])"
                         @click="(e) => handleShapeClick(e, layer)"
                         @contextmenu="(e) => handleContextMenu(e, layer)"
                         @dragmove="(e) => handleDragMove(e, layer)"

@@ -1,12 +1,17 @@
 <script setup>
 import { computed, watch, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useGraphicsStore } from '@/stores/graphics';
+import { useAuthStore } from '@/stores/auth';
+import axios from 'axios';
 import FontPicker from './FontPicker.vue';
 import ScrubberInput from '@/components/common/ScrubberInput.vue';
 
 const { t } = useI18n();
+const router = useRouter();
 const graphicsStore = useGraphicsStore();
+const authStore = useAuthStore();
 
 const selectedLayer = computed(() => graphicsStore.selectedLayer);
 const currentTemplate = computed(() => graphicsStore.currentTemplate);
@@ -203,19 +208,26 @@ const handleFillImageUpload = (event) => {
 };
 
 // Handle image replacement for image layers
+// Supports linked smart objects - changing one updates all instances
 const handleImageReplace = (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    console.log('[DEBUG handleImageReplace] Before update - clipPath:', selectedLayer.value?.properties?.clipPath?.substring(0, 100));
-
     const reader = new FileReader();
     reader.onload = (e) => {
-        updateProperty('src', e.target.result);
-        // Debug: check clipPath after update
-        setTimeout(() => {
-            console.log('[DEBUG handleImageReplace] After update - clipPath:', selectedLayer.value?.properties?.clipPath?.substring(0, 100));
-        }, 100);
+        const newSrc = e.target.result;
+
+        // Check if this is a linked smart object
+        const smartObjectSourceId = selectedLayer.value?.properties?.smartObjectSourceId;
+
+        if (smartObjectSourceId) {
+            // Use the linked smart object update method
+            const updatedCount = graphicsStore.updateLinkedSmartObjectImage(selectedLayer.value.id, newSrc);
+            console.log(`[SmartObject] Image replaced in ${updatedCount} linked layer(s)`);
+        } else {
+            // Regular image layer - just update this one
+            updateProperty('src', newSrc);
+        }
     };
     reader.readAsDataURL(file);
 };
@@ -265,6 +277,75 @@ const toggleTextDecoration = (decoration) => {
         // Add decoration
         decorations.push(decoration);
         return decorations.join(' ');
+    }
+};
+
+// Semantic tags for template preview (admin only)
+const semanticTagOptions = computed(() => {
+    const layerType = selectedLayer.value?.type;
+    if (!layerType) return [];
+
+    const textTags = [
+        { value: 'header', label: t('graphics.semantic_tags.header') },
+        { value: 'subtitle', label: t('graphics.semantic_tags.subtitle') },
+        { value: 'paragraph', label: t('graphics.semantic_tags.paragraph') },
+        { value: 'social_handle', label: t('graphics.semantic_tags.social_handle') },
+    ];
+
+    const colorTags = [
+        { value: 'primary_color', label: t('graphics.semantic_tags.primary_color') },
+        { value: 'secondary_color', label: t('graphics.semantic_tags.secondary_color') },
+    ];
+
+    const textColorTags = [
+        { value: 'text_primary_color', label: t('graphics.semantic_tags.text_primary_color') },
+        { value: 'text_secondary_color', label: t('graphics.semantic_tags.text_secondary_color') },
+    ];
+
+    const imageTags = [
+        { value: 'main_image', label: t('graphics.semantic_tags.main_image') },
+    ];
+
+    if (layerType === 'text' || layerType === 'textbox') {
+        return [...textTags, ...colorTags, ...textColorTags];
+    } else if (layerType === 'rectangle' || layerType === 'ellipse') {
+        return colorTags;
+    } else if (layerType === 'image') {
+        return imageTags;
+    }
+
+    return [];
+});
+
+const currentSemanticTag = computed(() => selectedLayer.value?.properties?.semanticTag || '');
+
+const updateSemanticTag = (tag) => {
+    updateProperty('semanticTag', tag || null);
+};
+
+// Create template from group (admin only)
+const creatingTemplate = ref(false);
+const isGroupLayer = computed(() => selectedLayer.value?.type === 'group');
+
+const createTemplateFromGroup = async (addToLibrary = false) => {
+    if (!selectedLayer.value || selectedLayer.value.type !== 'group') return;
+
+    creatingTemplate.value = true;
+    try {
+        const response = await axios.post(`/api/v1/layers/${selectedLayer.value.id}/create-template`, {
+            name: selectedLayer.value.name,
+            add_to_library: addToLibrary,
+        });
+
+        // Navigate to the new template
+        if (response.data.data?.id) {
+            router.push({ name: 'template.editor', params: { templateId: response.data.data.id } });
+        }
+    } catch (error) {
+        console.error('Failed to create template from group:', error);
+        alert(error.response?.data?.message || 'Failed to create template');
+    } finally {
+        creatingTemplate.value = false;
     }
 };
 </script>
@@ -656,6 +737,64 @@ const toggleTextDecoration = (decoration) => {
                         class="flex-1 bg-transparent border-none text-gray-900 text-sm font-medium focus:outline-none focus:ring-0 p-0"
                         placeholder="Layer name"
                     />
+                </div>
+            </div>
+
+            <!-- Semantic Tag section (admin only) -->
+            <div v-if="authStore.isAdmin && semanticTagOptions.length > 0" class="px-3 py-3 border-b border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                    </svg>
+                    <span class="text-xs font-medium text-gray-900">{{ t('graphics.properties.semantic_tag') }}</span>
+                </div>
+                <select
+                    :value="currentSemanticTag"
+                    @change="updateSemanticTag($event.target.value)"
+                    class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">{{ t('graphics.properties.no_tag') }}</option>
+                    <option
+                        v-for="tag in semanticTagOptions"
+                        :key="tag.value"
+                        :value="tag.value"
+                    >
+                        {{ tag.label }}
+                    </option>
+                </select>
+                <p class="mt-1 text-[10px] text-gray-500">{{ t('graphics.properties.semantic_tag_help') }}</p>
+            </div>
+
+            <!-- Create Template from Group (admin only, group layers) -->
+            <div v-if="authStore.isAdmin && isGroupLayer" class="px-3 py-3 border-b border-gray-200">
+                <div class="flex items-center gap-2 mb-2">
+                    <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                    </svg>
+                    <span class="text-xs font-medium text-gray-900">{{ t('graphics.layers.createTemplateFromGroup') }}</span>
+                </div>
+                <div class="flex flex-col gap-2">
+                    <button
+                        @click="createTemplateFromGroup(false)"
+                        :disabled="creatingTemplate"
+                        class="w-full px-3 py-2 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span v-if="creatingTemplate" class="flex items-center justify-center gap-2">
+                            <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                            {{ t('common.loading') }}
+                        </span>
+                        <span v-else>{{ t('graphics.library.createFromGroup') }}</span>
+                    </button>
+                    <button
+                        @click="createTemplateFromGroup(true)"
+                        :disabled="creatingTemplate"
+                        class="w-full px-3 py-2 text-xs font-medium text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {{ t('graphics.library.createFromGroup') }} + {{ t('graphics.library.addToLibrary') }}
+                    </button>
                 </div>
             </div>
 
@@ -1681,6 +1820,18 @@ const toggleTextDecoration = (decoration) => {
                             alt="Layer image"
                             class="w-full h-24 object-contain bg-gray-50"
                         />
+                        <!-- Mask indicator -->
+                        <div
+                            v-if="selectedLayer.properties?.maskSrc || selectedLayer.properties?.clipPath"
+                            class="absolute top-1 right-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded flex items-center gap-1"
+                            :title="t('graphics.properties.maskDescription')"
+                        >
+                            <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                            </svg>
+                            {{ t('graphics.properties.masked') }}
+                        </div>
                     </div>
 
                     <!-- Replace image button -->

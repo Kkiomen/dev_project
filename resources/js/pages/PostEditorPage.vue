@@ -17,6 +17,7 @@ import PlatformSelectModal from '@/components/posts/PlatformSelectModal.vue';
 import AiPlatformGenerateModal from '@/components/posts/AiPlatformGenerateModal.vue';
 import TemplatePickerModal from '@/components/posts/TemplatePickerModal.vue';
 import TemplateEditorModal from '@/components/posts/TemplateEditorModal.vue';
+import TemplatePreviewModal from '@/components/posts/TemplatePreviewModal.vue';
 import StockPhotoPicker from '@/components/stock/StockPhotoPicker.vue';
 
 const props = defineProps({
@@ -49,6 +50,7 @@ const showPlatformSelectModal = ref(false);
 const showAiModal = ref(null); // null or platform name
 const showTemplatePickerModal = ref(false);
 const showTemplateEditorModal = ref(false);
+const showTemplatePreviewModal = ref(false);
 const showStockPhotoPicker = ref(false);
 const selectedTemplateForEdit = ref(null);
 const resumeTemplateId = ref(null);
@@ -471,6 +473,34 @@ const handleSaveTemplateForLater = (sessionData) => {
     draft.saveTemplateInProgress(sessionData);
     templateInProgressInfo.value = sessionData;
     handleCloseTemplateEditor();
+};
+
+// Handle template preview modal
+const handleOpenTemplatePreview = () => {
+    showTemplatePreviewModal.value = true;
+};
+
+const handleTemplatePreviewSelect = async (preview) => {
+    showTemplatePreviewModal.value = false;
+    // Fetch the generated preview image and add as staged media
+    try {
+        const response = await fetch(preview.preview_url);
+        const blob = await response.blob();
+        const filename = `preview-${preview.id}-${Date.now()}.png`;
+        const file = new File([blob], filename, { type: 'image/png' });
+        await draft.stageMediaFile(file);
+    } catch (error) {
+        console.error('Failed to add preview image:', error);
+        toast.error(t('posts.template_preview.add_failed'));
+    }
+};
+
+const handleTemplatePreviewEdit = (preview) => {
+    showTemplatePreviewModal.value = false;
+    // Navigate to the template editor with the selected template
+    if (preview?.id) {
+        router.push({ name: 'template.editor', params: { templateId: preview.id } });
+    }
 };
 
 const handleResumeTemplate = () => {
@@ -950,8 +980,8 @@ const lastSavedText = computed(() => {
                                 :media="postsStore.currentPost?.media || []"
                             />
 
-                            <!-- Add from templates button -->
-                            <div class="mt-4 pt-4 border-t border-gray-200">
+                            <!-- Add from templates buttons -->
+                            <div class="mt-4 pt-4 border-t border-gray-200 space-y-2">
                                 <button
                                     @click="handleOpenTemplates"
                                     class="w-full flex items-center justify-center space-x-2 px-4 py-3 border-2 border-dashed border-gray-300 hover:border-purple-400 rounded-lg text-gray-600 hover:text-purple-600 transition-colors"
@@ -960,6 +990,16 @@ const lastSavedText = computed(() => {
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"/>
                                     </svg>
                                     <span class="font-medium">{{ t('posts.media.fromTemplates') }}</span>
+                                </button>
+                                <button
+                                    @click="handleOpenTemplatePreview"
+                                    class="w-full flex items-center justify-center space-x-2 px-4 py-3 border-2 border-dashed border-gray-300 hover:border-green-400 rounded-lg text-gray-600 hover:text-green-600 transition-colors"
+                                >
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                    </svg>
+                                    <span class="font-medium">{{ t('posts.template_preview.preview_button') }}</span>
                                 </button>
                             </div>
 
@@ -1123,6 +1163,16 @@ const lastSavedText = computed(() => {
                 v-if="showStockPhotoPicker"
                 @close="showStockPhotoPicker = false"
                 @select="handleSelectStockPhoto"
+            />
+        </teleport>
+
+        <!-- Template Preview Modal -->
+        <teleport to="body">
+            <TemplatePreviewModal
+                v-if="showTemplatePreviewModal"
+                @close="showTemplatePreviewModal = false"
+                @select="handleTemplatePreviewSelect"
+                @edit="handleTemplatePreviewEdit"
             />
         </teleport>
 

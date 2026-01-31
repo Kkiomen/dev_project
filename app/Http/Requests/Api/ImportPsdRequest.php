@@ -25,7 +25,7 @@ class ImportPsdRequest extends FormRequest
             'file' => [
                 'required',
                 'file',
-                'max:102400', // 100MB
+                'max:512000', // 500MB
                 function ($attribute, $value, $fail) {
                     $extension = strtolower($value->getClientOriginalExtension());
                     if ($extension !== 'psd') {

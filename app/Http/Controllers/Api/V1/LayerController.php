@@ -7,9 +7,12 @@ use App\Http\Requests\Api\StoreLayerRequest;
 use App\Http\Requests\Api\UpdateLayerRequest;
 use App\Http\Requests\Api\BulkUpdateLayersRequest;
 use App\Http\Resources\LayerResource;
+use App\Http\Resources\TemplateResource;
 use App\Models\Template;
 use App\Models\Layer;
+use App\Enums\LayerType;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class LayerController extends Controller
@@ -113,5 +116,152 @@ class LayerController extends Controller
         }
 
         return LayerResource::collection($template->layers()->ordered()->get());
+    }
+
+    /**
+     * Create a new template from a group layer.
+     * This extracts a group and its children into a standalone template.
+     */
+    public function createTemplateFromGroup(Request $request, Layer $layer): JsonResponse
+    {
+        $this->authorize('update', $layer->template);
+
+        // Validate that the layer is a group
+        if ($layer->type !== LayerType::GROUP) {
+            return response()->json([
+                'message' => __('graphics.layers.notAGroup'),
+            ], 422);
+        }
+
+        $request->validate([
+            'name' => 'nullable|string|max:255',
+            'add_to_library' => 'boolean',
+        ]);
+
+        // Get all descendants of this group (recursively)
+        $descendants = $this->getAllDescendants($layer);
+
+        if ($descendants->isEmpty()) {
+            return response()->json([
+                'message' => __('graphics.layers.groupEmpty'),
+            ], 422);
+        }
+
+        // Calculate bounding box of all descendants
+        $bounds = $this->calculateBounds($descendants, $layer);
+
+        // Create new template
+        $template = Template::create([
+            'user_id' => $request->user()->id,
+            'name' => $request->input('name', $layer->name ?? __('graphics.templates.newFromGroup')),
+            'width' => (int) ceil($bounds['width']),
+            'height' => (int) ceil($bounds['height']),
+            'background_color' => $layer->template->background_color ?? '#ffffff',
+            'is_library' => $request->boolean('add_to_library', false),
+        ]);
+
+        // Copy layers to new template with position adjustment
+        $this->copyLayersToTemplate($descendants, $template, $bounds['minX'], $bounds['minY'], $layer->id);
+
+        // Copy fonts from original template
+        foreach ($layer->template->fonts as $font) {
+            $newFont = $font->replicate();
+            $newFont->template_id = $template->id;
+            $newFont->save();
+        }
+
+        return response()->json([
+            'message' => __('graphics.library.groupTemplateCreated'),
+            'data' => new TemplateResource($template->load('layers')),
+        ], 201);
+    }
+
+    /**
+     * Get all descendants of a layer recursively.
+     */
+    private function getAllDescendants(Layer $layer): \Illuminate\Support\Collection
+    {
+        $descendants = collect();
+
+        foreach ($layer->children as $child) {
+            $descendants->push($child);
+            if ($child->type === LayerType::GROUP) {
+                $descendants = $descendants->merge($this->getAllDescendants($child));
+            }
+        }
+
+        return $descendants;
+    }
+
+    /**
+     * Calculate the bounding box of all layers.
+     */
+    private function calculateBounds(\Illuminate\Support\Collection $layers, Layer $groupLayer): array
+    {
+        // Start with the group's own position as the base
+        $minX = $groupLayer->x ?? 0;
+        $minY = $groupLayer->y ?? 0;
+        $maxX = $minX + ($groupLayer->width ?? 0);
+        $maxY = $minY + ($groupLayer->height ?? 0);
+
+        foreach ($layers as $layer) {
+            $layerMinX = $layer->x ?? 0;
+            $layerMinY = $layer->y ?? 0;
+            $layerMaxX = $layerMinX + ($layer->width ?? 0);
+            $layerMaxY = $layerMinY + ($layer->height ?? 0);
+
+            $minX = min($minX, $layerMinX);
+            $minY = min($minY, $layerMinY);
+            $maxX = max($maxX, $layerMaxX);
+            $maxY = max($maxY, $layerMaxY);
+        }
+
+        return [
+            'minX' => $minX,
+            'minY' => $minY,
+            'width' => $maxX - $minX,
+            'height' => $maxY - $minY,
+        ];
+    }
+
+    /**
+     * Copy layers to a new template with position adjustment.
+     */
+    private function copyLayersToTemplate(
+        \Illuminate\Support\Collection $layers,
+        Template $template,
+        float $offsetX,
+        float $offsetY,
+        int $excludeParentId
+    ): void {
+        // Build mapping from old layer ID to new layer ID
+        $idMapping = [];
+
+        // First pass: create all layers without parent_id
+        foreach ($layers as $layer) {
+            $newLayer = $layer->replicate(['public_id', 'parent_id']);
+            $newLayer->template_id = $template->id;
+            $newLayer->parent_id = null;
+
+            // Adjust position relative to the group's position
+            $newLayer->x = ($layer->x ?? 0) - $offsetX;
+            $newLayer->y = ($layer->y ?? 0) - $offsetY;
+
+            $newLayer->save();
+
+            $idMapping[$layer->id] = $newLayer->id;
+        }
+
+        // Second pass: update parent_id using the mapping (excluding the original group)
+        foreach ($layers as $layer) {
+            if ($layer->parent_id && $layer->parent_id !== $excludeParentId) {
+                if (isset($idMapping[$layer->parent_id])) {
+                    $newLayerId = $idMapping[$layer->id];
+                    Layer::where('id', $newLayerId)->update([
+                        'parent_id' => $idMapping[$layer->parent_id],
+                    ]);
+                }
+            }
+        }
     }
 }
