@@ -117,6 +117,14 @@ const copyToClipboard = async (text, section) => {
     }
 };
 
+// Convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
 // Local state for text editing (synced with layer)
 const localText = ref('');
 const isTextFocused = ref(false);
@@ -1054,6 +1062,45 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                 </div>
             </div>
 
+            <!-- Blur section (for text and rectangle) -->
+            <div
+                v-if="selectedLayer.type === 'text' || selectedLayer.type === 'rectangle'"
+                class="px-3 py-4 border-b border-gray-200"
+            >
+                <div class="flex items-center justify-between mb-3">
+                    <div class="flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                        <span class="text-xs font-medium text-gray-900">
+                            {{ t('graphics.properties.blur') }}
+                        </span>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input
+                            type="checkbox"
+                            :checked="selectedLayer.properties?.blurEnabled"
+                            @change="updateProperty('blurEnabled', $event.target.checked)"
+                            class="sr-only peer"
+                        />
+                        <div class="w-8 h-4 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-0.5 after:left-[2px] after:bg-white after:rounded-full after:h-3 after:w-3 after:transition-all"></div>
+                    </label>
+                </div>
+
+                <div v-if="selectedLayer.properties?.blurEnabled" class="space-y-2">
+                    <ScrubberInput
+                        :model-value="selectedLayer.properties?.blurRadius || 10"
+                        @update:model-value="updateProperty('blurRadius', $event)"
+                        :label="t('graphics.properties.blurRadius')"
+                        suffix="px"
+                        :min="0"
+                        :max="50"
+                        :sensitivity="0.3"
+                    />
+                </div>
+            </div>
+
             <!-- Transform section -->
             <div class="px-3 py-4 border-b border-gray-200">
                 <div class="flex items-center gap-2 mb-3">
@@ -1634,11 +1681,21 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                         <div
                             class="h-8 rounded border border-gray-200"
                             :style="{
-                                background: selectedLayer.properties?.gradientType === 'radial'
-                                    ? `radial-gradient(circle, ${selectedLayer.properties?.gradientStartColor || '#3B82F6'}, ${selectedLayer.properties?.gradientEndColor || '#8B5CF6'})`
-                                    : `linear-gradient(${selectedLayer.properties?.gradientAngle || 0}deg, ${selectedLayer.properties?.gradientStartColor || '#3B82F6'}, ${selectedLayer.properties?.gradientEndColor || '#8B5CF6'})`
+                                backgroundImage: 'linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)',
+                                backgroundSize: '8px 8px',
+                                backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+                                position: 'relative'
                             }"
-                        ></div>
+                        >
+                            <div
+                                class="absolute inset-0 rounded"
+                                :style="{
+                                    background: selectedLayer.properties?.gradientType === 'radial'
+                                        ? `radial-gradient(circle, ${hexToRgba(selectedLayer.properties?.gradientStartColor || '#3B82F6', selectedLayer.properties?.gradientStartOpacity ?? 1)}, ${hexToRgba(selectedLayer.properties?.gradientEndColor || '#8B5CF6', selectedLayer.properties?.gradientEndOpacity ?? 1)})`
+                                        : `linear-gradient(${selectedLayer.properties?.gradientAngle || 0}deg, ${hexToRgba(selectedLayer.properties?.gradientStartColor || '#3B82F6', selectedLayer.properties?.gradientStartOpacity ?? 1)}, ${hexToRgba(selectedLayer.properties?.gradientEndColor || '#8B5CF6', selectedLayer.properties?.gradientEndOpacity ?? 1)})`
+                                }"
+                            ></div>
+                        </div>
 
                         <!-- Start color -->
                         <div class="flex items-center gap-2">
@@ -1657,6 +1714,32 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                             />
                         </div>
 
+                        <!-- Start opacity -->
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.properties.gradientStartOpacity') }}</label>
+                            <div class="flex items-center gap-2">
+                                <input
+                                    type="range"
+                                    :value="(selectedLayer.properties?.gradientStartOpacity ?? 1) * 100"
+                                    @input="updateProperty('gradientStartOpacity', parseInt($event.target.value) / 100)"
+                                    min="0"
+                                    max="100"
+                                    class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                />
+                                <div class="w-14">
+                                    <ScrubberInput
+                                        :model-value="Math.round((selectedLayer.properties?.gradientStartOpacity ?? 1) * 100)"
+                                        @update:model-value="updateProperty('gradientStartOpacity', $event / 100)"
+                                        suffix="%"
+                                        :min="0"
+                                        :max="100"
+                                        :sensitivity="1"
+                                        input-class="px-2 py-1 text-center"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- End color -->
                         <div class="flex items-center gap-2">
                             <input
@@ -1672,6 +1755,32 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                                 type="text"
                                 class="flex-1 px-2 py-1.5 bg-gray-50 border border-gray-200 rounded text-gray-900 text-xs focus:outline-none focus:border-blue-500 focus:bg-white uppercase transition-colors font-mono"
                             />
+                        </div>
+
+                        <!-- End opacity -->
+                        <div>
+                            <label class="block text-[10px] text-gray-500 mb-1">{{ t('graphics.properties.gradientEndOpacity') }}</label>
+                            <div class="flex items-center gap-2">
+                                <input
+                                    type="range"
+                                    :value="(selectedLayer.properties?.gradientEndOpacity ?? 1) * 100"
+                                    @input="updateProperty('gradientEndOpacity', parseInt($event.target.value) / 100)"
+                                    min="0"
+                                    max="100"
+                                    class="flex-1 h-1.5 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+                                />
+                                <div class="w-14">
+                                    <ScrubberInput
+                                        :model-value="Math.round((selectedLayer.properties?.gradientEndOpacity ?? 1) * 100)"
+                                        @update:model-value="updateProperty('gradientEndOpacity', $event / 100)"
+                                        suffix="%"
+                                        :min="0"
+                                        :max="100"
+                                        :sensitivity="1"
+                                        input-class="px-2 py-1 text-center"
+                                    />
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Angle (for linear gradient) -->

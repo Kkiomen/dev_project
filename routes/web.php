@@ -38,6 +38,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 // Public approval route (no auth required)
 Route::get('/approve/{token}', fn () => view('spa'))->name('client-approval');
 
+// Render preview route (for template-renderer service, no auth required)
+Route::get('/render-preview', fn () => view('spa'))->name('render-preview');
+
 // Legacy Blade routes (keep for backward compatibility during migration)
 Route::middleware(['auth', 'verified'])->prefix('legacy')->group(function () {
     Route::get('/dashboard', DashboardController::class)->name('legacy.dashboard');

@@ -930,6 +930,57 @@ const handleDragEnd = (e, layer) => {
     });
 };
 
+// Shape refs for caching (required for Konva filters like blur)
+const shapeRefs = ref({});
+
+// Handle shape ref for caching when filters are enabled
+const handleShapeRef = (el, layer) => {
+    if (!el) {
+        delete shapeRefs.value[layer.id];
+        return;
+    }
+
+    const node = el.getNode ? el.getNode() : el;
+    shapeRefs.value[layer.id] = node;
+
+    // Cache the node if blur filter is enabled (required for Konva filters)
+    if (layer.properties?.blurEnabled && node) {
+        nextTick(() => {
+            try {
+                node.cache();
+            } catch (e) {
+                // Ignore cache errors
+            }
+        });
+    }
+};
+
+// Watch for blur changes to update cache
+watch(
+    () => graphicsStore.layers.map(l => ({ id: l.id, blur: l.properties?.blurEnabled, radius: l.properties?.blurRadius })),
+    (newVal) => {
+        newVal.forEach(({ id, blur }) => {
+            const node = shapeRefs.value[id];
+            if (node) {
+                if (blur) {
+                    try {
+                        node.cache();
+                    } catch (e) {
+                        // Ignore
+                    }
+                } else {
+                    try {
+                        node.clearCache();
+                    } catch (e) {
+                        // Ignore
+                    }
+                }
+            }
+        });
+    },
+    { deep: true }
+);
+
 // Get shadow config for a layer
 const getShadowConfig = (layer) => {
     if (!layer.properties?.shadowEnabled) return {};
@@ -944,14 +995,38 @@ const getShadowConfig = (layer) => {
     };
 };
 
+// Get blur filter config for a layer (rectangles only)
+const getBlurConfig = (layer) => {
+    if (!layer.properties?.blurEnabled) return {};
+
+    return {
+        filters: [Konva.Filters.Blur],
+        blurRadius: layer.properties?.blurRadius ?? 10,
+    };
+};
+
+// Helper to convert hex color to rgba with opacity
+const hexToRgba = (hex, opacity) => {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+};
+
 // Get gradient config for a layer
 const getGradientConfig = (layer) => {
     const gradientType = layer.properties?.gradientType || 'linear';
     const startColor = layer.properties?.gradientStartColor || '#3B82F6';
     const endColor = layer.properties?.gradientEndColor || '#8B5CF6';
+    const startOpacity = layer.properties?.gradientStartOpacity ?? 1;
+    const endOpacity = layer.properties?.gradientEndOpacity ?? 1;
     const angle = layer.properties?.gradientAngle || 0;
     const width = layer.width || 100;
     const height = layer.height || 100;
+
+    // Convert to rgba with opacity
+    const startColorRgba = hexToRgba(startColor, startOpacity);
+    const endColorRgba = hexToRgba(endColor, endOpacity);
 
     if (gradientType === 'radial') {
         return {
@@ -959,10 +1034,12 @@ const getGradientConfig = (layer) => {
             fillRadialGradientEndPoint: { x: width / 2, y: height / 2 },
             fillRadialGradientStartRadius: 0,
             fillRadialGradientEndRadius: Math.max(width, height) / 2,
-            fillRadialGradientColorStops: [0, startColor, 1, endColor],
+            fillRadialGradientColorStops: [0, startColorRgba, 1, endColorRgba],
         };
     } else {
         // Linear gradient - calculate start/end points based on angle
+        // Photoshop angle: 0° = left-to-right, 90° = bottom-to-top
+        // We need to negate the Y component to match Photoshop's coordinate system
         const angleRad = (angle * Math.PI) / 180;
         const halfWidth = width / 2;
         const halfHeight = height / 2;
@@ -972,16 +1049,17 @@ const getGradientConfig = (layer) => {
         const sin = Math.sin(angleRad);
         const length = Math.abs(width * cos) + Math.abs(height * sin);
 
+        // Start at bottom (for 90°), end at top - negate sin for Y axis
         return {
             fillLinearGradientStartPoint: {
                 x: halfWidth - (cos * length) / 2,
-                y: halfHeight - (sin * length) / 2,
+                y: halfHeight + (sin * length) / 2,  // + instead of - (flip Y)
             },
             fillLinearGradientEndPoint: {
                 x: halfWidth + (cos * length) / 2,
-                y: halfHeight + (sin * length) / 2,
+                y: halfHeight - (sin * length) / 2,  // - instead of + (flip Y)
             },
-            fillLinearGradientColorStops: [0, startColor, 1, endColor],
+            fillLinearGradientColorStops: [0, startColorRgba, 1, endColorRgba],
         };
     }
 };
@@ -1026,8 +1104,11 @@ const getShapeConfig = (layer) => {
 
             // Check if text has fixed width (for word wrapping)
             const hasFixedWidth = layer.properties?.fixedWidth === true;
+            const blurConfig = getBlurConfig(layer);
 
-            return {
+            // For point text (no fixed width), don't set width - otherwise Konva clips the text
+            // Only paragraph text (fixed width) should have width constraint for word wrapping
+            const textConfig = {
                 ...baseConfig,
                 text,
                 fontSize: layer.properties?.fontSize || 24,
@@ -1040,7 +1121,16 @@ const getShapeConfig = (layer) => {
                 textDecoration: layer.properties?.textDecoration || '',
                 // Enable word wrapping for fixed-width text
                 wrap: hasFixedWidth ? 'word' : 'none',
+                ...blurConfig,
             };
+
+            // Remove width/height for point text to prevent clipping
+            if (!hasFixedWidth) {
+                delete textConfig.width;
+                delete textConfig.height;
+            }
+
+            return textConfig;
         }
 
         case 'rectangle': {
@@ -1051,16 +1141,29 @@ const getShapeConfig = (layer) => {
             const useGradientFill = fillType === 'gradient';
 
             const gradientConfig = useGradientFill ? getGradientConfig(layer) : {};
+            const blurConfig = getBlurConfig(layer);
 
-            return {
+            const rectConfig = {
                 ...baseConfig,
-                fill: (useImageFill || useGradientFill) ? undefined : (layer.properties?.fill || '#CCCCCC'),
                 stroke: layer.properties?.stroke,
                 strokeWidth: layer.properties?.strokeWidth || 0,
                 cornerRadius: layer.properties?.cornerRadius || 0,
-                ...(useImageFill ? getFillPatternConfig(layer, fillImage) : {}),
-                ...gradientConfig,
+                ...blurConfig,
             };
+
+            // Set fill based on type - don't set fill at all when using gradient
+            // Konva fill priority defaults to 'color', so we must not set fill when using gradient
+            if (useGradientFill) {
+                Object.assign(rectConfig, gradientConfig);
+                const gradientType = layer.properties?.gradientType || 'linear';
+                rectConfig.fillPriority = gradientType === 'radial' ? 'radial-gradient' : 'linear-gradient';
+            } else if (useImageFill) {
+                Object.assign(rectConfig, getFillPatternConfig(layer, fillImage));
+            } else {
+                rectConfig.fill = layer.properties?.fill || '#CCCCCC';
+            }
+
+            return rectConfig;
         }
 
         case 'ellipse': {
@@ -1072,18 +1175,28 @@ const getShapeConfig = (layer) => {
 
             const gradientConfig = useGradientFill ? getGradientConfig(layer) : {};
 
-            return {
+            const ellipseConfig = {
                 ...baseConfig,
                 radiusX: (layer.width || 100) / 2,
                 radiusY: (layer.height || 100) / 2,
-                fill: (useImageFill || useGradientFill) ? undefined : (layer.properties?.fill || '#CCCCCC'),
                 stroke: layer.properties?.stroke,
                 strokeWidth: layer.properties?.strokeWidth || 0,
                 offsetX: -(layer.width || 100) / 2,
                 offsetY: -(layer.height || 100) / 2,
-                ...(useImageFill ? getFillPatternConfig(layer, fillImage, 'ellipse') : {}),
-                ...gradientConfig,
             };
+
+            // Set fill based on type - don't set fill at all when using gradient
+            if (useGradientFill) {
+                Object.assign(ellipseConfig, gradientConfig);
+                const gradientType = layer.properties?.gradientType || 'linear';
+                ellipseConfig.fillPriority = gradientType === 'radial' ? 'radial-gradient' : 'linear-gradient';
+            } else if (useImageFill) {
+                Object.assign(ellipseConfig, getFillPatternConfig(layer, fillImage, 'ellipse'));
+            } else {
+                ellipseConfig.fill = layer.properties?.fill || '#CCCCCC';
+            }
+
+            return ellipseConfig;
         }
 
         case 'image': {
@@ -2351,6 +2464,7 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                     <!-- Text -->
                     <v-text
                         v-if="layer.type === 'text'"
+                        :ref="(el) => handleShapeRef(el, layer)"
                         :config="getShapeConfig(layer)"
                         @click="(e) => handleShapeClick(e, layer)"
                         @contextmenu="(e) => handleContextMenu(e, layer)"
@@ -2364,6 +2478,7 @@ const getFillPatternConfig = (layer, image, shapeType = 'rectangle') => {
                     <!-- Rectangle -->
                     <v-rect
                         v-else-if="layer.type === 'rectangle'"
+                        :ref="(el) => handleShapeRef(el, layer)"
                         :config="getShapeConfig(layer)"
                         @click="(e) => handleShapeClick(e, layer)"
                         @contextmenu="(e) => handleContextMenu(e, layer)"

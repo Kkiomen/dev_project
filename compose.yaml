@@ -191,6 +191,7 @@ services:
             - '${FORWARD_TEMPLATE_RENDERER_PORT:-3336}:3336'
         environment:
             PORT: 3336
+            LARAVEL_URL: 'http://laravel.test'
         shm_size: '1gb'
         networks:
             - sail

@@ -107,6 +107,13 @@ const routes = [
         props: true,
         meta: { public: true },
     },
+    // Render preview (for template-renderer service, no auth)
+    {
+        path: '/render-preview',
+        name: 'render-preview',
+        component: () => import('@/pages/RenderPreviewPage.vue'),
+        meta: { public: true, hideLayout: true },
+    },
 ];
 
 const router = createRouter({

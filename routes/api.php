@@ -278,6 +278,11 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
             Route::post('render-psd', [DebugRenderController::class, 'renderPsd']);
             Route::post('psd-original', [DebugRenderController::class, 'psdOriginal']);
             Route::post('compare', [DebugRenderController::class, 'compare']);
+            Route::post('simulate-import', [DebugRenderController::class, 'simulateImport']);
+            // Vue-based render endpoints (single source of truth)
+            Route::post('render-vue', [DebugRenderController::class, 'renderVue']);
+            Route::post('render-psd-vue', [DebugRenderController::class, 'renderPsdVue']);
+            Route::post('compare-all', [DebugRenderController::class, 'compareAll']);
         });
     });
 
