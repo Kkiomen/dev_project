@@ -69,9 +69,58 @@ FONT_NAME_CORRECTIONS = {
     "open sans condensed": "Open Sans Condensed",
     "pt sans narrow": "PT Sans Narrow",
     "ubuntu condensed": "Ubuntu Condensed",
+    # Common naming variations without spaces
+    "bebasneue": "Bebas Neue",
+    "opensans": "Open Sans",
+    "sourcesanspro": "Source Sans Pro",
+    "playfairdisplay": "Playfair Display",
+    "robotomono": "Roboto Mono",
+    "firasans": "Fira Sans",
+    "librebaskerville": "Libre Baskerville",
+    "dancingscript": "Dancing Script",
+    "permanentmarker": "Permanent Marker",
+    "shadowsintolight": "Shadows Into Light",
+    "fredokaone": "Fredoka One",
+    "plusjakartasans": "Plus Jakarta Sans",
+    "spacegrotesk": "Space Grotesk",
+    "dmsans": "DM Sans",
 }
 
 DEFAULT_FONT = "Montserrat"
+
+# Fonts that are designed as all-caps/uppercase only
+# These fonts only contain uppercase glyphs, so text should be transformed to uppercase
+ALL_CAPS_FONTS = {
+    "bebas",
+    "bebas neue",
+    "bebasneue",
+    "bebas kai",
+    "bebas pro",
+    "impact",
+    "league gothic",
+    "leaguegothic",
+    "oswald",
+    "russo one",
+    "russoone",
+    "anton",
+    "archivo black",
+    "archivo narrow",
+    "archivonarrow",
+    "black ops one",
+    "blackopsone",
+    "bungee",
+    "bungee inline",
+    "bungee shade",
+    "staatliches",
+    "graduate",
+    "monoton",
+    "faster one",
+    "fasterone",
+    "shrikhand",
+    "alfa slab one",
+    "alfaslabone",
+    "ultra",
+}
 
 
 def normalize_font_name(font_name) -> str:
@@ -217,3 +266,39 @@ def extract_font_style(psd_font_name) -> str:
         return "italic"
 
     return "normal"
+
+
+def is_all_caps_font(font_name) -> bool:
+    """
+    Check if the font is an all-caps/uppercase-only font.
+
+    These fonts are designed with only uppercase glyphs, so any text
+    rendered with them will appear uppercase in Photoshop regardless
+    of the source text case.
+
+    Args:
+        font_name: Font name to check
+
+    Returns:
+        True if the font is known to be all-caps only
+    """
+    if not font_name or not isinstance(font_name, str):
+        return False
+
+    # Normalize the font name for comparison
+    normalized = font_name.lower().replace("-", " ").replace("_", " ").strip()
+    # Remove common suffixes
+    for suffix in [" regular", " bold", " light", " medium", " italic"]:
+        if normalized.endswith(suffix):
+            normalized = normalized[:-len(suffix)].strip()
+
+    # Check exact match first
+    if normalized in ALL_CAPS_FONTS:
+        return True
+
+    # Check partial match (font name contains any of the all-caps fonts)
+    for caps_font in ALL_CAPS_FONTS:
+        if caps_font in normalized or normalized in caps_font:
+            return True
+
+    return False

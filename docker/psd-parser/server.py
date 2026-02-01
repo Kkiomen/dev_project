@@ -11,7 +11,7 @@ import tempfile
 from flask import Flask, request, jsonify, send_file
 from flask_cors import CORS
 from psd_tools import PSDImage
-from psd_tools.api.layers import Group
+from psd_tools.api.layers import Group, PixelLayer, ShapeLayer, SmartObjectLayer
 
 from utils.layer_mapper import map_layer, collect_fonts
 from utils.image_extractor import rgba_to_hex, extract_smart_object_source
@@ -150,24 +150,64 @@ def parse_psd():
             return total
 
         # Assign positions incrementing from 0
-        # psd-tools iterates BOTTOM-to-TOP of Photoshop layer panel
-        # Bottom of panel = rendered first (bottom of canvas) = LOWEST position in Konva
-        # So first layer from psd-tools should get LOWEST position, we INCREMENT
+        # psd-tools iterates in layer panel order (top to bottom visually in Photoshop)
+        # BUT top of Photoshop panel = rendered ON TOP = needs HIGHEST z-index
+        # Wait, actually psd-tools returns layers in reverse order - first = bottom
+        # So we INCREMENT: first layer gets lowest position (rendered first = behind)
         layer_counter = {"index": 0}
+
+        def is_background_group(layer):
+            """Check if a group should be treated as a background layer.
+
+            Groups containing primarily images/SmartObjects or with background-related
+            names are treated as backgrounds and should render behind other groups.
+            """
+            if not isinstance(layer, Group):
+                return False
+
+            name_lower = layer.name.lower() if layer.name else ""
+            # Check for background-related names
+            background_keywords = ['image', 'placeholder', 'background', 'bg', 'photo']
+            if any(kw in name_lower for kw in background_keywords):
+                return True
+
+            # Check if group contains primarily image layers
+            image_count = 0
+            shape_count = 0
+            for child in layer:
+                if isinstance(child, SmartObjectLayer) or isinstance(child, PixelLayer):
+                    image_count += 1
+                elif isinstance(child, ShapeLayer):
+                    shape_count += 1
+
+            # If more images than shapes, treat as background
+            return image_count > 0 and image_count >= shape_count
 
         def process_layers(container, is_root=True):
             """Process layers recursively, preserving group hierarchy.
 
             Positions are assigned in ASCENDING order because:
-            - psd-tools iterates BOTTOM-to-TOP of Photoshop layer panel
-            - Bottom of panel = rendered at bottom in Photoshop
-            - Konva renders higher position on top
-            - So first layer from psd-tools should get LOWEST position
+            - psd-tools iterates from bottom to top of layer stack
+            - First layer = bottom of stack = rendered behind = lowest position
+            - Last layer = top of stack = rendered on top = highest position
+
+            At root level, groups containing images/SmartObjects are sorted to render
+            first (behind) to ensure proper z-ordering when masks aren't supported.
             """
             result = []
 
             # Convert container to list for sibling access (needed for clipping mask detection)
             sibling_layers = list(container)
+
+            # At root level, sort groups to put image-heavy groups first (behind)
+            if is_root:
+                # Separate background groups from foreground groups
+                bg_groups = [l for l in sibling_layers if is_background_group(l)]
+                fg_groups = [l for l in sibling_layers if not is_background_group(l)]
+                # Background groups first, then foreground groups
+                sibling_layers = bg_groups + fg_groups
+                if bg_groups:
+                    print(f"[Z-ORDER] Reordered groups: backgrounds={[l.name for l in bg_groups]}, foregrounds={[l.name for l in fg_groups]}")
 
             # Build a set of layers that are clipped to other layers (should be skipped)
             # These are handled via their clipping base's composite

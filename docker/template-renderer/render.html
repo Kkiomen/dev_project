@@ -3,6 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Template Renderer</title>
+    <!-- Google Fonts - preload common fonts used in designs -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;500;600;700&family=Poppins:wght@400;500;600;700&family=Open+Sans:wght@400;600;700&family=Roboto:wght@400;500;700&family=Lato:wght@400;700&family=Inter:wght@400;500;600;700&family=Oswald:wght@400;500;700&family=Raleway:wght@400;500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
     <script>__KONVA_JS__</script>
     <style>
         * {
@@ -68,12 +72,35 @@
         // Render a single layer
         async function renderLayer(layerData) {
             const props = layerData.properties || {};
+            const rotation = layerData.rotation || 0;
+            const width = layerData.width || 0;
+            const height = layerData.height || 0;
+
+            // For rotated elements, adjust position to rotate around center
+            // PSD gives us bounding box coordinates, but Konva rotates around (x,y)
+            // Use offset to rotate around center instead
+            let offsetX = 0;
+            let offsetY = 0;
+            let adjustedX = layerData.x || 0;
+            let adjustedY = layerData.y || 0;
+
+            if (Math.abs(rotation) > 0.1) {
+                // Set offset to center of shape
+                offsetX = width / 2;
+                offsetY = height / 2;
+                // Adjust position to account for offset (move to center)
+                adjustedX += width / 2;
+                adjustedY += height / 2;
+            }
+
             const baseConfig = {
-                x: layerData.x || 0,
-                y: layerData.y || 0,
-                width: layerData.width,
-                height: layerData.height,
-                rotation: layerData.rotation || 0,
+                x: adjustedX,
+                y: adjustedY,
+                width: width,
+                height: height,
+                rotation: rotation,
+                offsetX: offsetX,
+                offsetY: offsetY,
                 scaleX: layerData.scale_x || 1,
                 scaleY: layerData.scale_y || 1,
                 opacity: layerData.opacity ?? 1,
@@ -170,8 +197,18 @@
                 }
 
                 case 'text': {
-                    // Handle vertical text direction
+                    // Handle text transform (uppercase, lowercase, capitalize)
                     let text = props.text || '';
+                    const textTransform = props.textTransform;
+                    if (textTransform === 'uppercase') {
+                        text = text.toUpperCase();
+                    } else if (textTransform === 'lowercase') {
+                        text = text.toLowerCase();
+                    } else if (textTransform === 'capitalize') {
+                        text = text.replace(/\b\w/g, c => c.toUpperCase());
+                    }
+
+                    // Handle vertical text direction
                     const textDirection = props.textDirection || 'horizontal';
                     if (textDirection === 'vertical') {
                         text = text.split('').map(char => {
@@ -206,9 +243,11 @@
                     }
 
                     const textConfig = {
-                        x: layerData.x || 0,
-                        y: layerData.y || 0,
-                        rotation: layerData.rotation || 0,
+                        x: adjustedX,
+                        y: adjustedY,
+                        rotation: rotation,
+                        offsetX: offsetX,
+                        offsetY: offsetY,
                         scaleX: layerData.scale_x || 1,
                         scaleY: layerData.scale_y || 1,
                         opacity: layerData.opacity ?? 1,
@@ -571,8 +610,21 @@
             layer.draw();
         }
 
-        // Start rendering
-        renderAllLayers().catch(error => {
+        // Start rendering after fonts are loaded
+        async function initRender() {
+            // Wait for fonts to be ready
+            await document.fonts.ready;
+            console.log('Fonts loaded, starting render');
+
+            await renderAllLayers();
+
+            // Re-draw after a short delay to ensure fonts are applied
+            setTimeout(() => {
+                layer.batchDraw();
+            }, 100);
+        }
+
+        initRender().catch(error => {
             console.error('Render error:', error);
         });
     </script>

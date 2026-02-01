@@ -59,6 +59,11 @@ async function renderTemplate(templateData, width, height, deviceScaleFactor = 2
         // Load the HTML content
         await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 30000 });
 
+        // Wait for fonts to be loaded
+        await page.evaluate(() => {
+            return document.fonts.ready;
+        });
+
         // Wait for Konva to render
         await page.waitForSelector('#container canvas', { timeout: 10000 });
 

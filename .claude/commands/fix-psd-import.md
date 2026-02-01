@@ -378,6 +378,43 @@ docker compose build template-renderer && docker compose up -d template-renderer
 # Then re-run steps 1-2 to verify fix
 ```
 
+## IMPORTANT: New Properties Must Be Editable!
+
+**Jeśli dodajesz nową właściwość (property) do warstwy, MUSISZ również:**
+
+1. **Dodać możliwość edycji w PropertiesPanel** (`resources/js/components/graphics/PropertiesPanel.vue`)
+   - Dodaj odpowiedni input/control dla nowej właściwości
+   - Upewnij się, że zmiany są zapisywane do store
+
+2. **Zaktualizować store** (`resources/js/stores/graphics.js`)
+   - Dodaj obsługę nowej właściwości w `updateLayerProperty` jeśli potrzeba
+
+3. **Zaktualizować EditorCanvas** (`resources/js/components/graphics/EditorCanvas.vue`)
+   - Upewnij się, że nowa właściwość jest renderowana
+
+4. **Zaktualizować template-renderer** (`docker/template-renderer/render.html`)
+   - Dodaj obsługę nowej właściwości w renderingu Konva
+
+**Przykład dodania nowej właściwości `textTransform`:**
+
+```
+1. Parser (layer_mapper.py):
+   data["properties"]["textTransform"] = "uppercase"
+
+2. EditorCanvas.vue:
+   if (transform === 'uppercase') text = text.toUpperCase();
+
+3. PropertiesPanel.vue:
+   <select v-model="selectedLayer.properties.textTransform">
+     <option value="">Normal</option>
+     <option value="uppercase">UPPERCASE</option>
+     <option value="lowercase">lowercase</option>
+   </select>
+
+4. render.html:
+   if (textTransform === 'uppercase') text = text.toUpperCase();
+```
+
 ## REMEMBER
 - USE Bash tool to execute commands
 - USE Read tool to view PNG images
@@ -388,3 +425,4 @@ docker compose build template-renderer && docker compose up -d template-renderer
 - Fix rendering issues in `EditorCanvas.vue` - it's the single source of truth
 - Laravel API requires AUTH - use microservices directly for testing
 - RenderPreviewPage.vue uses EditorCanvas component - no duplicate code to maintain!
+- **NEW PROPERTIES MUST BE EDITABLE** - always add UI controls in PropertiesPanel.vue for new properties!

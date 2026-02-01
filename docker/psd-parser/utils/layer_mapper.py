@@ -6,7 +6,7 @@ from psd_tools.constants import BlendMode
 from psd_tools.api.layers import TypeLayer, PixelLayer, ShapeLayer, SmartObjectLayer, Group
 from psd_tools.api.adjustments import SolidColorFill
 
-from .font_matcher import match_font, extract_font_weight, extract_font_style
+from .font_matcher import match_font, extract_font_weight, extract_font_style, is_all_caps_font
 from .image_extractor import (
     extract_layer_image,
     extract_smart_object_image,
@@ -1109,22 +1109,31 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float, psd_dpi: int =
                         # TypeLayer.transform is a 2D affine matrix: [xx, xy, yx, yy, tx, ty]
                         # xx and yy contain the scale factors (when no rotation)
                         transform_scale = 1.0
+                        text_rotation = 0.0
                         if hasattr(layer, 'transform') and layer.transform:
                             transform = layer.transform
                             print(f"  [FONT] Layer transform: {transform}")
                             if len(transform) >= 4:
                                 import math
-                                # Extract scale from transform matrix
+                                # Extract scale and rotation from transform matrix
                                 # For affine matrix [xx, xy, yx, yy, tx, ty]:
-                                # scale_x = sqrt(xx^2 + yx^2)
-                                # scale_y = sqrt(xy^2 + yy^2)
+                                # scale_x = sqrt(xx^2 + xy^2)  (using xy from first row)
+                                # scale_y = sqrt(yx^2 + yy^2)  (using yx from second row)
+                                # rotation = atan2(xy, xx) in radians
                                 xx, xy, yx, yy = transform[0], transform[1], transform[2], transform[3]
                                 scale_x = math.sqrt(xx * xx + xy * xy)
                                 scale_y = math.sqrt(yx * yx + yy * yy)
                                 # Use average of x/y scale for font size
                                 # (typically they're the same for uniform scaling)
                                 transform_scale = (scale_x + scale_y) / 2.0
+                                # Extract rotation angle from transform matrix
+                                # atan2(xy, xx) gives rotation in radians
+                                text_rotation = math.degrees(math.atan2(xy, xx))
                                 print(f"  [FONT] Transform scale: xx={xx:.3f}, yy={yy:.3f} -> scale_x={scale_x:.3f}, scale_y={scale_y:.3f}, avg={transform_scale:.3f}")
+                                if abs(text_rotation) > 0.1:
+                                    print(f"  [FONT] Transform rotation: {text_rotation:.2f}°")
+                                    # Update the layer rotation in data
+                                    data["rotation"] = text_rotation
 
                         # Ensure all values are native Python floats
                         raw_font_size = float(raw_font_size)
@@ -1182,6 +1191,12 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float, psd_dpi: int =
         has_fixed_width = not is_point_text and data.get("width", 0) > 0
         print(f"  [TEXT] Layer '{layer.name}': is_point_text={is_point_text}, has_fixed_width={has_fixed_width}")
 
+        # Determine text transform - all-caps fonts should transform text to uppercase
+        text_transform = None
+        if original_font_name and is_all_caps_font(original_font_name):
+            text_transform = "uppercase"
+            print(f"  [TEXT] Layer '{layer.name}': detected all-caps font '{original_font_name}', setting textTransform=uppercase")
+
         data["properties"] = {
             "text": text,
             "fontFamily": font_family,
@@ -1197,6 +1212,7 @@ def _map_text_layer(layer: TypeLayer, data: dict, opacity: float, psd_dpi: int =
             "fixedWidth": has_fixed_width,  # Only true for paragraph text (with BoxBounds)
             "originalFontName": original_font_name,  # Original font name from PSD
             "isDynamicFont": is_dynamic_font,  # Whether to try dynamic Google Fonts loading
+            "textTransform": text_transform,  # Text case transformation (uppercase, lowercase, capitalize)
         }
 
     except Exception as e:
@@ -1318,13 +1334,36 @@ def _map_image_layer(layer, data: dict, opacity: float, sibling_layers: list = N
         # Mask will be applied dynamically in frontend - this allows user to replace image
         # and have the same mask applied to the new image
         if isinstance(layer, SmartObjectLayer):
-            # For SmartObjects: use extract_smart_object_source to get CLEAN original image
+            # For SmartObjects: try extract_smart_object_source first for CLEAN original image
             # This bypasses any layer masks or transformations
             image_data = extract_smart_object_source(layer)
+
+            # Validate that the extracted image is not empty/black
+            if image_data and image_data.get('data'):
+                # Check if image is actually valid (not just black pixels)
+                import base64
+                from PIL import Image as PILImage
+                import io as io_module
+                try:
+                    b64_data = image_data['data'].split(',')[1] if ',' in image_data['data'] else image_data['data']
+                    img_bytes = base64.b64decode(b64_data)
+                    test_img = PILImage.open(io_module.BytesIO(img_bytes))
+                    if test_img.mode == 'RGBA':
+                        # Sample center pixel to check if image has actual content
+                        w, h = test_img.size
+                        center_pixel = test_img.getpixel((w//2, h//2))
+                        # If pixel is pure black with full alpha, likely extraction failed
+                        if center_pixel == (0, 0, 0, 255):
+                            print(f"  [IMAGE] SmartObject source appears empty/black, using layer composite instead")
+                            image_data = None
+                except Exception as e:
+                    print(f"  [IMAGE] Could not validate SmartObject source: {e}")
+
             if image_data:
                 print(f"  [IMAGE] Extracted clean source image for SmartObject '{layer_name}'")
             else:
-                # Fallback: try without mask
+                # Fallback: use layer.composite() which includes the actual rendered content
+                print(f"  [IMAGE] Falling back to layer.composite() for SmartObject '{layer_name}'")
                 image_data = extract_layer_image_without_mask(layer)
                 if not image_data:
                     image_data = extract_layer_image(layer, apply_mask=False)
@@ -1477,6 +1516,7 @@ def _extract_gradient_data(gradient_fill: dict, layer_name: str) -> dict | None:
 def _map_shape_layer(layer: ShapeLayer, data: dict, opacity: float):
     """Map shape layer properties."""
     from psd_tools.constants import Tag
+    import math
 
     try:
         fill_color = "#CCCCCC"
@@ -1485,6 +1525,32 @@ def _map_shape_layer(layer: ShapeLayer, data: dict, opacity: float):
         corner_radius = 0
         fill_type = "solid"  # solid, gradient
         gradient_data = None
+
+        # Extract rotation from origination transform (if available)
+        shape_rotation = 0.0
+        if hasattr(layer, 'origination') and layer.origination:
+            for orig in layer.origination:
+                orig_type = type(orig).__name__
+                print(f"  [SHAPE DEBUG] Layer '{layer.name}': origination type={orig_type}")
+                if hasattr(orig, 'transform') and orig.transform:
+                    transform = orig.transform
+                    print(f"  [SHAPE DEBUG] Layer '{layer.name}': transform={transform}")
+                    if len(transform) >= 4:
+                        xx, xy, yx, yy = transform[0], transform[1], transform[2], transform[3]
+                        # Extract rotation angle from transform matrix
+                        rotation_rad = math.atan2(xy, xx)
+                        shape_rotation = math.degrees(rotation_rad)
+                        if abs(shape_rotation) > 0.1:
+                            print(f"  [SHAPE ROTATION] Layer '{layer.name}': rotation={shape_rotation:.2f}° from origination transform")
+                            data["rotation"] = shape_rotation
+                    break
+
+        # Try to extract rotation from vector_mask if origination didn't have it
+        if abs(shape_rotation) < 0.1:
+            rotation_from_mask = extract_rotation_from_vector_mask(layer)
+            if abs(rotation_from_mask) > 0.1:
+                print(f"  [SHAPE ROTATION] Layer '{layer.name}': rotation={rotation_from_mask:.2f}° from vector_mask")
+                data["rotation"] = rotation_from_mask
 
         # Priority 0: Check for gradient fill
         if hasattr(layer, "tagged_blocks"):

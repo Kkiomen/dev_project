@@ -174,6 +174,7 @@ const editingTextId = ref(null);
 const textareaRef = ref(null);
 const isDragOver = ref(false);
 const isShiftPressed = ref(false);
+const isCtrlPressed = ref(false);
 
 // Pan and zoom state
 const panOffset = ref({ x: 0, y: 0 });
@@ -240,6 +241,15 @@ const transformerConfig = computed(() => ({
     keepRatio: isShiftPressed.value,
     enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top-center', 'bottom-center', 'middle-left', 'middle-right'],
     boundBoxFunc: (oldBox, newBox) => {
+        // Only snap when Ctrl is pressed
+        if (!isCtrlPressed.value) {
+            guides.value = { vertical: [], horizontal: [] };
+            // Minimum size constraint
+            newBox.width = Math.max(5, newBox.width);
+            newBox.height = Math.max(5, newBox.height);
+            return newBox;
+        }
+
         // Get snap lines excluding selected layers
         const snapLines = getCombinedSnapLines(graphicsStore.selectedLayerIds);
         const newGuides = { vertical: [], horizontal: [] };
@@ -390,6 +400,9 @@ const handleKeyDown = (e) => {
     if (e.shiftKey) {
         isShiftPressed.value = true;
     }
+    if (e.ctrlKey || e.metaKey) {
+        isCtrlPressed.value = true;
+    }
 };
 
 const handleKeyUp = (e) => {
@@ -402,6 +415,9 @@ const handleKeyUp = (e) => {
     }
     if (!e.shiftKey) {
         isShiftPressed.value = false;
+    }
+    if (!e.ctrlKey && !e.metaKey) {
+        isCtrlPressed.value = false;
     }
 };
 
@@ -884,9 +900,16 @@ const handleTextboxDblClick = (e, layer) => {
     });
 };
 
-// Handle shape transform (resize) with snapping
+// Handle shape transform (resize) with snapping (only when Ctrl is pressed)
 const handleTransform = (e, layer) => {
     const node = e.target;
+
+    // Only snap when Ctrl is pressed
+    if (!isCtrlPressed.value) {
+        guides.value = { vertical: [], horizontal: [] };
+        return;
+    }
+
     const snapLines = getCanvasSnapLines();
 
     // Get current bounds
@@ -953,9 +976,15 @@ const handleTransformEnd = (e, layer) => {
     node.scaleY(1);
 };
 
-// Handle drag move with snapping
+// Handle drag move with snapping (only when Ctrl is pressed)
 const handleDragMove = (e, layer) => {
     const node = e.target;
+
+    // Only snap when Ctrl is pressed
+    if (!isCtrlPressed.value) {
+        guides.value = { vertical: [], horizontal: [] };
+        return;
+    }
 
     // Get snap lines from canvas AND other layers (excluding dragged layer)
     const snapLines = getCombinedSnapLines([layer.id]);
@@ -1010,20 +1039,12 @@ const handleShapeRef = (el, layer) => {
         const nodeWidth = node.width();
         const nodeHeight = node.height();
 
-        console.log(`[SHAPE-REF] Text layer "${layer.name}"`, {
-            layerWidth: layer.width,
-            layerHeight: layer.height,
-            nodeWidth,
-            nodeHeight,
-        });
-
         // Update layer dimensions if they don't match the actual Konva node
         // This ensures the bounding box matches the rendered text
         const widthDiff = Math.abs(layer.width - nodeWidth);
         const heightDiff = Math.abs(layer.height - nodeHeight);
 
         if (widthDiff > 1 || heightDiff > 1) {
-            console.log(`[SHAPE-REF] Syncing dimensions for "${layer.name}": ${layer.width}→${nodeWidth}, ${layer.height}→${nodeHeight}`);
             graphicsStore.updateLayerLocally(layer.id, {
                 width: nodeWidth,
                 height: nodeHeight,
@@ -1206,13 +1227,28 @@ const getGradientConfig = (layer) => {
 
 // Get shape config based on layer type
 const getShapeConfig = (layer) => {
+    // For rotated layers (from PSD import), use offset to rotate around center
+    // This ensures correct positioning when the layer has rotation
+    const rotation = layer.rotation || 0;
+    const hasRotation = Math.abs(rotation) > 0.1;
+    const width = layer.width || 0;
+    const height = layer.height || 0;
+
+    // Calculate offset for center rotation (only for rotated layers)
+    const offsetX = hasRotation ? width / 2 : 0;
+    const offsetY = hasRotation ? height / 2 : 0;
+    const adjustedX = hasRotation ? layer.x + width / 2 : layer.x;
+    const adjustedY = hasRotation ? layer.y + height / 2 : layer.y;
+
     const baseConfig = {
         id: layer.id,
-        x: layer.x,
-        y: layer.y,
-        width: layer.width,
-        height: layer.height,
-        rotation: layer.rotation,
+        x: adjustedX,
+        y: adjustedY,
+        width: width,
+        height: height,
+        rotation: rotation,
+        offsetX: offsetX,
+        offsetY: offsetY,
         scaleX: layer.scale_x,
         scaleY: layer.scale_y,
         draggable: !layer.locked,

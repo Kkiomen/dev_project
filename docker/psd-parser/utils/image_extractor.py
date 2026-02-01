@@ -107,6 +107,9 @@ def extract_layer_image_without_mask(layer, max_dimension: int = 4096, normalize
     Extract image from a PSD layer WITHOUT applying the vector mask.
     This gives us the full rectangular image that can be clipped by CSS/Canvas.
 
+    IMPORTANT: If the layer has effects (Color Overlay, etc.), always use composite()
+    because effects are only visible in the composite image.
+
     Args:
         layer: psd-tools layer object
         max_dimension: Maximum width/height for the extracted image
@@ -117,23 +120,35 @@ def extract_layer_image_without_mask(layer, max_dimension: int = 4096, normalize
     """
     try:
         pil_image = None
+        layer_name = getattr(layer, 'name', 'unknown')
 
-        # Try to get the raw pixel data without mask applied
-        # Method 1: Use topil() which gets raw layer pixels
-        if hasattr(layer, "topil"):
+        # Check if layer has effects - if so, MUST use composite() to get effects
+        layer_has_effects = has_layer_effects(layer)
+        if layer_has_effects:
+            print(f"  [IMAGE] Layer '{layer_name}' has effects - using composite() to preserve them")
             try:
-                pil_image = layer.topil()
-            except Exception:
-                pass
+                pil_image = layer.composite()
+            except Exception as e:
+                print(f"  [IMAGE] composite() failed for '{layer_name}': {e}")
 
-        # Method 2: For SmartObjects, try to extract embedded data
-        if pil_image is None and hasattr(layer, "smart_object") and layer.smart_object:
-            try:
-                data = layer.smart_object.data
-                if data:
-                    pil_image = Image.open(io.BytesIO(data))
-            except Exception:
-                pass
+        # If no effects, try other methods
+        if pil_image is None and not layer_has_effects:
+            # Try to get the raw pixel data without mask applied
+            # Method 1: Use topil() which gets raw layer pixels
+            if hasattr(layer, "topil"):
+                try:
+                    pil_image = layer.topil()
+                except Exception:
+                    pass
+
+            # Method 2: For SmartObjects, try to extract embedded data
+            if pil_image is None and hasattr(layer, "smart_object") and layer.smart_object:
+                try:
+                    data = layer.smart_object.data
+                    if data:
+                        pil_image = Image.open(io.BytesIO(data))
+                except Exception:
+                    pass
 
         # Method 3: Fall back to composite (will have mask baked in)
         if pil_image is None:
@@ -245,10 +260,124 @@ def _process_pil_image(pil_image: Image.Image, max_dimension: int) -> dict | Non
         return None
 
 
+def has_layer_effects(layer) -> bool:
+    """
+    Check if a layer has effects (Color Overlay, Drop Shadow, etc.)
+    that would change its appearance from the source image.
+
+    Also checks if composite() looks different from source (e.g., color tint applied).
+    """
+    try:
+        from psd_tools.constants import Tag
+
+        layer_name = getattr(layer, 'name', 'unknown')
+
+        if not hasattr(layer, 'tagged_blocks'):
+            return False
+
+        # Check for OBJECT_BASED_EFFECTS_LAYER_INFO which contains layer effects
+        try:
+            effects = layer.tagged_blocks.get_data(Tag.OBJECT_BASED_EFFECTS_LAYER_INFO)
+            if effects:
+                print(f"  [EFFECTS] Layer '{layer_name}' has OBJECT_BASED_EFFECTS_LAYER_INFO")
+                # Check if effects are enabled (masterFXSwitch)
+                if isinstance(effects, dict):
+                    master_switch = effects.get(b'masterFXSwitch', 1)
+                    if master_switch:
+                        # Check for specific effects
+                        for effect_key in [b'SoFi', b'DrSh', b'IrSh', b'OrGl', b'IrGl', b'bevl', b'ebbl']:
+                            if effect_key in effects:
+                                effect_data = effects[effect_key]
+                                if isinstance(effect_data, dict):
+                                    enabled = effect_data.get(b'enab', True)
+                                    if enabled:
+                                        print(f"  [EFFECTS] Layer '{layer_name}' has active effect: {effect_key}")
+                                        return True
+                else:
+                    # Effects exist but not in expected dict format - assume active
+                    print(f"  [EFFECTS] Layer '{layer_name}' has effects (non-dict format)")
+                    return True
+        except Exception as e:
+            print(f"  [EFFECTS] Error checking effects for '{layer_name}': {e}")
+
+        return False
+    except Exception:
+        return False
+
+
+def composite_differs_from_source(layer, threshold: float = 0.1) -> bool:
+    """
+    Check if layer.composite() is visually different from the source image.
+    This detects effects like Color Overlay that are applied to the layer.
+
+    Returns True if the composite appears to have color/effects applied.
+    """
+    try:
+        import numpy as np
+
+        layer_name = getattr(layer, 'name', 'unknown')
+
+        # Get composite
+        comp = layer.composite()
+        if comp is None:
+            return False
+
+        comp_rgba = comp.convert('RGBA')
+        comp_arr = np.array(comp_rgba)
+
+        # For SmartObjects, try to get source
+        if hasattr(layer, 'smart_object') and layer.smart_object:
+            so = layer.smart_object
+            if so.data:
+                try:
+                    source_img = Image.open(io.BytesIO(so.data))
+                    source_rgba = source_img.convert('RGBA')
+                    source_arr = np.array(source_rgba)
+
+                    # Resize source to match composite if different sizes
+                    if source_arr.shape[:2] != comp_arr.shape[:2]:
+                        source_img = source_img.resize(comp.size, Image.LANCZOS)
+                        source_arr = np.array(source_img.convert('RGBA'))
+
+                    # Compare average colors of non-transparent pixels
+                    comp_alpha = comp_arr[:, :, 3]
+                    source_alpha = source_arr[:, :, 3]
+
+                    comp_mask = comp_alpha > 50
+                    source_mask = source_alpha > 50
+
+                    if np.sum(comp_mask) > 100 and np.sum(source_mask) > 100:
+                        comp_rgb_avg = np.mean(comp_arr[:, :, :3][comp_mask], axis=0)
+                        source_rgb_avg = np.mean(source_arr[:, :, :3][source_mask], axis=0)
+
+                        # Calculate color difference (normalized 0-1)
+                        color_diff = np.abs(comp_rgb_avg - source_rgb_avg) / 255.0
+                        max_diff = np.max(color_diff)
+
+                        if max_diff > threshold:
+                            print(f"  [EFFECTS] Layer '{layer_name}': composite differs from source by {max_diff:.2%} (threshold: {threshold:.0%})")
+                            print(f"    Composite avg RGB: ({comp_rgb_avg[0]:.0f}, {comp_rgb_avg[1]:.0f}, {comp_rgb_avg[2]:.0f})")
+                            print(f"    Source avg RGB: ({source_rgb_avg[0]:.0f}, {source_rgb_avg[1]:.0f}, {source_rgb_avg[2]:.0f})")
+                            return True
+
+                except Exception as e:
+                    print(f"  [EFFECTS] Error comparing composite to source for '{layer_name}': {e}")
+
+        return False
+
+    except Exception as e:
+        print(f"  [EFFECTS] Error in composite_differs_from_source: {e}")
+        return False
+
+
 def extract_smart_object_source(layer, max_dimension: int = 4096) -> dict | None:
     """
     Extract SOURCE image from Smart Object (supports PSB/PSD).
     This is the original image before any transformations/masks.
+
+    IMPORTANT: If the layer has effects (Color Overlay, etc.) or the composite
+    looks different from the source (indicating color tint), this returns None
+    so that the caller falls back to layer.composite() which includes effects.
 
     Args:
         layer: psd-tools layer object with smart object
@@ -261,9 +390,22 @@ def extract_smart_object_source(layer, max_dimension: int = 4096) -> dict | None
             - width: image width (original source size)
             - height: image height (original source size)
             - unique_id: smart object unique identifier
-        or None if extraction fails
+        or None if extraction fails or layer has effects
     """
     if not hasattr(layer, "smart_object") or not layer.smart_object:
+        return None
+
+    layer_name = getattr(layer, 'name', 'unknown')
+
+    # If layer has effects (Color Overlay, etc.), don't use source image
+    # because effects are only visible in composite()
+    if has_layer_effects(layer):
+        print(f"  [SMART_OBJECT] Layer '{layer_name}' has effects - skipping source extraction, will use composite")
+        return None
+
+    # Check if composite looks different from source (color tint applied)
+    if composite_differs_from_source(layer, threshold=0.15):
+        print(f"  [SMART_OBJECT] Layer '{layer_name}' composite differs from source - using composite for colors")
         return None
 
     so = layer.smart_object
