@@ -230,26 +230,32 @@ const handleKeydown = (e) => {
     }
 };
 
-// Load fonts used by text layers and recalculate dimensions after loading
+// Load fonts used by text layers and sync dimensions after loading
 watch(
     () => graphicsStore.layers,
     async (layers) => {
         const textLayers = layers.filter((l) => l.type === 'text');
         const fonts = new Set(textLayers.map((l) => l.properties?.fontFamily).filter(Boolean));
 
+        console.log('[FONT-WATCHER] Loading fonts:', [...fonts]);
+
         // Load all fonts and wait for them
         const fontLoadPromises = [...fonts].map((font) => loadFont(font));
         await Promise.all(fontLoadPromises);
 
-        // After fonts are loaded, recalculate text layer heights (for wrapped text)
-        // This is important for PSD imports where fixedWidth is true
-        if (canvasRef.value?.autoResizeTextLayer) {
-            textLayers.forEach((layer) => {
-                if (layer.properties?.fixedWidth === true) {
-                    canvasRef.value.autoResizeTextLayer(layer.id);
-                }
-            });
-        }
+        console.log('[FONT-WATCHER] Fonts loaded, syncing text layers:', textLayers.map(l => l.name));
+
+        // After fonts are loaded, sync dimensions from actual Konva nodes
+        // Small delay to ensure Konva has re-rendered with loaded fonts
+        setTimeout(() => {
+            if (canvasRef.value?.syncTextLayerDimensions) {
+                textLayers.forEach((layer) => {
+                    canvasRef.value.syncTextLayerDimensions(layer.id);
+                });
+            } else {
+                console.log('[FONT-WATCHER] canvasRef.syncTextLayerDimensions not available');
+            }
+        }, 100);
     },
     { immediate: true, deep: true }
 );

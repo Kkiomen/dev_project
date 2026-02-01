@@ -32,6 +32,17 @@ const measureTextDimensions = (textProps) => {
     const width = tempText.width();
     const height = tempText.height();
 
+    console.log('[MEASURE-TEXT]', {
+        text: textProps.text?.substring(0, 30),
+        fontFamily: textProps.fontFamily,
+        fontSize: textProps.fontSize,
+        fontWeight: textProps.fontWeight,
+        fontStyle: textProps.fontStyle,
+        inputWidth: textProps.width,
+        measuredWidth: width,
+        measuredHeight: height,
+    });
+
     tempText.destroy();
 
     return { width, height };
@@ -45,6 +56,21 @@ const autoResizeTextLayer = (layerId) => {
     if (!layer || layer.type !== 'text') return;
 
     const layerProps = layer.properties || {};
+
+    console.log(`[AUTO-RESIZE] START Layer "${layer.name}" (${layerId})`, {
+        currentWidth: layer.width,
+        currentHeight: layer.height,
+        fixedWidth: layerProps.fixedWidth,
+        text: layerProps.text?.substring(0, 50),
+        fontSize: layerProps.fontSize,
+        fontFamily: layerProps.fontFamily,
+        fontWeight: layerProps.fontWeight,
+        fontStyle: layerProps.fontStyle,
+        scale_x: layer.scale_x,
+        scale_y: layer.scale_y,
+        x: layer.x,
+        y: layer.y,
+    });
     const canvasWidth = props.template.width;
 
     // Check if this layer has fixed width (imported from PSD or explicitly set)
@@ -117,8 +143,18 @@ const autoResizeTextLayer = (layerId) => {
     if (!hasFixedWidth && finalWidth !== layer.width) updates.width = finalWidth;
     if (finalHeight !== layer.height) updates.height = finalHeight;
 
+    console.log(`[AUTO-RESIZE] RESULT Layer "${layer.name}"`, {
+        hasFixedWidth,
+        finalWidth,
+        finalHeight,
+        currentWidth: layer.width,
+        currentHeight: layer.height,
+        updates,
+    });
+
     if (Object.keys(updates).length > 0) {
         graphicsStore.updateLayerLocally(layerId, updates);
+        console.log(`[AUTO-RESIZE] UPDATED Layer "${layer.name}"`, updates);
     }
 };
 
@@ -172,6 +208,29 @@ const snapValue = (value, snapLines) => {
     return { value, snapped: false };
 };
 
+// Get combined snap lines from canvas and other layers (excluding selected layers)
+const getCombinedSnapLines = (excludeLayerIds = []) => {
+    const canvasLines = getCanvasSnapLines();
+    const layerLines = { vertical: [], horizontal: [] };
+
+    for (const layer of graphicsStore.visibleLayers) {
+        if (excludeLayerIds.includes(layer.id)) continue;
+
+        const x = layer.x;
+        const y = layer.y;
+        const w = layer.width * (layer.scale_x || 1);
+        const h = layer.height * (layer.scale_y || 1);
+
+        layerLines.vertical.push(x, x + w / 2, x + w);
+        layerLines.horizontal.push(y, y + h / 2, y + h);
+    }
+
+    return {
+        vertical: [...canvasLines.vertical, ...layerLines.vertical],
+        horizontal: [...canvasLines.horizontal, ...layerLines.horizontal],
+    };
+};
+
 // Transformer config with boundBoxFunc for snapping during resize
 const transformerConfig = computed(() => ({
     anchorSize: 8,
@@ -181,7 +240,8 @@ const transformerConfig = computed(() => ({
     keepRatio: isShiftPressed.value,
     enabledAnchors: ['top-left', 'top-right', 'bottom-left', 'bottom-right', 'top-center', 'bottom-center', 'middle-left', 'middle-right'],
     boundBoxFunc: (oldBox, newBox) => {
-        const snapLines = getCanvasSnapLines();
+        // Get snap lines excluding selected layers
+        const snapLines = getCombinedSnapLines(graphicsStore.selectedLayerIds);
         const newGuides = { vertical: [], horizontal: [] };
 
         // Snap left edge
@@ -896,7 +956,9 @@ const handleTransformEnd = (e, layer) => {
 // Handle drag move with snapping
 const handleDragMove = (e, layer) => {
     const node = e.target;
-    const snapLines = getCanvasSnapLines();
+
+    // Get snap lines from canvas AND other layers (excluding dragged layer)
+    const snapLines = getCombinedSnapLines([layer.id]);
 
     // Get current position and size
     const x = node.x();
@@ -943,6 +1005,32 @@ const handleShapeRef = (el, layer) => {
     const node = el.getNode ? el.getNode() : el;
     shapeRefs.value[layer.id] = node;
 
+    // For text layers, sync dimensions from actual Konva node (more accurate than measurement)
+    if (layer.type === 'text' && node) {
+        const nodeWidth = node.width();
+        const nodeHeight = node.height();
+
+        console.log(`[SHAPE-REF] Text layer "${layer.name}"`, {
+            layerWidth: layer.width,
+            layerHeight: layer.height,
+            nodeWidth,
+            nodeHeight,
+        });
+
+        // Update layer dimensions if they don't match the actual Konva node
+        // This ensures the bounding box matches the rendered text
+        const widthDiff = Math.abs(layer.width - nodeWidth);
+        const heightDiff = Math.abs(layer.height - nodeHeight);
+
+        if (widthDiff > 1 || heightDiff > 1) {
+            console.log(`[SHAPE-REF] Syncing dimensions for "${layer.name}": ${layer.width}→${nodeWidth}, ${layer.height}→${nodeHeight}`);
+            graphicsStore.updateLayerLocally(layer.id, {
+                width: nodeWidth,
+                height: nodeHeight,
+            });
+        }
+    }
+
     // Cache the node if blur filter is enabled (required for Konva filters)
     if (layer.properties?.blurEnabled && node) {
         nextTick(() => {
@@ -975,6 +1063,58 @@ watch(
                         // Ignore
                     }
                 }
+            }
+        });
+    },
+    { deep: true }
+);
+
+// Watch for text property changes to sync dimensions from actual Konva node
+watch(
+    () => graphicsStore.layers
+        .filter(l => l.type === 'text')
+        .map(l => ({
+            id: l.id,
+            text: l.properties?.text,
+            fontSize: l.properties?.fontSize,
+            fontFamily: l.properties?.fontFamily,
+            fontWeight: l.properties?.fontWeight,
+            fontStyle: l.properties?.fontStyle,
+            letterSpacing: l.properties?.letterSpacing,
+            lineHeight: l.properties?.lineHeight,
+        })),
+    (newVal, oldVal) => {
+        // Find which layers actually changed
+        if (!oldVal) return;
+
+        newVal.forEach((newLayer, index) => {
+            const oldLayer = oldVal[index];
+            if (!oldLayer || newLayer.id !== oldLayer.id) return;
+
+            // Check if any property changed
+            const propsChanged = ['text', 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'letterSpacing', 'lineHeight']
+                .some(prop => newLayer[prop] !== oldLayer[prop]);
+
+            if (propsChanged) {
+                // Wait for Konva to re-render, then sync dimensions from actual node
+                nextTick(() => {
+                    setTimeout(() => {
+                        const node = shapeRefs.value[newLayer.id];
+                        const layer = graphicsStore.layers.find(l => l.id === newLayer.id);
+                        if (node && layer) {
+                            const nodeWidth = node.width();
+                            const nodeHeight = node.height();
+
+                            if (Math.abs(layer.width - nodeWidth) > 1 || Math.abs(layer.height - nodeHeight) > 1) {
+                                console.log(`[TEXT-WATCH] Syncing "${layer.name}": ${layer.width}→${nodeWidth}, ${layer.height}→${nodeHeight}`);
+                                graphicsStore.updateLayerLocally(layer.id, {
+                                    width: nodeWidth,
+                                    height: nodeHeight,
+                                });
+                            }
+                        }
+                    }, 50); // Small delay to ensure Konva has re-rendered
+                });
             }
         });
     },
@@ -1507,10 +1647,7 @@ const hasClipPath = (layer) => {
     }
     const has = layer.type === 'image' && !!layer.properties?.clipPath;
     if (layer.type === 'image') {
-        console.log(`[DEBUG hasClipPath] layer="${layer.name}" clipPath=${!!layer.properties?.clipPath} clippingBases=${hasClippingBases(layer)} result=${has}`);
-        if (layer.properties?.clipPath) {
-            console.log(`[DEBUG clipPath value]`, layer.properties.clipPath.substring(0, 100));
-        }
+
     }
     return has;
 };
@@ -2057,6 +2194,25 @@ const resetView = () => {
     resetPan();
 };
 
+// Sync text layer dimensions from actual Konva node (more accurate than measurement)
+const syncTextLayerDimensions = (layerId) => {
+    const node = shapeRefs.value[layerId];
+    const layer = graphicsStore.layers.find(l => l.id === layerId);
+
+    if (!node || !layer || layer.type !== 'text') return;
+
+    const nodeWidth = node.width();
+    const nodeHeight = node.height();
+
+    if (Math.abs(layer.width - nodeWidth) > 1 || Math.abs(layer.height - nodeHeight) > 1) {
+        console.log(`[SYNC-TEXT] "${layer.name}": ${layer.width}→${nodeWidth}, ${layer.height}→${nodeHeight}`);
+        graphicsStore.updateLayerLocally(layer.id, {
+            width: nodeWidth,
+            height: nodeHeight,
+        });
+    }
+};
+
 // Expose functions and refs
 defineExpose({
     exportImage,
@@ -2070,6 +2226,7 @@ defineExpose({
     fitToView,
     autoResizeTextLayer,
     measureTextDimensions,
+    syncTextLayerDimensions,
 });
 
 // Background image loading
