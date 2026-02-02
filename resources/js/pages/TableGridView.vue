@@ -72,62 +72,66 @@ const handleSearch = (query) => {
 
         <template v-else-if="tablesStore.currentTable">
             <!-- Header -->
-            <div class="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <RouterLink to="/dashboard" class="text-gray-500 hover:text-gray-700">
+            <div class="bg-white border-b border-gray-200 px-3 sm:px-4 py-3">
+                <div class="flex items-center space-x-3 sm:space-x-4">
+                    <RouterLink to="/data" class="text-gray-500 hover:text-gray-700 flex-shrink-0">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                         </svg>
                     </RouterLink>
 
-                    <div class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2 min-w-0">
                         <RouterLink
                             :to="{ name: 'base', params: { baseId: tablesStore.currentTable.base_id } }"
-                            class="text-sm font-medium text-gray-500 hover:text-gray-700"
+                            class="text-sm font-medium text-gray-500 hover:text-gray-700 truncate hidden sm:inline"
                         >
                             {{ t('table.base') }}
                         </RouterLink>
-                        <span class="text-gray-300">/</span>
-                        <span class="text-sm font-semibold text-gray-900">
+                        <span class="text-gray-300 hidden sm:inline">/</span>
+                        <span class="text-sm font-semibold text-gray-900 truncate">
                             {{ tablesStore.currentTable.name }}
                         </span>
                     </div>
                 </div>
-
             </div>
 
             <!-- Toolbar -->
-            <div class="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between">
-                <div class="flex items-center space-x-4">
-                    <span class="text-sm text-gray-500">
-                        {{ rowsStore.rows.length }} {{ t('table.records') }}
-                        <template v-if="filtersStore.hasActiveFilters">
-                            {{ t('table.filtered') }}
-                        </template>
-                    </span>
-                    <!-- Search -->
-                    <div class="relative">
-                        <input
-                            type="text"
-                            v-model="searchQuery"
-                            @input="handleSearch(searchQuery)"
-                            :placeholder="t('table.searchPlaceholder')"
-                            class="text-sm border-gray-300 rounded-md pl-8 pr-3 py-1.5 focus:border-blue-500 focus:ring-blue-500"
-                        />
-                        <svg
-                            class="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-                        </svg>
+            <div class="bg-white border-b border-gray-200 px-3 sm:px-4 py-2">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+                    <div class="flex items-center gap-2 sm:gap-4 flex-wrap">
+                        <span class="text-sm text-gray-500 whitespace-nowrap">
+                            {{ rowsStore.rows.length }} {{ t('table.records') }}
+                            <template v-if="filtersStore.hasActiveFilters">
+                                {{ t('table.filtered') }}
+                            </template>
+                        </span>
+                        <!-- Search -->
+                        <div class="relative flex-1 sm:flex-none">
+                            <input
+                                type="text"
+                                v-model="searchQuery"
+                                @input="handleSearch(searchQuery)"
+                                :placeholder="t('table.searchPlaceholder')"
+                                class="w-full sm:w-auto text-sm border-gray-300 rounded-md pl-8 pr-3 py-1.5 focus:border-blue-500 focus:ring-blue-500"
+                            />
+                            <svg
+                                class="w-4 h-4 absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                            </svg>
+                        </div>
                     </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                    <Button @click="handleAddRow">
-                        + {{ t('table.addRow') }}
-                    </Button>
+                    <div class="flex items-center">
+                        <Button @click="handleAddRow" class="w-full sm:w-auto justify-center">
+                            <svg class="w-4 h-4 sm:mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                            </svg>
+                            <span class="hidden sm:inline">{{ t('table.addRow') }}</span>
+                        </Button>
+                    </div>
                 </div>
             </div>
 
