@@ -50,7 +50,9 @@ return [
     ],
 
     'canvas' => [
+        'title' => 'Płótno',
         'settings' => 'Ustawienia płótna',
+        'size' => 'Rozmiar',
         'width' => 'Szerokość',
         'height' => 'Wysokość',
         'background_color' => 'Kolor tła',
@@ -151,5 +153,21 @@ return [
 
     'library' => [
         'groupTemplateCreated' => 'Utworzono nowy szablon z grupy',
+    ],
+
+    'apiDocs' => [
+        'title' => 'Dokumentacja API',
+        'howItWorks' => 'Jak to działa',
+        'howItWorksDesc' => 'Użyj API aby programowo generować obrazy z własną zawartością',
+        'copy' => 'Kopiuj',
+        'generateEndpoint' => 'Endpoint generowania',
+        'modifiableLayers' => 'Edytowalne warstwy',
+        'key' => 'Klucz',
+        'noModifiableLayers' => 'Brak edytowalnych warstw w tym szablonie',
+        'requestBody' => 'Ciało żądania',
+        'optionalParams' => 'Opcjonalne parametry',
+        'optionalParamsDesc' => 'format (png/jpeg/webp), quality (1-100), scale (1-4, domyślnie: 2 dla retina)',
+        'response' => 'Odpowiedź',
+        'curlCommand' => 'Polecenie cURL',
     ],
 ];

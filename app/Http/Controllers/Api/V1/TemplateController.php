@@ -10,9 +10,11 @@ use App\Http\Resources\LayerResource;
 use App\Http\Resources\TemplateResource;
 use App\Models\Base;
 use App\Models\Template;
+use App\Services\TemplateRenderService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Storage;
+use Exception;
 
 class TemplateController extends Controller
 {
@@ -161,70 +163,50 @@ class TemplateController extends Controller
     }
 
     /**
-     * Generate template preview with modifications applied.
+     * Generate rendered image with modifications applied.
      *
-     * Returns the template data with layers modified according to the provided modifications.
-     * The actual image rendering happens client-side using Konva.js.
+     * Renders the template with provided modifications and returns URL to the generated image.
+     * Modifications can be keyed by: layer_key (preferred), public_id, or layer name.
      * The original template remains unchanged.
      */
-    public function generate(GenerateTemplateRequest $request, Template $template)
+    public function generate(GenerateTemplateRequest $request, Template $template, TemplateRenderService $renderService)
     {
         $this->authorize('view', $template);
 
-        $template->load(['layers.parent', 'fonts']);
-
         $modifications = $request->input('modifications', []);
         $format = $request->input('format', 'png');
-        $quality = $request->input('quality', 100);
-        $scale = $request->input('scale', 1);
+        $quality = min(100, max(1, $request->input('quality', 100)));
+        $scale = min(4, max(1, $request->input('scale', 2)));
 
-        // Create modified layers data without changing the database
-        $modifiedLayers = $template->layers->map(function ($layer) use ($modifications) {
-            $layerData = $layer->toArray();
+        try {
+            $result = $renderService->renderWithModificationsAndStore(
+                $template,
+                $modifications,
+                $scale,
+                $format,
+                $quality
+            );
 
-            // Check if there are modifications for this layer (by name)
-            if (isset($modifications[$layer->name])) {
-                $layerModifications = $modifications[$layer->name];
-
-                // Merge modifications into properties
-                $properties = $layer->properties ?? [];
-                foreach ($layerModifications as $key => $value) {
-                    // Handle top-level layer properties vs nested properties
-                    if (in_array($key, ['text', 'src', 'fill', 'fillImage', 'fillFit', 'stroke', 'fontFamily', 'fontSize'])) {
-                        $properties[$key] = $value;
-                    } else {
-                        $layerData[$key] = $value;
-                    }
-                }
-
-                $layerData['properties'] = $properties;
-            }
-
-            return $layerData;
-        });
-
-        return response()->json([
-            'success' => true,
-            'template' => [
-                'id' => $template->public_id,
-                'name' => $template->name,
-                'width' => $template->width,
-                'height' => $template->height,
-                'background_color' => $template->background_color,
-                'background_image' => $template->background_image,
-            ],
-            'layers' => $modifiedLayers,
-            'fonts' => $template->fonts->map(fn ($font) => [
-                'font_family' => $font->font_family,
-                'font_url' => $font->font_file ? asset('storage/' . $font->font_file) : null,
-                'font_weight' => $font->font_weight,
-                'font_style' => $font->font_style,
-            ]),
-            'render_options' => [
-                'format' => $format,
-                'quality' => $quality,
-                'scale' => $scale,
-            ],
-        ]);
+            return response()->json([
+                'success' => true,
+                'image_url' => $result['url'],
+                'template' => [
+                    'id' => $template->public_id,
+                    'name' => $template->name,
+                    'width' => $template->width * $scale,
+                    'height' => $template->height * $scale,
+                ],
+                'render_options' => [
+                    'format' => $format,
+                    'quality' => $quality,
+                    'scale' => $scale,
+                ],
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 }

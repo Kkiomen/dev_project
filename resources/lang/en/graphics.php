@@ -50,7 +50,9 @@ return [
     ],
 
     'canvas' => [
+        'title' => 'Canvas',
         'settings' => 'Canvas Settings',
+        'size' => 'Size',
         'width' => 'Width',
         'height' => 'Height',
         'background_color' => 'Background Color',
@@ -151,5 +153,21 @@ return [
 
     'library' => [
         'groupTemplateCreated' => 'New template created from group',
+    ],
+
+    'apiDocs' => [
+        'title' => 'API Documentation',
+        'howItWorks' => 'How it works',
+        'howItWorksDesc' => 'Use the API to programmatically generate images with custom content',
+        'copy' => 'Copy',
+        'generateEndpoint' => 'Generate Endpoint',
+        'modifiableLayers' => 'Modifiable Layers',
+        'key' => 'Key',
+        'noModifiableLayers' => 'No modifiable layers in this template',
+        'requestBody' => 'Request Body',
+        'optionalParams' => 'Optional parameters',
+        'optionalParamsDesc' => 'format (png/jpeg/webp), quality (1-100), scale (1-4, default: 2 for retina)',
+        'response' => 'Response',
+        'curlCommand' => 'cURL Command',
     ],
 ];

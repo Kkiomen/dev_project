@@ -233,13 +233,25 @@ export const useGraphicsStore = defineStore('graphics', {
                 textbox: 'Text Box',
             };
 
+            // Generate unique name by adding number suffix if name already exists
+            const baseName = defaultNames[type] || type;
+            let uniqueName = baseName;
+            let counter = 1;
+
+            const existingNames = new Set(this.layers.map(l => l.name));
+            while (existingNames.has(uniqueName)) {
+                counter++;
+                uniqueName = `${baseName} ${counter}`;
+            }
+
             const data = {
-                name: defaultNames[type] || type,
+                name: uniqueName,
                 type,
                 x: 100,
                 y: 100,
                 width: type === 'text' ? null : 200,
                 height: type === 'text' ? null : 200,
+                visible: true,
                 ...props,
             };
 
@@ -249,7 +261,8 @@ export const useGraphicsStore = defineStore('graphics', {
                     data
                 );
                 const newLayer = response.data.data;
-                this.layers.push(newLayer);
+                // Use spread instead of push for better Vue reactivity
+                this.layers = [...this.layers, newLayer];
                 this.selectedLayerId = newLayer.id;
                 this.isDirty = true;
                 this.saveToHistory();

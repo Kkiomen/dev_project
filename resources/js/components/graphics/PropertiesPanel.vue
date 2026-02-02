@@ -40,6 +40,7 @@ const modifiableLayers = computed(() => {
 
         return {
             id: layer.id,
+            layer_key: layer.layer_key,
             name: layer.name,
             type: layer.type,
             modifiableProps,
@@ -48,11 +49,13 @@ const modifiableLayers = computed(() => {
     });
 });
 
-// Generate complete example modifications object (keyed by layer name)
+// Generate complete example modifications object (keyed by layer_key or id)
+// Priority: layer_key > id (name is avoided to prevent duplicates)
 const exampleModifications = computed(() => {
     const mods = {};
     modifiableLayers.value.forEach(layer => {
-        const key = layer.name;
+        // Use layer_key if set, otherwise use id (public_id)
+        const key = layer.layer_key || layer.id;
 
         if (layer.type === 'text') {
             mods[key] = {
@@ -97,7 +100,7 @@ const endpoints = computed(() => ({
 
 // Generate curl command
 const curlCommand = computed(() => {
-    const body = JSON.stringify({ modifications: exampleModifications.value, format: 'png', quality: 100, scale: 1 });
+    const body = JSON.stringify({ modifications: exampleModifications.value, format: 'png', quality: 100, scale: 2 });
     return `curl -X POST "${endpoints.value.generate}" \\
   -H "Content-Type: application/json" \\
   -H "Authorization: Bearer YOUR_API_TOKEN" \\
@@ -695,7 +698,13 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                             <div
                                 v-for="layer in modifiableLayers"
                                 :key="layer.id"
-                                class="p-2 bg-gray-50 rounded-lg border border-gray-200"
+                                :class="[
+                                    'p-2 rounded-lg border cursor-pointer transition-colors',
+                                    graphicsStore.selectedLayerId === layer.id
+                                        ? 'bg-blue-50 border-blue-300'
+                                        : 'bg-gray-50 border-gray-200 hover:border-blue-200 hover:bg-blue-50/50'
+                                ]"
+                                @click="graphicsStore.selectLayer(layer.id)"
                             >
                                 <div class="flex items-center gap-2 mb-1.5">
                                     <span :class="[
@@ -705,6 +714,9 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                                         'bg-orange-100 text-orange-700'
                                     ]">{{ layer.type.toUpperCase() }}</span>
                                     <span class="text-[10px] text-gray-700 font-medium truncate flex-1">{{ layer.name }}</span>
+                                </div>
+                                <div class="text-[9px] text-gray-500 mb-1.5 font-mono">
+                                    {{ t('graphics.apiDocs.key') }}: <span class="text-blue-600">{{ layer.layer_key || layer.id }}</span>
                                 </div>
                                 <div class="flex flex-wrap gap-1 mt-1">
                                     <span
@@ -723,13 +735,13 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                         <div class="flex items-center justify-between mb-2">
                             <span class="text-[11px] font-medium text-gray-900">{{ t('graphics.apiDocs.requestBody') }}</span>
                             <button
-                                @click="copyToClipboard(JSON.stringify({ modifications: exampleModifications, format: 'png', quality: 100, scale: 1 }, null, 2), 'body')"
+                                @click="copyToClipboard(JSON.stringify({ modifications: exampleModifications, format: 'png', quality: 100, scale: 2 }, null, 2), 'body')"
                                 class="text-[10px] text-blue-600 hover:text-blue-800"
                             >
                                 {{ copiedSection === 'body' ? '✓' : t('graphics.apiDocs.copy') }}
                             </button>
                         </div>
-                        <pre class="p-2.5 bg-gray-800 rounded-lg text-[10px] font-mono overflow-x-auto max-h-64 overflow-y-auto"><code class="whitespace-pre" style="color: #86efac;">{{ JSON.stringify({ modifications: exampleModifications, format: 'png', quality: 100, scale: 1 }, null, 2) }}</code></pre>
+                        <pre class="p-2.5 bg-gray-800 rounded-lg text-[10px] font-mono overflow-x-auto max-h-64 overflow-y-auto"><code class="whitespace-pre" style="color: #86efac;">{{ JSON.stringify({ modifications: exampleModifications, format: 'png', quality: 100, scale: 2 }, null, 2) }}</code></pre>
                     </div>
 
                     <!-- Optional params note -->
@@ -743,17 +755,17 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                         <span class="text-[11px] font-medium text-gray-900 mb-2 block">{{ t('graphics.apiDocs.response') }}</span>
                         <pre class="p-2.5 bg-gray-800 rounded-lg text-[10px] font-mono overflow-x-auto max-h-48 overflow-y-auto"><code class="whitespace-pre" style="color: #86efac;">{
   "success": true,
+  "image_url": "{{ apiBaseUrl }}/storage/generated/...",
   "template": {
     "id": "{{ templateId }}",
-    "width": {{ currentTemplate?.width || 1080 }},
-    "height": {{ currentTemplate?.height || 1080 }},
-    "background_color": "{{ currentTemplate?.background_color || '#FFFFFF' }}"
+    "name": "{{ currentTemplate?.name || 'Template' }}",
+    "width": {{ (currentTemplate?.width || 1080) * 2 }},
+    "height": {{ (currentTemplate?.height || 1080) * 2 }}
   },
-  "layers": [...],
   "render_options": {
     "format": "png",
     "quality": 100,
-    "scale": 1
+    "scale": 2
   }
 }</code></pre>
                     </div>

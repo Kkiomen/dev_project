@@ -57,6 +57,180 @@ class TemplateRenderService
     }
 
     /**
+     * Render a template with layer modifications as PNG.
+     * Modifications can be keyed by: layer_key, public_id, or layer name.
+     *
+     * @param Template $template The template to render
+     * @param array $modifications Layer modifications keyed by layer_key/id/name
+     * @param int $scale Device scale factor (1-4)
+     * @param string $format Output format (png, jpeg, webp)
+     * @param int $quality Quality for jpeg/webp (1-100)
+     * @return string Raw image binary
+     * @throws Exception
+     */
+    public function renderWithModifications(
+        Template $template,
+        array $modifications = [],
+        int $scale = 2,
+        string $format = 'png',
+        int $quality = 100
+    ): string {
+        $templateData = $this->prepareTemplateDataWithModifications($template, $modifications);
+
+        $response = Http::timeout($this->timeout)
+            ->post("{$this->baseUrl}/render", [
+                'template' => $templateData,
+                'width' => $template->width,
+                'height' => $template->height,
+                'scale' => $scale,
+            ]);
+
+        if ($response->failed()) {
+            $error = $response->json();
+            throw new Exception(__('services.template_render.render_failed', [
+                'message' => $error['message'] ?? $response->body(),
+            ]));
+        }
+
+        $imageData = $response->body();
+
+        // Convert format if needed
+        if ($format !== 'png') {
+            $imageData = $this->convertImageFormat($imageData, $format, $quality);
+        }
+
+        return $imageData;
+    }
+
+    /**
+     * Render template with modifications and save to storage.
+     *
+     * @param Template $template
+     * @param array $modifications
+     * @param int $scale
+     * @param string $format
+     * @param int $quality
+     * @return array{path: string, url: string}
+     * @throws Exception
+     */
+    public function renderWithModificationsAndStore(
+        Template $template,
+        array $modifications = [],
+        int $scale = 2,
+        string $format = 'png',
+        int $quality = 100
+    ): array {
+        $imageData = $this->renderWithModifications($template, $modifications, $scale, $format, $quality);
+
+        $extension = $format === 'jpeg' ? 'jpg' : $format;
+        $path = 'generated/' . $template->public_id . '/' . Str::uuid() . '.' . $extension;
+
+        Storage::disk('public')->put($path, $imageData);
+
+        return [
+            'path' => $path,
+            'url' => url('/storage/' . $path),
+        ];
+    }
+
+    /**
+     * Convert image format using GD.
+     */
+    protected function convertImageFormat(string $imageData, string $format, int $quality): string
+    {
+        $image = imagecreatefromstring($imageData);
+        if (!$image) {
+            throw new Exception('Failed to create image from data');
+        }
+
+        ob_start();
+
+        switch ($format) {
+            case 'jpeg':
+            case 'jpg':
+                imagejpeg($image, null, $quality);
+                break;
+            case 'webp':
+                imagewebp($image, null, $quality);
+                break;
+            default:
+                imagepng($image, null, 9);
+        }
+
+        $output = ob_get_clean();
+        imagedestroy($image);
+
+        return $output;
+    }
+
+    /**
+     * Prepare template data with layer modifications.
+     * Modifications can be keyed by: layer_key (preferred), public_id, or name.
+     */
+    protected function prepareTemplateDataWithModifications(Template $template, array $modifications): array
+    {
+        $template->load('layers');
+
+        $layers = $template->layers->map(function ($layer) use ($modifications) {
+            $properties = $layer->properties ?? [];
+
+            // Convert images to base64 data URLs to avoid CORS issues in renderer
+            $properties = $this->convertImagesToBase64($properties);
+
+            $layerData = [
+                'id' => $layer->public_id,
+                'type' => $layer->type->value,
+                'name' => $layer->name,
+                'x' => $layer->x,
+                'y' => $layer->y,
+                'width' => $layer->width,
+                'height' => $layer->height,
+                'rotation' => $layer->rotation,
+                'scale_x' => $layer->scale_x,
+                'scale_y' => $layer->scale_y,
+                'opacity' => $layer->opacity,
+                'visible' => $layer->visible,
+                'locked' => $layer->locked,
+                'position' => $layer->position,
+                'properties' => $properties,
+            ];
+
+            // Try to find modifications by layer_key, then public_id, then name
+            $layerModifications = null;
+            if ($layer->layer_key && isset($modifications[$layer->layer_key])) {
+                $layerModifications = $modifications[$layer->layer_key];
+            } elseif (isset($modifications[$layer->public_id])) {
+                $layerModifications = $modifications[$layer->public_id];
+            } elseif (isset($modifications[$layer->name])) {
+                $layerModifications = $modifications[$layer->name];
+            }
+
+            if ($layerModifications) {
+                foreach ($layerModifications as $key => $value) {
+                    // Handle properties that go into the properties array
+                    if (in_array($key, ['text', 'src', 'fill', 'fillImage', 'fillFit', 'stroke', 'fontFamily', 'fontSize', 'textColor', 'padding', 'cornerRadius'])) {
+                        $layerData['properties'][$key] = $value;
+                    } else {
+                        // Top-level layer properties
+                        $layerData[$key] = $value;
+                    }
+                }
+            }
+
+            return $layerData;
+        })->toArray();
+
+        return [
+            'id' => $template->public_id,
+            'name' => $template->name,
+            'width' => $template->width,
+            'height' => $template->height,
+            'backgroundColor' => $template->background_color,
+            'layers' => $layers,
+        ];
+    }
+
+    /**
      * Render a template using Vue EditorCanvas (accurate rendering).
      * Uses the /render-vue endpoint which loads the actual Vue component via Laravel.
      *

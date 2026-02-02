@@ -1339,6 +1339,17 @@ const getShapeConfig = (layer) => {
                 rectConfig.fill = layer.properties?.fill || '#CCCCCC';
             }
 
+            console.log('[RECT-CONFIG]', layer.id, layer.name, {
+                fill: rectConfig.fill,
+                x: rectConfig.x,
+                y: rectConfig.y,
+                width: rectConfig.width,
+                height: rectConfig.height,
+                visible: rectConfig.visible,
+                opacity: rectConfig.opacity,
+                properties: layer.properties,
+            });
+
             return rectConfig;
         }
 
@@ -2095,8 +2106,26 @@ const addLayerAtPosition = async (type, x, y) => {
             stroke: '#000000',
             strokeWidth: 2,
         };
+    } else if (type === 'rectangle') {
+        size = defaultSizes.rectangle;
+        properties = {
+            fill: '#3B82F6',
+            stroke: null,
+            strokeWidth: 0,
+            cornerRadius: 0,
+        };
+    } else if (type === 'ellipse') {
+        size = defaultSizes.ellipse;
+        properties = {
+            fill: '#3B82F6',
+            stroke: null,
+            strokeWidth: 0,
+        };
     } else {
         size = defaultSizes[type] || { width: 100, height: 100 };
+        properties = {
+            fill: '#3B82F6',
+        };
     }
 
     // Center the shape at drop position
@@ -2483,6 +2512,7 @@ const loadImageWithMask = (layer) => {
 watch(() => graphicsStore.layers, (layers) => {
     console.log('[WATCH] Layers changed, processing', layers.length, 'layers');
     layers.forEach(layer => {
+        console.log(`[WATCH] Layer ${layer.id} "${layer.name}": type=${layer.type}, visible=${layer.visible}, x=${layer.x}, y=${layer.y}, w=${layer.width}, h=${layer.height}`);
         if (layer.type === 'image') {
             console.log(`[WATCH] Image layer ${layer.id} "${layer.name}": src=${!!layer.properties?.src}, maskSrc=${!!layer.properties?.maskSrc}`);
             if (layer.properties?.src) {

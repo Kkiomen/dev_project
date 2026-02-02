@@ -250,6 +250,17 @@ const handleExport = () => {
 const handleOpenFonts = () => {
     showFontModal.value = true;
 };
+
+// Handle adding layer at center of canvas when tool is clicked
+const handleAddLayerAt = async ({ type }) => {
+    if (!canvasRef.value?.addLayerAtPosition) return;
+
+    // Add layer at center of canvas
+    const centerX = props.template.width / 2;
+    const centerY = props.template.height / 2;
+
+    await canvasRef.value.addLayerAtPosition(type, centerX, centerY);
+};
 </script>
 
 <template>
@@ -262,6 +273,7 @@ const handleOpenFonts = () => {
             @open-fonts="handleOpenFonts"
             @toggle-layers="showLayersPanel = !showLayersPanel"
             @toggle-properties="showPropertiesPanel = !showPropertiesPanel"
+            @add-layer-at="handleAddLayerAt"
             @open-library="showLibraryModal = true"
             @add-to-library="showAddToLibraryModal = true"
             @unlink-from-library="handleUnlinkFromLibrary"

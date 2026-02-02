@@ -30,11 +30,10 @@ class LayerController extends Controller
 
         $data = $request->validated();
 
-        // Set default properties based on layer type if not provided
-        if (!isset($data['properties'])) {
-            $type = \App\Enums\LayerType::from($data['type']);
-            $data['properties'] = $type->defaultProperties();
-        }
+        // Merge provided properties with defaults
+        $type = \App\Enums\LayerType::from($data['type']);
+        $defaultProperties = $type->defaultProperties();
+        $data['properties'] = array_merge($defaultProperties, $data['properties'] ?? []);
 
         $layer = $template->layers()->create($data);
 
