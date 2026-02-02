@@ -1,0 +1,96 @@
+<?php
+
+return [
+    'messages' => [
+        'scanning' => 'Skanowanie nowych plików PSD...',
+        'directory_created' => 'Utworzono katalog PSD: :directory',
+        'no_files_found' => 'Nie znaleziono plików PSD do importu.',
+        'files_found' => 'Znaleziono :count plik(ów) PSD do przetworzenia.',
+        'already_imported' => 'Już zaimportowany (pominięty)',
+        'would_import' => 'Zostałby zaimportowany (dry-run)',
+        'queued' => 'Dodany do kolejki importu',
+        'scan_complete' => 'Skanowanie zakończone. Nowe: :new, Pominięte: :skipped',
+        'file_not_found' => 'Nie znaleziono pliku PSD pod wskazaną ścieżką.',
+        'import_started' => 'Import rozpoczęty',
+        'import_completed' => 'Import zakończony pomyślnie',
+        'import_failed' => 'Import nie powiódł się',
+        'classification_started' => 'Klasyfikacja AI rozpoczęta',
+        'classification_completed' => 'Klasyfikacja AI zakończona',
+        'classification_failed' => 'Klasyfikacja AI nie powiodła się',
+    ],
+
+    'statuses' => [
+        'pending' => 'Oczekujący',
+        'processing' => 'Przetwarzanie',
+        'ai_classifying' => 'Klasyfikacja AI',
+        'completed' => 'Zakończony',
+        'failed' => 'Błąd',
+    ],
+
+    'semantic_roles' => [
+        'header' => 'Nagłówek',
+        'subtitle' => 'Podtytuł',
+        'body' => 'Tekst główny',
+        'cta' => 'Wezwanie do działania',
+        'decoration' => 'Dekoracja',
+        'main_image' => 'Główne zdjęcie',
+        'avatar' => 'Awatar',
+        'logo' => 'Logo',
+        'background' => 'Tło',
+        'accent' => 'Akcent',
+        'social_handle' => 'Uchwyt społecznościowy',
+        'date' => 'Data',
+        'quote' => 'Cytat',
+    ],
+
+    'style_tags' => [
+        'categories' => [
+            'style' => 'Styl',
+            'mood' => 'Nastrój',
+            'color' => 'Kolor',
+            'layout' => 'Układ',
+        ],
+        'style' => [
+            'minimalist' => 'Minimalistyczny',
+            'bold' => 'Wyrazisty',
+            'elegant' => 'Elegancki',
+            'modern' => 'Nowoczesny',
+            'vintage' => 'Vintage',
+            'playful' => 'Zabawny',
+            'corporate' => 'Korporacyjny',
+            'creative' => 'Kreatywny',
+        ],
+        'mood' => [
+            'professional' => 'Profesjonalny',
+            'casual' => 'Swobodny',
+            'energetic' => 'Energiczny',
+            'calm' => 'Spokojny',
+            'luxurious' => 'Luksusowy',
+            'friendly' => 'Przyjazny',
+            'serious' => 'Poważny',
+        ],
+        'color' => [
+            'dark' => 'Ciemny',
+            'light' => 'Jasny',
+            'vibrant' => 'Żywy',
+            'muted' => 'Stonowany',
+            'monochrome' => 'Monochromatyczny',
+            'colorful' => 'Kolorowy',
+            'pastel' => 'Pastelowy',
+            'neon' => 'Neonowy',
+        ],
+        'layout' => [
+            'centered' => 'Wyśrodkowany',
+            'asymmetric' => 'Asymetryczny',
+            'grid' => 'Siatka',
+            'minimal-text' => 'Mało tekstu',
+            'text-heavy' => 'Dużo tekstu',
+            'image-focused' => 'Skupiony na zdjęciu',
+        ],
+    ],
+
+    'template_groups' => [
+        'variant' => 'Wariant',
+        'variants_count' => ':count wariantów',
+    ],
+];

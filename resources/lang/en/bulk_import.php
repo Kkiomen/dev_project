@@ -1,0 +1,96 @@
+<?php
+
+return [
+    'messages' => [
+        'scanning' => 'Scanning for new PSD files...',
+        'directory_created' => 'Created PSD directory: :directory',
+        'no_files_found' => 'No PSD files found to import.',
+        'files_found' => 'Found :count PSD file(s) to process.',
+        'already_imported' => 'Already imported (skipped)',
+        'would_import' => 'Would import (dry-run)',
+        'queued' => 'Queued for import',
+        'scan_complete' => 'Scan complete. New: :new, Skipped: :skipped',
+        'file_not_found' => 'PSD file not found at specified path.',
+        'import_started' => 'Import started',
+        'import_completed' => 'Import completed successfully',
+        'import_failed' => 'Import failed',
+        'classification_started' => 'AI classification started',
+        'classification_completed' => 'AI classification completed',
+        'classification_failed' => 'AI classification failed',
+    ],
+
+    'statuses' => [
+        'pending' => 'Pending',
+        'processing' => 'Processing',
+        'ai_classifying' => 'AI Classifying',
+        'completed' => 'Completed',
+        'failed' => 'Failed',
+    ],
+
+    'semantic_roles' => [
+        'header' => 'Header',
+        'subtitle' => 'Subtitle',
+        'body' => 'Body Text',
+        'cta' => 'Call to Action',
+        'decoration' => 'Decoration',
+        'main_image' => 'Main Image',
+        'avatar' => 'Avatar',
+        'logo' => 'Logo',
+        'background' => 'Background',
+        'accent' => 'Accent',
+        'social_handle' => 'Social Handle',
+        'date' => 'Date',
+        'quote' => 'Quote',
+    ],
+
+    'style_tags' => [
+        'categories' => [
+            'style' => 'Style',
+            'mood' => 'Mood',
+            'color' => 'Color',
+            'layout' => 'Layout',
+        ],
+        'style' => [
+            'minimalist' => 'Minimalist',
+            'bold' => 'Bold',
+            'elegant' => 'Elegant',
+            'modern' => 'Modern',
+            'vintage' => 'Vintage',
+            'playful' => 'Playful',
+            'corporate' => 'Corporate',
+            'creative' => 'Creative',
+        ],
+        'mood' => [
+            'professional' => 'Professional',
+            'casual' => 'Casual',
+            'energetic' => 'Energetic',
+            'calm' => 'Calm',
+            'luxurious' => 'Luxurious',
+            'friendly' => 'Friendly',
+            'serious' => 'Serious',
+        ],
+        'color' => [
+            'dark' => 'Dark',
+            'light' => 'Light',
+            'vibrant' => 'Vibrant',
+            'muted' => 'Muted',
+            'monochrome' => 'Monochrome',
+            'colorful' => 'Colorful',
+            'pastel' => 'Pastel',
+            'neon' => 'Neon',
+        ],
+        'layout' => [
+            'centered' => 'Centered',
+            'asymmetric' => 'Asymmetric',
+            'grid' => 'Grid',
+            'minimal-text' => 'Minimal Text',
+            'text-heavy' => 'Text Heavy',
+            'image-focused' => 'Image Focused',
+        ],
+    ],
+
+    'template_groups' => [
+        'variant' => 'Variant',
+        'variants_count' => ':count variants',
+    ],
+];
