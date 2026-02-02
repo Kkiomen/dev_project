@@ -6,18 +6,29 @@ import DocsCodeBlock from '@/components/docs/DocsCodeBlock.vue';
 const { t } = useI18n();
 
 // Current tab
-const currentTab = ref('database');
+const currentTab = ref('general');
 
 // Tabs
 const tabs = computed(() => [
+    { id: 'general', label: t('docs.tabs.general') },
     { id: 'database', label: t('docs.tabs.database') },
     { id: 'templates', label: t('docs.tabs.templates') },
     { id: 'posts', label: t('docs.tabs.posts') },
+    { id: 'calendar', label: t('docs.tabs.calendar') },
 ]);
 
 // Sidebar sections for each tab
 const sidebarSections = computed(() => {
-    if (currentTab.value === 'database') {
+    if (currentTab.value === 'general') {
+        return [
+            { id: 'about', label: t('docs.general.about') },
+            { id: 'api-intro', label: t('docs.general.apiIntro.title') },
+            { id: 'authentication', label: t('docs.general.authentication') },
+            { id: 'quick-start', label: t('docs.general.quickStart') },
+            { id: 'errors', label: t('docs.general.errors.title') },
+            { id: 'rate-limits', label: t('docs.general.rateLimit.title') },
+        ];
+    } else if (currentTab.value === 'database') {
         return [
             { id: 'bases', label: t('docs.sidebar.bases') },
             { id: 'tables', label: t('docs.sidebar.tables') },
@@ -39,6 +50,13 @@ const sidebarSections = computed(() => {
             { id: 'calendar-views', label: 'Calendar & Views' },
             { id: 'workflow', label: 'Workflow (n8n)' },
             { id: 'media', label: 'Media' },
+        ];
+    } else if (currentTab.value === 'calendar') {
+        return [
+            { id: 'events-overview', label: t('docs.calendar.overview') },
+            { id: 'events-crud', label: t('docs.calendar.eventsCrud') },
+            { id: 'events-calendar', label: t('docs.calendar.calendarView') },
+            { id: 'events-reschedule', label: t('docs.calendar.reschedule') },
         ];
     }
     return [];
@@ -120,8 +138,226 @@ const baseUrl = computed(() => window.location.origin + '/api/v1');
 
                 <!-- Main content -->
                 <div class="flex-1 min-w-0 bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <!-- ===== GENERAL TAB ===== -->
+                <template v-if="currentTab === 'general'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.general.title') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.general.description') }}</p>
+
+                    <!-- ========== ABOUT ========== -->
+                    <h2 id="about" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.general.about') }}</h2>
+
+                    <!-- Features -->
+                    <div class="bg-gradient-to-br from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-6 mb-8">
+                        <h3 class="font-semibold text-blue-900 mb-4">{{ t('docs.general.features.title') }}</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">1</span>
+                                <span class="text-blue-800">{{ t('docs.general.features.database') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">2</span>
+                                <span class="text-blue-800">{{ t('docs.general.features.templates') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">3</span>
+                                <span class="text-blue-800">{{ t('docs.general.features.posts') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">4</span>
+                                <span class="text-blue-800">{{ t('docs.general.features.calendar') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-sm">5</span>
+                                <span class="text-blue-800">{{ t('docs.general.features.ai') }}</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ========== API INTRO ========== -->
+                    <h2 id="api-intro" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.general.apiIntro.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.general.apiIntro.description') }}</p>
+
+                    <!-- Base URL -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-2">{{ t('docs.general.apiIntro.baseUrl') }}</h4>
+                        <p class="text-gray-600 text-sm mb-2">{{ t('docs.general.apiIntro.baseUrlDesc') }}</p>
+                        <DocsCodeBlock language="text" :code="baseUrl" />
+                        <p class="text-gray-500 text-sm mt-2">{{ t('docs.general.apiIntro.versioning') }}</p>
+                    </div>
+
+                    <!-- Content Type -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-2">{{ t('docs.general.apiIntro.contentType') }}</h4>
+                        <p class="text-gray-600 text-sm mb-2">{{ t('docs.general.apiIntro.contentTypeDesc') }}</p>
+                        <DocsCodeBlock language="text" :code="`Content-Type: application/json
+Accept: application/json`" />
+                    </div>
+
+                    <!-- Response Format -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-2">{{ t('docs.general.apiIntro.responseFormat') }}</h4>
+                        <p class="text-gray-600 text-sm mb-2">{{ t('docs.general.apiIntro.responseFormatDesc') }}</p>
+                        <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;Example&quot;,
+    &quot;...&quot;: &quot;...&quot;
+  }
+}`" />
+                    </div>
+
+                    <!-- ========== AUTHENTICATION ========== -->
+                    <h2 id="authentication" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.general.authSection.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.general.authSection.description') }}</p>
+
+                    <!-- Getting Token -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-3">{{ t('docs.general.authSection.getToken') }}</h4>
+                        <ol class="list-decimal list-inside text-gray-600 space-y-2 ml-2">
+                            <li>{{ t('docs.general.authSection.getTokenSteps.step1') }}</li>
+                            <li>{{ t('docs.general.authSection.getTokenSteps.step2') }}</li>
+                            <li>{{ t('docs.general.authSection.getTokenSteps.step3') }}</li>
+                            <li>{{ t('docs.general.authSection.getTokenSteps.step4') }}</li>
+                        </ol>
+                    </div>
+
+                    <!-- Using Token -->
+                    <div class="mb-6">
+                        <h4 class="font-medium text-gray-900 mb-2">{{ t('docs.general.authSection.usingToken') }}</h4>
+                        <p class="text-gray-600 text-sm mb-2">{{ t('docs.general.authSection.usingTokenDesc') }}</p>
+                        <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/bases' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
+  -H 'Accept: application/json'`" />
+                    </div>
+
+                    <!-- Security Tips -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-yellow-800 mb-3">{{ t('docs.general.authSection.security') }}</h4>
+                        <ul class="space-y-2 text-yellow-700 text-sm">
+                            <li class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>{{ t('docs.general.authSection.securityTips.tip1') }}</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>{{ t('docs.general.authSection.securityTips.tip2') }}</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>{{ t('docs.general.authSection.securityTips.tip3') }}</span>
+                            </li>
+                            <li class="flex items-start gap-2">
+                                <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>{{ t('docs.general.authSection.securityTips.tip4') }}</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ========== QUICK START ========== -->
+                    <h2 id="quick-start" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.general.quickStartSection.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.general.quickStartSection.description') }}</p>
+
+                    <div class="space-y-6">
+                        <!-- Step 1 -->
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">1</span>
+                                <h4 class="font-medium text-gray-900">{{ t('docs.general.quickStartSection.step1Title') }}</h4>
+                            </div>
+                            <p class="text-gray-600 text-sm ml-11">{{ t('docs.general.quickStartSection.step1Desc') }}</p>
+                        </div>
+
+                        <!-- Step 2 -->
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">2</span>
+                                <h4 class="font-medium text-gray-900">{{ t('docs.general.quickStartSection.step2Title') }}</h4>
+                            </div>
+                            <p class="text-gray-600 text-sm ml-11 mb-3">{{ t('docs.general.quickStartSection.step2Desc') }}</p>
+                            <div class="ml-11">
+                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/bases' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
+  -H 'Accept: application/json'`" />
+                            </div>
+                        </div>
+
+                        <!-- Step 3 -->
+                        <div class="border rounded-lg p-4">
+                            <div class="flex items-center gap-3 mb-3">
+                                <span class="flex-shrink-0 w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold">3</span>
+                                <h4 class="font-medium text-gray-900">{{ t('docs.general.quickStartSection.step3Title') }}</h4>
+                            </div>
+                            <p class="text-gray-600 text-sm ml-11">{{ t('docs.general.quickStartSection.step3Desc') }}</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== ERRORS ========== -->
+                    <h2 id="errors" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.general.errors.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.general.errors.description') }}</p>
+
+                    <div class="overflow-x-auto mb-6">
+                        <table class="w-full text-sm">
+                            <thead>
+                                <tr class="border-b">
+                                    <th class="text-left py-2 pr-4 font-medium text-gray-900">Code</th>
+                                    <th class="text-left py-2 font-medium text-gray-900">Description</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y">
+                                <tr><td class="py-2 pr-4"><code class="text-green-600">200</code></td><td class="py-2">{{ t('docs.general.errors.codes.200') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-green-600">201</code></td><td class="py-2">{{ t('docs.general.errors.codes.201') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-green-600">204</code></td><td class="py-2">{{ t('docs.general.errors.codes.204') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-yellow-600">400</code></td><td class="py-2">{{ t('docs.general.errors.codes.400') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-red-600">401</code></td><td class="py-2">{{ t('docs.general.errors.codes.401') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-red-600">403</code></td><td class="py-2">{{ t('docs.general.errors.codes.403') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-red-600">404</code></td><td class="py-2">{{ t('docs.general.errors.codes.404') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-red-600">422</code></td><td class="py-2">{{ t('docs.general.errors.codes.422') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-orange-600">429</code></td><td class="py-2">{{ t('docs.general.errors.codes.429') }}</td></tr>
+                                <tr><td class="py-2 pr-4"><code class="text-red-600">500</code></td><td class="py-2">{{ t('docs.general.errors.codes.500') }}</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mb-6">
+                        <p class="text-gray-600 text-sm mb-2">{{ t('docs.general.errors.format') }}</p>
+                        <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;The given data was invalid.&quot;,
+  &quot;errors&quot;: {
+    &quot;field_name&quot;: [
+      &quot;The field name is required.&quot;
+    ]
+  }
+}`" />
+                    </div>
+
+                    <!-- ========== RATE LIMITS ========== -->
+                    <h2 id="rate-limits" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.general.rateLimit.title') }}</h2>
+                    <p class="text-gray-600 mb-4">{{ t('docs.general.rateLimit.description') }}</p>
+
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <p class="text-gray-700 font-medium">{{ t('docs.general.rateLimit.limit') }}</p>
+                    </div>
+
+                    <div class="mb-6">
+                        <p class="text-gray-600 text-sm mb-2">{{ t('docs.general.rateLimit.headers') }}</p>
+                        <DocsCodeBlock language="text" :code="`X-RateLimit-Limit: 60
+X-RateLimit-Remaining: 58
+X-RateLimit-Reset: 1705764000`" />
+                    </div>
+
+                    <p class="text-gray-600 text-sm">{{ t('docs.general.rateLimit.exceeded') }}</p>
+                </template>
+
                 <!-- ===== DATABASE TAB ===== -->
-                <template v-if="currentTab === 'database'">
+                <template v-else-if="currentTab === 'database'">
                     <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.tabs.database') }}</h1>
                     <p class="text-lg text-gray-600 mb-8">{{ t('docs.sidebar.dataDescription') }}</p>
 
@@ -1734,6 +1970,340 @@ const baseUrl = computed(() => window.location.origin + '/api/v1');
                             <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
                             <p class="text-gray-500 text-sm">No content</p>
                         </div>
+                    </div>
+                </template>
+
+                <!-- ===== CALENDAR TAB ===== -->
+                <template v-else-if="currentTab === 'calendar'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.calendar.title') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.calendar.description') }}</p>
+
+                    <!-- Authentication info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                        <h3 class="font-medium text-blue-800 mb-2">{{ t('docs.authentication') }}</h3>
+                        <p class="text-blue-700 text-sm mb-2">{{ t('docs.auth.usingTokenDescription') }}</p>
+                        <code class="bg-blue-100 px-2 py-1 rounded text-xs">Authorization: Bearer YOUR_API_TOKEN</code>
+                    </div>
+
+                    <!-- Event Types Reference -->
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-8">
+                        <h4 class="font-medium text-purple-800 mb-3">{{ t('docs.calendar.eventTypes.title') }}</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-sm">
+                            <div><code class="bg-white px-2 py-1 rounded">meeting</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">birthday</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">reminder</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">other</code></div>
+                        </div>
+                    </div>
+
+                    <!-- ========== EVENTS OVERVIEW ========== -->
+                    <h2 id="events-overview" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.calendar.overview') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.calendar.objectDescription') }}</p>
+
+                    <!-- Event Object -->
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <h4 class="font-medium mb-3">{{ t('docs.calendar.object') }}</h4>
+                        <DocsCodeBlock language="json" :code="`{
+  &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;title&quot;: &quot;Team Meeting&quot;,
+  &quot;description&quot;: &quot;Weekly sync with the team&quot;,
+  &quot;color&quot;: &quot;#3B82F6&quot;,
+  &quot;event_type&quot;: &quot;meeting&quot;,
+  &quot;starts_at&quot;: &quot;2024-01-20T10:00:00Z&quot;,
+  &quot;ends_at&quot;: &quot;2024-01-20T11:00:00Z&quot;,
+  &quot;all_day&quot;: false,
+  &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+}`" />
+                    </div>
+
+                    <table class="w-full text-sm mb-8">
+                        <tr><td class="font-mono text-blue-600 py-1">id</td><td>{{ t('docs.calendar.fields.id') }}</td></tr>
+                        <tr><td class="font-mono text-blue-600 py-1">title</td><td>{{ t('docs.calendar.fields.title') }}</td></tr>
+                        <tr><td class="font-mono text-blue-600 py-1">description</td><td>{{ t('docs.calendar.fields.description') }}</td></tr>
+                        <tr><td class="font-mono text-blue-600 py-1">color</td><td>{{ t('docs.calendar.fields.color') }}</td></tr>
+                        <tr><td class="font-mono text-blue-600 py-1">event_type</td><td>{{ t('docs.calendar.fields.eventType') }}</td></tr>
+                        <tr><td class="font-mono text-blue-600 py-1">starts_at</td><td>{{ t('docs.calendar.fields.startsAt') }}</td></tr>
+                        <tr><td class="font-mono text-blue-600 py-1">ends_at</td><td>{{ t('docs.calendar.fields.endsAt') }}</td></tr>
+                        <tr><td class="font-mono text-blue-600 py-1">all_day</td><td>{{ t('docs.calendar.fields.allDay') }}</td></tr>
+                    </table>
+
+                    <!-- ========== EVENTS CRUD ========== -->
+                    <h2 id="events-crud" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.calendar.eventsCrud') }}</h2>
+
+                    <!-- List Events -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/events</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.calendar.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.page') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">per_page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.perPage') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">event_type</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Filter by type (meeting, birthday, reminder, other)</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+      &quot;title&quot;: &quot;Team Meeting&quot;,
+      &quot;description&quot;: &quot;Weekly sync&quot;,
+      &quot;color&quot;: &quot;#3B82F6&quot;,
+      &quot;event_type&quot;: &quot;meeting&quot;,
+      &quot;starts_at&quot;: &quot;2024-01-20T10:00:00Z&quot;,
+      &quot;ends_at&quot;: &quot;2024-01-20T11:00:00Z&quot;,
+      &quot;all_day&quot;: false,
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+    }
+  ],
+  &quot;meta&quot;: { &quot;current_page&quot;: 1, &quot;per_page&quot;: 50, &quot;total&quot;: 10 }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Get Event -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/events/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.calendar.endpoints.getDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.calendar.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Team Meeting&quot;,
+    &quot;description&quot;: &quot;Weekly sync with the team&quot;,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;event_type&quot;: &quot;meeting&quot;,
+    &quot;starts_at&quot;: &quot;2024-01-20T10:00:00Z&quot;,
+    &quot;ends_at&quot;: &quot;2024-01-20T11:00:00Z&quot;,
+    &quot;all_day&quot;: false,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 404</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;Event not found.&quot;
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Create Event -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/events</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.calendar.endpoints.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">title</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.calendar.fields.title') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">starts_at</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.calendar.fields.startsAt') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.description') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.color') }} (default: #3B82F6)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">event_type</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.eventType') }} (default: meeting)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">ends_at</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.endsAt') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">all_day</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.allDay') }} (default: false)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;title&quot;: &quot;Team Meeting&quot;,
+  &quot;description&quot;: &quot;Weekly sync with the team&quot;,
+  &quot;starts_at&quot;: &quot;2024-01-20T10:00:00Z&quot;,
+  &quot;ends_at&quot;: &quot;2024-01-20T11:00:00Z&quot;,
+  &quot;color&quot;: &quot;#3B82F6&quot;,
+  &quot;event_type&quot;: &quot;meeting&quot;,
+  &quot;all_day&quot;: false
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns created event object with ID</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;The given data was invalid.&quot;,
+  &quot;errors&quot;: {
+    &quot;title&quot;: [&quot;The title field is required.&quot;],
+    &quot;starts_at&quot;: [&quot;The starts at field is required.&quot;]
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Update Event -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/events/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.calendar.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.calendar.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;title&quot;: &quot;Updated Meeting Title&quot;,
+  &quot;color&quot;: &quot;#10B981&quot;,
+  &quot;starts_at&quot;: &quot;2024-01-20T14:00:00Z&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated event object</p>
+                        </div>
+                    </div>
+
+                    <!-- Delete Event -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/events/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.calendar.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.calendar.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== CALENDAR VIEW ========== -->
+                    <h2 id="events-calendar" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.calendar.calendarView') }}</h2>
+
+                    <!-- Calendar View -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/events/calendar</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.calendar.endpoints.calendarDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">start</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Start date (YYYY-MM-DD)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">end</td><td class="text-red-500">{{ t('docs.required') }}</td><td>End date (YYYY-MM-DD)</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Example Request</h4>
+                            <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/events/calendar?start=2024-01-01&end=2024-01-31' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN'`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+      &quot;title&quot;: &quot;Team Meeting&quot;,
+      &quot;color&quot;: &quot;#3B82F6&quot;,
+      &quot;event_type&quot;: &quot;meeting&quot;,
+      &quot;starts_at&quot;: &quot;2024-01-20T10:00:00Z&quot;,
+      &quot;ends_at&quot;: &quot;2024-01-20T11:00:00Z&quot;,
+      &quot;all_day&quot;: false
+    },
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+      &quot;title&quot;: &quot;John's Birthday&quot;,
+      &quot;color&quot;: &quot;#F59E0B&quot;,
+      &quot;event_type&quot;: &quot;birthday&quot;,
+      &quot;starts_at&quot;: &quot;2024-01-25T00:00:00Z&quot;,
+      &quot;ends_at&quot;: null,
+      &quot;all_day&quot;: true
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- ========== RESCHEDULE ========== -->
+                    <h2 id="events-reschedule" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.calendar.reschedule') }}</h2>
+
+                    <!-- Reschedule Event -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/events/{id}/reschedule</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.calendar.endpoints.rescheduleDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.calendar.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">starts_at</td><td class="text-red-500">{{ t('docs.required') }}</td><td>New start date/time</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">ends_at</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>New end date/time</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;starts_at&quot;: &quot;2024-01-22T10:00:00Z&quot;,
+  &quot;ends_at&quot;: &quot;2024-01-22T11:00:00Z&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Team Meeting&quot;,
+    &quot;starts_at&quot;: &quot;2024-01-22T10:00:00Z&quot;,
+    &quot;ends_at&quot;: &quot;2024-01-22T11:00:00Z&quot;,
+    &quot;...&quot;: &quot;...&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Usage Tip -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-8">
+                        <h4 class="font-medium text-green-800 mb-2">Drag & Drop Integration</h4>
+                        <p class="text-green-700 text-sm">
+                            The reschedule endpoint is optimized for drag & drop calendar interactions.
+                            When a user drags an event to a new date/time, call this endpoint to update the event's schedule without modifying other properties.
+                        </p>
                     </div>
                 </template>
                 </div>

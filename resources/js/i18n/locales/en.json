@@ -41,18 +41,56 @@
         "more": "more"
     },
     "dashboard": {
-        "title": "My Databases",
+        "title": "Dashboard",
+        "welcomeMessage": "Here's an overview of your workspace.",
+        "greetings": {
+            "morning": "Good morning",
+            "afternoon": "Good afternoon",
+            "evening": "Good evening"
+        },
+        "stats": {
+            "databases": "Databases",
+            "tables": "Tables",
+            "templates": "Templates",
+            "posts": "Posts"
+        },
+        "quickActions": {
+            "title": "Quick Actions",
+            "newDatabase": "Databases",
+            "newDatabaseDesc": "Manage your data",
+            "templates": "Templates",
+            "templatesDesc": "Create graphics",
+            "calendar": "Calendar",
+            "calendarDesc": "Plan content",
+            "docs": "Documentation",
+            "docsDesc": "API reference"
+        },
+        "recentDatabases": "Recent Databases",
+        "viewAll": "View all"
+    },
+    "data": {
+        "title": "Databases",
         "subtitle": "Manage your databases and tables",
-        "newBase": "+ New Database",
-        "noBases": "No databases",
-        "noBasesDescription": "Start by creating a new database.",
+        "newDatabase": "New Database",
+        "noDatabases": "No databases yet",
+        "noDatabasesDescription": "Create your first database to start organizing your data.",
+        "createFirstDatabase": "Create First Database",
+        "searchPlaceholder": "Search databases...",
+        "gridView": "Grid view",
+        "listView": "List view",
+        "database": "Database",
+        "tables": "tables",
+        "lastModified": "Last Modified",
+        "actions": "Actions",
+        "noResults": "No results found",
+        "noResultsDescription": "Try a different search term.",
         "baseUpdated": "Database updated",
         "baseCreated": "Database created",
         "baseDeleted": "Database deleted",
         "saveBaseError": "Failed to save database",
         "deleteBaseError": "Failed to delete database",
         "deleteBaseTitle": "Delete Database",
-        "deleteBaseMessage": "Are you sure you want to delete the database \"{name}\"? All tables and data will be permanently deleted.",
+        "deleteBaseMessage": "Are you sure you want to delete \"{name}\"? All tables and data will be permanently deleted.",
         "deleteBaseConfirm": "Delete Database"
     },
     "base": {
@@ -87,8 +125,14 @@
         "newTableButton": "+ New Table",
         "tableName": "Table Name",
         "tableNamePlaceholder": "E.g. Contacts",
-        "noTables": "No tables",
-        "noTablesDescription": "Start by creating a new table.",
+        "noTables": "No tables yet",
+        "noTablesDescription": "Create your first table to start organizing data.",
+        "createFirstTable": "Create First Table",
+        "tables": "Tables",
+        "renameTable": "Rename Table",
+        "tableRenamed": "Table renamed",
+        "renameTableError": "Failed to rename table",
+        "openTable": "Open Table",
         "fields": "fields",
         "records": "records",
         "filtered": "(filtered)",
@@ -242,6 +286,7 @@
     },
     "navigation": {
         "dashboard": "Dashboard",
+        "data": "Data",
         "profile": "Profile",
         "settings": "Settings",
         "brands": "My Brands",
@@ -252,7 +297,8 @@
         "calendar": "Calendar",
         "approval": "Approval",
         "tokens": "Tokens",
-        "noBasesForGraphics": "Create a database first"
+        "noBasesForGraphics": "Create a database first",
+        "language": "Language"
     },
     "settings": {
         "title": "Settings",
@@ -305,6 +351,8 @@
             "monday": "Monday",
             "sunday": "Sunday",
             "timeFormat": "Time Format",
+            "time24h": "24h",
+            "time12h": "12h",
             "changePassword": "Change Password",
             "currentPassword": "Current Password",
             "newPassword": "New Password",
@@ -374,9 +422,91 @@
         "errors": "Errors",
         "pagination": "Pagination",
         "tabs": {
+            "general": "General",
             "database": "Database",
             "templates": "Templates",
-            "posts": "Posts"
+            "posts": "Posts",
+            "calendar": "Calendar"
+        },
+        "general": {
+            "title": "About Aisello",
+            "description": "Aisello is a comprehensive platform for personal brand automation. It combines tools for creating, planning, and publishing content to social media with AI-powered assistance.",
+            "about": "About Platform",
+            "authentication": "Authentication",
+            "quickStart": "Quick Start",
+            "features": {
+                "title": "Key Features",
+                "database": "Airtable-like database for storing and managing data",
+                "templates": "Graphic templates with PSD import and real-time editor",
+                "posts": "Social media post scheduling and automation",
+                "calendar": "Calendar events for organizing your schedule",
+                "ai": "AI-powered content generation and suggestions"
+            },
+            "apiIntro": {
+                "title": "API Introduction",
+                "description": "The Aisello REST API allows you to integrate all platform features with your applications and automation tools like n8n.",
+                "baseUrl": "Base URL",
+                "baseUrlDesc": "All API requests should be directed to:",
+                "versioning": "The API is versioned through the URL path. Current version is v1.",
+                "contentType": "Content Type",
+                "contentTypeDesc": "All requests should include the following headers:",
+                "responseFormat": "Response Format",
+                "responseFormatDesc": "All successful responses are wrapped in a data object:"
+            },
+            "authSection": {
+                "title": "Authentication",
+                "description": "The API uses Bearer tokens for authentication. Include the token in every request via the Authorization header.",
+                "getToken": "Getting an API Token",
+                "getTokenSteps": {
+                    "step1": "Log in to the Aisello dashboard",
+                    "step2": "Go to Settings > Tokens",
+                    "step3": "Click 'Create Token' and enter a name",
+                    "step4": "Copy and securely store your token"
+                },
+                "usingToken": "Using the Token",
+                "usingTokenDesc": "Include the token in the Authorization header of every request:",
+                "security": "Security Best Practices",
+                "securityTips": {
+                    "tip1": "Store tokens in environment variables, never in code",
+                    "tip2": "Don't commit tokens to version control",
+                    "tip3": "Rotate tokens periodically",
+                    "tip4": "Use separate tokens for different environments (dev, staging, prod)"
+                }
+            },
+            "quickStartSection": {
+                "title": "Quick Start",
+                "description": "Get started with the API in three simple steps:",
+                "step1Title": "Get Your API Token",
+                "step1Desc": "Create an API token in Settings > Tokens",
+                "step2Title": "Make Your First Request",
+                "step2Desc": "Test the connection by fetching your databases:",
+                "step3Title": "Explore the API",
+                "step3Desc": "Browse the documentation tabs to learn about available endpoints for databases, templates, posts, and calendar events."
+            },
+            "errors": {
+                "title": "Error Handling",
+                "description": "The API uses standard HTTP status codes to indicate success or failure:",
+                "codes": {
+                    "200": "OK - Request succeeded",
+                    "201": "Created - Resource created successfully",
+                    "204": "No Content - Request succeeded with no response body",
+                    "400": "Bad Request - Invalid request syntax",
+                    "401": "Unauthorized - Missing or invalid token",
+                    "403": "Forbidden - Token lacks required permissions",
+                    "404": "Not Found - Resource doesn't exist",
+                    "422": "Validation Error - Invalid request data",
+                    "429": "Too Many Requests - Rate limit exceeded",
+                    "500": "Server Error - Internal server error"
+                },
+                "format": "Error responses follow this format:"
+            },
+            "rateLimit": {
+                "title": "Rate Limits",
+                "description": "API requests are limited to prevent abuse:",
+                "limit": "60 requests per minute per token",
+                "headers": "Rate limit information is included in response headers:",
+                "exceeded": "When exceeded, wait for the reset time before making new requests."
+            }
         },
         "sidebar": {
             "gettingStarted": "Getting Started",
@@ -943,6 +1073,49 @@
                 "instagram": "Instagram - supports images and videos with hashtags",
                 "youtube": "YouTube - supports videos with title and description"
             }
+        },
+        "calendar": {
+            "title": "Calendar Events",
+            "description": "API for managing calendar events (meetings, birthdays, reminders). Events are displayed alongside posts in the calendar view.",
+            "overview": "Overview",
+            "eventsCrud": "Events CRUD",
+            "calendarView": "Calendar View",
+            "reschedule": "Reschedule",
+            "eventTypes": {
+                "title": "Event Types",
+                "meeting": "Meeting - scheduled meetings and appointments",
+                "birthday": "Birthday - birthday reminders",
+                "reminder": "Reminder - general reminders",
+                "other": "Other - custom events"
+            },
+            "object": "Event Object",
+            "objectDescription": "The event object contains the following fields:",
+            "fields": {
+                "id": "Unique event identifier (ULID)",
+                "title": "Event title",
+                "description": "Event description (optional)",
+                "color": "Display color (hex code)",
+                "eventType": "Event type (meeting, birthday, reminder, other)",
+                "startsAt": "Start date and time",
+                "endsAt": "End date and time (optional)",
+                "allDay": "Whether event lasts all day"
+            },
+            "endpoints": {
+                "list": "List Events",
+                "listDescription": "Gets a paginated list of user's events.",
+                "calendar": "Calendar View",
+                "calendarDescription": "Gets events for calendar display within a date range.",
+                "get": "Get Event",
+                "getDescription": "Gets full event details.",
+                "create": "Create Event",
+                "createDescription": "Creates a new calendar event.",
+                "update": "Update Event",
+                "updateDescription": "Updates event details.",
+                "delete": "Delete Event",
+                "deleteDescription": "Deletes an event (soft delete).",
+                "reschedule": "Reschedule Event",
+                "rescheduleDescription": "Changes event date/time (for drag & drop)."
+            }
         }
     },
     "graphics": {
@@ -1261,7 +1434,10 @@
             "october": "October",
             "november": "November",
             "december": "December"
-        }
+        },
+        "allDay": "All Day",
+        "noItemsForDay": "No items scheduled for this day",
+        "clickButtonsAbove": "Use the buttons above to add an event or post"
     },
     "calendarEvents": {
         "title": "Calendar Event",

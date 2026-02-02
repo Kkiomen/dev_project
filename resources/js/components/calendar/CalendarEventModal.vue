@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Modal from '@/components/common/Modal.vue';
 import Button from '@/components/common/Button.vue';
+import DateTimeInput from '@/components/common/DateTimeInput.vue';
 
 const props = defineProps({
     show: {
@@ -125,24 +126,24 @@ const close = () => {
 
 <template>
     <Modal :show="show" max-width="lg" @close="close">
-        <div class="space-y-6">
+        <div class="space-y-4 sm:space-y-6">
             <!-- Header -->
             <div class="flex items-center justify-between">
-                <h2 class="text-xl font-semibold text-gray-900">
+                <h2 class="text-lg sm:text-xl font-semibold text-gray-900">
                     {{ modalTitle }}
                 </h2>
                 <button
                     @click="close"
-                    class="text-gray-400 hover:text-gray-500"
+                    class="text-gray-400 hover:text-gray-500 p-1"
                 >
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
                     </svg>
                 </button>
             </div>
 
             <!-- Form -->
-            <form @submit.prevent="handleSubmit" class="space-y-4">
+            <form @submit.prevent="handleSubmit" class="space-y-3 sm:space-y-4">
                 <!-- Title -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">
@@ -152,7 +153,7 @@ const close = () => {
                         v-model="form.title"
                         type="text"
                         required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         :placeholder="t('calendarEvents.fields.title')"
                     />
                 </div>
@@ -164,8 +165,8 @@ const close = () => {
                     </label>
                     <textarea
                         v-model="form.description"
-                        rows="3"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        rows="2"
+                        class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                         :placeholder="t('calendarEvents.fields.description')"
                     />
                 </div>
@@ -177,7 +178,7 @@ const close = () => {
                     </label>
                     <select
                         v-model="form.event_type"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                        class="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                         <option v-for="type in eventTypes" :key="type.value" :value="type.value">
                             {{ t(type.label) }}
@@ -187,15 +188,15 @@ const close = () => {
 
                 <!-- Color -->
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">
                         {{ t('calendarEvents.fields.color') }}
                     </label>
-                    <div class="flex items-center space-x-2">
+                    <div class="flex flex-wrap items-center gap-2">
                         <button
                             v-for="color in defaultColors"
                             :key="color"
                             type="button"
-                            class="w-8 h-8 rounded-full border-2 transition-transform hover:scale-110"
+                            class="w-7 h-7 rounded-full border-2 transition-transform hover:scale-110 flex-shrink-0"
                             :class="form.color === color ? 'border-gray-800 scale-110' : 'border-transparent'"
                             :style="{ backgroundColor: color }"
                             @click="form.color = color"
@@ -203,7 +204,7 @@ const close = () => {
                         <input
                             v-model="form.color"
                             type="color"
-                            class="w-8 h-8 rounded cursor-pointer border border-gray-300"
+                            class="w-7 h-7 rounded cursor-pointer border border-gray-300 flex-shrink-0"
                         />
                     </div>
                 </div>
@@ -222,51 +223,51 @@ const close = () => {
                 </div>
 
                 <!-- Date/Time -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 gap-3 sm:gap-4">
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             {{ t('calendarEvents.fields.startsAt') }} *
                         </label>
-                        <input
+                        <DateTimeInput
                             v-model="form.starts_at"
-                            :type="form.all_day ? 'date' : 'datetime-local'"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            :type="form.all_day ? 'date' : 'datetime'"
+                            :required="true"
                         />
                     </div>
                     <div v-if="!form.all_day">
                         <label class="block text-sm font-medium text-gray-700 mb-1">
                             {{ t('calendarEvents.fields.endsAt') }}
                         </label>
-                        <input
+                        <DateTimeInput
                             v-model="form.ends_at"
-                            type="datetime-local"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            type="datetime"
                         />
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-4 border-t border-gray-200">
                     <div>
                         <Button
                             v-if="isEdit"
                             type="button"
                             variant="danger"
+                            class="w-full sm:w-auto"
                             @click="handleDelete"
                         >
                             {{ t('calendarEvents.deleteEvent') }}
                         </Button>
                     </div>
-                    <div class="flex items-center space-x-3">
+                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
                         <Button
                             type="button"
                             variant="secondary"
+                            class="w-full sm:w-auto"
                             @click="close"
                         >
                             {{ t('common.cancel') }}
                         </Button>
-                        <Button type="submit">
+                        <Button type="submit" class="w-full sm:w-auto">
                             {{ t('common.save') }}
                         </Button>
                     </div>

@@ -15,7 +15,7 @@ const props = defineProps({
     },
 });
 
-const emit = defineEmits(['edit', 'edit-event', 'reschedule', 'create', 'create-event']);
+const emit = defineEmits(['edit', 'edit-event', 'reschedule', 'create', 'create-event', 'open-day-modal']);
 
 const { t } = useI18n();
 const calendarStore = useCalendarStore();
@@ -23,6 +23,11 @@ const calendarStore = useCalendarStore();
 // Get week days in order based on user's week start setting
 const weekDays = computed(() => {
     return calendarStore.orderedDayKeys.map(key => t(`calendar.days.${key}`));
+});
+
+// Short day names for mobile
+const shortWeekDays = computed(() => {
+    return calendarStore.orderedDayKeys.map(key => t(`calendar.days.${key}`).charAt(0));
 });
 
 // Split days into weeks for proper rendering
@@ -78,19 +83,20 @@ const handleDragOver = (event) => {
             <div
                 v-for="(day, index) in weekDays"
                 :key="index"
-                class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider"
+                class="px-1 sm:px-2 py-2 sm:py-3 text-center text-[10px] sm:text-xs font-semibold text-gray-600 uppercase tracking-wider"
             >
-                {{ day }}
+                <span class="hidden sm:inline">{{ day }}</span>
+                <span class="sm:hidden">{{ shortWeekDays[index] }}</span>
             </div>
         </div>
 
         <!-- Calendar grid - render week by week -->
-        <div class="bg-white">
+        <div class="bg-white overflow-x-auto">
             <div
                 v-for="(week, weekIndex) in weeks"
                 :key="weekIndex"
                 class="grid border-b border-gray-200 last:border-b-0"
-                style="grid-template-columns: repeat(7, minmax(0, 1fr));"
+                style="grid-template-columns: repeat(7, minmax(0, 1fr)); min-width: 100%;"
             >
                 <CalendarDayCell
                     v-for="(day, dayIndex) in week"
@@ -103,6 +109,7 @@ const handleDragOver = (event) => {
                     @edit-event="(event) => emit('edit-event', event)"
                     @create="() => { calendarStore.selectDate(day.date); emit('create'); }"
                     @create-event="() => { calendarStore.selectDate(day.date); emit('create-event'); }"
+                    @open-day-modal="(data) => emit('open-day-modal', data)"
                     @dragover="handleDragOver"
                     @drop="(event) => handleDrop(day.date, event)"
                 />

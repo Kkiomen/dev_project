@@ -1,18 +1,33 @@
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useBrandsStore } from '@/stores/brands';
+import { useSettingsStore } from '@/stores/settings';
 import Dropdown from '@/components/common/Dropdown.vue';
 import BrandSwitcher from '@/components/brand/BrandSwitcher.vue';
 import NotificationBell from '@/components/notifications/NotificationBell.vue';
 import ActiveTasksIndicator from '@/components/tasks/ActiveTasksIndicator.vue';
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const authStore = useAuthStore();
 const brandsStore = useBrandsStore();
+const settingsStore = useSettingsStore();
 const showMobileMenu = ref(false);
+
+const availableLanguages = [
+    { code: 'en', name: 'English', flag: '🇬🇧' },
+    { code: 'pl', name: 'Polski', flag: '🇵🇱' },
+];
+
+const currentLanguage = computed(() => {
+    return availableLanguages.find(l => l.code === locale.value) || availableLanguages[0];
+});
+
+const changeLanguage = (langCode) => {
+    settingsStore.setLanguage(langCode);
+};
 
 onMounted(() => {
     brandsStore.fetchBrands();
@@ -53,6 +68,16 @@ const logout = () => {
                             {{ t('navigation.dashboard') }}
                         </RouterLink>
                         <RouterLink
+                            to="/data"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                            :class="{
+                                'border-blue-500 text-gray-900': $route.path.startsWith('/data') || $route.path.startsWith('/bases') || $route.path.startsWith('/tables'),
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/data') && !$route.path.startsWith('/bases') && !$route.path.startsWith('/tables'),
+                            }"
+                        >
+                            {{ t('navigation.data') }}
+                        </RouterLink>
+                        <RouterLink
                             to="/templates"
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
                             :class="{
@@ -91,6 +116,38 @@ const logout = () => {
 
                     <!-- Notifications -->
                     <NotificationBell />
+
+                    <!-- Language Switcher -->
+                    <Dropdown align="right" width="36">
+                        <template #trigger>
+                            <button
+                                type="button"
+                                class="inline-flex items-center px-2 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition"
+                                :title="t('navigation.language')"
+                            >
+                                <span class="text-base mr-1">{{ currentLanguage.flag }}</span>
+                                <span class="hidden lg:inline">{{ currentLanguage.code.toUpperCase() }}</span>
+                                <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </template>
+                        <template #content>
+                            <button
+                                v-for="lang in availableLanguages"
+                                :key="lang.code"
+                                @click="changeLanguage(lang.code)"
+                                class="w-full flex items-center px-4 py-2 text-sm text-left hover:bg-gray-100 transition"
+                                :class="{ 'bg-blue-50 text-blue-700': locale === lang.code, 'text-gray-700': locale !== lang.code }"
+                            >
+                                <span class="text-base mr-2">{{ lang.flag }}</span>
+                                <span>{{ lang.name }}</span>
+                                <svg v-if="locale === lang.code" class="ml-auto h-4 w-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                </svg>
+                            </button>
+                        </template>
+                    </Dropdown>
 
                     <!-- User Dropdown -->
                     <Dropdown align="right" width="48">
@@ -182,6 +239,16 @@ const logout = () => {
                     {{ t('navigation.dashboard') }}
                 </RouterLink>
                 <RouterLink
+                    to="/data"
+                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
+                    :class="{
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/data') || $route.path.startsWith('/bases') || $route.path.startsWith('/tables'),
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/data') && !$route.path.startsWith('/bases') && !$route.path.startsWith('/tables'),
+                    }"
+                >
+                    {{ t('navigation.data') }}
+                </RouterLink>
+                <RouterLink
                     to="/templates"
                     class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
                     :class="{
@@ -224,6 +291,25 @@ const logout = () => {
                 </div>
 
                 <div class="mt-3 space-y-1">
+                    <!-- Language Switcher (Mobile) -->
+                    <div class="px-3 py-2">
+                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
+                            {{ t('navigation.language') }}
+                        </div>
+                        <div class="flex space-x-2">
+                            <button
+                                v-for="lang in availableLanguages"
+                                :key="lang.code"
+                                @click="changeLanguage(lang.code)"
+                                class="flex items-center px-3 py-2 rounded-lg text-sm font-medium transition"
+                                :class="locale === lang.code ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                            >
+                                <span class="mr-1.5">{{ lang.flag }}</span>
+                                <span>{{ lang.code.toUpperCase() }}</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <RouterLink
                         to="/settings"
                         class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"

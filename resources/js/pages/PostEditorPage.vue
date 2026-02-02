@@ -18,6 +18,7 @@ import AiPlatformGenerateModal from '@/components/posts/AiPlatformGenerateModal.
 import TemplatePickerModal from '@/components/posts/TemplatePickerModal.vue';
 import TemplateEditorModal from '@/components/posts/TemplateEditorModal.vue';
 import StockPhotoPicker from '@/components/stock/StockPhotoPicker.vue';
+import DateTimeInput from '@/components/common/DateTimeInput.vue';
 
 const props = defineProps({
     postId: {
@@ -543,9 +544,17 @@ const formatDateForInput = (date) => {
 };
 
 const handleScheduleChange = (e) => {
-    const value = e.target.value;
+    const value = e.target?.value ?? e;
     sharedData.value.scheduled_at = value ? new Date(value).toISOString() : null;
 };
+
+// Computed for DateTimeInput v-model
+const scheduledAtForInput = computed({
+    get: () => formatDateForInput(sharedData.value.scheduled_at),
+    set: (value) => {
+        sharedData.value.scheduled_at = value ? new Date(value).toISOString() : null;
+    }
+});
 
 const clearSchedule = () => {
     sharedData.value.scheduled_at = null;
@@ -869,11 +878,10 @@ const lastSavedText = computed(() => {
                                 {{ t('posts.scheduledAt') }}
                             </label>
                             <div class="flex items-center space-x-2">
-                                <input
-                                    type="datetime-local"
-                                    :value="formatDateForInput(sharedData.scheduled_at)"
-                                    @input="handleScheduleChange"
-                                    class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                <DateTimeInput
+                                    v-model="scheduledAtForInput"
+                                    type="datetime"
+                                    class="flex-1"
                                 />
                                 <button
                                     v-if="sharedData.scheduled_at"

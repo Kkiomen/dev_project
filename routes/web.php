@@ -19,6 +19,8 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // SPA catch-all for Vue Router
     Route::get('/dashboard', fn () => view('spa'))->name('dashboard');
+    Route::get('/data', fn () => view('spa'))->name('data');
+    Route::get('/bases', fn () => view('spa'))->name('bases');
     Route::get('/bases/{any}', fn () => view('spa'))->where('any', '.*');
     Route::get('/tables/{any}', fn () => view('spa'))->where('any', '.*');
     Route::get('/templates/{any?}', fn () => view('spa'))->where('any', '.*')->name('templates');

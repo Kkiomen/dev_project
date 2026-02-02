@@ -42,18 +42,56 @@
         "more": "więcej"
     },
     "dashboard": {
-        "title": "Moje bazy danych",
+        "title": "Dashboard",
+        "welcomeMessage": "Oto przegląd Twojego obszaru roboczego.",
+        "greetings": {
+            "morning": "Dzień dobry",
+            "afternoon": "Dzień dobry",
+            "evening": "Dobry wieczór"
+        },
+        "stats": {
+            "databases": "Bazy danych",
+            "tables": "Tabele",
+            "templates": "Szablony",
+            "posts": "Posty"
+        },
+        "quickActions": {
+            "title": "Szybkie akcje",
+            "newDatabase": "Bazy danych",
+            "newDatabaseDesc": "Zarządzaj danymi",
+            "templates": "Szablony",
+            "templatesDesc": "Twórz grafiki",
+            "calendar": "Kalendarz",
+            "calendarDesc": "Planuj treści",
+            "docs": "Dokumentacja",
+            "docsDesc": "Referencja API"
+        },
+        "recentDatabases": "Ostatnie bazy danych",
+        "viewAll": "Zobacz wszystkie"
+    },
+    "data": {
+        "title": "Bazy danych",
         "subtitle": "Zarządzaj swoimi bazami danych i tabelami",
-        "newBase": "+ Nowa baza",
-        "noBases": "Brak baz danych",
-        "noBasesDescription": "Zacznij od utworzenia nowej bazy danych.",
+        "newDatabase": "Nowa baza danych",
+        "noDatabases": "Brak baz danych",
+        "noDatabasesDescription": "Utwórz pierwszą bazę danych, aby rozpocząć organizowanie danych.",
+        "createFirstDatabase": "Utwórz pierwszą bazę",
+        "searchPlaceholder": "Szukaj baz danych...",
+        "gridView": "Widok siatki",
+        "listView": "Widok listy",
+        "database": "Baza danych",
+        "tables": "tabele",
+        "lastModified": "Ostatnia modyfikacja",
+        "actions": "Akcje",
+        "noResults": "Brak wyników",
+        "noResultsDescription": "Spróbuj innej frazy wyszukiwania.",
         "baseUpdated": "Baza zaktualizowana",
         "baseCreated": "Baza utworzona",
         "baseDeleted": "Baza usunięta",
         "saveBaseError": "Nie udało się zapisać bazy",
         "deleteBaseError": "Nie udało się usunąć bazy",
         "deleteBaseTitle": "Usuń bazę danych",
-        "deleteBaseMessage": "Czy na pewno chcesz usunąć bazę \"{name}\"? Wszystkie tabele i dane zostaną bezpowrotnie usunięte.",
+        "deleteBaseMessage": "Czy na pewno chcesz usunąć \"{name}\"? Wszystkie tabele i dane zostaną bezpowrotnie usunięte.",
         "deleteBaseConfirm": "Usuń bazę"
     },
     "field": {
@@ -229,7 +267,13 @@
         "tableName": "Nazwa tabeli",
         "tableNamePlaceholder": "Np. Kontakty",
         "noTables": "Brak tabel",
-        "noTablesDescription": "Zacznij od utworzenia nowej tabeli.",
+        "noTablesDescription": "Utwórz pierwszą tabelę, aby rozpocząć organizowanie danych.",
+        "createFirstTable": "Utwórz pierwszą tabelę",
+        "tables": "Tabele",
+        "renameTable": "Zmień nazwę tabeli",
+        "tableRenamed": "Nazwa tabeli zmieniona",
+        "renameTableError": "Nie udało się zmienić nazwy tabeli",
+        "openTable": "Otwórz tabelę",
         "fields": "pól",
         "records": "rekordów",
         "filtered": "(przefiltrowane)",
@@ -243,6 +287,7 @@
     },
     "navigation": {
         "dashboard": "Dashboard",
+        "data": "Dane",
         "profile": "Profil",
         "settings": "Ustawienia",
         "brands": "Moje marki",
@@ -253,7 +298,8 @@
         "calendar": "Kalendarz",
         "approval": "Akceptacja",
         "tokens": "Tokeny",
-        "noBasesForGraphics": "Najpierw utwórz bazę danych"
+        "noBasesForGraphics": "Najpierw utwórz bazę danych",
+        "language": "Język"
     },
     "settings": {
         "title": "Ustawienia",
@@ -306,6 +352,8 @@
             "monday": "Poniedziałek",
             "sunday": "Niedziela",
             "timeFormat": "Format czasu",
+            "time24h": "24h",
+            "time12h": "12h",
             "changePassword": "Zmiana hasła",
             "currentPassword": "Aktualne hasło",
             "newPassword": "Nowe hasło",
@@ -375,9 +423,91 @@
         "errors": "Błędy",
         "pagination": "Paginacja",
         "tabs": {
+            "general": "Ogólne",
             "database": "Baza danych",
             "templates": "Szablony",
-            "posts": "Posty"
+            "posts": "Posty",
+            "calendar": "Kalendarz"
+        },
+        "general": {
+            "title": "O Aisello",
+            "description": "Aisello to kompleksowa platforma do automatyzacji marki osobistej. Łączy narzędzia do tworzenia, planowania i publikowania treści w social media ze wsparciem AI.",
+            "about": "O platformie",
+            "authentication": "Uwierzytelnianie",
+            "quickStart": "Szybki start",
+            "features": {
+                "title": "Kluczowe funkcje",
+                "database": "Baza danych typu Airtable do przechowywania i zarządzania danymi",
+                "templates": "Szablony graficzne z importem PSD i edytorem w czasie rzeczywistym",
+                "posts": "Planowanie i automatyzacja postów w social media",
+                "calendar": "Wydarzenia kalendarzowe do organizacji harmonogramu",
+                "ai": "Generowanie treści i sugestie wspierane przez AI"
+            },
+            "apiIntro": {
+                "title": "Wprowadzenie do API",
+                "description": "REST API Aisello pozwala zintegrować wszystkie funkcje platformy z Twoimi aplikacjami i narzędziami automatyzacji jak n8n.",
+                "baseUrl": "Bazowy URL",
+                "baseUrlDesc": "Wszystkie żądania API powinny być kierowane do:",
+                "versioning": "API jest wersjonowane przez ścieżkę URL. Aktualna wersja to v1.",
+                "contentType": "Typ zawartości",
+                "contentTypeDesc": "Wszystkie żądania powinny zawierać następujące nagłówki:",
+                "responseFormat": "Format odpowiedzi",
+                "responseFormatDesc": "Wszystkie pomyślne odpowiedzi są opakowane w obiekt data:"
+            },
+            "authSection": {
+                "title": "Uwierzytelnianie",
+                "description": "API używa tokenów Bearer do uwierzytelniania. Dołącz token do każdego żądania w nagłówku Authorization.",
+                "getToken": "Uzyskanie tokena API",
+                "getTokenSteps": {
+                    "step1": "Zaloguj się do panelu Aisello",
+                    "step2": "Przejdź do Ustawienia > Tokeny",
+                    "step3": "Kliknij 'Utwórz token' i wprowadź nazwę",
+                    "step4": "Skopiuj i bezpiecznie przechowaj token"
+                },
+                "usingToken": "Używanie tokena",
+                "usingTokenDesc": "Dołącz token w nagłówku Authorization każdego żądania:",
+                "security": "Najlepsze praktyki bezpieczeństwa",
+                "securityTips": {
+                    "tip1": "Przechowuj tokeny w zmiennych środowiskowych, nigdy w kodzie",
+                    "tip2": "Nie commituj tokenów do kontroli wersji",
+                    "tip3": "Regularnie rotuj tokeny",
+                    "tip4": "Używaj oddzielnych tokenów dla różnych środowisk (dev, staging, prod)"
+                }
+            },
+            "quickStartSection": {
+                "title": "Szybki start",
+                "description": "Rozpocznij pracę z API w trzech prostych krokach:",
+                "step1Title": "Uzyskaj token API",
+                "step1Desc": "Utwórz token API w Ustawienia > Tokeny",
+                "step2Title": "Wykonaj pierwsze żądanie",
+                "step2Desc": "Przetestuj połączenie pobierając swoje bazy danych:",
+                "step3Title": "Eksploruj API",
+                "step3Desc": "Przeglądaj zakładki dokumentacji, aby poznać dostępne endpointy dla baz danych, szablonów, postów i wydarzeń kalendarzowych."
+            },
+            "errors": {
+                "title": "Obsługa błędów",
+                "description": "API używa standardowych kodów HTTP do wskazania sukcesu lub niepowodzenia:",
+                "codes": {
+                    "200": "OK - Żądanie zakończone sukcesem",
+                    "201": "Created - Zasób utworzony pomyślnie",
+                    "204": "No Content - Żądanie zakończone sukcesem bez treści odpowiedzi",
+                    "400": "Bad Request - Nieprawidłowa składnia żądania",
+                    "401": "Unauthorized - Brakujący lub nieprawidłowy token",
+                    "403": "Forbidden - Token nie ma wymaganych uprawnień",
+                    "404": "Not Found - Zasób nie istnieje",
+                    "422": "Validation Error - Nieprawidłowe dane żądania",
+                    "429": "Too Many Requests - Przekroczono limit żądań",
+                    "500": "Server Error - Wewnętrzny błąd serwera"
+                },
+                "format": "Odpowiedzi błędów mają następujący format:"
+            },
+            "rateLimit": {
+                "title": "Limity żądań",
+                "description": "Żądania API są ograniczone, aby zapobiec nadużyciom:",
+                "limit": "60 żądań na minutę na token",
+                "headers": "Informacje o limitach są zawarte w nagłówkach odpowiedzi:",
+                "exceeded": "Po przekroczeniu limitu poczekaj na czas resetu przed wykonaniem nowych żądań."
+            }
         },
         "sidebar": {
             "gettingStarted": "Wprowadzenie",
@@ -944,6 +1074,49 @@
                 "instagram": "Instagram - obsługuje obrazy i wideo z hashtagami",
                 "youtube": "YouTube - obsługuje wideo z tytułem i opisem"
             }
+        },
+        "calendar": {
+            "title": "Wydarzenia kalendarza",
+            "description": "API do zarządzania wydarzeniami kalendarza (spotkania, urodziny, przypomnienia). Wydarzenia wyświetlane są obok postów w widoku kalendarza.",
+            "overview": "Przegląd",
+            "eventsCrud": "CRUD wydarzeń",
+            "calendarView": "Widok kalendarza",
+            "reschedule": "Zmiana terminu",
+            "eventTypes": {
+                "title": "Typy wydarzeń",
+                "meeting": "Spotkanie - zaplanowane spotkania i wizyty",
+                "birthday": "Urodziny - przypomnienia o urodzinach",
+                "reminder": "Przypomnienie - ogólne przypomnienia",
+                "other": "Inne - niestandardowe wydarzenia"
+            },
+            "object": "Obiekt wydarzenia",
+            "objectDescription": "Obiekt wydarzenia zawiera następujące pola:",
+            "fields": {
+                "id": "Unikalny identyfikator wydarzenia (ULID)",
+                "title": "Tytuł wydarzenia",
+                "description": "Opis wydarzenia (opcjonalny)",
+                "color": "Kolor wyświetlania (kod hex)",
+                "eventType": "Typ wydarzenia (meeting, birthday, reminder, other)",
+                "startsAt": "Data i godzina rozpoczęcia",
+                "endsAt": "Data i godzina zakończenia (opcjonalne)",
+                "allDay": "Czy wydarzenie trwa cały dzień"
+            },
+            "endpoints": {
+                "list": "Lista wydarzeń",
+                "listDescription": "Pobiera paginowaną listę wydarzeń użytkownika.",
+                "calendar": "Widok kalendarza",
+                "calendarDescription": "Pobiera wydarzenia do wyświetlenia w kalendarzu w zakresie dat.",
+                "get": "Pobierz wydarzenie",
+                "getDescription": "Pobiera pełne szczegóły wydarzenia.",
+                "create": "Utwórz wydarzenie",
+                "createDescription": "Tworzy nowe wydarzenie w kalendarzu.",
+                "update": "Aktualizuj wydarzenie",
+                "updateDescription": "Aktualizuje szczegóły wydarzenia.",
+                "delete": "Usuń wydarzenie",
+                "deleteDescription": "Usuwa wydarzenie (soft delete).",
+                "reschedule": "Zmień termin wydarzenia",
+                "rescheduleDescription": "Zmienia datę/godzinę wydarzenia (dla drag & drop)."
+            }
         }
     },
     "graphics": {
@@ -1262,7 +1435,10 @@
             "october": "Październik",
             "november": "Listopad",
             "december": "Grudzień"
-        }
+        },
+        "allDay": "Cały dzień",
+        "noItemsForDay": "Brak zaplanowanych wydarzeń na ten dzień",
+        "clickButtonsAbove": "Użyj przycisków powyżej aby dodać wydarzenie lub post"
     },
     "calendarEvents": {
         "title": "Wydarzenie",

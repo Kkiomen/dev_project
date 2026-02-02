@@ -280,12 +280,19 @@ const closeNewTokenModal = () => {
     <div class="min-h-screen bg-gray-50">
         <!-- Header -->
         <div class="bg-white border-b border-gray-200 sticky top-0 z-10">
-            <div class="max-w-5xl mx-auto px-6 py-4">
+            <div class="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
                 <div class="flex items-center justify-between">
-                    <h1 class="text-xl font-semibold text-gray-900">
+                    <h1 class="text-lg sm:text-xl font-semibold text-gray-900">
                         {{ t('settings.title') }}
                     </h1>
-                    <Button @click="handleSave" :loading="saving" :disabled="saving || loading">
+                    <Button
+                        v-if="activeTab !== 'tokens'"
+                        @click="handleSave"
+                        :loading="saving"
+                        :disabled="saving || loading"
+                        size="sm"
+                        class="sm:size-md"
+                    >
                         {{ t('common.save') }}
                     </Button>
                 </div>
@@ -293,14 +300,37 @@ const closeNewTokenModal = () => {
         </div>
 
         <!-- Content -->
-        <div class="max-w-5xl mx-auto p-6">
+        <div class="max-w-5xl mx-auto p-4 sm:p-6">
             <div v-if="loading" class="flex items-center justify-center py-20">
                 <LoadingSpinner size="lg" />
             </div>
 
-            <div v-else class="flex gap-6">
-                <!-- Sidebar -->
-                <nav class="w-56 flex-shrink-0">
+            <div v-else class="flex flex-col lg:flex-row gap-4 sm:gap-6">
+                <!-- Mobile Tabs (horizontal scroll) -->
+                <nav class="lg:hidden">
+                    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-1 flex overflow-x-auto">
+                        <button
+                            v-for="tab in tabs"
+                            :key="tab.key"
+                            @click="activeTab = tab.key"
+                            class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors whitespace-nowrap flex-shrink-0"
+                            :class="[
+                                activeTab === tab.key
+                                    ? 'bg-blue-100 text-blue-700'
+                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            ]"
+                        >
+                            <span
+                                :class="activeTab === tab.key ? 'text-blue-600' : 'text-gray-400'"
+                                v-html="tabIcons[tab.icon]"
+                            />
+                            <span class="hidden sm:inline">{{ t(`settings.tabs.${tab.key}`) }}</span>
+                        </button>
+                    </div>
+                </nav>
+
+                <!-- Desktop Sidebar -->
+                <nav class="hidden lg:block w-56 flex-shrink-0">
                     <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden sticky top-24">
                         <ul class="divide-y divide-gray-100">
                             <li v-for="tab in tabs" :key="tab.key">
@@ -327,10 +357,10 @@ const closeNewTokenModal = () => {
                 <!-- Content -->
                 <div class="flex-1 min-w-0">
                     <!-- Profile Tab -->
-                    <div v-if="activeTab === 'profile'" class="space-y-6">
+                    <div v-if="activeTab === 'profile'" class="space-y-4 sm:space-y-6">
                         <!-- Profile Info -->
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                            <h2 class="text-lg font-medium text-gray-900 mb-4">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+                            <h2 class="text-base sm:text-lg font-medium text-gray-900 mb-4">
                                 {{ t('settings.profile.title') }}
                             </h2>
 
@@ -342,7 +372,7 @@ const closeNewTokenModal = () => {
                                     <input
                                         v-model="profile.name"
                                         type="text"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     />
                                 </div>
 
@@ -353,15 +383,15 @@ const closeNewTokenModal = () => {
                                     <input
                                         v-model="profile.email"
                                         type="email"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     />
                                 </div>
                             </div>
                         </div>
 
                         <!-- Interface Settings -->
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                            <h2 class="text-lg font-medium text-gray-900 mb-4">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+                            <h2 class="text-base sm:text-lg font-medium text-gray-900 mb-4">
                                 {{ t('settings.profile.interface') }}
                             </h2>
 
@@ -372,7 +402,7 @@ const closeNewTokenModal = () => {
                                     </label>
                                     <select
                                         v-model="settings.language"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     >
                                         <option v-for="lang in languages" :key="lang.code" :value="lang.code">
                                             {{ lang.name }}
@@ -386,7 +416,7 @@ const closeNewTokenModal = () => {
                                     </label>
                                     <select
                                         v-model="settings.timezone"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     >
                                         <option v-for="tz in timezones" :key="tz" :value="tz">
                                             {{ tz }}
@@ -394,14 +424,14 @@ const closeNewTokenModal = () => {
                                     </select>
                                 </div>
 
-                                <div class="grid grid-cols-2 gap-4">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                     <div>
                                         <label class="block text-sm font-medium text-gray-700 mb-1">
                                             {{ t('settings.profile.weekStartsOn') }}
                                         </label>
                                         <select
                                             v-model="settings.weekStartsOn"
-                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                         >
                                             <option :value="1">{{ t('settings.profile.monday') }}</option>
                                             <option :value="0">{{ t('settings.profile.sunday') }}</option>
@@ -414,7 +444,7 @@ const closeNewTokenModal = () => {
                                         </label>
                                         <select
                                             v-model="settings.timeFormat"
-                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                            class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                         >
                                             <option value="24h">24h (14:00)</option>
                                             <option value="12h">12h (2:00 PM)</option>
@@ -425,8 +455,8 @@ const closeNewTokenModal = () => {
                         </div>
 
                         <!-- Change Password -->
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                            <h2 class="text-lg font-medium text-gray-900 mb-4">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+                            <h2 class="text-base sm:text-lg font-medium text-gray-900 mb-4">
                                 {{ t('settings.profile.changePassword') }}
                             </h2>
 
@@ -438,7 +468,7 @@ const closeNewTokenModal = () => {
                                     <input
                                         v-model="passwordData.current_password"
                                         type="password"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     />
                                 </div>
 
@@ -449,7 +479,7 @@ const closeNewTokenModal = () => {
                                     <input
                                         v-model="passwordData.password"
                                         type="password"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     />
                                 </div>
 
@@ -460,7 +490,7 @@ const closeNewTokenModal = () => {
                                     <input
                                         v-model="passwordData.password_confirmation"
                                         type="password"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     />
                                 </div>
 
@@ -469,6 +499,7 @@ const closeNewTokenModal = () => {
                                     @click="changePassword"
                                     :loading="changingPassword"
                                     :disabled="!passwordData.current_password || !passwordData.password"
+                                    class="w-full sm:w-auto"
                                 >
                                     {{ t('settings.profile.updatePassword') }}
                                 </Button>
@@ -477,22 +508,22 @@ const closeNewTokenModal = () => {
                     </div>
 
                     <!-- AI Tab -->
-                    <div v-if="activeTab === 'ai'" class="space-y-6">
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                            <h2 class="text-lg font-medium text-gray-900 mb-2">
+                    <div v-if="activeTab === 'ai'" class="space-y-4 sm:space-y-6">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+                            <h2 class="text-base sm:text-lg font-medium text-gray-900 mb-2">
                                 {{ t('settings.ai.title') }}
                             </h2>
-                            <p class="text-sm text-gray-500 mb-6">
+                            <p class="text-sm text-gray-500 mb-4 sm:mb-6">
                                 {{ t('settings.ai.description') }}
                             </p>
 
-                            <div class="space-y-6">
+                            <div class="space-y-5 sm:space-y-6">
                                 <!-- Creativity -->
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         {{ t('settings.ai.creativity') }}
                                     </label>
-                                    <div class="flex gap-2">
+                                    <div class="flex flex-col sm:flex-row gap-2">
                                         <button
                                             v-for="option in creativityOptions"
                                             :key="option"
@@ -516,7 +547,7 @@ const closeNewTokenModal = () => {
                                     <label class="block text-sm font-medium text-gray-700 mb-2">
                                         {{ t('settings.ai.defaultLength') }}
                                     </label>
-                                    <div class="flex gap-2">
+                                    <div class="flex flex-col sm:flex-row gap-2">
                                         <button
                                             v-for="option in lengthOptions"
                                             :key="option"
@@ -545,7 +576,7 @@ const closeNewTokenModal = () => {
                                         rows="4"
                                         maxlength="1000"
                                         :placeholder="t('settings.ai.customInstructionsPlaceholder')"
-                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                        class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm"
                                     ></textarea>
                                     <p class="mt-1 text-xs text-gray-400 text-right">
                                         {{ settings.ai.customInstructions?.length || 0 }} / 1000
@@ -553,8 +584,8 @@ const closeNewTokenModal = () => {
                                 </div>
 
                                 <!-- Auto Suggest -->
-                                <div class="flex items-center justify-between">
-                                    <div>
+                                <div class="flex items-start sm:items-center justify-between gap-4">
+                                    <div class="flex-1">
                                         <h3 class="text-sm font-medium text-gray-900">
                                             {{ t('settings.ai.autoSuggest') }}
                                         </h3>
@@ -583,19 +614,19 @@ const closeNewTokenModal = () => {
                     </div>
 
                     <!-- Notifications Tab -->
-                    <div v-if="activeTab === 'notifications'" class="space-y-6">
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                            <h2 class="text-lg font-medium text-gray-900 mb-2">
+                    <div v-if="activeTab === 'notifications'" class="space-y-4 sm:space-y-6">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+                            <h2 class="text-base sm:text-lg font-medium text-gray-900 mb-2">
                                 {{ t('settings.notifications.title') }}
                             </h2>
-                            <p class="text-sm text-gray-500 mb-6">
+                            <p class="text-sm text-gray-500 mb-4 sm:mb-6">
                                 {{ t('settings.notifications.description') }}
                             </p>
 
                             <div class="space-y-4">
                                 <!-- Email notifications master toggle -->
-                                <div class="flex items-center justify-between py-3 border-b border-gray-100">
-                                    <div>
+                                <div class="flex items-start sm:items-center justify-between gap-4 py-3 border-b border-gray-100">
+                                    <div class="flex-1">
                                         <h3 class="text-sm font-medium text-gray-900">
                                             {{ t('settings.notifications.emailNotifications') }}
                                         </h3>
@@ -624,10 +655,10 @@ const closeNewTokenModal = () => {
                                 <div
                                     v-for="type in ['postPublished', 'approvalRequired', 'weeklyReport']"
                                     :key="type"
-                                    class="flex items-center justify-between py-3"
+                                    class="flex items-start sm:items-center justify-between gap-4 py-3"
                                     :class="{ 'opacity-50 pointer-events-none': !settings.notifications.email }"
                                 >
-                                    <div>
+                                    <div class="flex-1">
                                         <h3 class="text-sm font-medium text-gray-900">
                                             {{ t(`settings.notifications.${type}`) }}
                                         </h3>
@@ -657,18 +688,18 @@ const closeNewTokenModal = () => {
                     </div>
 
                     <!-- Tokens Tab -->
-                    <div v-if="activeTab === 'tokens'" class="space-y-6">
-                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                            <div class="flex items-center justify-between mb-6">
+                    <div v-if="activeTab === 'tokens'" class="space-y-4 sm:space-y-6">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-4 sm:p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4 sm:mb-6">
                                 <div>
-                                    <h2 class="text-lg font-medium text-gray-900">
+                                    <h2 class="text-base sm:text-lg font-medium text-gray-900">
                                         {{ t('settings.tokens.title') }}
                                     </h2>
                                     <p class="text-sm text-gray-500 mt-1">
                                         {{ t('settings.tokens.description') }}
                                     </p>
                                 </div>
-                                <Button @click="showTokenForm = true">
+                                <Button @click="showTokenForm = true" class="w-full sm:w-auto">
                                     {{ t('settings.tokens.createToken') }}
                                 </Button>
                             </div>
@@ -708,12 +739,12 @@ const closeNewTokenModal = () => {
             role="dialog"
             aria-modal="true"
         >
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="flex items-end sm:items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
                 <div
                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                     @click="showTokenForm = false"
                 ></div>
-                <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+                <div class="relative bg-white rounded-t-xl sm:rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full sm:my-8 sm:max-w-lg">
                     <ApiTokenForm
                         @submit="handleCreateToken"
                         @cancel="showTokenForm = false"
@@ -730,24 +761,24 @@ const closeNewTokenModal = () => {
             role="dialog"
             aria-modal="true"
         >
-            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+            <div class="flex items-end sm:items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
                 <div
                     class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
                 ></div>
-                <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
-                    <div class="p-6">
+                <div class="relative bg-white rounded-t-xl sm:rounded-lg text-left overflow-hidden shadow-xl transform transition-all w-full sm:my-8 sm:max-w-lg">
+                    <div class="p-4 sm:p-6">
                         <div class="flex items-center mb-4">
                             <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                                 <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h2 class="ml-3 text-lg font-semibold text-gray-900">
+                            <h2 class="ml-3 text-base sm:text-lg font-semibold text-gray-900">
                                 {{ t('settings.tokens.tokenCreatedTitle') }}
                             </h2>
                         </div>
 
-                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-3 sm:p-4 mb-4">
                             <div class="flex">
                                 <svg class="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                     <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
@@ -762,15 +793,15 @@ const closeNewTokenModal = () => {
                             <label class="block text-sm font-medium text-gray-700 mb-2">
                                 {{ t('settings.tokens.yourToken') }}
                             </label>
-                            <div class="flex">
+                            <div class="flex flex-col sm:flex-row gap-2">
                                 <input
                                     :value="newTokenValue"
                                     readonly
-                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 font-mono text-sm"
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-lg sm:rounded-r-none bg-gray-50 font-mono text-xs sm:text-sm overflow-x-auto"
                                 />
                                 <button
                                     @click="handleCopyToken"
-                                    class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-lg sm:rounded-l-none hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
                                 >
                                     {{ t('common.copy') }}
                                 </button>
@@ -778,8 +809,8 @@ const closeNewTokenModal = () => {
                         </div>
                     </div>
 
-                    <div class="bg-gray-50 px-6 py-3 flex justify-end rounded-b-lg">
-                        <Button @click="closeNewTokenModal">
+                    <div class="bg-gray-50 px-4 sm:px-6 py-3 flex justify-end rounded-b-lg">
+                        <Button @click="closeNewTokenModal" class="w-full sm:w-auto">
                             {{ t('common.done') }}
                         </Button>
                     </div>

@@ -8,7 +8,12 @@ const routes = [
     {
         path: '/dashboard',
         name: 'dashboard',
-        component: () => import('@/pages/Dashboard.vue'),
+        component: () => import('@/pages/DashboardPage.vue'),
+    },
+    {
+        path: '/data',
+        name: 'data',
+        component: () => import('@/pages/DataPage.vue'),
     },
     {
         path: '/bases/:baseId',

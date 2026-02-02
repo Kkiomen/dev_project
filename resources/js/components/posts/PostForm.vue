@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useSettingsStore } from '@/stores/settings';
 import PostStatusBadge from './PostStatusBadge.vue';
 import RichTextEditor from './RichTextEditor.vue';
+import DateTimeInput from '@/components/common/DateTimeInput.vue';
 
 const props = defineProps({
     modelValue: {
@@ -59,9 +60,17 @@ const formatDateForInput = (date) => {
 };
 
 const handleDateChange = (event) => {
-    const value = event.target.value;
+    const value = event.target?.value ?? event;
     updateField('scheduled_at', value ? new Date(value).toISOString() : null);
 };
+
+// Computed for DateTimeInput v-model
+const scheduledAtForInput = computed({
+    get: () => formatDateForInput(formData.value.scheduled_at),
+    set: (value) => {
+        updateField('scheduled_at', value ? new Date(value).toISOString() : null);
+    }
+});
 
 // Helper to format schedule time display
 const formattedSchedule = computed(() => {
@@ -209,11 +218,9 @@ const clearSchedule = () => {
 
             <div class="flex items-center space-x-3">
                 <div class="relative flex-1">
-                    <input
-                        :value="formatDateForInput(formData.scheduled_at)"
-                        @input="handleDateChange"
-                        type="datetime-local"
-                        class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    <DateTimeInput
+                        v-model="scheduledAtForInput"
+                        type="datetime"
                     />
                 </div>
 
