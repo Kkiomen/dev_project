@@ -5,6 +5,8 @@ import { useCalendarStore } from '@/stores/calendar';
 import { useSettingsStore } from '@/stores/settings';
 import Button from '@/components/common/Button.vue';
 
+const emit = defineEmits(['create-event']);
+
 const { t } = useI18n();
 const calendarStore = useCalendarStore();
 const settingsStore = useSettingsStore();
@@ -63,6 +65,18 @@ const setTimeFormat = (format) => {
 
             <!-- Filters -->
             <div class="flex items-center space-x-4">
+                <!-- Item type filter -->
+                <select
+                    :value="calendarStore.filters.itemType"
+                    @change="calendarStore.setFilter('itemType', $event.target.value || null)"
+                    class="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                    <option value="">{{ t('calendar.allItems') }}</option>
+                    <option value="posts">{{ t('calendar.postsOnly') }}</option>
+                    <option value="events">{{ t('calendar.eventsOnly') }}</option>
+                </select>
+
+                <!-- Status filter (for posts) -->
                 <select
                     :value="calendarStore.filters.status"
                     @change="calendarStore.setFilter('status', $event.target.value || null)"

@@ -129,6 +129,11 @@ class User extends Authenticatable
         return $this->hasMany(Notification::class);
     }
 
+    public function calendarEvents(): HasMany
+    {
+        return $this->hasMany(CalendarEvent::class);
+    }
+
     public function getCurrentBrandId(): ?int
     {
         return $this->getSetting('current_brand_id');

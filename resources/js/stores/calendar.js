@@ -15,6 +15,7 @@ export const useCalendarStore = defineStore('calendar', {
         filters: {
             status: null,
             platforms: [],
+            itemType: null,
         },
     }),
 
@@ -191,6 +192,7 @@ export const useCalendarStore = defineStore('calendar', {
             this.filters = {
                 status: null,
                 platforms: [],
+                itemType: null,
             };
         },
 

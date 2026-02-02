@@ -81,6 +81,7 @@ return [
     'template_renderer' => [
         'url' => env('TEMPLATE_RENDERER_URL', 'http://template-renderer:3336'),
         'timeout' => env('TEMPLATE_RENDERER_TIMEOUT', 60),
+        'laravel_url' => env('TEMPLATE_RENDERER_LARAVEL_URL', 'http://laravel.test'),
     ],
 
 ];

@@ -9,9 +9,13 @@ const props = defineProps({
         type: Object,
         default: () => ({}),
     },
+    events: {
+        type: Object,
+        default: () => ({}),
+    },
 });
 
-const emit = defineEmits(['edit', 'reschedule', 'create']);
+const emit = defineEmits(['edit', 'edit-event', 'reschedule', 'create', 'create-event']);
 
 const { t } = useI18n();
 const calendarStore = useCalendarStore();
@@ -24,12 +28,12 @@ const weekDays = computed(() => {
 // Split days into weeks for proper rendering
 const weeks = computed(() => {
     const days = calendarStore.calendarDays;
-    
+
     // For week view, return only one week
     if (calendarStore.view === 'week') {
         return [days];
     }
-    
+
     // For month view, split into weeks
     const result = [];
     for (let i = 0; i < days.length; i += 7) {
@@ -39,10 +43,22 @@ const weeks = computed(() => {
 });
 
 const handleDrop = (date, event) => {
-    const postId = event.dataTransfer.getData('text/plain');
-    const post = Object.values(props.posts).flat().find(p => p.id === postId);
-    if (post && post.scheduled_date !== date) {
-        emit('reschedule', post, date);
+    const data = event.dataTransfer.getData('text/plain');
+
+    // Check if it's an event or a post
+    if (data.startsWith('event:')) {
+        const eventId = data.replace('event:', '');
+        const calendarEvent = Object.values(props.events).flat().find(e => e.id === eventId);
+        if (calendarEvent && calendarEvent.scheduled_date !== date) {
+            emit('reschedule', { ...calendarEvent, type: 'event' }, date);
+        }
+    } else {
+        // It's a post
+        const postId = data;
+        const post = Object.values(props.posts).flat().find(p => p.id === postId);
+        if (post && post.scheduled_date !== date) {
+            emit('reschedule', post, date);
+        }
     }
     calendarStore.stopDragging();
 };
@@ -55,7 +71,7 @@ const handleDragOver = (event) => {
 <template>
     <div class="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
         <!-- Week day headers -->
-        <div 
+        <div
             class="grid bg-gray-50 border-b border-gray-200"
             style="grid-template-columns: repeat(7, minmax(0, 1fr));"
         >
@@ -81,9 +97,12 @@ const handleDragOver = (event) => {
                     :key="day.date"
                     :day="day"
                     :posts="posts[day.date] || []"
+                    :events="events[day.date] || []"
                     :class="{ 'border-r border-gray-200': dayIndex < 6 }"
                     @edit="(post) => emit('edit', post)"
+                    @edit-event="(event) => emit('edit-event', event)"
                     @create="() => { calendarStore.selectDate(day.date); emit('create'); }"
+                    @create-event="() => { calendarStore.selectDate(day.date); emit('create-event'); }"
                     @dragover="handleDragOver"
                     @drop="(event) => handleDrop(day.date, event)"
                 />

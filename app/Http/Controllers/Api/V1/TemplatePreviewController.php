@@ -46,9 +46,12 @@ class TemplatePreviewController extends Controller
         }
 
         // Filter to templates that have at least one layer with a semantic tag
+        // Support both old format (semanticTag) and new format (semanticTags array)
         $templates = $query->get()->filter(function ($template) {
             return $template->layers->contains(function ($layer) {
-                return !empty($layer->properties['semanticTag']);
+                $hasNewFormat = !empty($layer->properties['semanticTags']);
+                $hasOldFormat = !empty($layer->properties['semanticTag']);
+                return $hasNewFormat || $hasOldFormat;
             });
         });
 

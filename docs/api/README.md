@@ -45,14 +45,15 @@ Authorization: Bearer {token}
 
 ## Endpointy
 
-| Zasób | Dokumentacja | Endpointy |
+| Zasob | Dokumentacja | Endpointy |
 |-------|--------------|-----------|
+| **Posts** | [posts.md](./posts.md) | **CRUD postow + n8n automation** |
 | Bases | [bases.md](./bases.md) | CRUD baz danych |
 | Tables | [tables.md](./tables.md) | CRUD tabel + reorder |
-| Fields | [fields.md](./fields.md) | CRUD pól + choices |
+| Fields | [fields.md](./fields.md) | CRUD pol + choices |
 | Rows | [rows.md](./rows.md) | CRUD wierszy + bulk |
-| Cells | [cells.md](./cells.md) | Update komórek |
-| Attachments | [attachments.md](./attachments.md) | Upload plików |
+| Cells | [cells.md](./cells.md) | Update komorek |
+| Attachments | [attachments.md](./attachments.md) | Upload plikow |
 
 ---
 

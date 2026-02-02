@@ -175,11 +175,11 @@ app.post('/render-vue', async (req, res) => {
             // Wait for Vue to signal render complete
             await page.waitForFunction(
                 () => window.__RENDER_COMPLETE__ === true,
-                { timeout: 15000 }
+                { timeout: 30000 }
             );
 
-            // Additional wait for images and canvas
-            await new Promise(resolve => setTimeout(resolve, 500));
+            // Additional wait for Konva canvas to fully render
+            await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Take screenshot of the container
             const container = await page.$('#render-preview-container');

@@ -289,7 +289,8 @@ const toggleTextDecoration = (decoration) => {
 };
 
 // Semantic tags for template preview (admin only)
-const semanticTagOptions = computed(() => {
+// Content tags - what data goes into the layer
+const contentTagOptions = computed(() => {
     const layerType = selectedLayer.value?.type;
     if (!layerType) return [];
 
@@ -297,8 +298,29 @@ const semanticTagOptions = computed(() => {
         { value: 'header', label: t('graphics.semantic_tags.header') },
         { value: 'subtitle', label: t('graphics.semantic_tags.subtitle') },
         { value: 'paragraph', label: t('graphics.semantic_tags.paragraph') },
+        { value: 'url', label: t('graphics.semantic_tags.url') },
         { value: 'social_handle', label: t('graphics.semantic_tags.social_handle') },
+        { value: 'cta', label: t('graphics.semantic_tags.cta') },
     ];
+
+    const imageTags = [
+        { value: 'main_image', label: t('graphics.semantic_tags.main_image') },
+        { value: 'logo', label: t('graphics.semantic_tags.logo') },
+    ];
+
+    if (layerType === 'text' || layerType === 'textbox') {
+        return textTags;
+    } else if (layerType === 'image') {
+        return imageTags;
+    }
+
+    return [];
+});
+
+// Style tags - how the layer is styled
+const styleTagOptions = computed(() => {
+    const layerType = selectedLayer.value?.type;
+    if (!layerType) return [];
 
     const colorTags = [
         { value: 'primary_color', label: t('graphics.semantic_tags.primary_color') },
@@ -310,25 +332,87 @@ const semanticTagOptions = computed(() => {
         { value: 'text_secondary_color', label: t('graphics.semantic_tags.text_secondary_color') },
     ];
 
-    const imageTags = [
-        { value: 'main_image', label: t('graphics.semantic_tags.main_image') },
-    ];
-
     if (layerType === 'text' || layerType === 'textbox') {
-        return [...textTags, ...colorTags, ...textColorTags];
+        return [...colorTags, ...textColorTags];
     } else if (layerType === 'rectangle' || layerType === 'ellipse') {
         return colorTags;
-    } else if (layerType === 'image') {
-        return imageTags;
     }
 
     return [];
 });
 
-const currentSemanticTag = computed(() => selectedLayer.value?.properties?.semanticTag || '');
+// Legacy compatibility - all options combined
+const semanticTagOptions = computed(() => {
+    return [...contentTagOptions.value, ...styleTagOptions.value];
+});
 
+// Get current tags from properties.semanticTags array
+const currentSemanticTags = computed(() => {
+    return selectedLayer.value?.properties?.semanticTags || [];
+});
+
+// Get content tag (first tag with category 'content')
+const currentContentTag = computed(() => {
+    const tags = currentSemanticTags.value;
+    const contentTagValues = ['header', 'subtitle', 'paragraph', 'url', 'social_handle', 'main_image', 'logo', 'cta'];
+    return tags.find(t => contentTagValues.includes(t)) || '';
+});
+
+// Get style tag (first tag with category 'style')
+const currentStyleTag = computed(() => {
+    const tags = currentSemanticTags.value;
+    const styleTagValues = ['primary_color', 'secondary_color', 'text_primary_color', 'text_secondary_color'];
+    return tags.find(t => styleTagValues.includes(t)) || '';
+});
+
+// Legacy compatibility
+const currentSemanticTag = computed(() => currentContentTag.value || currentStyleTag.value);
+
+const updateContentTag = (tag) => {
+    const properties = selectedLayer.value?.properties || {};
+    let tags = [...(properties.semanticTags || [])];
+
+    // Remove existing content tags
+    const contentTagValues = ['header', 'subtitle', 'paragraph', 'url', 'social_handle', 'main_image', 'logo', 'cta'];
+    tags = tags.filter(t => !contentTagValues.includes(t));
+
+    // Add new tag if provided
+    if (tag) {
+        tags.push(tag);
+    }
+
+    updateProperty('semanticTags', tags.length > 0 ? tags : null);
+};
+
+const updateStyleTag = (tag) => {
+    const properties = selectedLayer.value?.properties || {};
+    let tags = [...(properties.semanticTags || [])];
+
+    // Remove existing style tags
+    const styleTagValues = ['primary_color', 'secondary_color', 'text_primary_color', 'text_secondary_color'];
+    tags = tags.filter(t => !styleTagValues.includes(t));
+
+    // Add new tag if provided
+    if (tag) {
+        tags.push(tag);
+    }
+
+    updateProperty('semanticTags', tags.length > 0 ? tags : null);
+};
+
+// Legacy method for backward compatibility
 const updateSemanticTag = (tag) => {
-    updateProperty('semanticTag', tag || null);
+    if (!tag) {
+        updateProperty('semanticTags', null);
+        return;
+    }
+
+    const contentTagValues = ['header', 'subtitle', 'paragraph', 'url', 'social_handle', 'main_image', 'logo', 'cta'];
+    if (contentTagValues.includes(tag)) {
+        updateContentTag(tag);
+    } else {
+        updateStyleTag(tag);
+    }
 };
 
 // Create template from group (admin only)
@@ -748,29 +832,64 @@ const createTemplateFromGroup = async (addToLibrary = false) => {
                 </div>
             </div>
 
-            <!-- Semantic Tag section (admin only) -->
+            <!-- Semantic Tags section (admin only) -->
             <div v-if="authStore.isAdmin && semanticTagOptions.length > 0" class="px-3 py-3 border-b border-gray-200">
-                <div class="flex items-center gap-2 mb-2">
+                <div class="flex items-center gap-2 mb-3">
                     <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                     </svg>
                     <span class="text-xs font-medium text-gray-900">{{ t('graphics.properties.semantic_tag') }}</span>
                 </div>
-                <select
-                    :value="currentSemanticTag"
-                    @change="updateSemanticTag($event.target.value)"
-                    class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                >
-                    <option value="">{{ t('graphics.properties.no_tag') }}</option>
-                    <option
-                        v-for="tag in semanticTagOptions"
-                        :key="tag.value"
-                        :value="tag.value"
+
+                <!-- Content Tag dropdown -->
+                <div v-if="contentTagOptions.length > 0" class="mb-3">
+                    <label class="block text-[10px] text-gray-500 mb-1">
+                        <span class="inline-flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-blue-500"></span>
+                            {{ t('graphics.semantic_tags.content_tag') }}
+                        </span>
+                    </label>
+                    <select
+                        :value="currentContentTag"
+                        @change="updateContentTag($event.target.value)"
+                        class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                     >
-                        {{ tag.label }}
-                    </option>
-                </select>
-                <p class="mt-1 text-[10px] text-gray-500">{{ t('graphics.properties.semantic_tag_help') }}</p>
+                        <option value="">{{ t('graphics.semantic_tags.no_content_tag') }}</option>
+                        <option
+                            v-for="tag in contentTagOptions"
+                            :key="tag.value"
+                            :value="tag.value"
+                        >
+                            {{ tag.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <!-- Style Tag dropdown -->
+                <div v-if="styleTagOptions.length > 0">
+                    <label class="block text-[10px] text-gray-500 mb-1">
+                        <span class="inline-flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-green-500"></span>
+                            {{ t('graphics.semantic_tags.style_tag') }}
+                        </span>
+                    </label>
+                    <select
+                        :value="currentStyleTag"
+                        @change="updateStyleTag($event.target.value)"
+                        class="w-full px-2 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-green-500 focus:border-green-500"
+                    >
+                        <option value="">{{ t('graphics.semantic_tags.no_style_tag') }}</option>
+                        <option
+                            v-for="tag in styleTagOptions"
+                            :key="tag.value"
+                            :value="tag.value"
+                        >
+                            {{ tag.label }}
+                        </option>
+                    </select>
+                </div>
+
+                <p class="mt-2 text-[10px] text-gray-500">{{ t('graphics.properties.semantic_tag_help') }}</p>
             </div>
 
             <!-- Create Template from Group (admin only, group layers) -->

@@ -69,6 +69,26 @@
             });
         }
 
+        // Helper function to tint an image with a color
+        // Works best with white/light images on transparent background
+        function tintImage(img, tintColor) {
+            const canvas = document.createElement('canvas');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            const ctx = canvas.getContext('2d');
+
+            // Draw original image
+            ctx.drawImage(img, 0, 0);
+
+            // Apply tint using source-in composite mode
+            // This replaces all non-transparent pixels with the tint color
+            ctx.globalCompositeOperation = 'source-in';
+            ctx.fillStyle = tintColor;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            return canvas;
+        }
+
         // Render a single layer
         async function renderLayer(layerData) {
             const props = layerData.properties || {};
@@ -341,7 +361,12 @@
                 case 'image': {
                     if (props.src) {
                         try {
-                            const img = await loadImage(props.src);
+                            let img = await loadImage(props.src);
+
+                            // Apply tint color if specified (for recoloring icon images)
+                            if (props.tintColor) {
+                                img = tintImage(img, props.tintColor);
+                            }
 
                             // Check if we have a clipPath to apply
                             if (props.clipPath) {

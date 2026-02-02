@@ -7,6 +7,7 @@ use App\Models\Concerns\HasPosition;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -16,6 +17,9 @@ class Template extends Model
 
     protected $fillable = [
         'user_id',
+        'template_group_id',
+        'variant_order',
+        'psd_import_id',
         'brand_id',
         'base_id',
         'name',
@@ -34,6 +38,7 @@ class Template extends Model
     protected $casts = [
         'width' => 'integer',
         'height' => 'integer',
+        'variant_order' => 'integer',
         'settings' => 'array',
         'is_library' => 'boolean',
         'created_at' => 'datetime',
@@ -60,6 +65,23 @@ class Template extends Model
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    public function group(): BelongsTo
+    {
+        return $this->belongsTo(TemplateGroup::class, 'template_group_id');
+    }
+
+    public function psdImport(): BelongsTo
+    {
+        return $this->belongsTo(PsdImport::class);
+    }
+
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(TemplateTag::class, 'template_tag')
+            ->withPivot(['confidence', 'is_ai_generated'])
+            ->withTimestamps();
     }
 
     public function layers(): HasMany
@@ -96,6 +118,21 @@ class Template extends Model
     public function scopeUserTemplates($query)
     {
         return $query->where('is_library', false);
+    }
+
+    public function scopePrimaryOnly($query)
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('template_group_id')
+              ->orWhere('variant_order', 1);
+        });
+    }
+
+    public function scopeWithStyleTags($query, array $tags)
+    {
+        return $query->whereHas('tags', function ($q) use ($tags) {
+            $q->whereIn('name', $tags);
+        });
     }
 
     // Helper methods

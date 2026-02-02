@@ -1,6 +1,9 @@
 <script setup>
 import { computed } from 'vue';
 import { useGraphicsStore } from '@/stores/graphics';
+import { useI18n } from 'vue-i18n';
+
+const { t } = useI18n();
 
 const props = defineProps({
     layer: {
@@ -50,6 +53,47 @@ const reversedChildren = computed(() => {
     return [...props.layer.children].reverse();
 });
 
+// Semantic tag helpers
+const contentTagValues = ['header', 'subtitle', 'paragraph', 'url', 'social_handle', 'main_image', 'logo', 'cta'];
+const styleTagValues = ['primary_color', 'secondary_color', 'text_primary_color', 'text_secondary_color'];
+
+const semanticTags = computed(() => {
+    return props.layer.properties?.semanticTags || [];
+});
+
+const hasContentTag = computed(() => {
+    return semanticTags.value.some(t => contentTagValues.includes(t));
+});
+
+const hasStyleTag = computed(() => {
+    return semanticTags.value.some(t => styleTagValues.includes(t));
+});
+
+const hasSemanticTag = computed(() => {
+    return hasContentTag.value || hasStyleTag.value;
+});
+
+// Determine tag indicator category
+const tagCategory = computed(() => {
+    if (hasContentTag.value && hasStyleTag.value) return 'both';
+    if (hasContentTag.value) return 'content';
+    if (hasStyleTag.value) return 'style';
+    return null;
+});
+
+// Get tag names for tooltip
+const tagTooltip = computed(() => {
+    const tags = semanticTags.value;
+    if (tags.length === 0) return '';
+
+    const tagLabels = tags.map(tag => {
+        const key = `graphics.semantic_tags.${tag}`;
+        return t(key);
+    });
+
+    return tagLabels.join(', ');
+});
+
 const getIcon = () => {
     switch (props.layer.type) {
         case 'text': return 'type';
@@ -72,14 +116,21 @@ const paddingLeft = computed(() => (props.depth * 16 + 8) + 'px');
         <div
             draggable="true"
             :class="[
-                'px-2 py-1.5 flex items-center space-x-1.5 cursor-pointer transition-colors border-l-2',
+                'px-2 py-1.5 flex items-center space-x-1.5 cursor-pointer transition-colors border-l-3',
                 isSelected
                     ? 'bg-blue-50 border-l-blue-500'
-                    : 'hover:bg-gray-50 border-l-transparent',
+                    : hasSemanticTag
+                        ? tagCategory === 'both'
+                            ? 'hover:bg-gray-50 border-l-purple-500'
+                            : tagCategory === 'content'
+                                ? 'hover:bg-gray-50 border-l-blue-400'
+                                : 'hover:bg-gray-50 border-l-green-500'
+                        : 'hover:bg-gray-50 border-l-transparent',
                 draggedLayerId === layer.id ? 'opacity-50' : '',
                 dragOverLayerId === layer.id && draggedLayerId !== layer.id ? 'border-t-2 border-t-blue-500' : ''
             ]"
             :style="{ paddingLeft }"
+            :title="tagTooltip"
             @click="emit('select', layer)"
             @dragstart="(e) => emit('dragstart', e, layer)"
             @dragover="(e) => emit('dragover', e, layer)"
@@ -140,11 +191,26 @@ const paddingLeft = computed(() => (props.depth * 16 + 8) + 'px');
             <!-- Name -->
             <span
                 :class="[
-                    'flex-1 min-w-0 text-xs font-medium truncate',
+                    'flex-1 min-w-0 text-xs font-medium truncate flex items-center gap-1',
                     isEffectivelyVisible ? 'text-gray-900' : 'text-gray-400'
                 ]"
             >
                 {{ layer.name }}
+                <!-- Semantic tag indicator -->
+                <span
+                    v-if="hasSemanticTag"
+                    :class="[
+                        'inline-flex items-center justify-center w-3.5 h-3.5 rounded-full flex-shrink-0',
+                        tagCategory === 'both' ? 'bg-purple-100 text-purple-600' :
+                        tagCategory === 'content' ? 'bg-blue-100 text-blue-600' :
+                        'bg-green-100 text-green-600'
+                    ]"
+                    :title="tagTooltip"
+                >
+                    <svg class="w-2 h-2" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
+                    </svg>
+                </span>
             </span>
 
             <!-- Actions -->

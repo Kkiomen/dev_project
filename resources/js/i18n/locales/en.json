@@ -37,7 +37,8 @@
         "finish": "Finish",
         "selected": "selected",
         "selectAll": "Select all",
-        "deselectAll": "Deselect all"
+        "deselectAll": "Deselect all",
+        "more": "more"
     },
     "dashboard": {
         "title": "My Databases",
@@ -250,6 +251,7 @@
         "graphics": "Graphics",
         "calendar": "Calendar",
         "approval": "Approval",
+        "tokens": "Tokens",
         "noBasesForGraphics": "Create a database first"
     },
     "settings": {
@@ -260,7 +262,37 @@
         "tabs": {
             "profile": "Profile",
             "ai": "AI Settings",
-            "notifications": "Notifications"
+            "notifications": "Notifications",
+            "tokens": "Tokens"
+        },
+        "tokens": {
+            "title": "API Tokens",
+            "description": "Manage API access tokens. Tokens allow authorizing requests to the API (Bearer token).",
+            "createToken": "Create Token",
+            "noTokens": "No tokens",
+            "noTokensHint": "Create a token to access the API.",
+            "tokenCreated": "Token created",
+            "tokenRevoked": "Token revoked",
+            "tokenCopied": "Token copied to clipboard",
+            "revokeConfirm": "Are you sure you want to revoke this token? Applications using this token will lose access.",
+            "tokenCreatedTitle": "Token created successfully",
+            "tokenWarning": "Copy the token now. For security reasons, it will not be shown again.",
+            "yourToken": "Your API token",
+            "tokenName": "Token name",
+            "tokenNamePlaceholder": "e.g. My Application",
+            "tokenNameHint": "Give the token a descriptive name to easily identify it.",
+            "expiresAt": "Expiration date",
+            "expiresAtHint": "Leave empty for the token to never expire.",
+            "noExpiry": "Never",
+            "abilities": "Abilities",
+            "allAbilities": "Full access",
+            "created": "Created",
+            "expires": "Expires",
+            "lastUsed": "Last used",
+            "never": "Never",
+            "active": "Active",
+            "expired": "Expired",
+            "revoke": "Revoke"
         },
         "profile": {
             "title": "Profile Information",
@@ -341,18 +373,28 @@
         "rateLimit": "Rate limits",
         "errors": "Errors",
         "pagination": "Pagination",
+        "tabs": {
+            "database": "Database",
+            "templates": "Templates",
+            "posts": "Posts"
+        },
         "sidebar": {
             "gettingStarted": "Getting Started",
             "overview": "API Overview",
             "authentication": "Authentication",
             "quickStart": "Quick Start",
-            "resources": "Resources",
+            "data": "Data",
+            "dataDescription": "Airtable-like database",
             "bases": "Databases",
             "tables": "Tables",
             "fields": "Fields",
             "rows": "Records",
             "cells": "Cells",
             "attachments": "Attachments",
+            "graphics": "Graphics",
+            "graphicsDescription": "Templates & image generation",
+            "posts": "Posts",
+            "postsDescription": "Social media automation",
             "advanced": "Advanced",
             "filtering": "Filtering",
             "sorting": "Sorting",
@@ -687,6 +729,220 @@
                 "title": "Limit Exceeded",
                 "description": "After exceeding the limit you will receive a 429 response:"
             }
+        },
+        "templates": {
+            "title": "Templates",
+            "description": "API for managing graphic templates and layers. Templates are containers for graphics that can be dynamically filled with content during generation.",
+            "workflow": {
+                "title": "Workflow",
+                "step1": "Create a template with dimensions and background",
+                "step2": "Add layers (text, images, shapes)",
+                "step3": "Assign semantic tags to layers",
+                "step4": "Generate graphics with dynamic data"
+            },
+            "object": "Template Object",
+            "objectDescription": "The template object contains the following fields:",
+            "fields": {
+                "id": "Unique template identifier (ULID)",
+                "name": "Template name",
+                "description": "Optional template description",
+                "canvasWidth": "Canvas width in pixels",
+                "canvasHeight": "Canvas height in pixels",
+                "canvasBackgroundColor": "Background color (hex)",
+                "thumbnailUrl": "URL to thumbnail image",
+                "backgroundImageUrl": "URL to background image",
+                "inLibrary": "Whether template is in shared library",
+                "layersCount": "Number of layers",
+                "createdAt": "Creation date",
+                "updatedAt": "Last modification date"
+            },
+            "layers": {
+                "title": "Layers",
+                "description": "Layers define the content of a template. Each layer has a type, properties, and optionally a semantic tag.",
+                "object": "Layer Object",
+                "objectDescription": "The layer object contains:",
+                "fields": {
+                    "id": "Unique layer identifier (ULID)",
+                    "name": "Layer name",
+                    "type": "Layer type (text, textbox, image, rectangle, ellipse, line, group)",
+                    "properties": "Layer properties object (position, size, styles)",
+                    "semanticTag": "Semantic tag for dynamic content",
+                    "visible": "Whether layer is visible",
+                    "locked": "Whether layer is locked",
+                    "order": "Layer order (0 = top)"
+                },
+                "types": {
+                    "title": "Layer Types",
+                    "text": "Text - single-line text (point text)",
+                    "textbox": "Text Box - multi-line text with wrapping",
+                    "image": "Image - image from URL or base64",
+                    "rectangle": "Rectangle - rectangular shape",
+                    "ellipse": "Ellipse - oval or circle",
+                    "line": "Line - line segment",
+                    "group": "Group - container for other layers"
+                }
+            },
+            "semanticTags": {
+                "title": "Semantic Tags",
+                "description": "Semantic tags mark layers that will be filled with dynamic content during generation.",
+                "content": {
+                    "title": "Content Tags",
+                    "header": "Header - main headline",
+                    "subtitle": "Subtitle - secondary text",
+                    "paragraph": "Paragraph - longer body text",
+                    "url": "URL - web address or link",
+                    "socialHandle": "Social Handle - {'@'}username",
+                    "mainImage": "Main Image - primary image",
+                    "logo": "Logo - brand logo",
+                    "cta": "Call to Action - button text"
+                },
+                "style": {
+                    "title": "Style Tags",
+                    "primaryColor": "Primary Color - main brand color (fill)",
+                    "secondaryColor": "Secondary Color - secondary color (fill)",
+                    "textPrimaryColor": "Text Primary Color - main text color",
+                    "textSecondaryColor": "Text Secondary Color - secondary text color"
+                }
+            },
+            "endpoints": {
+                "list": "List Templates",
+                "listDescription": "Gets a paginated list of user's templates.",
+                "get": "Get Template",
+                "getDescription": "Gets template details with all layers.",
+                "create": "Create Template",
+                "createDescription": "Creates a new template with specified dimensions.",
+                "update": "Update Template",
+                "updateDescription": "Updates template name, description, or canvas settings.",
+                "delete": "Delete Template",
+                "deleteDescription": "Deletes a template and all its layers.",
+                "duplicate": "Duplicate Template",
+                "duplicateDescription": "Creates a copy of the template with all layers.",
+                "addLayer": "Add Layer",
+                "addLayerDescription": "Adds a new layer to the template.",
+                "updateLayer": "Update Layer",
+                "updateLayerDescription": "Updates layer properties or semantic tag.",
+                "deleteLayer": "Delete Layer",
+                "deleteLayerDescription": "Deletes a layer from the template."
+            }
+        },
+        "graphicsGeneration": {
+            "title": "Graphics Generation",
+            "description": "API for generating graphics from templates with dynamic content. Combine templates with your data to create personalized images.",
+            "workflow": {
+                "title": "How It Works",
+                "description": "The graphics generation workflow combines a template with dynamic data to produce a finished image.",
+                "step1": "Select a template with semantic tags",
+                "step2": "Prepare data object with values for each tag",
+                "step3": "Send request to preview endpoint",
+                "step4": "Receive generated image (base64 or URL)"
+            },
+            "preview": {
+                "title": "Generate Preview",
+                "description": "Main endpoint for generating graphics. Accepts a template ID and data object, returns the generated image.",
+                "endpoint": "POST /api/v1/library/templates/preview",
+                "parameters": {
+                    "templateId": "Template ID from library",
+                    "data": "Data object with values for semantic tags",
+                    "format": "Output format: png or jpeg (default: png)",
+                    "scale": "Image scale 0.1-2.0 (default: 1)",
+                    "quality": "JPEG quality 1-100 (default: 90)"
+                }
+            },
+            "data": {
+                "title": "Data Object",
+                "description": "The data object contains values for semantic tags defined in the template.",
+                "contentFields": {
+                    "title": "Content Fields",
+                    "header": "Text for header layers",
+                    "subtitle": "Text for subtitle layers",
+                    "paragraph": "Text for paragraph layers",
+                    "url": "URL for link layers",
+                    "socialHandle": "Social media handle ({'@'}username)",
+                    "cta": "Call to action text",
+                    "mainImage": "URL or base64 for main image",
+                    "logo": "URL or base64 for logo"
+                },
+                "styleFields": {
+                    "title": "Style Fields",
+                    "primaryColor": "Hex color for primary color tags",
+                    "secondaryColor": "Hex color for secondary color tags"
+                }
+            },
+            "images": {
+                "title": "Generated Images",
+                "list": "List Generated Images",
+                "listDescription": "Gets a list of images generated from a template.",
+                "save": "Save Generated Image",
+                "saveDescription": "Saves a generated image to storage for later use.",
+                "delete": "Delete Generated Image",
+                "deleteDescription": "Deletes a generated image from storage."
+            }
+        },
+        "postsApi": {
+            "title": "Social Posts",
+            "description": "API for managing social media posts with support for n8n automation. Create, schedule, approve, and publish posts to multiple platforms.",
+            "workflow": {
+                "title": "Workflow with n8n",
+                "description": "The typical workflow for automated post publishing:",
+                "step1": "n8n generates posts via API",
+                "step2": "Posts appear in calendar view",
+                "step3": "User reviews and approves posts",
+                "step4": "n8n fetches approved posts",
+                "step5": "n8n publishes and marks as published"
+            },
+            "statuses": {
+                "title": "Post Statuses",
+                "draft": "Draft - post being edited, not ready for review",
+                "pendingApproval": "Pending Approval - awaiting user approval",
+                "approved": "Approved - ready for publication by n8n",
+                "scheduled": "Scheduled - planned for specific date/time",
+                "published": "Published - successfully posted to platform",
+                "failed": "Failed - publication attempt failed"
+            },
+            "object": "Post Object",
+            "objectDescription": "The post object contains the following fields:",
+            "fields": {
+                "id": "Unique post identifier (ULID)",
+                "title": "Post title for internal reference",
+                "mainCaption": "Main content/caption for the post",
+                "status": "Current post status",
+                "scheduledAt": "Scheduled publication date/time",
+                "publishedAt": "Actual publication date/time",
+                "platformPosts": "Platform-specific configurations",
+                "media": "Attached media files (images, videos)",
+                "mediaCount": "Number of attached media files"
+            },
+            "endpoints": {
+                "list": "List Posts",
+                "listDescription": "Gets a paginated list of user's posts with optional filters.",
+                "calendar": "Calendar View",
+                "calendarDescription": "Gets posts for calendar display within a date range.",
+                "verified": "Verified Posts (n8n)",
+                "verifiedDescription": "Gets approved posts ready for publication. Used by n8n automation.",
+                "get": "Get Post",
+                "getDescription": "Gets full post details including platform posts and media.",
+                "create": "Create Post",
+                "createDescription": "Creates a new post with content and platform selection.",
+                "update": "Update Post",
+                "updateDescription": "Updates post content, schedule, or platform settings.",
+                "delete": "Delete Post",
+                "deleteDescription": "Deletes a post and all associated media.",
+                "approve": "Approve Post",
+                "approveDescription": "Approves a post for publication. Changes status to approved.",
+                "reject": "Reject Post",
+                "rejectDescription": "Rejects a post with optional feedback. Returns to draft status.",
+                "markPublished": "Mark Published (n8n)",
+                "markPublishedDescription": "Marks post as published with external platform ID and URL.",
+                "markFailed": "Mark Failed (n8n)",
+                "markFailedDescription": "Marks post as failed with error message."
+            },
+            "platforms": {
+                "title": "Platform Posts",
+                "description": "Each post can have platform-specific content and settings.",
+                "facebook": "Facebook - supports images, videos, and link previews",
+                "instagram": "Instagram - supports images and videos with hashtags",
+                "youtube": "YouTube - supports videos with title and description"
+            }
         }
     },
     "graphics": {
@@ -978,7 +1234,11 @@
         "month": "Month",
         "week": "Week",
         "allStatuses": "All Statuses",
+        "allItems": "All Items",
+        "postsOnly": "Posts Only",
+        "eventsOnly": "Events Only",
         "newPostCreated": "New post added to calendar",
+        "verifyPosts": "Verify Posts",
         "days": {
             "sun": "Sun",
             "mon": "Mon",
@@ -1001,6 +1261,32 @@
             "october": "October",
             "november": "November",
             "december": "December"
+        }
+    },
+    "calendarEvents": {
+        "title": "Calendar Event",
+        "addEvent": "Add Event",
+        "editEvent": "Edit Event",
+        "deleteEvent": "Delete Event",
+        "eventTypes": {
+            "meeting": "Meeting",
+            "birthday": "Birthday",
+            "reminder": "Reminder",
+            "other": "Other"
+        },
+        "fields": {
+            "title": "Title",
+            "description": "Description",
+            "color": "Color",
+            "eventType": "Event Type",
+            "startsAt": "Start Date/Time",
+            "endsAt": "End Date/Time",
+            "allDay": "All Day"
+        },
+        "messages": {
+            "created": "Event created successfully",
+            "updated": "Event updated successfully",
+            "deleted": "Event deleted successfully"
         }
     },
     "posts": {
@@ -1590,6 +1876,171 @@
         },
         "descriptions": {
             "contentGeneration": "Creating post for \"{pillar}\" ({brand})"
+        }
+    },
+    "psd_editor": {
+        "title": "PSD Editor",
+        "subtitle": "Edit PSD files and import as templates",
+        "toolbar": {
+            "save_psd": "Save PSD",
+            "refresh": "Refresh",
+            "import_templates": "Import as Templates",
+            "select_file": "Select PSD File",
+            "preview_with_data": "Preview with Data"
+        },
+        "sidebar": {
+            "title": "PSD Files",
+            "no_files": "No PSD files found",
+            "loading": "Loading files...",
+            "search_placeholder": "Search files..."
+        },
+        "layers": {
+            "title": "Layers",
+            "no_layers": "No layers found",
+            "loading": "Loading layers...",
+            "mark_variant": "Mark as variant",
+            "unmark_variant": "Remove variant mark",
+            "semantic_tag": "Semantic tag",
+            "no_tag": "No tag",
+            "collapse_all": "Collapse all",
+            "expand_all": "Expand all",
+            "variants_selected": "{count} variant(s) selected",
+            "mark_all_variants": "Select all groups",
+            "help_tip": "Check the boxes next to groups you want to import as separate templates. Each group = 1 post/template."
+        },
+        "preview": {
+            "title": "Preview",
+            "no_variant": "Select a variant to preview",
+            "loading": "Generating preview...",
+            "test_data": "Test Data",
+            "generate": "Generate Preview"
+        },
+        "photopea": {
+            "title": "Photopea Editor",
+            "loading": "Loading Photopea...",
+            "load_file": "Open in Photopea",
+            "save_changes": "Save changes from Photopea"
+        },
+        "import": {
+            "title": "Import Variants",
+            "description": "Select variant groups to import as separate templates",
+            "no_variants": "No groups marked as variants",
+            "add_to_library": "Add to template library",
+            "confirm": "Import {count} variant(s)",
+            "cancel": "Cancel"
+        },
+        "messages": {
+            "file_saved": "PSD file saved successfully",
+            "tags_saved": "Save Tags",
+            "import_success": "{count} template(s) imported successfully",
+            "variant_marked": "Group marked as variant",
+            "variant_unmarked": "Variant mark removed",
+            "tag_updated": "Semantic tag updated"
+        },
+        "errors": {
+            "file_not_found": "PSD file not found",
+            "parse_failed": "Failed to parse PSD file",
+            "import_failed": "Failed to import templates",
+            "preview_failed": "Failed to generate preview",
+            "variant_not_found": "Variant group not found",
+            "photopea_load_failed": "Failed to load file in Photopea",
+            "save_failed": "Failed to save PSD file"
+        },
+        "test_fields": {
+            "header": "Header text",
+            "subtitle": "Subtitle text",
+            "paragraph": "Paragraph text",
+            "primary_color": "Primary color",
+            "secondary_color": "Secondary color",
+            "social_handle": "Social handle",
+            "main_image": "Main image",
+            "logo": "Logo",
+            "upload_image": "Upload image"
+        },
+        "variant_preview": {
+            "title": "Preview Variants with Your Content",
+            "variants_count": "variant(s)",
+            "your_content": "Your Content",
+            "hint": "Enter test data. Empty fields will be hidden in the preview.",
+            "clear": "Clear",
+            "header_text": "Header",
+            "header_placeholder": "Enter header text...",
+            "subtitle_text": "Subtitle",
+            "subtitle_placeholder": "Enter subtitle text...",
+            "paragraph_text": "Paragraph",
+            "paragraph_placeholder": "Enter paragraph text...",
+            "social_handle": "Social Handle",
+            "main_image": "Main Image",
+            "upload_image": "Click to upload image",
+            "primary_color": "Primary Color",
+            "secondary_color": "Secondary Color",
+            "generate": "Generate Previews",
+            "generating": "Generating...",
+            "generating_message": "Generating variant previews...",
+            "generating_hint": "Rendering {count} variant(s)",
+            "empty_state": "No previews yet",
+            "empty_state_hint": "Enter data and click Generate to see previews",
+            "fill_at_least_one": "Fill in at least one field",
+            "no_variants": "No variants selected for preview",
+            "no_variants_hint": "First mark groups as variants in the layers panel",
+            "no_variants_marked": "No groups marked as variants. Mark groups as variants in the layers panel first.",
+            "all_failed": "Failed to generate any preview",
+            "render_failed": "Render error",
+            "download": "Download",
+            "successful_renders": "preview(s) generated successfully"
+        }
+    },
+    "verification": {
+        "title": "Verify Posts",
+        "noPosts": "All caught up!",
+        "noPostsDescription": "There are no posts waiting for verification. Check back later or create new posts.",
+        "backToCalendar": "Back to Calendar",
+        "allDone": "All Done!",
+        "allDoneDescription": "You've reviewed all {approved} posts. {rejected} were rejected and will need revision.",
+        "startOver": "Start Over",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "approve": "APPROVE",
+        "reject": "REJECT",
+        "photos": "photos",
+        "notScheduled": "Not scheduled",
+        "postUpdated": "Post updated successfully",
+        "postUpdatedFromEditor": "Post synced from editor",
+        "hints": {
+            "reject": "Reject",
+            "approve": "Approve",
+            "ai": "AI Chat",
+            "edit": "Edit"
+        },
+        "errors": {
+            "fetchFailed": "Failed to load posts",
+            "processFailed": "Failed to process post",
+            "updateFailed": "Failed to update post"
+        },
+        "ai": {
+            "title": "AI Assistant",
+            "welcome": "How can I help?",
+            "welcomeDescription": "Tell me how you'd like to modify this post. I can shorten, lengthen, change tone, add emojis, and more.",
+            "placeholder": "Type your instruction...",
+            "modified": "Post content has been updated.",
+            "newCaption": "New caption",
+            "error": "Something went wrong. Please try again.",
+            "suggestions": {
+                "shorter": "Make shorter",
+                "longer": "Make longer",
+                "professional": "More professional",
+                "casual": "More casual",
+                "addEmojis": "Add emojis",
+                "addCTA": "Add call to action"
+            },
+            "prompts": {
+                "shorter": "Make this post shorter and more concise, keeping the main message.",
+                "longer": "Expand this post with more details and context.",
+                "professional": "Rewrite this post in a more professional and formal tone.",
+                "casual": "Rewrite this post in a more casual and friendly tone.",
+                "addEmojis": "Add appropriate emojis to make this post more engaging.",
+                "addCTA": "Add a compelling call to action at the end of this post."
+            }
         }
     }
 }

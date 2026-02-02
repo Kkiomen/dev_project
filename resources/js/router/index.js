@@ -67,6 +67,11 @@ const routes = [
         props: true,
     },
     {
+        path: '/posts/verify',
+        name: 'post.verify',
+        component: () => import('@/pages/PostVerificationPage.vue'),
+    },
+    {
         path: '/approval-tokens',
         name: 'approval-tokens',
         component: () => import('@/pages/ApprovalTokensPage.vue'),
@@ -98,6 +103,13 @@ const routes = [
         path: '/settings',
         name: 'settings',
         component: () => import('@/pages/SettingsPage.vue'),
+    },
+    // PSD Editor (admin only)
+    {
+        path: '/psd-editor',
+        name: 'psd-editor',
+        component: () => import('@/pages/PsdEditorPage.vue'),
+        meta: { requiresAdmin: true },
     },
     // Public client approval (no auth)
     {

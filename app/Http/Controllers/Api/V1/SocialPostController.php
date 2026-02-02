@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\PostStatus;
+use App\Events\CalendarPostUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\RescheduleSocialPostRequest;
 use App\Http\Requests\Api\StoreSocialPostRequest;
@@ -113,7 +114,12 @@ class SocialPostController extends Controller
             $this->contentSyncService->syncToPlatforms($post);
         }
 
-        return new SocialPostResource($post->load(['platformPosts', 'media']));
+        $post->load(['platformPosts', 'media']);
+
+        // Broadcast the update for real-time sync (e.g., verification page)
+        broadcast(new CalendarPostUpdated($post));
+
+        return new SocialPostResource($post);
     }
 
     public function destroy(Request $request, SocialPost $post): JsonResponse
@@ -316,5 +322,112 @@ class SocialPostController extends Controller
         $posts = $query->ordered()->paginate($request->get('per_page', 20));
 
         return SocialPostResource::collection($posts);
+    }
+
+    /**
+     * Get verified (approved) posts ready for publishing.
+     * Used by n8n to fetch posts that should be published to social media.
+     */
+    public function verified(Request $request): AnonymousResourceCollection
+    {
+        $query = SocialPost::forUser($request->user())
+            ->with(['platformPosts', 'media', 'brand'])
+            ->withCount('media')
+            ->where('status', PostStatus::Approved);
+
+        // Filter by brand
+        if ($request->has('brand_id')) {
+            $query->whereHas('brand', function ($q) use ($request) {
+                $q->where('public_id', $request->brand_id);
+            });
+        }
+
+        // Filter by scheduled date (posts ready to publish now or in the past)
+        if ($request->boolean('ready_to_publish')) {
+            $query->where(function ($q) {
+                $q->whereNull('scheduled_at')
+                    ->orWhere('scheduled_at', '<=', now());
+            });
+        }
+
+        // Filter by date range
+        if ($request->has('start')) {
+            $query->where('scheduled_at', '>=', $request->start);
+        }
+        if ($request->has('end')) {
+            $query->where('scheduled_at', '<=', $request->end);
+        }
+
+        $posts = $query->ordered()->paginate($request->get('per_page', 50));
+
+        return SocialPostResource::collection($posts);
+    }
+
+    /**
+     * Mark post as published after successful publishing via n8n.
+     */
+    public function markPublished(Request $request, SocialPost $post): SocialPostResource
+    {
+        $this->authorize('update', $post);
+
+        if ($post->status !== PostStatus::Approved && $post->status !== PostStatus::Scheduled) {
+            abort(400, __('posts.cannot_mark_published'));
+        }
+
+        $request->validate([
+            'platform' => ['nullable', 'string', 'in:facebook,instagram,youtube'],
+            'external_id' => ['nullable', 'string', 'max:255'],
+            'external_url' => ['nullable', 'url', 'max:500'],
+        ]);
+
+        $post->update([
+            'status' => PostStatus::Published,
+            'published_at' => now(),
+        ]);
+
+        // Update platform post if specified
+        if ($request->has('platform')) {
+            $platformPost = $post->platformPosts()->where('platform', $request->platform)->first();
+            if ($platformPost) {
+                $platformPost->update([
+                    'publish_status' => 'published',
+                    'published_at' => now(),
+                    'external_id' => $request->external_id,
+                    'external_url' => $request->external_url,
+                ]);
+            }
+        }
+
+        return new SocialPostResource($post->load(['platformPosts', 'media']));
+    }
+
+    /**
+     * Mark post as failed after unsuccessful publishing via n8n.
+     */
+    public function markFailed(Request $request, SocialPost $post): SocialPostResource
+    {
+        $this->authorize('update', $post);
+
+        $request->validate([
+            'platform' => ['nullable', 'string', 'in:facebook,instagram,youtube'],
+            'error_message' => ['nullable', 'string', 'max:1000'],
+        ]);
+
+        $post->update([
+            'status' => PostStatus::Failed,
+        ]);
+
+        // Update platform post if specified
+        if ($request->has('platform')) {
+            $platformPost = $post->platformPosts()->where('platform', $request->platform)->first();
+            if ($platformPost) {
+                $platformPost->update([
+                    'publish_status' => 'failed',
+                    'error_message' => $request->error_message,
+                ]);
+            }
+        }
+
+        return new SocialPostResource($post->load(['platformPosts', 'media']));
     }
 }

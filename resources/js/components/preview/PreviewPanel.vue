@@ -144,6 +144,7 @@ const firstMediaUrl = computed(() => {
                 :title="videoTitle || getPlatformPost('youtube')?.video_title || title"
                 :description="getPlatformPost('youtube')?.video_description || caption"
                 :thumbnail="firstMediaUrl"
+                :media="normalizedMedia"
             />
         </div>
     </div>

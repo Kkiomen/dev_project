@@ -25,6 +25,7 @@ class PlatformPost extends Model
         'publish_status',
         'published_at',
         'external_id',
+        'external_url',
         'error_message',
         'platform_data',
     ];
@@ -98,12 +99,15 @@ class PlatformPost extends Model
         return $this;
     }
 
-    public function markAsPublished(?string $externalId = null): self
+    public function markAsPublished(?string $externalId = null, ?string $externalUrl = null): self
     {
         $this->publish_status = PublishStatus::Published;
         $this->published_at = now();
         if ($externalId) {
             $this->external_id = $externalId;
+        }
+        if ($externalUrl) {
+            $this->external_url = $externalUrl;
         }
         $this->save();
 

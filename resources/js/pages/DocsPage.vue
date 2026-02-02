@@ -1,90 +1,68 @@
 <script setup>
-import { ref, computed, watch, onMounted, nextTick } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute, useRouter } from 'vue-router';
 import DocsCodeBlock from '@/components/docs/DocsCodeBlock.vue';
-import DocsEndpoint from '@/components/docs/DocsEndpoint.vue';
-import DocsTable from '@/components/docs/DocsTable.vue';
-import DocsTip from '@/components/docs/DocsTip.vue';
 
 const { t } = useI18n();
-const route = useRoute();
-const router = useRouter();
 
-// Current section from URL
-const currentSection = computed(() => route.params.section || 'overview');
+// Current tab
+const currentTab = ref('database');
 
-// Sidebar sections
-const sidebarSections = computed(() => [
-    {
-        title: t('docs.sidebar.gettingStarted'),
-        items: [
-            { id: 'overview', label: t('docs.sidebar.overview'), icon: 'book' },
-            { id: 'authentication', label: t('docs.sidebar.authentication'), icon: 'key' },
-            { id: 'quick-start', label: t('docs.sidebar.quickStart'), icon: 'rocket' },
-        ],
-    },
-    {
-        title: t('docs.sidebar.resources'),
-        items: [
-            { id: 'bases', label: t('docs.sidebar.bases'), icon: 'database' },
-            { id: 'tables', label: t('docs.sidebar.tables'), icon: 'table' },
-            { id: 'fields', label: t('docs.sidebar.fields'), icon: 'columns' },
-            { id: 'rows', label: t('docs.sidebar.rows'), icon: 'rows' },
-            { id: 'cells', label: t('docs.sidebar.cells'), icon: 'cell' },
-            { id: 'attachments', label: t('docs.sidebar.attachments'), icon: 'attachment' },
-        ],
-    },
-    {
-        title: t('docs.sidebar.advanced'),
-        items: [
-            { id: 'filtering', label: t('docs.sidebar.filtering'), icon: 'filter' },
-            { id: 'sorting', label: t('docs.sidebar.sorting'), icon: 'sort' },
-            { id: 'pagination', label: t('docs.sidebar.pagination'), icon: 'pages' },
-            { id: 'errors', label: t('docs.sidebar.errors'), icon: 'alert' },
-        ],
-    },
+// Tabs
+const tabs = computed(() => [
+    { id: 'database', label: t('docs.tabs.database') },
+    { id: 'templates', label: t('docs.tabs.templates') },
+    { id: 'posts', label: t('docs.tabs.posts') },
 ]);
 
-// Navigate to section
-const navigateToSection = (sectionId) => {
-    router.push({ name: 'docs', params: { section: sectionId } });
-};
-
-// Mobile sidebar
-const showMobileSidebar = ref(false);
-
-// On this page navigation
-const pageAnchors = ref([]);
-const activeAnchor = ref('');
-
-onMounted(() => {
-    updatePageAnchors();
+// Sidebar sections for each tab
+const sidebarSections = computed(() => {
+    if (currentTab.value === 'database') {
+        return [
+            { id: 'bases', label: t('docs.sidebar.bases') },
+            { id: 'tables', label: t('docs.sidebar.tables') },
+            { id: 'fields', label: t('docs.sidebar.fields') },
+            { id: 'rows', label: t('docs.sidebar.rows') },
+            { id: 'cells', label: t('docs.sidebar.cells') },
+            { id: 'attachments', label: t('docs.sidebar.attachments') },
+        ];
+    } else if (currentTab.value === 'templates') {
+        return [
+            { id: 'templates-crud', label: 'Templates CRUD' },
+            { id: 'layers', label: t('docs.templates.layers.title') },
+            { id: 'generation', label: t('docs.graphicsGeneration.title') },
+            { id: 'generated-images', label: t('docs.graphicsGeneration.images.title') },
+        ];
+    } else if (currentTab.value === 'posts') {
+        return [
+            { id: 'posts-crud', label: 'Posts CRUD' },
+            { id: 'calendar-views', label: 'Calendar & Views' },
+            { id: 'workflow', label: 'Workflow (n8n)' },
+            { id: 'media', label: 'Media' },
+        ];
+    }
+    return [];
 });
 
-watch(currentSection, () => {
-    nextTick(() => {
-        updatePageAnchors();
-        window.scrollTo(0, 0);
-    });
-});
+// Active section for highlighting
+const activeSection = ref('');
 
-const updatePageAnchors = () => {
-    const headings = document.querySelectorAll('.docs-content h2[id], .docs-content h3[id]');
-    pageAnchors.value = Array.from(headings).map((h) => ({
-        id: h.id,
-        text: h.textContent,
-        level: h.tagName === 'H2' ? 2 : 3,
-    }));
-};
-
-const scrollToAnchor = (id) => {
-    const element = document.getElementById(id);
+// Scroll to section
+const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
     if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        activeAnchor.value = id;
+        activeSection.value = sectionId;
     }
 };
+
+// Reset active section when tab changes
+watch(currentTab, () => {
+    activeSection.value = '';
+    nextTick(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+});
 
 // Base URL for examples
 const baseUrl = computed(() => window.location.origin + '/api/v1');
@@ -92,305 +70,501 @@ const baseUrl = computed(() => window.location.origin + '/api/v1');
 
 <template>
     <div class="py-8 px-4 sm:px-6 lg:px-8">
-            <div class="max-w-7xl mx-auto">
-                <!-- Page title -->
-                <div class="mb-8">
-                    <h1 class="text-2xl font-bold text-gray-900">{{ t('docs.title') }}</h1>
-                    <p class="text-gray-500 mt-1">{{ t('docs.subtitle') }}</p>
-                </div>
+        <div class="max-w-7xl mx-auto">
+            <!-- Page title -->
+            <div class="mb-8">
+                <h1 class="text-2xl font-bold text-gray-900">{{ t('docs.title') }}</h1>
+                <p class="text-gray-500 mt-1">{{ t('docs.subtitle') }}</p>
+            </div>
 
-                <div class="flex gap-8">
-                <!-- Sidebar -->
-                    <aside class="hidden lg:block w-64 flex-shrink-0">
-                        <nav class="sticky top-8 space-y-6 pr-4">
-                            <div v-for="section in sidebarSections" :key="section.title">
-                                <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                                    {{ section.title }}
-                                </h3>
-                                <ul class="space-y-1">
-                                    <li v-for="item in section.items" :key="item.id">
-                                        <button
-                                            @click="navigateToSection(item.id)"
-                                            class="w-full flex items-center gap-2 px-3 py-2 text-sm rounded-lg transition-colors"
-                                            :class="currentSection === item.id
-                                                ? 'bg-blue-50 text-blue-700 font-medium'
-                                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
-                                        >
-                                            <span class="w-5 h-5 flex items-center justify-center opacity-60">
-                                                <!-- Icons -->
-                                                <svg v-if="item.icon === 'book'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'key'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'rocket'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'database'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'table'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'columns'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'rows'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'cell'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6z"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'attachment'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'filter'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'sort'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'pages'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/>
-                                                </svg>
-                                                <svg v-else-if="item.icon === 'alert'" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                                                </svg>
-                                            </span>
-                                            {{ item.label }}
-                                        </button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </nav>
-                    </aside>
+            <!-- Tabs -->
+            <div class="border-b border-gray-200 mb-8">
+                <nav class="flex gap-8">
+                    <button
+                        v-for="tab in tabs"
+                        :key="tab.id"
+                        @click="currentTab = tab.id"
+                        :class="currentTab === tab.id
+                            ? 'border-blue-500 text-blue-600'
+                            : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="py-4 px-1 border-b-2 font-medium text-sm transition-colors"
+                    >
+                        {{ tab.label }}
+                    </button>
+                </nav>
+            </div>
 
-                    <!-- Main content -->
-                    <main class="flex-1 min-w-0">
-                        <div class="docs-content bg-white rounded-xl shadow-sm border border-gray-200 p-10">
-                            <!-- Overview Section -->
-                            <template v-if="currentSection === 'overview'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.overview.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.overview.description') }}</p>
+            <!-- Content with sidebar -->
+            <div class="flex gap-8">
+                <!-- Left sidebar navigation -->
+                <aside class="hidden lg:block w-48 flex-shrink-0">
+                    <nav class="sticky top-8">
+                        <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
+                            {{ t('docs.onThisPage') }}
+                        </h3>
+                        <ul class="space-y-1">
+                            <li v-for="section in sidebarSections" :key="section.id">
+                                <button
+                                    @click="scrollToSection(section.id)"
+                                    class="w-full text-left px-3 py-2 text-sm rounded-lg transition-colors"
+                                    :class="activeSection === section.id
+                                        ? 'bg-blue-50 text-blue-700 font-medium'
+                                        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'"
+                                >
+                                    {{ section.label }}
+                                </button>
+                            </li>
+                        </ul>
+                    </nav>
+                </aside>
 
-                                <h2 id="base-url" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.overview.baseUrl') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.overview.baseUrlDescription') }}</p>
-                                <DocsCodeBlock language="text" :code="baseUrl" />
+                <!-- Main content -->
+                <div class="flex-1 min-w-0 bg-white rounded-xl shadow-sm border border-gray-200 p-8">
+                <!-- ===== DATABASE TAB ===== -->
+                <template v-if="currentTab === 'database'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.tabs.database') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.sidebar.dataDescription') }}</p>
 
-                                <h2 id="versioning" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.overview.versioning') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.overview.versioningDescription') }}</p>
+                    <!-- Authentication info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                        <h3 class="font-medium text-blue-800 mb-2">{{ t('docs.authentication') }}</h3>
+                        <p class="text-blue-700 text-sm mb-2">{{ t('docs.auth.usingTokenDescription') }}</p>
+                        <code class="bg-blue-100 px-2 py-1 rounded text-xs">Authorization: Bearer YOUR_API_TOKEN</code>
+                    </div>
 
-                                <h2 id="response-format" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.overview.responseFormat') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.overview.responseFormatDescription') }}</p>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;data&quot;: {
-    &quot;id&quot;: &quot;bas_abc123&quot;,
-    &quot;name&quot;: &quot;My Database&quot;,
-    ...
-  }
-}`" />
+                    <!-- ========== BASES ========== -->
+                    <h2 id="bases" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.bases.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.bases.description') }}</p>
 
-                                <h2 id="content-type" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.overview.contentType') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.overview.contentTypeDescription') }}</p>
-                                <DocsCodeBlock language="http" :code="`Content-Type: application/json
-Accept: application/json`" />
-                            </template>
-
-                            <!-- Authentication Section -->
-                            <template v-else-if="currentSection === 'authentication'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.auth.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.auth.description') }}</p>
-
-                                <h2 id="get-token" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.auth.getToken') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.auth.getTokenDescription') }}</p>
-
-                                <h2 id="using-token" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.auth.usingToken') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.auth.usingTokenDescription') }}</p>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/bases' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
-  -H 'Accept: application/json'`" />
-
-                                <h2 id="token-security" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.auth.tokenSecurity') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.auth.tokenSecurityDescription') }}</p>
-                                <DocsTip type="warning">
-                                    <ul class="list-disc list-inside space-y-1">
-                                        <li>{{ t('docs.auth.tokenSecurityTips.tip1') }}</li>
-                                        <li>{{ t('docs.auth.tokenSecurityTips.tip2') }}</li>
-                                        <li>{{ t('docs.auth.tokenSecurityTips.tip3') }}</li>
-                                        <li>{{ t('docs.auth.tokenSecurityTips.tip4') }}</li>
-                                    </ul>
-                                </DocsTip>
-                            </template>
-
-                            <!-- Quick Start Section -->
-                            <template v-else-if="currentSection === 'quick-start'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.quickStart.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.quickStart.description') }}</p>
-
-                                <h2 id="step-1" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.quickStart.step1') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.quickStart.step1Description') }}</p>
-
-                                <h2 id="step-2" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.quickStart.step2') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.quickStart.step2Description') }}</p>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/bases' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
-  -H 'Accept: application/json'`" />
-
-                                <p class="text-gray-600 mt-4 mb-2">{{ t('docs.response') }}:</p>
-                                <DocsCodeBlock language="json" :code="`{
+                    <!-- List Bases -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/bases</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.bases.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.page') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">per_page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.perPage') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
   &quot;data&quot;: [
     {
       &quot;id&quot;: &quot;bas_abc123&quot;,
-      &quot;name&quot;: &quot;My First Database&quot;,
+      &quot;name&quot;: &quot;My Database&quot;,
       &quot;description&quot;: &quot;Sample database&quot;,
+      &quot;icon&quot;: &quot;📊&quot;,
+      &quot;color&quot;: &quot;#3B82F6&quot;,
       &quot;tables_count&quot;: 3,
-      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+      &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
     }
-  ]
+  ],
+  &quot;meta&quot;: {
+    &quot;current_page&quot;: 1,
+    &quot;per_page&quot;: 50,
+    &quot;total&quot;: 10
+  }
 }`" />
+                        </div>
+                    </div>
 
-                                <h2 id="step-3" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.quickStart.step3') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.quickStart.step3Description') }}</p>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/bases/bas_abc123/tables' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
-  -H 'Accept: application/json'`" />
+                    <!-- Get Base -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/bases/{base_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.bases.endpoints.getDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">base_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.bases.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;bas_abc123&quot;,
+    &quot;name&quot;: &quot;My Database&quot;,
+    &quot;description&quot;: &quot;Sample database&quot;,
+    &quot;icon&quot;: &quot;📊&quot;,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;tables_count&quot;: 3,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 404</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;Base not found.&quot;
+}`" />
+                        </div>
+                    </div>
 
-                                <DocsTip type="success">
-                                    <strong>{{ t('docs.quickStart.congratulations') }}</strong>
-                                    <p>{{ t('docs.quickStart.congratulationsDescription') }}</p>
-                                </DocsTip>
-                            </template>
-
-                            <!-- Bases Section -->
-                            <template v-else-if="currentSection === 'bases'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.bases.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.bases.description') }}</p>
-
-                                <h2 id="object" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.bases.object') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.bases.objectDescription') }}</p>
-                                <DocsTable :headers="[t('docs.parameters'), t('common.description')]" :rows="[
-                                    ['id', t('docs.bases.fields.id')],
-                                    ['name', t('docs.bases.fields.name')],
-                                    ['description', t('docs.bases.fields.description')],
-                                    ['icon', t('docs.bases.fields.icon')],
-                                    ['color', t('docs.bases.fields.color')],
-                                    ['tables_count', t('docs.bases.fields.tablesCount')],
-                                    ['created_at', t('docs.bases.fields.createdAt')],
-                                    ['updated_at', t('docs.bases.fields.updatedAt')],
-                                ]" />
-
-                                <h2 id="list-bases" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.bases.endpoints.list') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.bases.endpoints.listDescription') }}</p>
-                                <DocsEndpoint method="GET" :path="`${baseUrl}/bases`" />
-
-                                <h2 id="get-base" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.bases.endpoints.get') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.bases.endpoints.getDescription') }}</p>
-                                <DocsEndpoint method="GET" :path="`${baseUrl}/bases/{base_id}`" />
-
-                                <h2 id="create-base" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.bases.endpoints.create') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.bases.endpoints.createDescription') }}</p>
-                                <DocsEndpoint method="POST" :path="`${baseUrl}/bases`" />
-                                <DocsCodeBlock language="json" :code="`{
+                    <!-- Create Base -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/bases</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.bases.endpoints.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.bases.fields.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.bases.fields.description') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">icon</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.bases.fields.icon') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.bases.fields.color') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
   &quot;name&quot;: &quot;My New Database&quot;,
   &quot;description&quot;: &quot;Optional description&quot;,
   &quot;icon&quot;: &quot;📊&quot;,
   &quot;color&quot;: &quot;#3B82F6&quot;
 }`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;bas_xyz789&quot;,
+    &quot;name&quot;: &quot;My New Database&quot;,
+    &quot;description&quot;: &quot;Optional description&quot;,
+    &quot;icon&quot;: &quot;📊&quot;,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;tables_count&quot;: 0,
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;The given data was invalid.&quot;,
+  &quot;errors&quot;: {
+    &quot;name&quot;: [&quot;The name field is required.&quot;]
+  }
+}`" />
+                        </div>
+                    </div>
 
-                                <h2 id="update-base" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.bases.endpoints.update') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.bases.endpoints.updateDescription') }}</p>
-                                <DocsEndpoint method="PUT" :path="`${baseUrl}/bases/{base_id}`" />
+                    <!-- Update Base -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/bases/{base_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.bases.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">base_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.bases.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.bases.fields.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.bases.fields.description') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">icon</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.bases.fields.icon') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.bases.fields.color') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Updated Name&quot;,
+  &quot;color&quot;: &quot;#10B981&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;bas_abc123&quot;,
+    &quot;name&quot;: &quot;Updated Name&quot;,
+    &quot;description&quot;: &quot;Sample database&quot;,
+    &quot;icon&quot;: &quot;📊&quot;,
+    &quot;color&quot;: &quot;#10B981&quot;,
+    &quot;tables_count&quot;: 3,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
 
-                                <h2 id="delete-base" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.bases.endpoints.delete') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.bases.endpoints.deleteDescription') }}</p>
-                                <DocsEndpoint method="DELETE" :path="`${baseUrl}/bases/{base_id}`" />
-                            </template>
+                    <!-- Delete Base -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/bases/{base_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.bases.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">base_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.bases.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
 
-                            <!-- Tables Section -->
-                            <template v-else-if="currentSection === 'tables'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.tables.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.tables.description') }}</p>
+                    <!-- ========== TABLES ========== -->
+                    <h2 id="tables" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.tables.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.tables.description') }}</p>
 
-                                <h2 id="object" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.tables.object') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.tables.objectDescription') }}</p>
-                                <DocsTable :headers="[t('docs.parameters'), t('common.description')]" :rows="[
-                                    ['id', t('docs.tables.fields.id')],
-                                    ['base_id', t('docs.tables.fields.baseId')],
-                                    ['name', t('docs.tables.fields.name')],
-                                    ['description', t('docs.tables.fields.description')],
-                                    ['icon', t('docs.tables.fields.icon')],
-                                    ['fields_count', t('docs.tables.fields.fieldsCount')],
-                                    ['rows_count', t('docs.tables.fields.rowsCount')],
-                                    ['created_at', t('docs.tables.fields.createdAt')],
-                                    ['updated_at', t('docs.tables.fields.updatedAt')],
-                                ]" />
+                    <!-- List Tables -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/bases/{base_id}/tables</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.tables.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">base_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.bases.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;tbl_abc123&quot;,
+      &quot;base_id&quot;: &quot;bas_abc123&quot;,
+      &quot;name&quot;: &quot;Contacts&quot;,
+      &quot;description&quot;: &quot;Customer contacts&quot;,
+      &quot;icon&quot;: &quot;👥&quot;,
+      &quot;fields_count&quot;: 5,
+      &quot;rows_count&quot;: 150,
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+      &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
 
-                                <h2 id="list-tables" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.tables.endpoints.list') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.tables.endpoints.listDescription') }}</p>
-                                <DocsEndpoint method="GET" :path="`${baseUrl}/bases/{base_id}/tables`" />
+                    <!-- Get Table -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/tables/{table_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.tables.endpoints.getDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">table_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.tables.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;tbl_abc123&quot;,
+    &quot;base_id&quot;: &quot;bas_abc123&quot;,
+    &quot;name&quot;: &quot;Contacts&quot;,
+    &quot;description&quot;: &quot;Customer contacts&quot;,
+    &quot;icon&quot;: &quot;👥&quot;,
+    &quot;fields_count&quot;: 5,
+    &quot;rows_count&quot;: 150,
+    &quot;fields&quot;: [
+      { &quot;id&quot;: &quot;fld_name&quot;, &quot;name&quot;: &quot;Name&quot;, &quot;type&quot;: &quot;text&quot;, &quot;is_primary&quot;: true },
+      { &quot;id&quot;: &quot;fld_email&quot;, &quot;name&quot;: &quot;Email&quot;, &quot;type&quot;: &quot;text&quot; },
+      { &quot;id&quot;: &quot;fld_status&quot;, &quot;name&quot;: &quot;Status&quot;, &quot;type&quot;: &quot;select&quot; }
+    ],
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
 
-                                <h2 id="get-table" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.tables.endpoints.get') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.tables.endpoints.getDescription') }}</p>
-                                <DocsEndpoint method="GET" :path="`${baseUrl}/tables/{table_id}`" />
-
-                                <h2 id="create-table" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.tables.endpoints.create') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.tables.endpoints.createDescription') }}</p>
-                                <DocsEndpoint method="POST" :path="`${baseUrl}/bases/{base_id}/tables`" />
-                                <DocsCodeBlock language="json" :code="`{
+                    <!-- Create Table -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/bases/{base_id}/tables</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.tables.endpoints.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">base_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.bases.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.tables.fields.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.tables.fields.description') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
   &quot;name&quot;: &quot;Contacts&quot;,
   &quot;description&quot;: &quot;Customer contact list&quot;
 }`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;tbl_xyz789&quot;,
+    &quot;base_id&quot;: &quot;bas_abc123&quot;,
+    &quot;name&quot;: &quot;Contacts&quot;,
+    &quot;description&quot;: &quot;Customer contact list&quot;,
+    &quot;fields_count&quot;: 1,
+    &quot;rows_count&quot;: 0,
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
 
-                                <h2 id="update-table" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.tables.endpoints.update') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.tables.endpoints.updateDescription') }}</p>
-                                <DocsEndpoint method="PUT" :path="`${baseUrl}/tables/{table_id}`" />
+                    <!-- Update Table -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/tables/{table_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.tables.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Updated Table Name&quot;,
+  &quot;description&quot;: &quot;Updated description&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated table object</p>
+                        </div>
+                    </div>
 
-                                <h2 id="delete-table" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.tables.endpoints.delete') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.tables.endpoints.deleteDescription') }}</p>
-                                <DocsEndpoint method="DELETE" :path="`${baseUrl}/tables/{table_id}`" />
-                            </template>
+                    <!-- Delete Table -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/tables/{table_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.tables.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
 
-                            <!-- Fields Section -->
-                            <template v-else-if="currentSection === 'fields'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.fields.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.fields.description') }}</p>
+                    <!-- ========== FIELDS ========== -->
+                    <h2 id="fields" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.fields.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.fields.description') }}</p>
 
-                                <h2 id="object" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.fields.object') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.fields.objectDescription') }}</p>
-                                <DocsTable :headers="[t('docs.parameters'), t('common.description')]" :rows="[
-                                    ['id', t('docs.fields.attributes.id')],
-                                    ['table_id', t('docs.fields.attributes.tableId')],
-                                    ['name', t('docs.fields.attributes.name')],
-                                    ['type', t('docs.fields.attributes.type')],
-                                    ['options', t('docs.fields.attributes.options')],
-                                    ['is_primary', t('docs.fields.attributes.isPrimary')],
-                                    ['position', t('docs.fields.attributes.position')],
-                                ]" />
+                    <!-- Field Types Reference -->
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <h4 class="font-medium mb-3">{{ t('docs.fields.types.title') }}</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                            <div><code class="bg-white px-2 py-1 rounded">text</code> - {{ t('field.types.text') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">number</code> - {{ t('field.types.number') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">date</code> - {{ t('field.types.date') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">datetime</code> - {{ t('field.types.datetime') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">checkbox</code> - {{ t('field.types.checkbox') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">select</code> - {{ t('field.types.select') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">multi_select</code> - {{ t('field.types.multi_select') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">url</code> - {{ t('field.types.url') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">attachment</code> - {{ t('field.types.attachment') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">json</code> - JSON</div>
+                        </div>
+                    </div>
 
-                                <h2 id="field-types" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.fields.types.title') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.fields.types.description') }}</p>
-                                <DocsTable :headers="['Type', t('common.description')]" :rows="[
-                                    ['text', t('docs.fields.types.text')],
-                                    ['number', t('docs.fields.types.number')],
-                                    ['date', t('docs.fields.types.date')],
-                                    ['datetime', t('docs.fields.types.datetime')],
-                                    ['checkbox', t('docs.fields.types.checkbox')],
-                                    ['select', t('docs.fields.types.select')],
-                                    ['multi_select', t('docs.fields.types.multiSelect')],
-                                    ['url', t('docs.fields.types.url')],
-                                    ['attachment', t('docs.fields.types.attachment')],
-                                    ['json', t('docs.fields.types.json')],
-                                ]" />
+                    <!-- List Fields -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/tables/{table_id}/fields</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.fields.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;fld_name&quot;,
+      &quot;table_id&quot;: &quot;tbl_abc123&quot;,
+      &quot;name&quot;: &quot;Name&quot;,
+      &quot;type&quot;: &quot;text&quot;,
+      &quot;is_primary&quot;: true,
+      &quot;position&quot;: 0
+    },
+    {
+      &quot;id&quot;: &quot;fld_status&quot;,
+      &quot;table_id&quot;: &quot;tbl_abc123&quot;,
+      &quot;name&quot;: &quot;Status&quot;,
+      &quot;type&quot;: &quot;select&quot;,
+      &quot;options&quot;: {
+        &quot;choices&quot;: [
+          { &quot;id&quot;: &quot;opt_1&quot;, &quot;name&quot;: &quot;New&quot;, &quot;color&quot;: &quot;#3B82F6&quot; },
+          { &quot;id&quot;: &quot;opt_2&quot;, &quot;name&quot;: &quot;Done&quot;, &quot;color&quot;: &quot;#10B981&quot; }
+        ]
+      },
+      &quot;is_primary&quot;: false,
+      &quot;position&quot;: 1
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
 
-                                <h2 id="list-fields" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.fields.endpoints.list') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.fields.endpoints.listDescription') }}</p>
-                                <DocsEndpoint method="GET" :path="`${baseUrl}/tables/{table_id}/fields`" />
-
-                                <h2 id="create-field" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.fields.endpoints.create') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.fields.endpoints.createDescription') }}</p>
-                                <DocsEndpoint method="POST" :path="`${baseUrl}/tables/{table_id}/fields`" />
-                                <DocsCodeBlock language="json" :code="`{
+                    <!-- Create Field -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/tables/{table_id}/fields</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.fields.endpoints.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.fields.attributes.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">type</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.fields.attributes.type') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">options</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.fields.attributes.options') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
   &quot;name&quot;: &quot;Status&quot;,
   &quot;type&quot;: &quot;select&quot;,
   &quot;options&quot;: {
@@ -401,38 +575,74 @@ Accept: application/json`" />
     ]
   }
 }`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns created field object</p>
+                        </div>
+                    </div>
 
-                                <h2 id="update-field" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.fields.endpoints.update') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.fields.endpoints.updateDescription') }}</p>
-                                <DocsEndpoint method="PUT" :path="`${baseUrl}/fields/{field_id}`" />
+                    <!-- Update Field -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/fields/{field_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.fields.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Updated Field Name&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated field object</p>
+                        </div>
+                    </div>
 
-                                <h2 id="delete-field" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.fields.endpoints.delete') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.fields.endpoints.deleteDescription') }}</p>
-                                <DocsEndpoint method="DELETE" :path="`${baseUrl}/fields/{field_id}`" />
-                            </template>
+                    <!-- Delete Field -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/fields/{field_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.fields.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
 
-                            <!-- Rows Section -->
-                            <template v-else-if="currentSection === 'rows'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.rows.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.rows.description') }}</p>
+                    <!-- ========== ROWS ========== -->
+                    <h2 id="rows" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.rows.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.rows.description') }}</p>
 
-                                <h2 id="object" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.rows.object') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.rows.objectDescription') }}</p>
-                                <DocsTable :headers="[t('docs.parameters'), t('common.description')]" :rows="[
-                                    ['id', t('docs.rows.attributes.id')],
-                                    ['table_id', t('docs.rows.attributes.tableId')],
-                                    ['cells', t('docs.rows.attributes.cells')],
-                                    ['position', t('docs.rows.attributes.position')],
-                                    ['created_at', t('docs.rows.attributes.createdAt')],
-                                    ['updated_at', t('docs.rows.attributes.updatedAt')],
-                                ]" />
-
-                                <h2 id="list-rows" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.rows.endpoints.list') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.rows.endpoints.listDescription') }}</p>
-                                <DocsEndpoint method="GET" :path="`${baseUrl}/tables/{table_id}/rows`" />
-
-                                <p class="text-gray-600 mt-4 mb-2">{{ t('docs.response') }}:</p>
-                                <DocsCodeBlock language="json" :code="`{
+                    <!-- List Rows -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/tables/{table_id}/rows</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.rows.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.page') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">per_page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.perPage') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">filters</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>JSON filter object</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">sort</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>JSON sort array</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
   &quot;data&quot;: [
     {
       &quot;id&quot;: &quot;row_abc123&quot;,
@@ -441,7 +651,8 @@ Accept: application/json`" />
         &quot;fld_email&quot;: &quot;john@example.com&quot;,
         &quot;fld_status&quot;: { &quot;id&quot;: &quot;opt_1&quot;, &quot;name&quot;: &quot;Active&quot;, &quot;color&quot;: &quot;#10B981&quot; }
       },
-      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+      &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
     }
   ],
   &quot;meta&quot;: {
@@ -450,463 +661,1097 @@ Accept: application/json`" />
     &quot;total&quot;: 150
   }
 }`" />
+                        </div>
+                    </div>
 
-                                <h2 id="get-row" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.rows.endpoints.get') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.rows.endpoints.getDescription') }}</p>
-                                <DocsEndpoint method="GET" :path="`${baseUrl}/rows/{row_id}`" />
+                    <!-- Get Row -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/rows/{row_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.rows.endpoints.getDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;row_abc123&quot;,
+    &quot;table_id&quot;: &quot;tbl_abc123&quot;,
+    &quot;cells&quot;: {
+      &quot;fld_name&quot;: &quot;John Doe&quot;,
+      &quot;fld_email&quot;: &quot;john@example.com&quot;
+    },
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
 
-                                <h2 id="create-row" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.rows.endpoints.create') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.rows.endpoints.createDescription') }}</p>
-                                <DocsEndpoint method="POST" :path="`${baseUrl}/tables/{table_id}/rows`" />
-                                <DocsCodeBlock language="json" :code="`{
+                    <!-- Create Row -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/tables/{table_id}/rows</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.rows.endpoints.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
   &quot;cells&quot;: {
     &quot;fld_name&quot;: &quot;Jane Smith&quot;,
     &quot;fld_email&quot;: &quot;jane@example.com&quot;,
     &quot;fld_status&quot;: &quot;opt_1&quot;
   }
 }`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns created row object with ID</p>
+                        </div>
+                    </div>
 
-                                <h2 id="update-row" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.rows.endpoints.update') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.rows.endpoints.updateDescription') }}</p>
-                                <DocsEndpoint method="PUT" :path="`${baseUrl}/rows/{row_id}`" />
+                    <!-- Update Row -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/rows/{row_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.rows.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;cells&quot;: {
+    &quot;fld_status&quot;: &quot;opt_2&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated row object</p>
+                        </div>
+                    </div>
 
-                                <h2 id="delete-row" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.rows.endpoints.delete') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.rows.endpoints.deleteDescription') }}</p>
-                                <DocsEndpoint method="DELETE" :path="`${baseUrl}/rows/{row_id}`" />
-                            </template>
+                    <!-- Delete Row -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/rows/{row_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.rows.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
 
-                            <!-- Cells Section -->
-                            <template v-else-if="currentSection === 'cells'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.cells.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.cells.description') }}</p>
+                    <!-- ========== CELLS ========== -->
+                    <h2 id="cells" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.cells.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.cells.description') }}</p>
 
-                                <h2 id="object" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.cells.object') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.cells.objectDescription') }}</p>
-                                <DocsTable :headers="[t('docs.parameters'), t('common.description')]" :rows="[
-                                    ['row_id', t('docs.cells.attributes.rowId')],
-                                    ['field_id', t('docs.cells.attributes.fieldId')],
-                                    ['value', t('docs.cells.attributes.value')],
-                                ]" />
-
-                                <h2 id="value-formats" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.cells.valueFormats.title') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.cells.valueFormats.description') }}</p>
-                                <DocsTable :headers="['Type', 'Format']" :rows="[
-                                    ['text', t('docs.cells.valueFormats.text')],
-                                    ['number', t('docs.cells.valueFormats.number')],
-                                    ['date', t('docs.cells.valueFormats.date')],
-                                    ['datetime', t('docs.cells.valueFormats.datetime')],
-                                    ['checkbox', t('docs.cells.valueFormats.checkbox')],
-                                    ['select', t('docs.cells.valueFormats.select')],
-                                    ['multi_select', t('docs.cells.valueFormats.multiSelect')],
-                                    ['url', t('docs.cells.valueFormats.url')],
-                                    ['attachment', t('docs.cells.valueFormats.attachment')],
-                                    ['json', t('docs.cells.valueFormats.json')],
-                                ]" />
-
-                                <h2 id="update-cell" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.cells.endpoints.update') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.cells.endpoints.updateDescription') }}</p>
-                                <DocsEndpoint method="PUT" :path="`${baseUrl}/rows/{row_id}/cells/{field_id}`" />
-                                <DocsCodeBlock language="json" :code="`{
+                    <!-- Update Cell -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/rows/{row_id}/cells/{field_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.cells.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">row_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.cells.attributes.rowId') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">field_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.cells.attributes.fieldId') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
   &quot;value&quot;: &quot;Updated value&quot;
 }`" />
-                            </template>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated cell value</p>
+                        </div>
+                    </div>
 
-                            <!-- Attachments Section -->
-                            <template v-else-if="currentSection === 'attachments'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.attachments.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.attachments.description') }}</p>
+                    <!-- ========== ATTACHMENTS ========== -->
+                    <h2 id="attachments" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.attachments.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.attachments.description') }}</p>
 
-                                <h2 id="object" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.attachments.object') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.attachments.objectDescription') }}</p>
-                                <DocsTable :headers="[t('docs.parameters'), t('common.description')]" :rows="[
-                                    ['id', t('docs.attachments.attributes.id')],
-                                    ['filename', t('docs.attachments.attributes.filename')],
-                                    ['mime_type', t('docs.attachments.attributes.mimeType')],
-                                    ['size', t('docs.attachments.attributes.size')],
-                                    ['url', t('docs.attachments.attributes.url')],
-                                    ['thumbnail_url', t('docs.attachments.attributes.thumbnailUrl')],
-                                ]" />
-
-                                <h2 id="upload" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.attachments.endpoints.upload') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.attachments.endpoints.uploadDescription') }}</p>
-                                <DocsEndpoint method="POST" :path="`${baseUrl}/rows/{row_id}/cells/{field_id}/attachments`" />
-                                <DocsCodeBlock language="bash" :code="`curl -X POST '${baseUrl}/rows/{row_id}/cells/{field_id}/attachments' \\
+                    <!-- Upload Attachment -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/rows/{row_id}/cells/{field_id}/attachments</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.attachments.endpoints.uploadDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request (multipart/form-data)</h4>
+                            <DocsCodeBlock language="bash" :code="`curl -X POST '${baseUrl}/rows/{row_id}/cells/{field_id}/attachments' \\
   -H 'Authorization: Bearer YOUR_API_TOKEN' \\
   -F 'file=@/path/to/document.pdf'`" />
-
-                                <h2 id="delete-attachment" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.attachments.endpoints.delete') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.attachments.endpoints.deleteDescription') }}</p>
-                                <DocsEndpoint method="DELETE" :path="`${baseUrl}/attachments/{attachment_id}`" />
-
-                                <h2 id="limits" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.attachments.limits.title') }}</h2>
-                                <DocsTip type="info">
-                                    <ul class="list-disc list-inside space-y-1">
-                                        <li>{{ t('docs.attachments.limits.maxFileSize') }}</li>
-                                        <li>{{ t('docs.attachments.limits.allowedTypes') }}</li>
-                                    </ul>
-                                </DocsTip>
-                            </template>
-
-                            <!-- Filtering Section -->
-                            <template v-else-if="currentSection === 'filtering'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.filtering.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.filtering.description') }}</p>
-
-                                <h2 id="syntax" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.filtering.syntax') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.filtering.syntaxDescription') }}</p>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;filters&quot;: {
-    &quot;conjunction&quot;: &quot;and&quot;,
-    &quot;conditions&quot;: [
-      {
-        &quot;field_id&quot;: &quot;fld_name&quot;,
-        &quot;operator&quot;: &quot;contains&quot;,
-        &quot;value&quot;: &quot;John&quot;
-      }
-    ]
-  }
-}`" />
-
-                                <h2 id="conjunction" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.filtering.conjunction') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.filtering.conjunctionDescription') }}</p>
-                                <ul class="list-disc list-inside text-gray-600 space-y-2 mb-4">
-                                    <li><code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">and</code> - {{ t('docs.filtering.conjunctionAnd').split(' - ')[1] }}</li>
-                                    <li><code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">or</code> - {{ t('docs.filtering.conjunctionOr').split(' - ')[1] }}</li>
-                                </ul>
-
-                                <h2 id="operators" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.filtering.operators.title') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.filtering.operators.description') }}</p>
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.operators.textOperators') }}</h3>
-                                <DocsTable :headers="['Operator', t('common.description')]" :rows="[
-                                    ['equals', t('filter.operators.equals')],
-                                    ['not_equals', t('filter.operators.not_equals')],
-                                    ['contains', t('filter.operators.contains')],
-                                    ['not_contains', t('filter.operators.not_contains')],
-                                    ['starts_with', t('filter.operators.starts_with')],
-                                    ['ends_with', t('filter.operators.ends_with')],
-                                    ['is_empty', t('filter.operators.is_empty')],
-                                    ['is_not_empty', t('filter.operators.is_not_empty')],
-                                ]" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.operators.numberOperators') }}</h3>
-                                <DocsTable :headers="['Operator', t('common.description')]" :rows="[
-                                    ['equals', t('filter.operators.equals')],
-                                    ['not_equals', t('filter.operators.not_equals')],
-                                    ['greater_than', t('filter.operators.greater_than')],
-                                    ['less_than', t('filter.operators.less_than')],
-                                    ['greater_or_equal', t('filter.operators.greater_or_equal')],
-                                    ['less_or_equal', t('filter.operators.less_or_equal')],
-                                    ['between', t('filter.operators.between')],
-                                    ['is_empty', t('filter.operators.is_empty')],
-                                    ['is_not_empty', t('filter.operators.is_not_empty')],
-                                ]" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.operators.dateOperators') }}</h3>
-                                <DocsTable :headers="['Operator', t('common.description')]" :rows="[
-                                    ['equals', t('filter.operators.equals')],
-                                    ['not_equals', t('filter.operators.not_equals')],
-                                    ['before', t('filter.operators.before')],
-                                    ['after', t('filter.operators.after')],
-                                    ['on_or_before', t('filter.operators.on_or_before')],
-                                    ['on_or_after', t('filter.operators.on_or_after')],
-                                    ['between', t('filter.operators.between')],
-                                    ['is_empty', t('filter.operators.is_empty')],
-                                    ['is_not_empty', t('filter.operators.is_not_empty')],
-                                ]" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.operators.checkboxOperators') }}</h3>
-                                <DocsTable :headers="['Operator', t('common.description')]" :rows="[
-                                    ['is_true', t('filter.operators.is_true')],
-                                    ['is_false', t('filter.operators.is_false')],
-                                ]" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.operators.selectOperators') }}</h3>
-                                <DocsTable :headers="['Operator', t('common.description')]" :rows="[
-                                    ['equals', t('filter.operators.equals')],
-                                    ['not_equals', t('filter.operators.not_equals')],
-                                    ['is_any_of', t('filter.operators.is_any_of')],
-                                    ['is_none_of', t('filter.operators.is_none_of')],
-                                    ['is_empty', t('filter.operators.is_empty')],
-                                    ['is_not_empty', t('filter.operators.is_not_empty')],
-                                ]" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.operators.multiSelectOperators') }}</h3>
-                                <DocsTable :headers="['Operator', t('common.description')]" :rows="[
-                                    ['contains_any', t('filter.operators.contains_any')],
-                                    ['contains_all', t('filter.operators.contains_all')],
-                                    ['is_empty', t('filter.operators.is_empty')],
-                                    ['is_not_empty', t('filter.operators.is_not_empty')],
-                                ]" />
-
-                                <h2 id="examples" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.filtering.examples.title') }}</h2>
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.examples.simpleFilter') }}</h3>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/tables/{table_id}/rows?filters={&quot;conditions&quot;:[{&quot;field_id&quot;:&quot;fld_name&quot;,&quot;operator&quot;:&quot;contains&quot;,&quot;value&quot;:&quot;John&quot;}]}' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN'`" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.examples.multipleConditions') }}</h3>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;filters&quot;: {
-    &quot;conjunction&quot;: &quot;and&quot;,
-    &quot;conditions&quot;: [
-      { &quot;field_id&quot;: &quot;fld_status&quot;, &quot;operator&quot;: &quot;equals&quot;, &quot;value&quot;: &quot;opt_active&quot; },
-      { &quot;field_id&quot;: &quot;fld_price&quot;, &quot;operator&quot;: &quot;greater_than&quot;, &quot;value&quot;: 100 }
-    ]
-  }
-}`" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.filtering.examples.rangeFilter') }}</h3>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;filters&quot;: {
-    &quot;conditions&quot;: [
-      {
-        &quot;field_id&quot;: &quot;fld_date&quot;,
-        &quot;operator&quot;: &quot;between&quot;,
-        &quot;value&quot;: [&quot;2024-01-01&quot;, &quot;2024-12-31&quot;]
-      }
-    ]
-  }
-}`" />
-                            </template>
-
-                            <!-- Sorting Section -->
-                            <template v-else-if="currentSection === 'sorting'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.sorting.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.sorting.description') }}</p>
-
-                                <h2 id="syntax" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.sorting.syntax') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.sorting.syntaxDescription') }}</p>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;sort&quot;: [
-    { &quot;field_id&quot;: &quot;fld_name&quot;, &quot;direction&quot;: &quot;asc&quot; }
-  ]
-}`" />
-
-                                <h2 id="directions" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.sorting.directions.title') }}</h2>
-                                <ul class="list-disc list-inside text-gray-600 space-y-2 mb-4">
-                                    <li><code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">asc</code> - {{ t('docs.sorting.directions.asc').split(' - ')[1] }}</li>
-                                    <li><code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">desc</code> - {{ t('docs.sorting.directions.desc').split(' - ')[1] }}</li>
-                                </ul>
-
-                                <h2 id="multi-sort" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.sorting.multiSort') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.sorting.multiSortDescription') }}</p>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;sort&quot;: [
-    { &quot;field_id&quot;: &quot;fld_status&quot;, &quot;direction&quot;: &quot;asc&quot; },
-    { &quot;field_id&quot;: &quot;fld_name&quot;, &quot;direction&quot;: &quot;asc&quot; }
-  ]
-}`" />
-
-                                <h2 id="null-handling" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.sorting.nullHandling') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.sorting.nullHandlingDescription') }}</p>
-
-                                <h2 id="examples" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.sorting.examples.title') }}</h2>
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.sorting.examples.simpleSort') }}</h3>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/tables/{table_id}/rows?sort=[{&quot;field_id&quot;:&quot;fld_name&quot;,&quot;direction&quot;:&quot;asc&quot;}]' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN'`" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.sorting.examples.descSort') }}</h3>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/tables/{table_id}/rows?sort=[{&quot;field_id&quot;:&quot;fld_date&quot;,&quot;direction&quot;:&quot;desc&quot;}]' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN'`" />
-                            </template>
-
-                            <!-- Pagination Section -->
-                            <template v-else-if="currentSection === 'pagination'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.paginationSection.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.paginationSection.description') }}</p>
-
-                                <h2 id="parameters" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.paginationSection.parameters.title') }}</h2>
-                                <ul class="list-disc list-inside text-gray-600 space-y-2 mb-4">
-                                    <li><code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">page</code> - {{ t('docs.paginationSection.parameters.page').split(' - ')[1] }}</li>
-                                    <li><code class="bg-gray-100 px-1.5 py-0.5 rounded text-sm">per_page</code> - {{ t('docs.paginationSection.parameters.perPage').split(' - ')[1] }}</li>
-                                </ul>
-
-                                <h2 id="response" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.paginationSection.response.title') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.paginationSection.response.description') }}</p>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;data&quot;: [...],
-  &quot;meta&quot;: {
-    &quot;current_page&quot;: 1,
-    &quot;from&quot;: 1,
-    &quot;last_page&quot;: 10,
-    &quot;per_page&quot;: 50,
-    &quot;to&quot;: 50,
-    &quot;total&quot;: 500
-  },
-  &quot;links&quot;: {
-    &quot;first&quot;: &quot;${baseUrl}/tables/{id}/rows?page=1&quot;,
-    &quot;last&quot;: &quot;${baseUrl}/tables/{id}/rows?page=10&quot;,
-    &quot;prev&quot;: null,
-    &quot;next&quot;: &quot;${baseUrl}/tables/{id}/rows?page=2&quot;
-  }
-}`" />
-
-                                <h2 id="examples" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.paginationSection.examples.title') }}</h2>
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.paginationSection.examples.basicPagination') }}</h3>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/tables/{table_id}/rows?page=2' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN'`" />
-
-                                <h3 class="text-lg font-medium text-gray-800 mt-6 mb-3">{{ t('docs.paginationSection.examples.customPerPage') }}</h3>
-                                <DocsCodeBlock language="bash" :code="`curl -X GET '${baseUrl}/tables/{table_id}/rows?page=1&per_page=25' \\
-  -H 'Authorization: Bearer YOUR_API_TOKEN'`" />
-                            </template>
-
-                            <!-- Errors Section -->
-                            <template v-else-if="currentSection === 'errors'">
-                                <h1 class="text-3xl font-bold text-gray-900 mb-4">{{ t('docs.errorsSection.title') }}</h1>
-                                <p class="text-lg text-gray-600 mb-8">{{ t('docs.errorsSection.description') }}</p>
-
-                                <h2 id="format" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.errorsSection.format') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.errorsSection.formatDescription') }}</p>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;message&quot;: &quot;The given data was invalid.&quot;,
-  &quot;errors&quot;: {
-    &quot;name&quot;: [&quot;The name field is required.&quot;]
-  }
-}`" />
-
-                                <h2 id="codes" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.errorsSection.codes.title') }}</h2>
-                                <DocsTable :headers="['Code', t('common.description')]" :rows="[
-                                    ['400', t('docs.errorsSection.codes.400').split(' - ')[1]],
-                                    ['401', t('docs.errorsSection.codes.401').split(' - ')[1]],
-                                    ['403', t('docs.errorsSection.codes.403').split(' - ')[1]],
-                                    ['404', t('docs.errorsSection.codes.404').split(' - ')[1]],
-                                    ['422', t('docs.errorsSection.codes.422').split(' - ')[1]],
-                                    ['429', t('docs.errorsSection.codes.429').split(' - ')[1]],
-                                    ['500', t('docs.errorsSection.codes.500').split(' - ')[1]],
-                                ]" />
-
-                                <h2 id="validation" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.errorsSection.validation.title') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.errorsSection.validation.description') }}</p>
-                                <DocsCodeBlock language="json" :code="`{
-  &quot;message&quot;: &quot;The given data was invalid.&quot;,
-  &quot;errors&quot;: {
-    &quot;name&quot;: [&quot;The name field is required.&quot;],
-    &quot;email&quot;: [
-      &quot;The email field is required.&quot;,
-      &quot;The email must be a valid email address.&quot;
-    ]
-  }
-}`" />
-
-                                <h2 id="handling" class="text-xl font-semibold text-gray-900 mt-8 mb-4">{{ t('docs.errorsSection.handling.title') }}</h2>
-                                <p class="text-gray-600 mb-4">{{ t('docs.errorsSection.handling.description') }}</p>
-                                <DocsCodeBlock language="javascript" :code="`try {
-  const response = await fetch('${baseUrl}/bases', {
-    headers: {
-      'Authorization': 'Bearer YOUR_TOKEN',
-      'Accept': 'application/json'
-    }
-  });
-
-  if (!response.ok) {
-    const error = await response.json();
-
-    switch (response.status) {
-      case 401:
-        console.error('Invalid or expired token');
-        break;
-      case 422:
-        console.error('Validation errors:', error.errors);
-        break;
-      case 429:
-        console.error('Rate limit exceeded, retry later');
-        break;
-      default:
-        console.error('API error:', error.message);
-    }
-    return;
-  }
-
-  const data = await response.json();
-  console.log('Success:', data);
-} catch (e) {
-  console.error('Network error:', e);
-}`" />
-                            </template>
-
-                            <!-- Default / Not found -->
-                            <template v-else>
-                                <div class="text-center py-12">
-                                    <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                                        <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M12 12h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                                        </svg>
-                                    </div>
-                                    <h2 class="text-xl font-semibold text-gray-900 mb-2">{{ t('common.noData') }}</h2>
-                                    <button @click="navigateToSection('overview')" class="text-blue-600 hover:text-blue-700">
-                                        {{ t('docs.sidebar.overview') }} →
-                                    </button>
-                                </div>
-                            </template>
                         </div>
-                    </main>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;att_xyz789&quot;,
+    &quot;filename&quot;: &quot;document.pdf&quot;,
+    &quot;mime_type&quot;: &quot;application/pdf&quot;,
+    &quot;size&quot;: 102400,
+    &quot;url&quot;: &quot;https://example.com/storage/document.pdf&quot;
+  }
+}`" />
+                        </div>
+                    </div>
 
-                    <!-- Right sidebar - On this page -->
-                    <aside class="hidden xl:block w-56 flex-shrink-0">
-                        <nav v-if="pageAnchors.length > 0" class="sticky top-8 pl-4">
-                            <h3 class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
-                                {{ t('docs.onThisPage') }}
-                            </h3>
-                            <ul class="space-y-2">
-                                <li v-for="anchor in pageAnchors" :key="anchor.id">
-                                    <button
-                                        @click="scrollToAnchor(anchor.id)"
-                                        class="text-sm text-gray-500 hover:text-gray-900 transition-colors text-left"
-                                        :class="{
-                                            'text-blue-600': activeAnchor === anchor.id,
-                                            'pl-3': anchor.level === 3
-                                        }"
-                                    >
-                                        {{ anchor.text }}
-                                    </button>
-                                </li>
-                            </ul>
-                        </nav>
-                    </aside>
+                    <!-- Delete Attachment -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/attachments/{attachment_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.attachments.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ===== TEMPLATES TAB ===== -->
+                <template v-else-if="currentTab === 'templates'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.tabs.templates') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.templates.description') }}</p>
+
+                    <!-- Authentication info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                        <h3 class="font-medium text-blue-800 mb-2">{{ t('docs.authentication') }}</h3>
+                        <p class="text-blue-700 text-sm mb-2">{{ t('docs.auth.usingTokenDescription') }}</p>
+                        <code class="bg-blue-100 px-2 py-1 rounded text-xs">Authorization: Bearer YOUR_API_TOKEN</code>
+                    </div>
+
+                    <!-- Workflow -->
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-8">
+                        <h4 class="font-medium mb-3">{{ t('docs.templates.workflow.title') }}</h4>
+                        <ol class="list-decimal list-inside text-gray-600 space-y-1 text-sm">
+                            <li>{{ t('docs.templates.workflow.step1') }}</li>
+                            <li>{{ t('docs.templates.workflow.step2') }}</li>
+                            <li>{{ t('docs.templates.workflow.step3') }}</li>
+                            <li>{{ t('docs.templates.workflow.step4') }}</li>
+                        </ol>
+                    </div>
+
+                    <!-- ========== TEMPLATES CRUD ========== -->
+                    <h2 id="templates-crud" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.templates.title') }} CRUD</h2>
+
+                    <!-- List Templates -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/templates</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.page') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">per_page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.perPage') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">in_library</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Filter by library status (true/false)</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+      &quot;name&quot;: &quot;Instagram Post&quot;,
+      &quot;description&quot;: &quot;1080x1080 template&quot;,
+      &quot;canvas_width&quot;: 1080,
+      &quot;canvas_height&quot;: 1080,
+      &quot;canvas_background_color&quot;: &quot;#ffffff&quot;,
+      &quot;thumbnail_url&quot;: &quot;https://example.com/thumb.png&quot;,
+      &quot;in_library&quot;: true,
+      &quot;layers_count&quot;: 5,
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+      &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+    }
+  ],
+  &quot;meta&quot;: { &quot;current_page&quot;: 1, &quot;per_page&quot;: 50, &quot;total&quot;: 10 }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Get Template -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/templates/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.getDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;Instagram Post&quot;,
+    &quot;canvas_width&quot;: 1080,
+    &quot;canvas_height&quot;: 1080,
+    &quot;canvas_background_color&quot;: &quot;#ffffff&quot;,
+    &quot;layers&quot;: [
+      {
+        &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+        &quot;name&quot;: &quot;Header Text&quot;,
+        &quot;type&quot;: &quot;text&quot;,
+        &quot;semantic_tag&quot;: &quot;header&quot;,
+        &quot;properties&quot;: {
+          &quot;x&quot;: 100, &quot;y&quot;: 200,
+          &quot;text&quot;: &quot;Hello World&quot;,
+          &quot;fontSize&quot;: 48,
+          &quot;fill&quot;: &quot;#000000&quot;
+        },
+        &quot;visible&quot;: true,
+        &quot;locked&quot;: false,
+        &quot;order&quot;: 0
+      }
+    ]
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Create Template -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/templates</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.templates.fields.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">canvas_width</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.templates.fields.canvasWidth') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">canvas_height</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.templates.fields.canvasHeight') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.fields.description') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">canvas_background_color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.fields.canvasBackgroundColor') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Instagram Post&quot;,
+  &quot;description&quot;: &quot;1080x1080 post template&quot;,
+  &quot;canvas_width&quot;: 1080,
+  &quot;canvas_height&quot;: 1080,
+  &quot;canvas_background_color&quot;: &quot;#ffffff&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns created template object</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;The given data was invalid.&quot;,
+  &quot;errors&quot;: {
+    &quot;canvas_width&quot;: [&quot;The canvas width field is required.&quot;]
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Update Template -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/templates/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Updated Template Name&quot;,
+  &quot;canvas_background_color&quot;: &quot;#f0f0f0&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated template object</p>
+                        </div>
+                    </div>
+
+                    <!-- Delete Template -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/templates/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+
+                    <!-- Duplicate Template -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/templates/{id}/duplicate</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.duplicateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns duplicated template object with new ID</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== LAYERS ========== -->
+                    <h2 id="layers" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.templates.layers.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.templates.layers.description') }}</p>
+
+                    <!-- Layer Types Reference -->
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <h4 class="font-medium mb-3">{{ t('docs.templates.layers.types.title') }}</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                            <div><code class="bg-white px-2 py-1 rounded">text</code> - {{ t('docs.templates.layers.types.text') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">textbox</code> - {{ t('docs.templates.layers.types.textbox') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">image</code> - {{ t('docs.templates.layers.types.image') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">rectangle</code> - {{ t('docs.templates.layers.types.rectangle') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">ellipse</code> - {{ t('docs.templates.layers.types.ellipse') }}</div>
+                            <div><code class="bg-white px-2 py-1 rounded">group</code> - {{ t('docs.templates.layers.types.group') }}</div>
+                        </div>
+                    </div>
+
+                    <!-- Semantic Tags Reference -->
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-purple-800 mb-3">{{ t('docs.templates.semanticTags.title') }}</h4>
+                        <p class="text-purple-700 text-sm mb-3">{{ t('docs.templates.semanticTags.description') }}</p>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <p class="font-medium text-purple-800 mb-1">{{ t('docs.templates.semanticTags.content.title') }}:</p>
+                                <code class="text-purple-600">header, subtitle, paragraph, social_handle, main_image, logo, cta</code>
+                            </div>
+                            <div>
+                                <p class="font-medium text-purple-800 mb-1">{{ t('docs.templates.semanticTags.style.title') }}:</p>
+                                <code class="text-purple-600">primary_color, secondary_color</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- List Layers -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/templates/{id}/layers</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+      &quot;name&quot;: &quot;Header Text&quot;,
+      &quot;type&quot;: &quot;text&quot;,
+      &quot;semantic_tag&quot;: &quot;header&quot;,
+      &quot;properties&quot;: {
+        &quot;x&quot;: 100, &quot;y&quot;: 200,
+        &quot;text&quot;: &quot;Hello World&quot;,
+        &quot;fontSize&quot;: 48
+      },
+      &quot;visible&quot;: true,
+      &quot;locked&quot;: false,
+      &quot;order&quot;: 0
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Add Layer -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/templates/{id}/layers</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.addLayerDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.templates.layers.fields.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">type</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.templates.layers.fields.type') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">properties</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.templates.layers.fields.properties') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">semantic_tag</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.layers.fields.semanticTag') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Header Text&quot;,
+  &quot;type&quot;: &quot;text&quot;,
+  &quot;properties&quot;: {
+    &quot;x&quot;: 100,
+    &quot;y&quot;: 200,
+    &quot;text&quot;: &quot;Hello World&quot;,
+    &quot;fontSize&quot;: 48,
+    &quot;fontFamily&quot;: &quot;Inter&quot;,
+    &quot;fill&quot;: &quot;#000000&quot;
+  },
+  &quot;semantic_tag&quot;: &quot;header&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns created layer object</p>
+                        </div>
+                    </div>
+
+                    <!-- Update Layer -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/layers/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.updateLayerDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;properties&quot;: {
+    &quot;x&quot;: 150,
+    &quot;y&quot;: 250,
+    &quot;fill&quot;: &quot;#FF0000&quot;
+  },
+  &quot;semantic_tag&quot;: &quot;subtitle&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated layer object</p>
+                        </div>
+                    </div>
+
+                    <!-- Delete Layer -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/layers/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.templates.endpoints.deleteLayerDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== GENERATION ========== -->
+                    <h2 id="generation" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.graphicsGeneration.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.graphicsGeneration.description') }}</p>
+
+                    <!-- Generate Preview -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/library/templates/preview</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.graphicsGeneration.preview.description') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">template_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.graphicsGeneration.preview.parameters.templateId') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">data</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.graphicsGeneration.preview.parameters.data') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">format</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.graphicsGeneration.preview.parameters.format') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">scale</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.graphicsGeneration.preview.parameters.scale') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;template_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;data&quot;: {
+    &quot;header&quot;: &quot;Big Sale!&quot;,
+    &quot;subtitle&quot;: &quot;Only this week&quot;,
+    &quot;main_image&quot;: &quot;https://example.com/product.jpg&quot;,
+    &quot;logo&quot;: &quot;https://example.com/logo.png&quot;,
+    &quot;primary_color&quot;: &quot;#FF5733&quot;,
+    &quot;secondary_color&quot;: &quot;#333333&quot;
+  },
+  &quot;format&quot;: &quot;png&quot;,
+  &quot;scale&quot;: 1
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;image&quot;: &quot;data:image/png;base64,iVBORw0KGgo...&quot;,
+    &quot;width&quot;: 1080,
+    &quot;height&quot;: 1080,
+    &quot;format&quot;: &quot;png&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 404</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;Template not found.&quot;
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- ========== GENERATED IMAGES ========== -->
+                    <h2 id="generated-images" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.graphicsGeneration.images.title') }}</h2>
+
+                    <!-- List Generated Images -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/templates/{id}/images</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.graphicsGeneration.images.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+      &quot;url&quot;: &quot;https://example.com/generated/image1.png&quot;,
+      &quot;width&quot;: 1080,
+      &quot;height&quot;: 1080,
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Save Generated Image -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/templates/{id}/images</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.graphicsGeneration.images.saveDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;image&quot;: &quot;data:image/png;base64,iVBORw0KGgo...&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns saved image object with URL</p>
+                        </div>
+                    </div>
+
+                    <!-- Delete Generated Image -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/generated-images/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.graphicsGeneration.images.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- ===== POSTS TAB ===== -->
+                <template v-else-if="currentTab === 'posts'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.tabs.posts') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.postsApi.description') }}</p>
+
+                    <!-- Authentication info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                        <h3 class="font-medium text-blue-800 mb-2">{{ t('docs.authentication') }}</h3>
+                        <p class="text-blue-700 text-sm mb-2">{{ t('docs.auth.usingTokenDescription') }}</p>
+                        <code class="bg-blue-100 px-2 py-1 rounded text-xs">Authorization: Bearer YOUR_API_TOKEN</code>
+                    </div>
+
+                    <!-- Workflow -->
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-8">
+                        <h4 class="font-medium mb-3">{{ t('docs.postsApi.workflow.title') }}</h4>
+                        <ol class="list-decimal list-inside text-gray-600 space-y-1 text-sm">
+                            <li>{{ t('docs.postsApi.workflow.step1') }}</li>
+                            <li>{{ t('docs.postsApi.workflow.step2') }}</li>
+                            <li>{{ t('docs.postsApi.workflow.step3') }}</li>
+                            <li>{{ t('docs.postsApi.workflow.step4') }}</li>
+                            <li>{{ t('docs.postsApi.workflow.step5') }}</li>
+                        </ol>
+                    </div>
+
+                    <!-- Post Statuses Reference -->
+                    <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
+                        <h4 class="font-medium text-yellow-800 mb-3">{{ t('docs.postsApi.statuses.title') }}</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                            <div><code class="bg-white px-2 py-1 rounded">draft</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">pending_approval</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">approved</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">scheduled</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">published</code></div>
+                            <div><code class="bg-white px-2 py-1 rounded">failed</code></div>
+                        </div>
+                    </div>
+
+                    <!-- ========== POSTS CRUD ========== -->
+                    <h2 id="posts-crud" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.postsApi.title') }} CRUD</h2>
+
+                    <!-- List Posts -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/posts</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.page') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">per_page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.perPage') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">status</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Filter by status</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+      &quot;title&quot;: &quot;Weekly Update&quot;,
+      &quot;main_caption&quot;: &quot;Check out our latest news...&quot;,
+      &quot;status&quot;: &quot;pending_approval&quot;,
+      &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+      &quot;published_at&quot;: null,
+      &quot;media_count&quot;: 2,
+      &quot;platform_posts&quot;: [
+        { &quot;platform&quot;: &quot;facebook&quot;, &quot;status&quot;: &quot;pending&quot; },
+        { &quot;platform&quot;: &quot;instagram&quot;, &quot;status&quot;: &quot;pending&quot; }
+      ],
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+    }
+  ],
+  &quot;meta&quot;: { &quot;current_page&quot;: 1, &quot;per_page&quot;: 50, &quot;total&quot;: 25 }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Get Post -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/posts/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.getDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.postsApi.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Weekly Update&quot;,
+    &quot;main_caption&quot;: &quot;Check out our latest news...&quot;,
+    &quot;status&quot;: &quot;pending_approval&quot;,
+    &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;platform_posts&quot;: [
+      {
+        &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+        &quot;platform&quot;: &quot;facebook&quot;,
+        &quot;caption&quot;: &quot;Custom Facebook caption...&quot;,
+        &quot;status&quot;: &quot;pending&quot;,
+        &quot;external_id&quot;: null,
+        &quot;external_url&quot;: null
+      }
+    ],
+    &quot;media&quot;: [
+      {
+        &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+        &quot;url&quot;: &quot;https://example.com/media/image1.jpg&quot;,
+        &quot;type&quot;: &quot;image&quot;
+      }
+    ]
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 404</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;Post not found.&quot;
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Create Post -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">title</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.postsApi.fields.title') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">main_caption</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.postsApi.fields.mainCaption') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">platforms</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Array: facebook, instagram, youtube</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">scheduled_at</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.postsApi.fields.scheduledAt') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">status</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>draft, pending_approval (default: draft)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;title&quot;: &quot;Weekly Update&quot;,
+  &quot;main_caption&quot;: &quot;Check out our latest news and updates!&quot;,
+  &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+  &quot;platforms&quot;: [&quot;facebook&quot;, &quot;instagram&quot;],
+  &quot;status&quot;: &quot;pending_approval&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns created post object with ID</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;The given data was invalid.&quot;,
+  &quot;errors&quot;: {
+    &quot;main_caption&quot;: [&quot;The main caption field is required.&quot;],
+    &quot;platforms&quot;: [&quot;The platforms field is required.&quot;]
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Update Post -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/posts/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;title&quot;: &quot;Updated Title&quot;,
+  &quot;main_caption&quot;: &quot;Updated caption content...&quot;,
+  &quot;scheduled_at&quot;: &quot;2024-01-25T10:00:00Z&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns updated post object</p>
+                        </div>
+                    </div>
+
+                    <!-- Delete Post -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/posts/{id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== CALENDAR & VIEWS ========== -->
+                    <h2 id="calendar-views" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">Calendar & Views</h2>
+
+                    <!-- Calendar View -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/posts/calendar</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.calendarDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">start_date</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Start date (YYYY-MM-DD)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">end_date</td><td class="text-red-500">{{ t('docs.required') }}</td><td>End date (YYYY-MM-DD)</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+      &quot;title&quot;: &quot;Weekly Update&quot;,
+      &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+      &quot;status&quot;: &quot;approved&quot;,
+      &quot;platforms&quot;: [&quot;facebook&quot;, &quot;instagram&quot;]
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Verified Posts (n8n) -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/posts/verified</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.verifiedDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns posts with status "approved" ready for publication</p>
+                        </div>
+                    </div>
+
+                    <!-- Pending Approval -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/posts/pending-approval</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">Posts pending user approval</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns posts with status "pending_approval"</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== WORKFLOW (n8n) ========== -->
+                    <h2 id="workflow" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">Workflow (n8n)</h2>
+
+                    <!-- Approve Post -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/approve</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.approveDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;status&quot;: &quot;approved&quot;,
+    &quot;...&quot;: &quot;...&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Reject Post -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/reject</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.rejectDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;reason&quot;: &quot;Please update the image quality&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns post with status "draft"</p>
+                        </div>
+                    </div>
+
+                    <!-- Mark Published -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/mark-published</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.markPublishedDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">platform</td><td class="text-red-500">{{ t('docs.required') }}</td><td>facebook, instagram, youtube</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">external_id</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Platform post ID</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">external_url</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>URL to published post</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;platform&quot;: &quot;facebook&quot;,
+  &quot;external_id&quot;: &quot;123456789&quot;,
+  &quot;external_url&quot;: &quot;https://facebook.com/posts/123456789&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns post with platform_post status "published"</p>
+                        </div>
+                    </div>
+
+                    <!-- Mark Failed -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/mark-failed</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.postsApi.endpoints.markFailedDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">platform</td><td class="text-red-500">{{ t('docs.required') }}</td><td>facebook, instagram, youtube</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">error_message</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Error description</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;platform&quot;: &quot;instagram&quot;,
+  &quot;error_message&quot;: &quot;Media aspect ratio is not supported&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <p class="text-gray-500 text-sm">Returns post with platform_post status "failed"</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== MEDIA ========== -->
+                    <h2 id="media" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">Media</h2>
+
+                    <!-- List Media -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/posts/{id}/media</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">List media files attached to a post</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+      &quot;url&quot;: &quot;https://example.com/media/image1.jpg&quot;,
+      &quot;type&quot;: &quot;image&quot;,
+      &quot;mime_type&quot;: &quot;image/jpeg&quot;,
+      &quot;size&quot;: 102400
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Upload Media -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/media</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">Upload media file to a post</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request (multipart/form-data)</h4>
+                            <DocsCodeBlock language="bash" :code="`curl -X POST '${baseUrl}/posts/{id}/media' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
+  -F 'file=@/path/to/image.jpg'`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <p class="text-gray-500 text-sm">Returns uploaded media object</p>
+                        </div>
+                    </div>
+
+                    <!-- Delete Media -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/posts/{post_id}/media/{media_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">Delete media file from a post</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+                </template>
                 </div>
             </div>
         </div>
+    </div>
 </template>
 
 <style scoped>
-.docs-content h2 {
-    scroll-margin-top: 2rem;
-    margin-top: 2rem;
-    margin-bottom: 1rem;
+table td {
+    padding: 0.25rem 0.5rem;
 }
-
-.docs-content h3 {
-    scroll-margin-top: 2rem;
-    margin-top: 1.5rem;
-    margin-bottom: 0.75rem;
+table td:first-child {
+    white-space: nowrap;
 }
-
-.docs-content h1 {
-    margin-bottom: 1rem;
-}
-
-.docs-content p {
-    margin-bottom: 1rem;
-    line-height: 1.6;
-}
-
-.docs-content > * + * {
-    margin-top: 1.5rem;
-}
-
-.docs-content h2 + p {
-    margin-top: 0.5rem;
-}
-
-.docs-content h1 + p {
-    margin-top: 0.5rem;
-}
-
-.docs-content h3 + p {
-    margin-top: 0.5rem;
+table td:nth-child(2) {
+    white-space: nowrap;
+    padding-left: 1rem;
+    padding-right: 1rem;
 }
 </style>

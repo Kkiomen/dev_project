@@ -15,6 +15,9 @@ Chcemy stworzy narzedzie gdzie bedzie wszystko zautomatyzowane. Posiadać funkcj
 Nie mozesz umieszczać tekstu w kodzie bezpośrednio. Wszystko ma byc obslugiwane przez translacje bo aplikacja ma być multilanguage
 
 
+## Responsywnosc
+Każda podstrona musi być w pełni responsywna
+
 ## Development Commands
 
 ```bash

@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\AiChatController;
+use App\Http\Controllers\Api\V1\ApiTokenController;
+use App\Http\Controllers\Api\V1\CalendarEventController;
 use App\Http\Controllers\Api\V1\DebugRenderController;
 use App\Http\Controllers\Api\V1\ApprovalTokenController;
 use App\Http\Controllers\Api\V1\BaseController;
@@ -8,6 +10,7 @@ use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\ClientApprovalController;
 use App\Http\Controllers\Api\V1\ContentPlanController;
 use App\Http\Controllers\Api\V1\PostAiController;
+use App\Http\Controllers\Api\V1\PsdFileController;
 use App\Http\Controllers\Api\V1\PsdImportController;
 use App\Http\Controllers\Api\V1\StockPhotoController;
 use App\Http\Controllers\Api\V1\TableController;
@@ -286,12 +289,27 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         });
     });
 
+    // === PSD FILES (Editor) ===
+    Route::prefix('psd-files')->group(function () {
+        Route::get('/', [PsdFileController::class, 'index']);
+        Route::get('{name}', [PsdFileController::class, 'show'])->where('name', '.*\.psd');
+        Route::put('{name}', [PsdFileController::class, 'update'])->where('name', '.*\.psd');
+        Route::post('{name}/parse', [PsdFileController::class, 'parse'])->where('name', '.*\.psd');
+        Route::get('{name}/tags', [PsdFileController::class, 'getTags'])->where('name', '.*\.psd');
+        Route::put('{name}/tags', [PsdFileController::class, 'saveTags'])->where('name', '.*\.psd');
+        Route::post('{name}/import', [PsdFileController::class, 'import'])->where('name', '.*\.psd');
+        Route::post('{name}/preview', [PsdFileController::class, 'preview'])->where('name', '.*\.psd');
+        Route::post('{name}/preview-all', [PsdFileController::class, 'previewAllVariants'])->where('name', '.*\.psd');
+    });
+
     // === SOCIAL POSTS ===
     Route::get('posts', [SocialPostController::class, 'index']);
     Route::get('posts/calendar', [SocialPostController::class, 'calendar']);
     Route::get('posts/pending-approval', [SocialPostController::class, 'pendingApproval']);
+    Route::get('posts/verified', [SocialPostController::class, 'verified']);
     Route::post('posts', [SocialPostController::class, 'store']);
     Route::post('posts/ai/generate', [PostAiController::class, 'generate']);
+    Route::post('posts/ai/modify', [PostAiController::class, 'modify']);
     Route::post('posts/batch-approve', [SocialPostController::class, 'batchApprove']);
     Route::post('posts/batch-reject', [SocialPostController::class, 'batchReject']);
     Route::get('posts/{post}', [SocialPostController::class, 'show']);
@@ -303,6 +321,8 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('posts/{post}/approve', [SocialPostController::class, 'approve']);
     Route::post('posts/{post}/reject', [SocialPostController::class, 'reject']);
     Route::post('posts/{post}/publish', [SocialPostController::class, 'publish']);
+    Route::post('posts/{post}/mark-published', [SocialPostController::class, 'markPublished']);
+    Route::post('posts/{post}/mark-failed', [SocialPostController::class, 'markFailed']);
 
     // === PLATFORM POSTS ===
     Route::put('posts/{post}/platforms/{platform}', [PlatformPostController::class, 'update']);
@@ -316,6 +336,11 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('posts/{post}/media/reorder', [PostMediaController::class, 'reorder']);
     Route::get('media/{media}/validate/{platform}', [PostMediaController::class, 'validate']);
 
+    // === API TOKENS (Personal Access Tokens) ===
+    Route::get('api-tokens', [ApiTokenController::class, 'index']);
+    Route::post('api-tokens', [ApiTokenController::class, 'store']);
+    Route::delete('api-tokens/{tokenId}', [ApiTokenController::class, 'destroy']);
+
     // === APPROVAL TOKENS ===
     Route::get('approval-tokens', [ApprovalTokenController::class, 'index']);
     Route::post('approval-tokens', [ApprovalTokenController::class, 'store']);
@@ -323,6 +348,17 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::delete('approval-tokens/{approvalToken}', [ApprovalTokenController::class, 'destroy']);
     Route::post('approval-tokens/{approvalToken}/regenerate', [ApprovalTokenController::class, 'regenerate']);
     Route::get('approval-tokens/{approvalToken}/stats', [ApprovalTokenController::class, 'stats']);
+
+    // === CALENDAR EVENTS ===
+    Route::prefix('events')->group(function () {
+        Route::get('/', [CalendarEventController::class, 'index']);
+        Route::get('/calendar', [CalendarEventController::class, 'calendar']);
+        Route::post('/', [CalendarEventController::class, 'store']);
+        Route::get('/{event}', [CalendarEventController::class, 'show']);
+        Route::put('/{event}', [CalendarEventController::class, 'update']);
+        Route::delete('/{event}', [CalendarEventController::class, 'destroy']);
+        Route::post('/{event}/reschedule', [CalendarEventController::class, 'reschedule']);
+    });
 });
 
 // === PUBLIC APPROVAL ROUTES (No Auth) ===

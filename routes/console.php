@@ -37,3 +37,9 @@ Schedule::command('automation:init-week')
 Schedule::command('previews:cleanup')
     ->hourly()
     ->withoutOverlapping();
+
+// Scan for new PSD files to import every 2 minutes
+Schedule::command('psd:scan')
+    ->everyTwoMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();

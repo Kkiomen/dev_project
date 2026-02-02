@@ -38,7 +38,8 @@
         "finish": "Zakończ",
         "selected": "zaznaczonych",
         "selectAll": "Zaznacz wszystko",
-        "deselectAll": "Odznacz wszystko"
+        "deselectAll": "Odznacz wszystko",
+        "more": "więcej"
     },
     "dashboard": {
         "title": "Moje bazy danych",
@@ -251,6 +252,7 @@
         "graphics": "Grafiki",
         "calendar": "Kalendarz",
         "approval": "Akceptacja",
+        "tokens": "Tokeny",
         "noBasesForGraphics": "Najpierw utwórz bazę danych"
     },
     "settings": {
@@ -261,7 +263,37 @@
         "tabs": {
             "profile": "Profil",
             "ai": "Ustawienia AI",
-            "notifications": "Powiadomienia"
+            "notifications": "Powiadomienia",
+            "tokens": "Tokeny"
+        },
+        "tokens": {
+            "title": "Tokeny API",
+            "description": "Zarządzaj tokenami dostępu do API. Tokeny pozwalają na autoryzację żądań do API (Bearer token).",
+            "createToken": "Utwórz token",
+            "noTokens": "Brak tokenów",
+            "noTokensHint": "Utwórz token, aby uzyskać dostęp do API.",
+            "tokenCreated": "Token utworzony",
+            "tokenRevoked": "Token unieważniony",
+            "tokenCopied": "Token skopiowany do schowka",
+            "revokeConfirm": "Czy na pewno chcesz unieważnić ten token? Aplikacje używające tego tokena stracą dostęp.",
+            "tokenCreatedTitle": "Token utworzony pomyślnie",
+            "tokenWarning": "Skopiuj token teraz. Ze względów bezpieczeństwa nie będzie on wyświetlany ponownie.",
+            "yourToken": "Twój token API",
+            "tokenName": "Nazwa tokena",
+            "tokenNamePlaceholder": "np. Moja aplikacja",
+            "tokenNameHint": "Nadaj tokenowi opisową nazwę, żeby łatwo go zidentyfikować.",
+            "expiresAt": "Data wygaśnięcia",
+            "expiresAtHint": "Pozostaw puste, aby token nie wygasał.",
+            "noExpiry": "Nigdy",
+            "abilities": "Uprawnienia",
+            "allAbilities": "Pełny dostęp",
+            "created": "Utworzono",
+            "expires": "Wygasa",
+            "lastUsed": "Ostatnio użyty",
+            "never": "Nigdy",
+            "active": "Aktywny",
+            "expired": "Wygasły",
+            "revoke": "Unieważnij"
         },
         "profile": {
             "title": "Informacje o profilu",
@@ -342,18 +374,28 @@
         "rateLimit": "Limity zapytań",
         "errors": "Błędy",
         "pagination": "Paginacja",
+        "tabs": {
+            "database": "Baza danych",
+            "templates": "Szablony",
+            "posts": "Posty"
+        },
         "sidebar": {
             "gettingStarted": "Wprowadzenie",
             "overview": "Przegląd API",
             "authentication": "Uwierzytelnianie",
             "quickStart": "Szybki start",
-            "resources": "Zasoby",
+            "data": "Dane",
+            "dataDescription": "Baza danych typu Airtable",
             "bases": "Bazy danych",
             "tables": "Tabele",
             "fields": "Pola",
             "rows": "Rekordy",
             "cells": "Komórki",
             "attachments": "Załączniki",
+            "graphics": "Grafiki",
+            "graphicsDescription": "Szablony i generowanie obrazów",
+            "posts": "Posty",
+            "postsDescription": "Automatyzacja social media",
             "advanced": "Zaawansowane",
             "filtering": "Filtrowanie",
             "sorting": "Sortowanie",
@@ -688,6 +730,220 @@
                 "title": "Przekroczenie limitu",
                 "description": "Po przekroczeniu limitu otrzymasz odpowiedź 429:"
             }
+        },
+        "templates": {
+            "title": "Szablony",
+            "description": "API do zarządzania szablonami graficznymi i warstwami. Szablony to kontenery grafik, które można dynamicznie wypełniać treścią podczas generowania.",
+            "workflow": {
+                "title": "Workflow",
+                "step1": "Utwórz szablon z wymiarami i tłem",
+                "step2": "Dodaj warstwy (tekst, obrazy, kształty)",
+                "step3": "Przypisz tagi semantyczne do warstw",
+                "step4": "Generuj grafiki z dynamicznymi danymi"
+            },
+            "object": "Obiekt szablonu",
+            "objectDescription": "Obiekt szablonu zawiera następujące pola:",
+            "fields": {
+                "id": "Unikalny identyfikator szablonu (ULID)",
+                "name": "Nazwa szablonu",
+                "description": "Opcjonalny opis szablonu",
+                "canvasWidth": "Szerokość płótna w pikselach",
+                "canvasHeight": "Wysokość płótna w pikselach",
+                "canvasBackgroundColor": "Kolor tła (hex)",
+                "thumbnailUrl": "URL do miniatury",
+                "backgroundImageUrl": "URL do obrazu tła",
+                "inLibrary": "Czy szablon jest w bibliotece udostępnionej",
+                "layersCount": "Liczba warstw",
+                "createdAt": "Data utworzenia",
+                "updatedAt": "Data ostatniej modyfikacji"
+            },
+            "layers": {
+                "title": "Warstwy",
+                "description": "Warstwy definiują zawartość szablonu. Każda warstwa ma typ, właściwości i opcjonalnie tag semantyczny.",
+                "object": "Obiekt warstwy",
+                "objectDescription": "Obiekt warstwy zawiera:",
+                "fields": {
+                    "id": "Unikalny identyfikator warstwy (ULID)",
+                    "name": "Nazwa warstwy",
+                    "type": "Typ warstwy (text, textbox, image, rectangle, ellipse, line, group)",
+                    "properties": "Obiekt właściwości warstwy (pozycja, rozmiar, style)",
+                    "semanticTag": "Tag semantyczny dla dynamicznej treści",
+                    "visible": "Czy warstwa jest widoczna",
+                    "locked": "Czy warstwa jest zablokowana",
+                    "order": "Kolejność warstwy (0 = na wierzchu)"
+                },
+                "types": {
+                    "title": "Typy warstw",
+                    "text": "Tekst - tekst jednoliniowy (point text)",
+                    "textbox": "Text Box - tekst wieloliniowy z zawijaniem",
+                    "image": "Obraz - obraz z URL lub base64",
+                    "rectangle": "Prostokąt - kształt prostokątny",
+                    "ellipse": "Elipsa - owal lub koło",
+                    "line": "Linia - odcinek",
+                    "group": "Grupa - kontener dla innych warstw"
+                }
+            },
+            "semanticTags": {
+                "title": "Tagi semantyczne",
+                "description": "Tagi semantyczne oznaczają warstwy, które będą wypełniane dynamiczną treścią podczas generowania.",
+                "content": {
+                    "title": "Tagi treści",
+                    "header": "Header - główny nagłówek",
+                    "subtitle": "Subtitle - podtytuł",
+                    "paragraph": "Paragraph - dłuższy tekst akapitowy",
+                    "url": "URL - adres strony lub link",
+                    "socialHandle": "Social Handle - {'@'}username",
+                    "mainImage": "Main Image - główny obraz",
+                    "logo": "Logo - logo marki",
+                    "cta": "Call to Action - tekst przycisku"
+                },
+                "style": {
+                    "title": "Tagi stylów",
+                    "primaryColor": "Primary Color - główny kolor brandingu (fill)",
+                    "secondaryColor": "Secondary Color - drugorzędny kolor (fill)",
+                    "textPrimaryColor": "Text Primary Color - główny kolor tekstu",
+                    "textSecondaryColor": "Text Secondary Color - drugorzędny kolor tekstu"
+                }
+            },
+            "endpoints": {
+                "list": "Lista szablonów",
+                "listDescription": "Pobiera paginowaną listę szablonów użytkownika.",
+                "get": "Pobierz szablon",
+                "getDescription": "Pobiera szczegóły szablonu ze wszystkimi warstwami.",
+                "create": "Utwórz szablon",
+                "createDescription": "Tworzy nowy szablon z określonymi wymiarami.",
+                "update": "Aktualizuj szablon",
+                "updateDescription": "Aktualizuje nazwę, opis lub ustawienia płótna.",
+                "delete": "Usuń szablon",
+                "deleteDescription": "Usuwa szablon i wszystkie jego warstwy.",
+                "duplicate": "Duplikuj szablon",
+                "duplicateDescription": "Tworzy kopię szablonu ze wszystkimi warstwami.",
+                "addLayer": "Dodaj warstwę",
+                "addLayerDescription": "Dodaje nową warstwę do szablonu.",
+                "updateLayer": "Aktualizuj warstwę",
+                "updateLayerDescription": "Aktualizuje właściwości warstwy lub tag semantyczny.",
+                "deleteLayer": "Usuń warstwę",
+                "deleteLayerDescription": "Usuwa warstwę z szablonu."
+            }
+        },
+        "graphicsGeneration": {
+            "title": "Generowanie grafik",
+            "description": "API do generowania grafik z szablonów z dynamiczną treścią. Łącz szablony z danymi, aby tworzyć spersonalizowane obrazy.",
+            "workflow": {
+                "title": "Jak to działa",
+                "description": "Workflow generowania grafik łączy szablon z dynamicznymi danymi, aby stworzyć gotowy obraz.",
+                "step1": "Wybierz szablon z tagami semantycznymi",
+                "step2": "Przygotuj obiekt data z wartościami dla każdego tagu",
+                "step3": "Wyślij żądanie do endpointu preview",
+                "step4": "Otrzymaj wygenerowany obraz (base64 lub URL)"
+            },
+            "preview": {
+                "title": "Generuj podgląd",
+                "description": "Główny endpoint do generowania grafik. Przyjmuje ID szablonu i obiekt data, zwraca wygenerowany obraz.",
+                "endpoint": "POST /api/v1/library/templates/preview",
+                "parameters": {
+                    "templateId": "ID szablonu z biblioteki",
+                    "data": "Obiekt data z wartościami dla tagów semantycznych",
+                    "format": "Format wyjściowy: png lub jpeg (domyślnie: png)",
+                    "scale": "Skala obrazu 0.1-2.0 (domyślnie: 1)",
+                    "quality": "Jakość JPEG 1-100 (domyślnie: 90)"
+                }
+            },
+            "data": {
+                "title": "Obiekt data",
+                "description": "Obiekt data zawiera wartości dla tagów semantycznych zdefiniowanych w szablonie.",
+                "contentFields": {
+                    "title": "Pola treści",
+                    "header": "Tekst dla warstw header",
+                    "subtitle": "Tekst dla warstw subtitle",
+                    "paragraph": "Tekst dla warstw paragraph",
+                    "url": "URL dla warstw link",
+                    "socialHandle": "Uchwyt social media ({'@'}username)",
+                    "cta": "Tekst call to action",
+                    "mainImage": "URL lub base64 dla głównego obrazu",
+                    "logo": "URL lub base64 dla logo"
+                },
+                "styleFields": {
+                    "title": "Pola stylów",
+                    "primaryColor": "Kolor hex dla tagów primary color",
+                    "secondaryColor": "Kolor hex dla tagów secondary color"
+                }
+            },
+            "images": {
+                "title": "Wygenerowane obrazy",
+                "list": "Lista wygenerowanych obrazów",
+                "listDescription": "Pobiera listę obrazów wygenerowanych z szablonu.",
+                "save": "Zapisz wygenerowany obraz",
+                "saveDescription": "Zapisuje wygenerowany obraz do magazynu do późniejszego użycia.",
+                "delete": "Usuń wygenerowany obraz",
+                "deleteDescription": "Usuwa wygenerowany obraz z magazynu."
+            }
+        },
+        "postsApi": {
+            "title": "Posty",
+            "description": "API do zarządzania postami w social media z obsługą automatyzacji n8n. Twórz, planuj, zatwierdzaj i publikuj posty na wielu platformach.",
+            "workflow": {
+                "title": "Workflow z n8n",
+                "description": "Typowy workflow dla automatycznej publikacji postów:",
+                "step1": "n8n generuje posty przez API",
+                "step2": "Posty pojawiają się w widoku kalendarza",
+                "step3": "Użytkownik przegląda i zatwierdza posty",
+                "step4": "n8n pobiera zatwierdzone posty",
+                "step5": "n8n publikuje i oznacza jako opublikowane"
+            },
+            "statuses": {
+                "title": "Statusy postów",
+                "draft": "Draft - post w edycji, niegotowy do przeglądu",
+                "pendingApproval": "Pending Approval - oczekuje na zatwierdzenie",
+                "approved": "Approved - gotowy do publikacji przez n8n",
+                "scheduled": "Scheduled - zaplanowany na konkretną datę/godzinę",
+                "published": "Published - pomyślnie opublikowany na platformie",
+                "failed": "Failed - próba publikacji nie powiodła się"
+            },
+            "object": "Obiekt posta",
+            "objectDescription": "Obiekt posta zawiera następujące pola:",
+            "fields": {
+                "id": "Unikalny identyfikator posta (ULID)",
+                "title": "Tytuł posta do wewnętrznego użytku",
+                "mainCaption": "Główna treść/opis posta",
+                "status": "Aktualny status posta",
+                "scheduledAt": "Zaplanowana data/godzina publikacji",
+                "publishedAt": "Rzeczywista data/godzina publikacji",
+                "platformPosts": "Konfiguracje dla poszczególnych platform",
+                "media": "Załączone pliki mediów (obrazy, wideo)",
+                "mediaCount": "Liczba załączonych plików mediów"
+            },
+            "endpoints": {
+                "list": "Lista postów",
+                "listDescription": "Pobiera paginowaną listę postów użytkownika z opcjonalnymi filtrami.",
+                "calendar": "Widok kalendarza",
+                "calendarDescription": "Pobiera posty do wyświetlenia w kalendarzu w zakresie dat.",
+                "verified": "Zatwierdzone posty (n8n)",
+                "verifiedDescription": "Pobiera zatwierdzone posty gotowe do publikacji. Używany przez automatyzację n8n.",
+                "get": "Pobierz post",
+                "getDescription": "Pobiera pełne szczegóły posta wraz z postami platform i mediami.",
+                "create": "Utwórz post",
+                "createDescription": "Tworzy nowy post z treścią i wyborem platform.",
+                "update": "Aktualizuj post",
+                "updateDescription": "Aktualizuje treść posta, harmonogram lub ustawienia platform.",
+                "delete": "Usuń post",
+                "deleteDescription": "Usuwa post i wszystkie powiązane media.",
+                "approve": "Zatwierdź post",
+                "approveDescription": "Zatwierdza post do publikacji. Zmienia status na approved.",
+                "reject": "Odrzuć post",
+                "rejectDescription": "Odrzuca post z opcjonalną informacją zwrotną. Wraca do statusu draft.",
+                "markPublished": "Oznacz jako opublikowany (n8n)",
+                "markPublishedDescription": "Oznacza post jako opublikowany z zewnętrznym ID i URL platformy.",
+                "markFailed": "Oznacz jako nieudany (n8n)",
+                "markFailedDescription": "Oznacza post jako nieudany z komunikatem błędu."
+            },
+            "platforms": {
+                "title": "Posty platform",
+                "description": "Każdy post może mieć treść i ustawienia specyficzne dla platformy.",
+                "facebook": "Facebook - obsługuje obrazy, wideo i podglądy linków",
+                "instagram": "Instagram - obsługuje obrazy i wideo z hashtagami",
+                "youtube": "YouTube - obsługuje wideo z tytułem i opisem"
+            }
         }
     },
     "graphics": {
@@ -979,7 +1235,11 @@
         "month": "Miesiąc",
         "week": "Tydzień",
         "allStatuses": "Wszystkie statusy",
+        "allItems": "Wszystko",
+        "postsOnly": "Tylko posty",
+        "eventsOnly": "Tylko wydarzenia",
         "newPostCreated": "Nowy post dodany do kalendarza",
+        "verifyPosts": "Weryfikuj posty",
         "days": {
             "sun": "Ndz",
             "mon": "Pon",
@@ -1002,6 +1262,32 @@
             "october": "Październik",
             "november": "Listopad",
             "december": "Grudzień"
+        }
+    },
+    "calendarEvents": {
+        "title": "Wydarzenie",
+        "addEvent": "Dodaj wydarzenie",
+        "editEvent": "Edytuj wydarzenie",
+        "deleteEvent": "Usuń wydarzenie",
+        "eventTypes": {
+            "meeting": "Spotkanie",
+            "birthday": "Urodziny",
+            "reminder": "Przypomnienie",
+            "other": "Inne"
+        },
+        "fields": {
+            "title": "Tytuł",
+            "description": "Opis",
+            "color": "Kolor",
+            "eventType": "Typ wydarzenia",
+            "startsAt": "Data/czas rozpoczęcia",
+            "endsAt": "Data/czas zakończenia",
+            "allDay": "Cały dzień"
+        },
+        "messages": {
+            "created": "Wydarzenie utworzone",
+            "updated": "Wydarzenie zaktualizowane",
+            "deleted": "Wydarzenie usunięte"
         }
     },
     "posts": {
@@ -1593,6 +1879,171 @@
         },
         "descriptions": {
             "contentGeneration": "Tworzenie posta dla \"{pillar}\" ({brand})"
+        }
+    },
+    "psd_editor": {
+        "title": "Edytor PSD",
+        "subtitle": "Edytuj pliki PSD i importuj jako szablony",
+        "toolbar": {
+            "save_psd": "Zapisz PSD",
+            "refresh": "Odśwież",
+            "import_templates": "Importuj jako szablony",
+            "select_file": "Wybierz plik PSD",
+            "preview_with_data": "Podgląd z danymi"
+        },
+        "sidebar": {
+            "title": "Pliki PSD",
+            "no_files": "Brak plików PSD",
+            "loading": "Ładowanie plików...",
+            "search_placeholder": "Szukaj plików..."
+        },
+        "layers": {
+            "title": "Warstwy",
+            "no_layers": "Brak warstw",
+            "loading": "Ładowanie warstw...",
+            "mark_variant": "Oznacz jako wariant",
+            "unmark_variant": "Usuń oznaczenie wariantu",
+            "semantic_tag": "Tag semantyczny",
+            "no_tag": "Brak tagu",
+            "collapse_all": "Zwiń wszystko",
+            "expand_all": "Rozwiń wszystko",
+            "variants_selected": "{count} wariant(ów) wybranych",
+            "mark_all_variants": "Zaznacz wszystkie grupy",
+            "help_tip": "Zaznacz checkboxy przy grupach, które chcesz importować jako osobne szablony. Każda grupa = 1 post/szablon."
+        },
+        "preview": {
+            "title": "Podgląd",
+            "no_variant": "Wybierz wariant do podglądu",
+            "loading": "Generowanie podglądu...",
+            "test_data": "Dane testowe",
+            "generate": "Generuj podgląd"
+        },
+        "photopea": {
+            "title": "Edytor Photopea",
+            "loading": "Ładowanie Photopea...",
+            "load_file": "Otwórz w Photopea",
+            "save_changes": "Zapisz zmiany z Photopea"
+        },
+        "import": {
+            "title": "Importuj warianty",
+            "description": "Wybierz grupy wariantów do importu jako osobne szablony",
+            "no_variants": "Brak grup oznaczonych jako warianty",
+            "add_to_library": "Dodaj do biblioteki szablonów",
+            "confirm": "Importuj {count} wariant(ów)",
+            "cancel": "Anuluj"
+        },
+        "messages": {
+            "file_saved": "Plik PSD zapisany pomyślnie",
+            "tags_saved": "Zapisz tagi",
+            "import_success": "Zaimportowano {count} szablon(ów) pomyślnie",
+            "variant_marked": "Grupa oznaczona jako wariant",
+            "variant_unmarked": "Usunięto oznaczenie wariantu",
+            "tag_updated": "Tag semantyczny zaktualizowany"
+        },
+        "errors": {
+            "file_not_found": "Plik PSD nie został znaleziony",
+            "parse_failed": "Nie udało się sparsować pliku PSD",
+            "import_failed": "Nie udało się zaimportować szablonów",
+            "preview_failed": "Nie udało się wygenerować podglądu",
+            "variant_not_found": "Grupa wariantu nie została znaleziona",
+            "photopea_load_failed": "Nie udało się załadować pliku w Photopea",
+            "save_failed": "Nie udało się zapisać pliku PSD"
+        },
+        "test_fields": {
+            "header": "Tekst nagłówka",
+            "subtitle": "Tekst podtytułu",
+            "paragraph": "Tekst paragrafu",
+            "primary_color": "Kolor główny",
+            "secondary_color": "Kolor dodatkowy",
+            "social_handle": "Uchwyt społecznościowy",
+            "main_image": "Główny obraz",
+            "logo": "Logo",
+            "upload_image": "Wgraj zdjęcie"
+        },
+        "variant_preview": {
+            "title": "Podgląd wariantów z Twoją treścią",
+            "variants_count": "wariant(ów)",
+            "your_content": "Twoja treść",
+            "hint": "Wprowadź dane testowe. Puste pola będą ukryte w podglądzie.",
+            "clear": "Wyczyść",
+            "header_text": "Nagłówek",
+            "header_placeholder": "Wpisz tekst nagłówka...",
+            "subtitle_text": "Podtytuł",
+            "subtitle_placeholder": "Wpisz tekst podtytułu...",
+            "paragraph_text": "Paragraf",
+            "paragraph_placeholder": "Wpisz tekst paragrafu...",
+            "social_handle": "Uchwyt społecznościowy",
+            "main_image": "Główny obraz",
+            "upload_image": "Kliknij aby przesłać obraz",
+            "primary_color": "Kolor główny",
+            "secondary_color": "Kolor dodatkowy",
+            "generate": "Generuj podglądy",
+            "generating": "Generowanie...",
+            "generating_message": "Generowanie podglądów wariantów...",
+            "generating_hint": "Renderowanie {count} wariant(ów)",
+            "empty_state": "Brak podglądów",
+            "empty_state_hint": "Wprowadź dane i kliknij Generuj aby zobaczyć podglądy",
+            "fill_at_least_one": "Wypełnij przynajmniej jedno pole",
+            "no_variants": "Brak wybranych wariantów do podglądu",
+            "no_variants_hint": "Najpierw zaznacz grupy jako warianty w panelu warstw",
+            "no_variants_marked": "Brak grup oznaczonych jako warianty. Najpierw oznacz grupy jako warianty w panelu warstw.",
+            "all_failed": "Nie udało się wygenerować żadnego podglądu",
+            "render_failed": "Błąd renderowania",
+            "download": "Pobierz",
+            "successful_renders": "podglądów wygenerowanych pomyślnie"
+        }
+    },
+    "verification": {
+        "title": "Weryfikacja postow",
+        "noPosts": "Wszystko gotowe!",
+        "noPostsDescription": "Nie ma postow oczekujacych na weryfikacje. Wroc pozniej lub utworz nowe posty.",
+        "backToCalendar": "Wroc do kalendarza",
+        "allDone": "Gotowe!",
+        "allDoneDescription": "Przejrzales {approved} postow. {rejected} zostalo odrzuconych i wymaga poprawek.",
+        "startOver": "Zacznij od nowa",
+        "approved": "Zatwierdzony",
+        "rejected": "Odrzucony",
+        "approve": "ZATWIERDZ",
+        "reject": "ODRZUC",
+        "photos": "zdjec",
+        "notScheduled": "Niezaplanowany",
+        "postUpdated": "Post zaktualizowany pomyslnie",
+        "postUpdatedFromEditor": "Post zsynchronizowany z edytora",
+        "hints": {
+            "reject": "Odrzuc",
+            "approve": "Zatwierdz",
+            "ai": "Czat AI",
+            "edit": "Edytuj"
+        },
+        "errors": {
+            "fetchFailed": "Nie udalo sie zaladowac postow",
+            "processFailed": "Nie udalo sie przetworzyc posta",
+            "updateFailed": "Nie udalo sie zaktualizowac posta"
+        },
+        "ai": {
+            "title": "Asystent AI",
+            "welcome": "Jak moge pomoc?",
+            "welcomeDescription": "Powiedz mi jak chcesz zmodyfikowac ten post. Moge skrocic, wydluzyc, zmienic ton, dodac emoji i wiele wiecej.",
+            "placeholder": "Wpisz instrukcje...",
+            "modified": "Tresc posta zostala zaktualizowana.",
+            "newCaption": "Nowa tresc",
+            "error": "Cos poszlo nie tak. Sprobuj ponownie.",
+            "suggestions": {
+                "shorter": "Skroc",
+                "longer": "Wydluz",
+                "professional": "Bardziej profesjonalny",
+                "casual": "Bardziej swobodny",
+                "addEmojis": "Dodaj emoji",
+                "addCTA": "Dodaj CTA"
+            },
+            "prompts": {
+                "shorter": "Skroc ten post, zachowujac glowny przekaz.",
+                "longer": "Rozwin ten post, dodajac wiecej szczegolow i kontekstu.",
+                "professional": "Przepisz ten post w bardziej profesjonalnym i formalnym tonie.",
+                "casual": "Przepisz ten post w bardziej swobodnym i przyjaznym tonie.",
+                "addEmojis": "Dodaj odpowiednie emoji, aby post byl bardziej angazujacy.",
+                "addCTA": "Dodaj przekonujace wezwanie do dzialania na koncu tego posta."
+            }
         }
     }
 }

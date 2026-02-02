@@ -85,6 +85,17 @@ async function waitForImages(layers) {
                     img.src = layer.properties.src;
                 });
                 imagePromises.push(promise);
+
+                // Also preload mask if exists
+                if (layer.properties?.maskSrc) {
+                    const maskPromise = new Promise((resolve) => {
+                        const maskImg = new Image();
+                        maskImg.onload = () => resolve();
+                        maskImg.onerror = () => resolve();
+                        maskImg.src = layer.properties.maskSrc;
+                    });
+                    imagePromises.push(maskPromise);
+                }
             }
         }
     }
@@ -92,8 +103,11 @@ async function waitForImages(layers) {
     processLayers(layers);
     await Promise.all(imagePromises);
 
-    // Additional wait for EditorCanvas internal image loading
-    await new Promise(resolve => setTimeout(resolve, 300));
+    // Wait for EditorCanvas to process images through Konva
+    // Large images (2000x2000) need more time
+    const imageCount = imagePromises.length;
+    const waitTime = Math.max(1000, imageCount * 200);
+    await new Promise(resolve => setTimeout(resolve, waitTime));
 }
 </script>
 

@@ -251,4 +251,72 @@ PROMPT;
 
         return $descriptions[$length][$language] ?? $descriptions[$length]['en'];
     }
+
+    /**
+     * Modify existing post content based on user instruction.
+     */
+    public function modify(string $currentCaption, ?string $currentTitle, string $instruction, string $language = 'pl'): array
+    {
+        $langName = $language === 'pl' ? 'Polish' : 'English';
+
+        $systemPrompt = <<<PROMPT
+You are an expert social media content editor. You modify existing post content based on user instructions.
+
+RULES:
+1. Write in {$langName}
+2. Maintain the original meaning and key information unless asked to change it
+3. Apply the user's requested changes precisely
+4. Keep the content engaging and suitable for social media
+5. DO NOT use Unicode bold/italic formatting - use plain text only
+6. Use emojis where appropriate
+
+RESPONSE FORMAT:
+You MUST respond with valid JSON only. No additional text before or after the JSON.
+{
+  "modified": true,
+  "caption": "The modified caption text",
+  "title": "The modified title (if applicable, otherwise null)",
+  "message": "Brief description of what was changed"
+}
+
+If you cannot make the requested change, respond with:
+{
+  "modified": false,
+  "caption": null,
+  "title": null,
+  "message": "Explanation of why the change cannot be made"
+}
+PROMPT;
+
+        $userPrompt = "Current caption:\n{$currentCaption}\n\n";
+        if ($currentTitle) {
+            $userPrompt .= "Current title: {$currentTitle}\n\n";
+        }
+        $userPrompt .= "User instruction: {$instruction}";
+
+        $response = $this->openAiClient->chatCompletion([
+            ['role' => 'system', 'content' => $systemPrompt],
+            ['role' => 'user', 'content' => $userPrompt],
+        ]);
+
+        $content = trim($response->choices[0]->message->content);
+
+        // Remove markdown code blocks if present
+        if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/', $content, $matches)) {
+            $content = $matches[1];
+        }
+
+        $decoded = json_decode($content, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            throw new \RuntimeException('Failed to parse AI response as JSON: ' . json_last_error_msg());
+        }
+
+        // Convert literal \n to actual newlines
+        if (isset($decoded['caption']) && is_string($decoded['caption'])) {
+            $decoded['caption'] = str_replace('\n', "\n", $decoded['caption']);
+        }
+
+        return $decoded;
+    }
 }

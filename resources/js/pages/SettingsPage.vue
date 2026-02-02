@@ -1,18 +1,25 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRoute } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import { useApiTokensStore } from '@/stores/apiTokens';
 import { useToast } from '@/composables/useToast';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import Button from '@/components/common/Button.vue';
+import ApiTokenList from '@/components/settings/ApiTokenList.vue';
+import ApiTokenForm from '@/components/settings/ApiTokenForm.vue';
 
 const { t, locale } = useI18n();
+const route = useRoute();
 const authStore = useAuthStore();
+const apiTokensStore = useApiTokensStore();
 const toast = useToast();
 
 const loading = ref(true);
 const saving = ref(false);
 const activeTab = ref('profile');
+const showTokenForm = ref(false);
 
 // Profile data
 const profile = ref({
@@ -52,6 +59,7 @@ const tabs = [
     { key: 'profile', icon: 'user' },
     { key: 'ai', icon: 'sparkles' },
     { key: 'notifications', icon: 'bell' },
+    { key: 'tokens', icon: 'key' },
 ];
 
 const timezones = [
@@ -107,10 +115,23 @@ const tabIcons = {
     user: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>`,
     sparkles: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" /></svg>`,
     bell: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>`,
+    key: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" /></svg>`,
 };
 
 onMounted(async () => {
+    if (route.query.tab) {
+        activeTab.value = route.query.tab;
+    }
     await loadSettings();
+    if (activeTab.value === 'tokens') {
+        await apiTokensStore.fetchTokens();
+    }
+});
+
+watch(activeTab, async (newTab) => {
+    if (newTab === 'tokens') {
+        await apiTokensStore.fetchTokens();
+    }
 });
 
 const loadSettings = async () => {
@@ -208,9 +229,50 @@ const handleSave = () => {
     if (activeTab.value === 'profile') {
         saveProfile();
         saveSettings();
-    } else {
+    } else if (activeTab.value !== 'tokens') {
         saveSettings();
     }
+};
+
+// Token management functions
+const newTokenValue = ref(null);
+
+const handleCreateToken = async (data) => {
+    try {
+        const result = await apiTokensStore.createToken(data);
+        newTokenValue.value = result.plain_text_token;
+        showTokenForm.value = false;
+        toast.success(t('settings.tokens.tokenCreated'));
+    } catch (error) {
+        console.error('Failed to create token:', error);
+        toast.error(error.response?.data?.message || t('common.error'));
+    }
+};
+
+const handleRevokeToken = async (token) => {
+    if (!confirm(t('settings.tokens.revokeConfirm'))) return;
+    try {
+        await apiTokensStore.revokeToken(token.id);
+        toast.success(t('settings.tokens.tokenRevoked'));
+    } catch (error) {
+        console.error('Failed to revoke token:', error);
+        toast.error(error.response?.data?.message || t('common.error'));
+    }
+};
+
+const handleCopyToken = async () => {
+    if (!newTokenValue.value) return;
+    try {
+        await navigator.clipboard.writeText(newTokenValue.value);
+        toast.success(t('settings.tokens.tokenCopied'));
+    } catch (error) {
+        console.error('Failed to copy token:', error);
+        toast.error(t('common.error'));
+    }
+};
+
+const closeNewTokenModal = () => {
+    newTokenValue.value = null;
 };
 </script>
 
@@ -592,6 +654,134 @@ const handleSave = () => {
                                 </div>
                             </div>
                         </div>
+                    </div>
+
+                    <!-- Tokens Tab -->
+                    <div v-if="activeTab === 'tokens'" class="space-y-6">
+                        <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                            <div class="flex items-center justify-between mb-6">
+                                <div>
+                                    <h2 class="text-lg font-medium text-gray-900">
+                                        {{ t('settings.tokens.title') }}
+                                    </h2>
+                                    <p class="text-sm text-gray-500 mt-1">
+                                        {{ t('settings.tokens.description') }}
+                                    </p>
+                                </div>
+                                <Button @click="showTokenForm = true">
+                                    {{ t('settings.tokens.createToken') }}
+                                </Button>
+                            </div>
+
+                            <div v-if="apiTokensStore.loading" class="flex items-center justify-center py-12">
+                                <LoadingSpinner />
+                            </div>
+
+                            <div v-else-if="apiTokensStore.tokens.length === 0" class="text-center py-12">
+                                <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+                                </svg>
+                                <h3 class="mt-2 text-sm font-medium text-gray-900">
+                                    {{ t('settings.tokens.noTokens') }}
+                                </h3>
+                                <p class="mt-1 text-sm text-gray-500">
+                                    {{ t('settings.tokens.noTokensHint') }}
+                                </p>
+                            </div>
+
+                            <ApiTokenList
+                                v-else
+                                :tokens="apiTokensStore.tokens"
+                                @revoke="handleRevokeToken"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Token Form Modal -->
+        <div
+            v-if="showTokenForm"
+            class="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="modal-title"
+            role="dialog"
+            aria-modal="true"
+        >
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                <div
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                    @click="showTokenForm = false"
+                ></div>
+                <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+                    <ApiTokenForm
+                        @submit="handleCreateToken"
+                        @cancel="showTokenForm = false"
+                    />
+                </div>
+            </div>
+        </div>
+
+        <!-- New Token Display Modal -->
+        <div
+            v-if="newTokenValue"
+            class="fixed inset-0 z-50 overflow-y-auto"
+            aria-labelledby="new-token-modal"
+            role="dialog"
+            aria-modal="true"
+        >
+            <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:p-0">
+                <div
+                    class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+                ></div>
+                <div class="relative bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:max-w-lg sm:w-full">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            </div>
+                            <h2 class="ml-3 text-lg font-semibold text-gray-900">
+                                {{ t('settings.tokens.tokenCreatedTitle') }}
+                            </h2>
+                        </div>
+
+                        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+                            <div class="flex">
+                                <svg class="w-5 h-5 text-yellow-400 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                                </svg>
+                                <p class="text-sm text-yellow-800">
+                                    {{ t('settings.tokens.tokenWarning') }}
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                                {{ t('settings.tokens.yourToken') }}
+                            </label>
+                            <div class="flex">
+                                <input
+                                    :value="newTokenValue"
+                                    readonly
+                                    class="flex-1 px-3 py-2 border border-gray-300 rounded-l-lg bg-gray-50 font-mono text-sm"
+                                />
+                                <button
+                                    @click="handleCopyToken"
+                                    class="px-4 py-2 bg-blue-600 text-white rounded-r-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                >
+                                    {{ t('common.copy') }}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-gray-50 px-6 py-3 flex justify-end rounded-b-lg">
+                        <Button @click="closeNewTokenModal">
+                            {{ t('common.done') }}
+                        </Button>
                     </div>
                 </div>
             </div>

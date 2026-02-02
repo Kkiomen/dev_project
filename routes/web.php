@@ -5,7 +5,11 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\BaseController;
 use App\Http\Controllers\Web\TableController;
+use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+
+// Register broadcasting authentication routes
+Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 Route::get('/', function () {
     return view('welcome');
@@ -33,6 +37,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Settings
     Route::get('/settings', fn () => view('spa'))->name('settings');
+
+    // PSD Editor (admin only)
+    Route::get('/psd-editor', fn () => view('spa'))->name('psd-editor')->middleware('admin');
 });
 
 // Public approval route (no auth required)

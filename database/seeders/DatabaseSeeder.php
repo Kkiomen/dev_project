@@ -15,6 +15,9 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
+        // Create system user for library templates
+        $this->call(SystemUserSeeder::class);
+
         // User::factory(10)->create();
 
         User::factory()->create([

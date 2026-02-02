@@ -4,7 +4,7 @@ Layer mapper utility for mapping PSD layers to canvas layer types.
 
 from psd_tools.constants import BlendMode
 from psd_tools.api.layers import TypeLayer, PixelLayer, ShapeLayer, SmartObjectLayer, Group
-from psd_tools.api.adjustments import SolidColorFill
+from psd_tools.api.adjustments import SolidColorFill, GradientFill
 
 from .font_matcher import match_font, extract_font_weight, extract_font_style, is_all_caps_font
 from .image_extractor import (
@@ -791,6 +791,10 @@ def get_layer_type(layer) -> str | None:
         # Solid color fill layers are treated as rectangles
         return LAYER_TYPE_RECTANGLE
 
+    if isinstance(layer, GradientFill):
+        # Gradient fill adjustment layers are treated as rectangles with gradient
+        return LAYER_TYPE_RECTANGLE
+
     return None
 
 
@@ -814,11 +818,13 @@ def _is_complex_shape(layer: ShapeLayer) -> bool:
 def _detect_shape_type(layer: ShapeLayer) -> str:
     """Detect if a shape is a rectangle or ellipse."""
     try:
+        print(f"  [SHAPE TYPE] Layer '{layer.name}': detecting shape type...")
         # Priority 1: Check origination data - this is the most reliable
         # Photoshop stores the original shape type (Rectangle, Ellipse, etc.)
         if hasattr(layer, 'origination') and layer.origination:
             for orig in layer.origination:
                 orig_type = type(orig).__name__
+                print(f"  [SHAPE TYPE] Layer '{layer.name}': origination type = {orig_type}")
                 if orig_type == 'Ellipse':
                     print(f"  [SHAPE] Detected Ellipse from origination: {layer.name}")
                     return LAYER_TYPE_ELLIPSE
@@ -915,6 +921,8 @@ def map_layer(layer, layer_index: int, psd_width: int, psd_height: int, is_group
         _map_text_layer(layer, base_data, opacity, psd_dpi)
     elif layer_type == LAYER_TYPE_IMAGE:
         _map_image_layer(layer, base_data, opacity, sibling_layers)
+    elif isinstance(layer, GradientFill):
+        _map_gradient_fill_layer(layer, base_data, opacity)
     elif isinstance(layer, SolidColorFill):
         _map_solid_color_fill_layer(layer, base_data, opacity)
     elif layer_type in (LAYER_TYPE_RECTANGLE, LAYER_TYPE_ELLIPSE):
@@ -1553,6 +1561,7 @@ def _map_shape_layer(layer: ShapeLayer, data: dict, opacity: float):
                 data["rotation"] = rotation_from_mask
 
         # Priority 0: Check for gradient fill
+        print(f"  [SHAPE DEBUG] Layer '{layer.name}': checking for gradient/color fill")
         if hasattr(layer, "tagged_blocks"):
             try:
                 gradient_fill = layer.tagged_blocks.get_data(Tag.GRADIENT_FILL_SETTING)
@@ -1562,6 +1571,8 @@ def _map_shape_layer(layer: ShapeLayer, data: dict, opacity: float):
                     # Gradient structure: {b'Grad': {...}, b'Angl': angle, b'Type': type, ...}
                     gradient_data = _extract_gradient_data(gradient_fill, layer.name)
                     print(f"  [GRADIENT] Layer '{layer.name}': detected gradient fill")
+                else:
+                    print(f"  [SHAPE DEBUG] Layer '{layer.name}': no GRADIENT_FILL_SETTING")
             except Exception as e:
                 print(f"  [GRADIENT] Could not extract gradient: {e}")
 
@@ -1579,6 +1590,8 @@ def _map_shape_layer(layer: ShapeLayer, data: dict, opacity: float):
                         b = int(color_data.get(b'Bl  ', 0))
                         fill_color = f"#{r:02x}{g:02x}{b:02x}"
                         print(f"  [SHAPE COLOR] Layer '{layer.name}': extracted from SOLID_COLOR_SHEET_SETTING: {fill_color}")
+                else:
+                    print(f"  [SHAPE DEBUG] Layer '{layer.name}': no SOLID_COLOR_SHEET_SETTING")
             except Exception as e:
                 print(f"  [SHAPE COLOR] Could not extract from SOLID_COLOR_SHEET_SETTING: {e}")
 
@@ -1636,6 +1649,121 @@ def _map_shape_layer(layer: ShapeLayer, data: dict, opacity: float):
                 "stroke": None,
                 "strokeWidth": 0,
             }
+
+
+def _map_gradient_fill_layer(layer: GradientFill, data: dict, opacity: float):
+    """Map gradient fill adjustment layer properties."""
+    from psd_tools.constants import Tag
+
+    try:
+        print(f"  [GRADIENT FILL] Processing layer '{layer.name}'")
+
+        # Default gradient values
+        gradient_type = "linear"
+        gradient_angle = 90.0  # Default vertical
+        start_color = "#aaaaff"  # Light purple
+        end_color = "#ff88ff"    # Light pink
+
+        # Try to extract gradient data from GRADIENT_FILL_SETTING
+        if hasattr(layer, "tagged_blocks"):
+            try:
+                gradient_fill = layer.tagged_blocks.get_data(Tag.GRADIENT_FILL_SETTING)
+                if gradient_fill:
+                    # Extract gradient type
+                    grad_type_raw = gradient_fill.get(b'Type')
+                    if grad_type_raw:
+                        type_str = str(grad_type_raw).lower()
+                        if 'radial' in type_str or 'rdl' in type_str:
+                            gradient_type = 'radial'
+
+                    # Extract angle
+                    angle_raw = gradient_fill.get(b'Angl')
+                    if angle_raw:
+                        if hasattr(angle_raw, 'value'):
+                            gradient_angle = float(angle_raw.value)
+                        else:
+                            gradient_angle = float(angle_raw)
+
+                    # Extract colors from Grad structure
+                    grad = gradient_fill.get(b'Grad')
+                    if grad:
+                        colors = grad.get(b'Clrs', [])
+                        if len(colors) >= 1:
+                            first_stop = colors[0]
+                            first_clr = first_stop.get(b'Clr ')
+                            if first_clr:
+                                r = int(first_clr.get(b'Rd  ', 170))
+                                g = int(first_clr.get(b'Grn ', 170))
+                                b = int(first_clr.get(b'Bl  ', 255))
+                                start_color = f"#{r:02x}{g:02x}{b:02x}"
+
+                        if len(colors) >= 2:
+                            last_stop = colors[-1]
+                            last_clr = last_stop.get(b'Clr ')
+                            if last_clr:
+                                r = int(last_clr.get(b'Rd  ', 255))
+                                g = int(last_clr.get(b'Grn ', 136))
+                                b = int(last_clr.get(b'Bl  ', 255))
+                                end_color = f"#{r:02x}{g:02x}{b:02x}"
+                        else:
+                            end_color = start_color
+
+                    print(f"  [GRADIENT FILL] Extracted: type={gradient_type}, angle={gradient_angle}, colors={start_color}->{end_color}")
+            except Exception as e:
+                print(f"  [GRADIENT FILL] Could not extract from GRADIENT_FILL_SETTING: {e}")
+
+        # Fallback: try to get colors from layer.data
+        if hasattr(layer, "data") and layer.data:
+            try:
+                grad_data = layer.data
+                colors = grad_data.get(b'Clrs', [])
+                if len(colors) >= 1:
+                    first_clr = colors[0].get(b'Clr ')
+                    if first_clr:
+                        r = int(first_clr.get(b'Rd  ', 170))
+                        g = int(first_clr.get(b'Grn ', 170))
+                        b = int(first_clr.get(b'Bl  ', 255))
+                        start_color = f"#{r:02x}{g:02x}{b:02x}"
+                        print(f"  [GRADIENT FILL] Got start color from layer.data: {start_color}")
+
+                if len(colors) >= 2:
+                    last_clr = colors[-1].get(b'Clr ')
+                    if last_clr:
+                        r = int(last_clr.get(b'Rd  ', 255))
+                        g = int(last_clr.get(b'Grn ', 136))
+                        b = int(last_clr.get(b'Bl  ', 255))
+                        end_color = f"#{r:02x}{g:02x}{b:02x}"
+                        print(f"  [GRADIENT FILL] Got end color from layer.data: {end_color}")
+            except Exception as e:
+                print(f"  [GRADIENT FILL] Could not extract from layer.data: {e}")
+
+        data["properties"] = {
+            "fill": start_color,  # Fallback solid color
+            "stroke": None,
+            "strokeWidth": 0,
+            "cornerRadius": 0,
+            "fillType": "gradient",
+            "gradientType": gradient_type,
+            "gradientAngle": gradient_angle,
+            "gradientStartColor": start_color,
+            "gradientEndColor": end_color,
+            "gradientStartOpacity": 1.0,
+            "gradientEndOpacity": 1.0,
+        }
+
+        print(f"  [GRADIENT FILL] Layer '{layer.name}': {start_color} -> {end_color}, angle={gradient_angle}")
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        data["warnings"].append(f"Could not parse gradient fill: {str(e)}")
+        data["properties"] = {
+            "fill": "#aaaaff",
+            "stroke": None,
+            "strokeWidth": 0,
+            "cornerRadius": 0,
+            "fillType": "solid",
+        }
 
 
 def _map_solid_color_fill_layer(layer: SolidColorFill, data: dict, opacity: float):

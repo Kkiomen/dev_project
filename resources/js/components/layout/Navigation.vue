@@ -73,16 +73,6 @@ const logout = () => {
                             {{ t('navigation.calendar') }}
                         </RouterLink>
                         <RouterLink
-                            to="/approval-dashboard"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/approval'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/approval'),
-                            }"
-                        >
-                            {{ t('navigation.approval') }}
-                        </RouterLink>
-                        <RouterLink
                             to="/docs"
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
                             :class="{
@@ -131,6 +121,12 @@ const logout = () => {
                                 class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                             >
                                 {{ t('navigation.settings') }}
+                            </RouterLink>
+                            <RouterLink
+                                to="/settings?tab=tokens"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                                {{ t('navigation.tokens') }}
                             </RouterLink>
                             <RouterLink
                                 to="/brands"
@@ -206,16 +202,6 @@ const logout = () => {
                     {{ t('navigation.calendar') }}
                 </RouterLink>
                 <RouterLink
-                    to="/approval-dashboard"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/approval'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/approval'),
-                    }"
-                >
-                    {{ t('navigation.approval') }}
-                </RouterLink>
-                <RouterLink
                     to="/docs"
                     class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
                     :class="{
@@ -243,6 +229,12 @@ const logout = () => {
                         class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
                     >
                         {{ t('navigation.settings') }}
+                    </RouterLink>
+                    <RouterLink
+                        to="/settings?tab=tokens"
+                        class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
+                    >
+                        {{ t('navigation.tokens') }}
                     </RouterLink>
                     <RouterLink
                         to="/brands"

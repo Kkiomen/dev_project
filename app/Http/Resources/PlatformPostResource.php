@@ -25,6 +25,9 @@ class PlatformPostResource extends JsonResource
             'link_preview' => $this->link_preview,
             'publish_status' => $this->publish_status,
             'published_at' => $this->published_at,
+            'external_id' => $this->external_id,
+            'external_url' => $this->external_url,
+            'error_message' => $this->error_message,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

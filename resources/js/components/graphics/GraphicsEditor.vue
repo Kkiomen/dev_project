@@ -9,10 +9,8 @@ import EditorToolbar from './EditorToolbar.vue';
 import EditorCanvas from './EditorCanvas.vue';
 import LayersPanel from './LayersPanel.vue';
 import PropertiesPanel from './PropertiesPanel.vue';
-import AiChatPanel from './AiChatPanel.vue';
 import ExportModal from './modals/ExportModal.vue';
 import FontUploadModal from './modals/FontUploadModal.vue';
-import PsdUploadModal from './modals/PsdUploadModal.vue';
 import TemplateLibraryModal from './TemplateLibraryModal.vue';
 import AddToLibraryModal from './AddToLibraryModal.vue';
 
@@ -36,36 +34,6 @@ const showExportModal = ref(false);
 const showFontModal = ref(false);
 const showLibraryModal = ref(false);
 const showAddToLibraryModal = ref(false);
-const showPsdUploadModal = ref(false);
-
-// Resizable panel
-const DEFAULT_PANEL_WIDTH = 384; // w-96 = 24rem = 384px
-const MIN_PANEL_WIDTH = 280;
-const MAX_PANEL_WIDTH = 600;
-const propertiesPanelWidth = ref(DEFAULT_PANEL_WIDTH);
-const isResizing = ref(false);
-
-const startResize = (e) => {
-    isResizing.value = true;
-    document.addEventListener('mousemove', handleResize);
-    document.addEventListener('mouseup', stopResize);
-    document.body.style.cursor = 'col-resize';
-    document.body.style.userSelect = 'none';
-};
-
-const handleResize = (e) => {
-    if (!isResizing.value) return;
-    const newWidth = window.innerWidth - e.clientX;
-    propertiesPanelWidth.value = Math.min(MAX_PANEL_WIDTH, Math.max(MIN_PANEL_WIDTH, newWidth));
-};
-
-const stopResize = () => {
-    isResizing.value = false;
-    document.removeEventListener('mousemove', handleResize);
-    document.removeEventListener('mouseup', stopResize);
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-};
 
 const handleTemplateCopied = (newTemplate) => {
     showLibraryModal.value = false;
@@ -82,12 +50,6 @@ const handleAppliedToCurrent = (updatedTemplate) => {
 const handleAddedToLibrary = (template) => {
     showAddToLibraryModal.value = false;
     // Optionally refresh template data
-};
-
-const handlePsdImported = (newTemplate) => {
-    showPsdUploadModal.value = false;
-    // Navigate to the new template
-    router.push({ name: 'template.editor', params: { templateId: newTemplate.id } });
 };
 
 const handleUnlinkFromLibrary = async () => {
@@ -304,7 +266,6 @@ const handleOpenFonts = () => {
             @add-to-library="showAddToLibraryModal = true"
             @unlink-from-library="handleUnlinkFromLibrary"
             @fit-to-view="canvasRef?.fitToView?.()"
-            @import-psd="showPsdUploadModal = true"
         />
 
         <!-- Main content -->
@@ -326,25 +287,12 @@ const handleOpenFonts = () => {
                 />
             </div>
 
-            <!-- Properties panel / AI Chat panel -->
+            <!-- Properties panel -->
             <div
                 v-if="showPropertiesPanel"
-                class="flex-shrink-0 bg-white border-l border-gray-200 overflow-hidden relative"
-                :style="{ width: graphicsStore.chatPanelOpen ? propertiesPanelWidth + 'px' : '384px' }"
+                class="flex-shrink-0 bg-white border-l border-gray-200 overflow-hidden w-96"
             >
-                <!-- Resize handle (only for AI chat) -->
-                <div
-                    v-if="graphicsStore.chatPanelOpen"
-                    class="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-purple-400 transition-colors z-10"
-                    :style="{ backgroundColor: isResizing ? '#a855f7' : 'transparent' }"
-                    @mousedown="startResize"
-                ></div>
-
-                <AiChatPanel
-                    v-if="graphicsStore.chatPanelOpen"
-                    @close="graphicsStore.closeChatPanel()"
-                />
-                <div v-else class="h-full overflow-y-auto">
+                <div class="h-full overflow-y-auto">
                     <PropertiesPanel />
                 </div>
             </div>
@@ -381,13 +329,6 @@ const handleOpenFonts = () => {
             :canvas-ref="canvasRef"
             @close="showAddToLibraryModal = false"
             @added="handleAddedToLibrary"
-        />
-
-        <!-- PSD Upload modal (admin only) -->
-        <PsdUploadModal
-            :show="showPsdUploadModal"
-            @close="showPsdUploadModal = false"
-            @imported="handlePsdImported"
         />
     </div>
 </template>

@@ -242,64 +242,119 @@ def parse_psd():
                     has_clip_layers = hasattr(layer, 'clip_layers') and layer.clip_layers
 
                     if has_clip_layers:
-                        # This is a clipping base - extract its composite as an image
-                        # The composite includes the clipped content
-                        print(f"[CLIP BASE] Layer '{layer.name}' has clip_layers - extracting as image")
+                        # This is a clipping base - extract composite WITH clipped layers
+                        print(f"[CLIP BASE] Layer '{layer.name}' has {len(layer.clip_layers)} clip_layers")
+                        for clip_layer in layer.clip_layers:
+                            print(f"  [CLIP] Clipped layer: '{clip_layer.name}'")
 
                         try:
-                            comp = layer.composite()
-                            if comp:
-                                from utils.image_extractor import extract_layer_image
-                                import base64
-                                from io import BytesIO
+                            from utils.image_extractor import extract_layer_image
+                            import base64
+                            from io import BytesIO
+                            from PIL import Image
 
-                                # Convert composite to base64
-                                comp_rgba = comp.convert("RGBA")
-                                buffer = BytesIO()
-                                comp_rgba.save(buffer, format="PNG")
-                                img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
-
-                                # Create image layer data
-                                position = layer_counter["index"]
-                                layer_counter["index"] += 1
-
-                                mapped = {
-                                    "name": layer.name,
-                                    "type": "image",
-                                    "position": position,
-                                    "visible": layer.visible,
-                                    "locked": False,
-                                    "x": float(layer.left),
-                                    "y": float(layer.top),
-                                    "width": float(comp.width),
-                                    "height": float(comp.height),
-                                    "rotation": 0,
-                                    "scale_x": 1.0,
-                                    "scale_y": 1.0,
-                                    "opacity": layer.opacity / 255.0 if hasattr(layer, "opacity") else 1.0,
-                                    "properties": {
-                                        "src": None,
-                                        "fit": "fill",
-                                        "clipPath": None,
-                                        "isClipBase": True,  # Mark as clipping base
-                                    },
-                                }
-
-                                # Add image data
-                                image_id = f"img_{position}"
-                                images.append({
-                                    "id": image_id,
-                                    "layer_index": position,
-                                    "data": f"data:image/png;base64,{img_base64}",
-                                    "mime_type": "image/png",
-                                    "width": comp.width,
-                                    "height": comp.height,
-                                })
-                                mapped["image_id"] = image_id
-
-                                result.append(mapped)
-                                print(f"[CLIP BASE] Created image layer for '{layer.name}' ({comp.width}x{comp.height})")
+                            # Get base layer composite
+                            base_comp = layer.composite()
+                            if not base_comp:
+                                print(f"[CLIP BASE] No composite for '{layer.name}', skipping")
                                 continue
+
+                            base_comp = base_comp.convert("RGBA")
+
+                            # Use ONLY base layer bounds - this is the clipping mask!
+                            # Clipped layers are cropped TO the base, not expanded beyond it
+                            min_x = layer.left
+                            min_y = layer.top
+                            result_width = base_comp.width
+                            result_height = base_comp.height
+                            result_img = Image.new("RGBA", (result_width, result_height), (0, 0, 0, 0))
+
+                            # Paste base layer
+                            base_x = int(layer.left - min_x)
+                            base_y = int(layer.top - min_y)
+                            result_img.paste(base_comp, (base_x, base_y), base_comp)
+
+                            # Process clipped layers - they are clipped TO the base's alpha
+                            for clip_layer in layer.clip_layers:
+                                clip_comp = clip_layer.composite()
+                                if not clip_comp:
+                                    continue
+                                clip_comp = clip_comp.convert("RGBA")
+
+                                # Position on result canvas
+                                clip_x = int(clip_layer.left - min_x)
+                                clip_y = int(clip_layer.top - min_y)
+
+                                # Create a temporary image for this clipped layer
+                                temp = Image.new("RGBA", (result_width, result_height), (0, 0, 0, 0))
+                                temp.paste(clip_comp, (clip_x, clip_y), clip_comp)
+
+                                # Clip to base layer's alpha (use base alpha as mask)
+                                # Create mask from base layer alpha channel
+                                base_alpha = Image.new("L", (result_width, result_height), 0)
+                                base_with_alpha = Image.new("RGBA", (result_width, result_height), (0, 0, 0, 0))
+                                base_with_alpha.paste(base_comp, (base_x, base_y), base_comp)
+                                base_alpha = base_with_alpha.split()[3]
+
+                                # Apply clip mask - only show clipped layer where base has alpha
+                                temp_r, temp_g, temp_b, temp_a = temp.split()
+                                # Multiply clipped layer alpha with base alpha
+                                clipped_alpha = Image.composite(temp_a, Image.new("L", temp_a.size, 0), base_alpha)
+                                temp = Image.merge("RGBA", (temp_r, temp_g, temp_b, clipped_alpha))
+
+                                # Composite onto result
+                                result_img = Image.alpha_composite(result_img, temp)
+
+                            comp = result_img
+                            print(f"[CLIP BASE] Composited '{layer.name}' with clipped layers: {result_width}x{result_height}")
+
+                            # Convert composite to base64
+                            comp_rgba = comp.convert("RGBA")
+                            buffer = BytesIO()
+                            comp_rgba.save(buffer, format="PNG")
+                            img_base64 = base64.b64encode(buffer.getvalue()).decode("utf-8")
+
+                            # Create image layer data
+                            position = layer_counter["index"]
+                            layer_counter["index"] += 1
+
+                            mapped = {
+                                "name": layer.name,
+                                "type": "image",
+                                "position": position,
+                                "visible": layer.visible,
+                                "locked": False,
+                                "x": float(min_x),
+                                "y": float(min_y),
+                                "width": float(comp.width),
+                                "height": float(comp.height),
+                                "rotation": 0,
+                                "scale_x": 1.0,
+                                "scale_y": 1.0,
+                                "opacity": layer.opacity / 255.0 if hasattr(layer, "opacity") else 1.0,
+                                "properties": {
+                                    "src": None,
+                                    "fit": "fill",
+                                    "clipPath": None,
+                                    "isClipBase": True,  # Mark as clipping base
+                                },
+                            }
+
+                            # Add image data
+                            image_id = f"img_{position}"
+                            images.append({
+                                "id": image_id,
+                                "layer_index": position,
+                                "data": f"data:image/png;base64,{img_base64}",
+                                "mime_type": "image/png",
+                                "width": comp.width,
+                                "height": comp.height,
+                            })
+                            mapped["image_id"] = image_id
+
+                            result.append(mapped)
+                            print(f"[CLIP BASE] Created image layer for '{layer.name}' ({comp.width}x{comp.height})")
+                            continue
                         except Exception as e:
                             print(f"[CLIP BASE] Error extracting composite for '{layer.name}': {e}")
                             # Fall through to normal processing
@@ -650,6 +705,21 @@ def render_preview():
                             # Resize to layer dimensions
                             img = img.resize((w, h), Image.Resampling.LANCZOS)
 
+                            # Apply tint color if specified (for recoloring icon images)
+                            tint_color = props.get("tintColor")
+                            if tint_color and tint_color.startswith("#"):
+                                try:
+                                    tr = int(tint_color[1:3], 16)
+                                    tg = int(tint_color[3:5], 16)
+                                    tb = int(tint_color[5:7], 16)
+                                    # Create solid color image with same size
+                                    tint_layer = Image.new("RGBA", img.size, (tr, tg, tb, 255))
+                                    # Use original image's alpha as mask
+                                    # This replaces all non-transparent pixels with tint color
+                                    img = Image.composite(tint_layer, Image.new("RGBA", img.size, (0, 0, 0, 0)), img)
+                                except Exception as te:
+                                    print(f"Error applying tint: {te}")
+
                             # Apply opacity
                             if opacity < 1.0:
                                 alpha = img.split()[3]
@@ -666,6 +736,227 @@ def render_preview():
         render_layers(layers)
 
         # Save to bytes
+        img_bytes = io.BytesIO()
+        canvas.save(img_bytes, format="PNG")
+        img_bytes.seek(0)
+
+        return send_file(img_bytes, mimetype="image/png")
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": f"Render failed: {str(e)}"}), 500
+
+
+@app.route("/render-with-substitution", methods=["POST"])
+def render_with_substitution():
+    """
+    Render PSD with substituted values for tagged layers.
+    Uses psd.composite() for 1:1 accuracy, then overlays substituted content.
+
+    Expects JSON body with:
+        - psd_path: path to PSD file (or 'file' in form data)
+        - variant_path: path to variant group (e.g. "Post 01")
+        - tags: dict mapping layer paths to semantic tags
+        - data: substitution data (header, subtitle, main_image, primary_color, etc.)
+
+    Returns: PNG image
+    """
+    from PIL import Image, ImageDraw, ImageFont
+    import base64
+
+    try:
+        # Get request data
+        if request.is_json:
+            req_data = request.get_json()
+            psd_path = req_data.get('psd_path')
+            if psd_path:
+                with open(psd_path, 'rb') as f:
+                    file_data = f.read()
+            else:
+                return jsonify({"error": "No psd_path provided"}), 400
+        elif "file" in request.files:
+            file_data = request.files["file"].read()
+            req_data = {
+                'variant_path': request.form.get('variant_path'),
+                'tags': request.form.get('tags', '{}'),
+                'data': request.form.get('data', '{}')
+            }
+            if isinstance(req_data['tags'], str):
+                import json as json_module
+                req_data['tags'] = json_module.loads(req_data['tags'])
+            if isinstance(req_data['data'], str):
+                import json as json_module
+                req_data['data'] = json_module.loads(req_data['data'])
+        else:
+            return jsonify({"error": "No file or psd_path provided"}), 400
+
+        variant_path = req_data.get('variant_path', '')
+        tags = req_data.get('tags', {})
+        sub_data = req_data.get('data', {})
+
+        # Parse PSD
+        psd = PSDImage.open(io.BytesIO(file_data))
+
+        # Find variant group if specified
+        def find_group(layers, path):
+            parts = path.split('/') if path else []
+            current = layers
+            for part in parts:
+                found = None
+                for layer in current:
+                    if layer.name == part:
+                        found = layer
+                        break
+                if found is None:
+                    return None
+                current = found
+            return current
+
+        target_group = find_group(list(psd), variant_path) if variant_path else psd
+
+        # Start with blank canvas
+        canvas = Image.new("RGBA", (psd.width, psd.height), (255, 255, 255, 255))
+
+        def get_layer_path(layer, parent_path=""):
+            return f"{parent_path}/{layer.name}" if parent_path else layer.name
+
+        def render_layer_recursive(layer, parent_path="", parent_visible=True):
+            """Render layer using native composite, with substitutions for tagged layers."""
+            layer_path = get_layer_path(layer, parent_path)
+            is_visible = layer.visible and parent_visible
+
+            print(f"[RENDER] Processing layer: '{layer_path}' visible={is_visible} type={type(layer).__name__}")
+
+            # Check if this layer path has a tag
+            tag_info = tags.get(layer_path, {})
+            semantic_tag = tag_info.get('semantic_tag') if isinstance(tag_info, dict) else tag_info
+            if semantic_tag:
+                print(f"[RENDER] Layer '{layer_path}' has semantic_tag: {semantic_tag}")
+
+            if hasattr(layer, '__iter__'):  # Group
+                for child in layer:
+                    render_layer_recursive(child, layer_path, is_visible)
+            else:
+                if not is_visible:
+                    return
+
+                # Get native composite (1:1 with Photoshop)
+                comp = layer.composite()
+                if not comp:
+                    return
+
+                comp = comp.convert("RGBA")
+                x, y = layer.left, layer.top
+
+                # Apply substitution if layer has semantic tag and data exists
+                if semantic_tag and sub_data:
+                    value = sub_data.get(semantic_tag)
+                    print(f"[SUBST] Layer '{layer_path}' has tag '{semantic_tag}', value exists: {value is not None}")
+
+                    if value:
+                        # Text substitution
+                        if semantic_tag in ['header', 'subtitle', 'paragraph', 'social_handle', 'url', 'cta']:
+                            if hasattr(layer, 'engine_dict'):
+                                # Draw new text over the composite
+                                try:
+                                    # Get original text properties
+                                    font_size = 24
+                                    font_family = "DejaVuSans"
+                                    fill_color = (0, 0, 0, 255)
+
+                                    # Try to extract from layer
+                                    if hasattr(layer, 'engine_dict') and layer.engine_dict:
+                                        ed = layer.engine_dict
+                                        if 'StyleRun' in ed and 'RunArray' in ed['StyleRun']:
+                                            style = ed['StyleRun']['RunArray'][0].get('StyleSheet', {}).get('StyleSheetData', {})
+                                            font_size = int(style.get('FontSize', 24))
+                                            fc = style.get('FillColor', {}).get('Values', [1, 0, 0, 0])
+                                            if len(fc) >= 4:
+                                                fill_color = (int(fc[1]*255), int(fc[2]*255), int(fc[3]*255), int(fc[0]*255))
+
+                                    # Create new text image
+                                    try:
+                                        font = ImageFont.truetype("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf", font_size)
+                                    except:
+                                        font = ImageFont.load_default(size=font_size)
+
+                                    # Measure text
+                                    temp_draw = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+                                    bbox = temp_draw.textbbox((0, 0), value, font=font)
+                                    text_w = bbox[2] - bbox[0]
+                                    text_h = bbox[3] - bbox[1]
+
+                                    # Create text image
+                                    text_img = Image.new("RGBA", (max(comp.width, text_w + 10), max(comp.height, text_h + 10)), (0, 0, 0, 0))
+                                    draw = ImageDraw.Draw(text_img)
+                                    draw.text((0, 0), value, fill=fill_color, font=font)
+
+                                    comp = text_img
+                                except Exception as e:
+                                    print(f"[SUBST] Error substituting text: {e}")
+
+                        # Image substitution
+                        elif semantic_tag in ['main_image', 'logo']:
+                            print(f"[SUBST IMAGE] Attempting image substitution for '{layer_path}'")
+                            print(f"[SUBST IMAGE] Original comp size: {comp.width}x{comp.height}")
+                            print(f"[SUBST IMAGE] Value starts with: {value[:50] if isinstance(value, str) else 'N/A'}...")
+                            try:
+                                img_data = value
+                                if img_data.startswith('data:'):
+                                    img_data = img_data.split(',')[1]
+                                    print(f"[SUBST IMAGE] Stripped data: prefix")
+                                img_bytes = base64.b64decode(img_data)
+                                new_img = Image.open(io.BytesIO(img_bytes)).convert("RGBA")
+                                print(f"[SUBST IMAGE] Loaded new image: {new_img.width}x{new_img.height}")
+
+                                # Resize to fit layer bounds, maintaining aspect ratio
+                                new_img = new_img.resize((comp.width, comp.height), Image.Resampling.LANCZOS)
+                                print(f"[SUBST IMAGE] Resized to: {new_img.width}x{new_img.height}")
+
+                                # Use original alpha as mask (for clipping)
+                                if comp.mode == 'RGBA':
+                                    orig_alpha = comp.split()[3]
+                                    new_img.putalpha(orig_alpha)
+                                    print(f"[SUBST IMAGE] Applied original alpha mask")
+
+                                comp = new_img
+                                print(f"[SUBST IMAGE] Image substitution complete")
+                            except Exception as e:
+                                print(f"[SUBST IMAGE] Error substituting image: {e}")
+                                import traceback
+                                traceback.print_exc()
+
+                        # Color substitution
+                        elif semantic_tag in ['primary_color', 'secondary_color']:
+                            try:
+                                color = value
+                                if color.startswith('#'):
+                                    r = int(color[1:3], 16)
+                                    g = int(color[3:5], 16)
+                                    b = int(color[5:7], 16)
+
+                                    # Recolor - keep alpha, change RGB
+                                    if comp.mode == 'RGBA':
+                                        _, _, _, a = comp.split()
+                                        colored = Image.new("RGBA", comp.size, (r, g, b, 255))
+                                        colored.putalpha(a)
+                                        comp = colored
+                            except Exception as e:
+                                print(f"[SUBST] Error substituting color: {e}")
+
+                # Paste onto canvas
+                canvas.paste(comp, (x, y), comp)
+
+        # Render all layers in variant
+        if variant_path:
+            for layer in target_group:
+                render_layer_recursive(layer, variant_path, True)
+        else:
+            for layer in psd:
+                render_layer_recursive(layer, "", layer.visible)
+
+        # Return PNG
         img_bytes = io.BytesIO()
         canvas.save(img_bytes, format="PNG")
         img_bytes.seek(0)

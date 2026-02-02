@@ -3,26 +3,18 @@ import { ref, onMounted } from 'vue';
 import { useRouter, RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useGraphicsStore } from '@/stores/graphics';
-import { useAuthStore } from '@/stores/auth';
 import { useConfirm } from '@/composables/useConfirm';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import Button from '@/components/common/Button.vue';
-import TemplateLibraryModal from '@/components/graphics/TemplateLibraryModal.vue';
-import PsdUploadModal from '@/components/graphics/modals/PsdUploadModal.vue';
-import TemplatePreviewModal from '@/components/posts/TemplatePreviewModal.vue';
 
 const { t } = useI18n();
 
 const router = useRouter();
 const graphicsStore = useGraphicsStore();
-const authStore = useAuthStore();
 const { confirm } = useConfirm();
 
 const loading = ref(true);
 const showCreateModal = ref(false);
-const showLibraryModal = ref(false);
-const showPsdUploadModal = ref(false);
-const showPreviewModal = ref(false);
 const newTemplateName = ref('');
 const newTemplateWidth = ref(1080);
 const newTemplateHeight = ref(1080);
@@ -108,30 +100,6 @@ const handleDelete = async (template) => {
     }
 };
 
-// Handle PSD import
-const handlePsdImported = (newTemplate) => {
-    showPsdUploadModal.value = false;
-    router.push({ name: 'template.editor', params: { templateId: newTemplate.id } });
-};
-
-// Handle library template copied
-const handleTemplateCopied = (newTemplate) => {
-    showLibraryModal.value = false;
-    fetchData();
-};
-
-// Handle preview select (add to nothing - just close)
-const handlePreviewSelect = (preview) => {
-    showPreviewModal.value = false;
-};
-
-// Handle preview edit
-const handlePreviewEdit = (preview) => {
-    showPreviewModal.value = false;
-    if (preview?.id) {
-        router.push({ name: 'template.editor', params: { templateId: preview.id } });
-    }
-};
 </script>
 
 <template>
@@ -153,40 +121,6 @@ const handlePreviewEdit = (preview) => {
                     </h1>
                 </div>
                 <div class="flex items-center gap-3">
-                    <!-- Admin buttons -->
-                    <template v-if="authStore.isAdmin">
-                        <button
-                            @click="showPreviewModal = true"
-                            class="flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-all"
-                            :title="t('posts.template_preview.preview_button')"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                            </svg>
-                            <span>{{ t('posts.template_preview.preview_button') }}</span>
-                        </button>
-                        <button
-                            @click="showLibraryModal = true"
-                            class="flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 transition-all"
-                            :title="t('graphics.library.browse')"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-                            </svg>
-                            <span>{{ t('graphics.library.titleShort') }}</span>
-                        </button>
-                        <button
-                            @click="showPsdUploadModal = true"
-                            class="flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200 transition-all"
-                            :title="t('graphics.psd.uploadButton')"
-                        >
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
-                            </svg>
-                            <span>{{ t('graphics.psd.uploadButton') }}</span>
-                        </button>
-                    </template>
                     <Button @click="showCreateModal = true">
                         {{ t('graphics.templates.newTemplate') }}
                     </Button>
@@ -387,26 +321,5 @@ const handlePreviewEdit = (preview) => {
             </div>
         </teleport>
 
-        <!-- Library Modal -->
-        <TemplateLibraryModal
-            :show="showLibraryModal"
-            @close="showLibraryModal = false"
-            @template-copied="handleTemplateCopied"
-        />
-
-        <!-- PSD Upload Modal -->
-        <PsdUploadModal
-            :show="showPsdUploadModal"
-            @close="showPsdUploadModal = false"
-            @imported="handlePsdImported"
-        />
-
-        <!-- Template Preview Modal -->
-        <TemplatePreviewModal
-            v-if="showPreviewModal"
-            @close="showPreviewModal = false"
-            @select="handlePreviewSelect"
-            @edit="handlePreviewEdit"
-        />
     </div>
 </template>

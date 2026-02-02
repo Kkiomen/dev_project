@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\LayerType;
 use App\Enums\SemanticTag;
 use App\Models\Template;
 use Illuminate\Support\Facades\Http;
@@ -53,6 +54,85 @@ class TemplateRenderService
         }
 
         return $response->body();
+    }
+
+    /**
+     * Render a template using Vue EditorCanvas (accurate rendering).
+     * Uses the /render-vue endpoint which loads the actual Vue component via Laravel.
+     *
+     * @param Template $template The template to render
+     * @param int $scale Device scale factor (default 2 for retina)
+     * @return string Raw PNG binary
+     * @throws Exception
+     */
+    public function renderVue(Template $template, int $scale = 2): string
+    {
+        $templateData = $this->prepareTemplateData($template, []);
+
+        $response = Http::timeout($this->timeout)
+            ->post("{$this->baseUrl}/render-vue", [
+                'template' => $templateData,
+                'width' => $template->width,
+                'height' => $template->height,
+                'scale' => $scale,
+            ]);
+
+        if ($response->failed()) {
+            $error = $response->json();
+            throw new Exception(__('services.template_render.render_failed', [
+                'message' => $error['message'] ?? $response->body(),
+            ]));
+        }
+
+        return $response->body();
+    }
+
+    /**
+     * Render a template as thumbnail using Vue EditorCanvas for accurate rendering.
+     *
+     * @param Template $template The template to render
+     * @param int $width Thumbnail width
+     * @return string Raw PNG binary
+     * @throws Exception
+     */
+    public function renderThumbnail(Template $template, int $width = 400): string
+    {
+        // Use Vue rendering for accurate thumbnail (matches EditorCanvas)
+        $imageData = $this->renderVue($template, scale: 1);
+
+        // Resize using GD
+        $image = imagecreatefromstring($imageData);
+        if (!$image) {
+            throw new Exception('Failed to create image from render data');
+        }
+
+        $originalWidth = imagesx($image);
+        $originalHeight = imagesy($image);
+        $aspectRatio = $originalHeight / $originalWidth;
+        $height = (int) round($width * $aspectRatio);
+
+        // Create resized image
+        $thumbnail = imagecreatetruecolor($width, $height);
+
+        // Preserve transparency
+        imagealphablending($thumbnail, false);
+        imagesavealpha($thumbnail, true);
+
+        // High-quality resize
+        imagecopyresampled(
+            $thumbnail,
+            $image,
+            0, 0, 0, 0,
+            $width, $height,
+            $originalWidth, $originalHeight
+        );
+
+        // Output to string
+        ob_start();
+        imagepng($thumbnail, null, 9);
+        $thumbnailData = ob_get_clean();
+
+        return $thumbnailData;
     }
 
     /**
@@ -121,6 +201,11 @@ class TemplateRenderService
         $template->load('layers');
 
         $layers = $template->layers->map(function ($layer) use ($data) {
+            $properties = $layer->properties ?? [];
+
+            // Convert images to base64 data URLs to avoid CORS issues in renderer
+            $properties = $this->convertImagesToBase64($properties);
+
             $layerData = [
                 'id' => $layer->public_id,
                 'type' => $layer->type->value,
@@ -136,32 +221,161 @@ class TemplateRenderService
                 'visible' => $layer->visible,
                 'locked' => $layer->locked,
                 'position' => $layer->position,
-                'properties' => $layer->properties ?? [],
+                'properties' => $properties,
             ];
 
             // Apply semantic tag substitutions
-            $semanticTagValue = $layer->properties['semanticTag'] ?? null;
-            if ($semanticTagValue) {
-                $tag = SemanticTag::tryFrom($semanticTagValue);
-                if ($tag) {
-                    // Get the input key for this tag (some tags share input fields)
-                    $inputKey = $tag->inputKey();
-                    $value = $data[$inputKey] ?? null;
+            // Support both old format (semanticTag) and new format (semanticTags array)
+            $semanticTags = $layer->properties['semanticTags'] ?? [];
+            $legacyTag = $layer->properties['semanticTag'] ?? null;
 
-                    // If value is empty, hide the layer
+            // If no semanticTags but has legacy semanticTag, use that
+            if (empty($semanticTags) && $legacyTag) {
+                $semanticTags = [$legacyTag];
+            }
+
+            // Apply all semantic tags (content tags first, then style tags)
+            $contentApplied = false;
+            foreach ($semanticTags as $tagValue) {
+                $tag = SemanticTag::tryFrom($tagValue);
+                if (!$tag) {
+                    continue;
+                }
+
+                $inputKey = $tag->inputKey();
+
+                // Only apply substitution if a value is explicitly provided in data
+                // If no value provided, keep original layer content visible
+                if (!array_key_exists($inputKey, $data)) {
+                    continue;
+                }
+
+                $value = $data[$inputKey];
+
+                // For content tags, if value is explicitly empty, hide the layer
+                if ($tag->category() === 'content') {
                     if (empty($value)) {
                         $layerData['visible'] = false;
-                    } else {
-                        $layerData['properties'] = $this->applySubstitution(
-                            $layerData['properties'],
-                            $tag,
-                            $value
-                        );
+                        break; // Don't process further if content is missing
                     }
+                    $contentApplied = true;
                 }
+
+                // Apply substitution (pass layer type for context-aware substitution)
+                $layerData['properties'] = $this->applySubstitution(
+                    $layerData['properties'],
+                    $tag,
+                    $value,
+                    $layer->type
+                );
             }
 
             return $layerData;
+        })->toArray();
+
+        return [
+            'id' => $template->public_id,
+            'name' => $template->name,
+            'width' => $template->width,
+            'height' => $template->height,
+            'backgroundColor' => $template->background_color,
+            'layers' => $layers,
+        ];
+    }
+
+    /**
+     * Convert relative image paths in properties to absolute URLs.
+     *
+     * @param array $properties
+     * @param string $baseUrl
+     * @return array
+     */
+    protected function convertImagePaths(array $properties, string $baseUrl): array
+    {
+        $imageKeys = ['src', 'maskSrc', 'smartObjectSource'];
+
+        foreach ($imageKeys as $key) {
+            if (isset($properties[$key]) && is_string($properties[$key])) {
+                $path = $properties[$key];
+                // Convert relative paths starting with / to absolute URLs
+                if (str_starts_with($path, '/') && !str_starts_with($path, '//')) {
+                    $properties[$key] = $baseUrl . $path;
+                }
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
+     * Convert image paths to base64 data URLs for reliable rendering.
+     *
+     * @param array $properties
+     * @return array
+     */
+    protected function convertImagesToBase64(array $properties): array
+    {
+        $imageKeys = ['src', 'maskSrc', 'smartObjectSource'];
+
+        foreach ($imageKeys as $key) {
+            if (isset($properties[$key]) && is_string($properties[$key])) {
+                $path = $properties[$key];
+
+                // Skip if already a data URL
+                if (str_starts_with($path, 'data:')) {
+                    continue;
+                }
+
+                // Convert /storage/ paths to actual file paths
+                if (str_starts_with($path, '/storage/')) {
+                    $relativePath = str_replace('/storage/', '', $path);
+                    $fullPath = Storage::disk('public')->path($relativePath);
+
+                    if (file_exists($fullPath)) {
+                        $imageData = file_get_contents($fullPath);
+                        $mimeType = mime_content_type($fullPath) ?: 'image/png';
+                        $properties[$key] = 'data:' . $mimeType . ';base64,' . base64_encode($imageData);
+                    }
+                }
+            }
+        }
+
+        return $properties;
+    }
+
+    /**
+     * Prepare template data with images as base64 for reliable rendering.
+     *
+     * @param Template $template
+     * @return array
+     */
+    protected function prepareTemplateDataWithBase64Images(Template $template): array
+    {
+        $template->load('layers');
+
+        $layers = $template->layers->map(function ($layer) {
+            $properties = $layer->properties ?? [];
+
+            // Convert images to base64 data URLs
+            $properties = $this->convertImagesToBase64($properties);
+
+            return [
+                'id' => $layer->public_id,
+                'type' => $layer->type->value,
+                'name' => $layer->name,
+                'x' => $layer->x,
+                'y' => $layer->y,
+                'width' => $layer->width,
+                'height' => $layer->height,
+                'rotation' => $layer->rotation,
+                'scale_x' => $layer->scale_x,
+                'scale_y' => $layer->scale_y,
+                'opacity' => $layer->opacity,
+                'visible' => $layer->visible,
+                'locked' => $layer->locked,
+                'position' => $layer->position,
+                'properties' => $properties,
+            ];
         })->toArray();
 
         return [
@@ -180,11 +394,20 @@ class TemplateRenderService
      * @param array $properties Layer properties
      * @param SemanticTag $tag The semantic tag
      * @param mixed $value The value to substitute
+     * @param LayerType|null $layerType The layer type for context-aware substitution
      * @return array Modified properties
      */
-    protected function applySubstitution(array $properties, SemanticTag $tag, mixed $value): array
+    protected function applySubstitution(array $properties, SemanticTag $tag, mixed $value, ?LayerType $layerType = null): array
     {
         $propertyKey = $tag->affectsProperty();
+
+        // For color tags on image layers, use tintColor instead of fill
+        // This allows recoloring of icon/shape images that were rasterized from PSD
+        if ($propertyKey === 'fill' && $layerType === LayerType::IMAGE) {
+            $properties['tintColor'] = $value;
+            return $properties;
+        }
+
         $properties[$propertyKey] = $value;
 
         return $properties;
