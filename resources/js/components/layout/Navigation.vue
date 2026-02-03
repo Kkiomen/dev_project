@@ -91,11 +91,31 @@ const logout = () => {
                             to="/calendar"
                             class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
                             :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts'),
+                                'border-blue-500 text-gray-900': $route.path.startsWith('/calendar') || ($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/calendar') && !($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
                             }"
                         >
                             {{ t('navigation.calendar') }}
+                        </RouterLink>
+                        <RouterLink
+                            to="/posts/automation"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                            :class="{
+                                'border-blue-500 text-gray-900': $route.path === '/posts/automation',
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': $route.path !== '/posts/automation',
+                            }"
+                        >
+                            {{ t('navigation.postAutomation') }}
+                        </RouterLink>
+                        <RouterLink
+                            to="/boards"
+                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
+                            :class="{
+                                'border-blue-500 text-gray-900': $route.path.startsWith('/boards'),
+                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/boards'),
+                            }"
+                        >
+                            {{ t('navigation.boards') }}
                         </RouterLink>
                         <RouterLink
                             to="/docs"
@@ -191,6 +211,13 @@ const logout = () => {
                             >
                                 {{ t('navigation.brands') }}
                             </RouterLink>
+                            <RouterLink
+                                v-if="authStore.isAdmin"
+                                to="/admin/users"
+                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            >
+                                {{ t('navigation.admin') }}
+                            </RouterLink>
                             <button
                                 @click="logout"
                                 class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -262,11 +289,31 @@ const logout = () => {
                     to="/calendar"
                     class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
                     :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/calendar') || $route.path.startsWith('/posts'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/calendar') && !$route.path.startsWith('/posts'),
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/calendar') || ($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/calendar') && !($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
                     }"
                 >
                     {{ t('navigation.calendar') }}
+                </RouterLink>
+                <RouterLink
+                    to="/posts/automation"
+                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
+                    :class="{
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path === '/posts/automation',
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': $route.path !== '/posts/automation',
+                    }"
+                >
+                    {{ t('navigation.postAutomation') }}
+                </RouterLink>
+                <RouterLink
+                    to="/boards"
+                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
+                    :class="{
+                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/boards'),
+                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/boards'),
+                    }"
+                >
+                    {{ t('navigation.boards') }}
                 </RouterLink>
                 <RouterLink
                     to="/docs"
@@ -327,6 +374,17 @@ const logout = () => {
                         class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
                     >
                         {{ t('navigation.brands') }}
+                    </RouterLink>
+                    <RouterLink
+                        v-if="authStore.isAdmin"
+                        to="/admin/users"
+                        class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
+                        :class="{
+                            'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/admin'),
+                            'border-transparent': !$route.path.startsWith('/admin'),
+                        }"
+                    >
+                        {{ t('navigation.admin') }}
                     </RouterLink>
                     <button
                         @click="logout"

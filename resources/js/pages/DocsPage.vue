@@ -15,6 +15,8 @@ const tabs = computed(() => [
     { id: 'templates', label: t('docs.tabs.templates') },
     { id: 'posts', label: t('docs.tabs.posts') },
     { id: 'calendar', label: t('docs.tabs.calendar') },
+    { id: 'boards', label: t('docs.tabs.boards') },
+    { id: 'automation', label: t('docs.tabs.automation') },
 ]);
 
 // Sidebar sections for each tab
@@ -57,6 +59,23 @@ const sidebarSections = computed(() => {
             { id: 'events-crud', label: t('docs.calendar.eventsCrud') },
             { id: 'events-calendar', label: t('docs.calendar.calendarView') },
             { id: 'events-reschedule', label: t('docs.calendar.reschedule') },
+        ];
+    } else if (currentTab.value === 'boards') {
+        return [
+            { id: 'boards-overview', label: t('docs.boards.overview') },
+            { id: 'boards-crud', label: t('docs.boards.boardsCrud') },
+            { id: 'columns-crud', label: t('docs.boards.columnsCrud') },
+            { id: 'cards-crud', label: t('docs.boards.cardsCrud') },
+            { id: 'cards-move', label: t('docs.boards.movingCards') },
+        ];
+    } else if (currentTab.value === 'automation') {
+        return [
+            { id: 'automation-overview', label: t('docs.automationApi.howItWorks') },
+            { id: 'create-post', label: t('docs.automationApi.createPost.title') },
+            { id: 'webhook-reference', label: t('docs.automationApi.webhookReference') },
+            { id: 'automation-endpoints', label: 'Endpoints' },
+            { id: 'n8n-integration', label: t('docs.automationApi.n8nExample.title') },
+            { id: 'automation-curl', label: t('docs.automationApi.curlExamples') },
         ];
     }
     return [];
@@ -696,7 +715,17 @@ X-RateLimit-Reset: 1705764000`" />
                             <p class="text-gray-600">{{ t('docs.tables.endpoints.updateDescription') }}</p>
                         </div>
                         <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">table_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Table ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Table name</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Table description</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;name&quot;: &quot;Updated Table Name&quot;,
   &quot;description&quot;: &quot;Updated description&quot;
@@ -704,7 +733,17 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated table object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;tbl_abc123&quot;,
+    &quot;name&quot;: &quot;Updated Table Name&quot;,
+    &quot;description&quot;: &quot;Updated description&quot;,
+    &quot;fields_count&quot;: 5,
+    &quot;rows_count&quot;: 42,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -814,7 +853,23 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns created field object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;fld_status&quot;,
+    &quot;table_id&quot;: &quot;tbl_abc123&quot;,
+    &quot;name&quot;: &quot;Status&quot;,
+    &quot;type&quot;: &quot;select&quot;,
+    &quot;options&quot;: {
+      &quot;choices&quot;: [
+        { &quot;id&quot;: &quot;opt_1&quot;, &quot;name&quot;: &quot;New&quot;, &quot;color&quot;: &quot;#3B82F6&quot; },
+        { &quot;id&quot;: &quot;opt_2&quot;, &quot;name&quot;: &quot;In Progress&quot;, &quot;color&quot;: &quot;#F59E0B&quot; },
+        { &quot;id&quot;: &quot;opt_3&quot;, &quot;name&quot;: &quot;Done&quot;, &quot;color&quot;: &quot;#10B981&quot; }
+      ]
+    },
+    &quot;is_primary&quot;: false,
+    &quot;position&quot;: 3
+  }
+}`" />
                         </div>
                     </div>
 
@@ -829,13 +884,31 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.fields.attributes.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">options</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.fields.attributes.options') }}</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;name&quot;: &quot;Updated Field Name&quot;
 }`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated field object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;fld_status&quot;,
+    &quot;table_id&quot;: &quot;tbl_abc123&quot;,
+    &quot;name&quot;: &quot;Updated Field Name&quot;,
+    &quot;type&quot;: &quot;select&quot;,
+    &quot;options&quot;: {
+      &quot;choices&quot;: [
+        { &quot;id&quot;: &quot;opt_1&quot;, &quot;name&quot;: &quot;New&quot;, &quot;color&quot;: &quot;#3B82F6&quot; }
+      ]
+    },
+    &quot;is_primary&quot;: false,
+    &quot;position&quot;: 3
+  }
+}`" />
                         </div>
                     </div>
 
@@ -936,7 +1009,16 @@ X-RateLimit-Reset: 1705764000`" />
                             <p class="text-gray-600">{{ t('docs.rows.endpoints.createDescription') }}</p>
                         </div>
                         <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">table_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Table ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">cells</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Object with field_id: value pairs</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;cells&quot;: {
     &quot;fld_name&quot;: &quot;Jane Smith&quot;,
@@ -947,7 +1029,19 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns created row object with ID</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;row_def456&quot;,
+    &quot;table_id&quot;: &quot;tbl_abc123&quot;,
+    &quot;cells&quot;: {
+      &quot;fld_name&quot;: &quot;Jane Smith&quot;,
+      &quot;fld_email&quot;: &quot;jane@example.com&quot;,
+      &quot;fld_status&quot;: { &quot;id&quot;: &quot;opt_1&quot;, &quot;name&quot;: &quot;Active&quot;, &quot;color&quot;: &quot;#10B981&quot; }
+    },
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -961,7 +1055,16 @@ X-RateLimit-Reset: 1705764000`" />
                             <p class="text-gray-600">{{ t('docs.rows.endpoints.updateDescription') }}</p>
                         </div>
                         <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">row_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Row ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">cells</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Object with field_id: value pairs to update</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;cells&quot;: {
     &quot;fld_status&quot;: &quot;opt_2&quot;
@@ -970,7 +1073,19 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated row object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;row_abc123&quot;,
+    &quot;table_id&quot;: &quot;tbl_abc123&quot;,
+    &quot;cells&quot;: {
+      &quot;fld_name&quot;: &quot;John Doe&quot;,
+      &quot;fld_email&quot;: &quot;john@example.com&quot;,
+      &quot;fld_status&quot;: { &quot;id&quot;: &quot;opt_2&quot;, &quot;name&quot;: &quot;Done&quot;, &quot;color&quot;: &quot;#10B981&quot; }
+    },
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1017,7 +1132,14 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated cell value</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;row_id&quot;: &quot;row_abc123&quot;,
+    &quot;field_id&quot;: &quot;fld_name&quot;,
+    &quot;value&quot;: &quot;Updated value&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1204,7 +1326,21 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns created template object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQZ...&quot;,
+    &quot;name&quot;: &quot;Instagram Post&quot;,
+    &quot;description&quot;: &quot;1080x1080 post template&quot;,
+    &quot;canvas_width&quot;: 1080,
+    &quot;canvas_height&quot;: 1080,
+    &quot;canvas_background_color&quot;: &quot;#ffffff&quot;,
+    &quot;thumbnail_url&quot;: null,
+    &quot;in_library&quot;: false,
+    &quot;layers_count&quot;: 0,
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
@@ -1227,7 +1363,19 @@ X-RateLimit-Reset: 1705764000`" />
                             <p class="text-gray-600">{{ t('docs.templates.endpoints.updateDescription') }}</p>
                         </div>
                         <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Template public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.fields.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.fields.description') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">canvas_background_color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.fields.canvasBackgroundColor') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">in_library</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Add to library (boolean)</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;name&quot;: &quot;Updated Template Name&quot;,
   &quot;canvas_background_color&quot;: &quot;#f0f0f0&quot;
@@ -1235,7 +1383,20 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated template object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;Updated Template Name&quot;,
+    &quot;canvas_width&quot;: 1080,
+    &quot;canvas_height&quot;: 1080,
+    &quot;canvas_background_color&quot;: &quot;#f0f0f0&quot;,
+    &quot;thumbnail_url&quot;: &quot;https://example.com/thumb.png&quot;,
+    &quot;in_library&quot;: true,
+    &quot;layers_count&quot;: 5,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1265,7 +1426,19 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns duplicated template object with new ID</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQY...&quot;,
+    &quot;name&quot;: &quot;Instagram Post (copy)&quot;,
+    &quot;canvas_width&quot;: 1080,
+    &quot;canvas_height&quot;: 1080,
+    &quot;canvas_background_color&quot;: &quot;#ffffff&quot;,
+    &quot;in_library&quot;: false,
+    &quot;layers_count&quot;: 5,
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1367,7 +1540,24 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns created layer object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQX...&quot;,
+    &quot;name&quot;: &quot;Header Text&quot;,
+    &quot;type&quot;: &quot;text&quot;,
+    &quot;semantic_tag&quot;: &quot;header&quot;,
+    &quot;properties&quot;: {
+      &quot;x&quot;: 100, &quot;y&quot;: 200,
+      &quot;text&quot;: &quot;Hello World&quot;,
+      &quot;fontSize&quot;: 48,
+      &quot;fontFamily&quot;: &quot;Inter&quot;,
+      &quot;fill&quot;: &quot;#000000&quot;
+    },
+    &quot;visible&quot;: true,
+    &quot;locked&quot;: false,
+    &quot;order&quot;: 5
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1381,7 +1571,20 @@ X-RateLimit-Reset: 1705764000`" />
                             <p class="text-gray-600">{{ t('docs.templates.endpoints.updateLayerDescription') }}</p>
                         </div>
                         <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Layer public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.layers.fields.name') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">properties</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.layers.fields.properties') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">semantic_tag</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.templates.layers.fields.semanticTag') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">visible</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Visibility (boolean)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">locked</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Lock state (boolean)</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;properties&quot;: {
     &quot;x&quot;: 150,
@@ -1393,7 +1596,23 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated layer object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+    &quot;name&quot;: &quot;Header Text&quot;,
+    &quot;type&quot;: &quot;text&quot;,
+    &quot;semantic_tag&quot;: &quot;subtitle&quot;,
+    &quot;properties&quot;: {
+      &quot;x&quot;: 150, &quot;y&quot;: 250,
+      &quot;text&quot;: &quot;Hello World&quot;,
+      &quot;fontSize&quot;: 48,
+      &quot;fill&quot;: &quot;#FF0000&quot;
+    },
+    &quot;visible&quot;: true,
+    &quot;locked&quot;: false,
+    &quot;order&quot;: 0
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1511,7 +1730,15 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns saved image object with URL</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQB...&quot;,
+    &quot;url&quot;: &quot;https://example.com/generated/image2.png&quot;,
+    &quot;width&quot;: 1080,
+    &quot;height&quot;: 1080,
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1692,7 +1919,22 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns created post object with ID</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQZ...&quot;,
+    &quot;title&quot;: &quot;Weekly Update&quot;,
+    &quot;main_caption&quot;: &quot;Check out our latest news and updates!&quot;,
+    &quot;status&quot;: &quot;pending_approval&quot;,
+    &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;published_at&quot;: null,
+    &quot;media_count&quot;: 0,
+    &quot;platform_posts&quot;: [
+      { &quot;platform&quot;: &quot;facebook&quot;, &quot;status&quot;: &quot;pending&quot; },
+      { &quot;platform&quot;: &quot;instagram&quot;, &quot;status&quot;: &quot;pending&quot; }
+    ],
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
@@ -1716,7 +1958,19 @@ X-RateLimit-Reset: 1705764000`" />
                             <p class="text-gray-600">{{ t('docs.postsApi.endpoints.updateDescription') }}</p>
                         </div>
                         <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>{{ t('docs.postsApi.fields.id') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">title</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.postsApi.fields.title') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">main_caption</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.postsApi.fields.mainCaption') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">scheduled_at</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.postsApi.fields.scheduledAt') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">status</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>draft, pending_approval</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;title&quot;: &quot;Updated Title&quot;,
   &quot;main_caption&quot;: &quot;Updated caption content...&quot;,
@@ -1725,7 +1979,21 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated post object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Updated Title&quot;,
+    &quot;main_caption&quot;: &quot;Updated caption content...&quot;,
+    &quot;status&quot;: &quot;draft&quot;,
+    &quot;scheduled_at&quot;: &quot;2024-01-25T10:00:00Z&quot;,
+    &quot;published_at&quot;: null,
+    &quot;media_count&quot;: 2,
+    &quot;platform_posts&quot;: [
+      { &quot;platform&quot;: &quot;facebook&quot;, &quot;status&quot;: &quot;pending&quot; }
+    ],
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1790,7 +2058,18 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns posts with status "approved" ready for publication</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+      &quot;title&quot;: &quot;Weekly Update&quot;,
+      &quot;main_caption&quot;: &quot;Check out our latest news...&quot;,
+      &quot;status&quot;: &quot;approved&quot;,
+      &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+      &quot;platforms&quot;: [&quot;facebook&quot;, &quot;instagram&quot;]
+    }
+  ]
+}`" />
                         </div>
                     </div>
 
@@ -1805,7 +2084,18 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns posts with status "pending_approval"</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+      &quot;title&quot;: &quot;Product Launch&quot;,
+      &quot;main_caption&quot;: &quot;Exciting new product...&quot;,
+      &quot;status&quot;: &quot;pending_approval&quot;,
+      &quot;scheduled_at&quot;: &quot;2024-01-22T12:00:00Z&quot;,
+      &quot;platforms&quot;: [&quot;instagram&quot;]
+    }
+  ]
+}`" />
                         </div>
                     </div>
 
@@ -1850,7 +2140,14 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns post with status "draft"</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;status&quot;: &quot;draft&quot;,
+    &quot;rejection_reason&quot;: &quot;Please update the image quality&quot;,
+    &quot;...&quot;: &quot;...&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1878,7 +2175,27 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns post with platform_post status "published"</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Weekly Update&quot;,
+    &quot;main_caption&quot;: &quot;Check out our latest news...&quot;,
+    &quot;status&quot;: &quot;approved&quot;,
+    &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;published_at&quot;: &quot;2024-01-20T15:01:23Z&quot;,
+    &quot;media_count&quot;: 1,
+    &quot;platform_posts&quot;: [
+      {
+        &quot;platform&quot;: &quot;facebook&quot;,
+        &quot;status&quot;: &quot;published&quot;,
+        &quot;external_id&quot;: &quot;123456789&quot;,
+        &quot;external_url&quot;: &quot;https://facebook.com/posts/123456789&quot;,
+        &quot;published_at&quot;: &quot;2024-01-20T15:01:23Z&quot;
+      }
+    ],
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1904,7 +2221,26 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns post with platform_post status "failed"</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Weekly Update&quot;,
+    &quot;main_caption&quot;: &quot;Check out our latest news...&quot;,
+    &quot;status&quot;: &quot;approved&quot;,
+    &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;published_at&quot;: null,
+    &quot;media_count&quot;: 1,
+    &quot;platform_posts&quot;: [
+      {
+        &quot;platform&quot;: &quot;instagram&quot;,
+        &quot;status&quot;: &quot;failed&quot;,
+        &quot;error_message&quot;: &quot;Media aspect ratio is not supported&quot;,
+        &quot;failed_at&quot;: &quot;2024-01-20T15:01:23Z&quot;
+      }
+    ],
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1953,7 +2289,17 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns uploaded media object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+    &quot;url&quot;: &quot;https://example.com/media/image1.jpg&quot;,
+    &quot;type&quot;: &quot;image&quot;,
+    &quot;mime_type&quot;: &quot;image/jpeg&quot;,
+    &quot;size&quot;: 102400,
+    &quot;filename&quot;: &quot;image1.jpg&quot;,
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -1971,6 +2317,543 @@ X-RateLimit-Reset: 1705764000`" />
                             <p class="text-gray-500 text-sm">No content</p>
                         </div>
                     </div>
+
+                </template>
+
+                <!-- ===== AUTOMATION TAB ===== -->
+                <template v-else-if="currentTab === 'automation'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.automationApi.title') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.automationApi.howItWorksDescription') }}</p>
+
+                    <!-- Authentication info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                        <h3 class="font-medium text-blue-800 mb-2">{{ t('docs.authentication') }}</h3>
+                        <p class="text-blue-700 text-sm mb-2">{{ t('docs.auth.usingTokenDescription') }}</p>
+                        <code class="bg-blue-100 px-2 py-1 rounded text-xs">Authorization: Bearer YOUR_API_TOKEN</code>
+                    </div>
+
+                    <!-- ========== HOW IT WORKS ========== -->
+                    <h2 id="automation-overview" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.automationApi.howItWorks') }}</h2>
+
+                    <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4 mb-8">
+                        <ol class="list-decimal list-inside text-indigo-700 space-y-1 text-sm">
+                            <li>{{ t('docs.automationApi.howItWorksSteps.step1') }}</li>
+                            <li>{{ t('docs.automationApi.howItWorksSteps.step2') }}</li>
+                            <li>{{ t('docs.automationApi.howItWorksSteps.step3') }}</li>
+                            <li>{{ t('docs.automationApi.howItWorksSteps.step4') }}</li>
+                            <li>{{ t('docs.automationApi.howItWorksSteps.step5') }}</li>
+                            <li>{{ t('docs.automationApi.howItWorksSteps.step6') }}</li>
+                        </ol>
+                    </div>
+
+                    <!-- ========== CREATE POST ========== -->
+                    <h2 id="create-post" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.automationApi.createPost.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.automationApi.createPost.description') }}</p>
+
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1 w-40">title</td><td class="text-red-500 w-20">required</td><td>{{ t('docs.automationApi.createPost.titleField') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">main_caption</td><td class="text-gray-400">optional</td><td>{{ t('docs.automationApi.createPost.captionField') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">scheduled_at</td><td class="text-gray-400">optional</td><td>{{ t('docs.automationApi.createPost.scheduledField') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">platforms</td><td class="text-gray-400">optional</td><td>{{ t('docs.automationApi.createPost.platformsField') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-500 text-xs mb-2">{{ t('docs.automationApi.createPost.exampleTitle') }}</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;title&quot;: &quot;5 AI trends in marketing for 2026&quot;,
+  &quot;scheduled_at&quot;: &quot;2026-02-15T10:00:00+00:00&quot;,
+  &quot;platforms&quot;: [&quot;facebook&quot;, &quot;instagram&quot;]
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;title&quot;: &quot;5 AI trends in marketing for 2026&quot;,
+  &quot;main_caption&quot;: null,
+  &quot;status&quot;: &quot;draft&quot;,
+  &quot;scheduled_at&quot;: &quot;2026-02-15T10:00:00+00:00&quot;,
+  &quot;...&quot;: &quot;...&quot;
+}`" />
+                        </div>
+                    </div>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
+                        <p class="text-amber-800 text-sm">{{ t('docs.automationApi.createPost.note') }}</p>
+                    </div>
+
+                    <!-- ========== WEBHOOK REFERENCE ========== -->
+                    <h2 id="webhook-reference" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.automationApi.webhookReference') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.automationApi.webhookReferenceDescription') }}</p>
+
+                    <!-- ===== 1. TEXT GENERATION WEBHOOK ===== -->
+                    <div class="border-2 border-blue-200 rounded-xl mb-8 overflow-hidden">
+                        <div class="bg-blue-50 px-5 py-4 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-blue-900 text-lg">{{ t('docs.automationApi.textGenerationWebhook.title') }}</h3>
+                                <code class="text-blue-600 text-xs">{{ t('docs.automationApi.textGenerationWebhook.settingKey') }}</code>
+                            </div>
+                            <span class="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">{{ t('docs.automationApi.webhookTypesTable.fallback') }}: {{ t('docs.automationApi.webhookTypesTable.textGenerationFallback') }}</span>
+                        </div>
+                        <div class="px-5 py-4 border-t border-blue-200">
+                            <p class="text-gray-700 text-sm mb-2">{{ t('docs.automationApi.textGenerationWebhook.description') }}</p>
+                            <p class="text-blue-600 text-xs italic">{{ t('docs.automationApi.textGenerationWebhook.fallbackNote') }}</p>
+                        </div>
+                        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-blue-200 border-t border-blue-200">
+                            <!-- INPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs font-bold">IN</span>
+                                    {{ t('docs.automationApi.receives') }}
+                                </h4>
+                                <p class="text-gray-500 text-xs mb-2">{{ t('docs.automationApi.keyFields') }}:</p>
+                                <ul class="text-sm text-gray-700 space-y-1">
+                                    <li><code class="bg-gray-100 px-1 rounded text-blue-600">prompt</code> — {{ t('docs.automationApi.textGenerationWebhook.keyField1') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-blue-600">title</code> — {{ t('docs.automationApi.textGenerationWebhook.keyField2') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-blue-600">brand_context</code> — {{ t('docs.automationApi.textGenerationWebhook.keyField3') }}</li>
+                                </ul>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;post_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;brand_id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+  &quot;brand_name&quot;: &quot;My Brand&quot;,
+  &quot;title&quot;: &quot;AI trends in marketing&quot;,
+  &quot;main_caption&quot;: &quot;&quot;,
+  &quot;image_prompt&quot;: null,
+  &quot;status&quot;: &quot;draft&quot;,
+  &quot;prompt&quot;: &quot;Write an engaging social media post...&quot;,
+  &quot;brand_context&quot;: { &quot;...&quot;: &quot;...&quot; }
+}`" />
+                            </div>
+                            <!-- OUTPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold">OUT</span>
+                                    {{ t('docs.automationApi.mustReturn') }}
+                                </h4>
+                                <ul class="text-sm text-gray-700 space-y-1 mb-3">
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">success</code> — {{ t('docs.automationApi.textGenerationWebhook.returnField1') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">caption</code> — {{ t('docs.automationApi.textGenerationWebhook.returnField2') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">title</code> — {{ t('docs.automationApi.textGenerationWebhook.returnField3') }}</li>
+                                </ul>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;success&quot;: true,
+  &quot;caption&quot;: &quot;Here are the top 5 AI trends...&quot;,
+  &quot;title&quot;: &quot;AI Trends in Marketing 2024&quot;
+}`" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== 2. IMAGE GENERATION WEBHOOK ===== -->
+                    <div class="border-2 border-purple-200 rounded-xl mb-8 overflow-hidden">
+                        <div class="bg-purple-50 px-5 py-4 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-purple-900 text-lg">{{ t('docs.automationApi.imageGenerationWebhook.title') }}</h3>
+                                <code class="text-purple-600 text-xs">{{ t('docs.automationApi.imageGenerationWebhook.settingKey') }}</code>
+                            </div>
+                            <span class="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-xs font-medium">{{ t('docs.automationApi.webhookTypesTable.fallback') }}: {{ t('docs.automationApi.webhookTypesTable.imageGenerationFallback') }}</span>
+                        </div>
+                        <div class="px-5 py-4 border-t border-purple-200">
+                            <p class="text-gray-700 text-sm mb-2">{{ t('docs.automationApi.imageGenerationWebhook.description') }}</p>
+                            <p class="text-red-600 text-xs italic">{{ t('docs.automationApi.imageGenerationWebhook.fallbackNote') }}</p>
+                        </div>
+                        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-purple-200 border-t border-purple-200">
+                            <!-- INPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs font-bold">IN</span>
+                                    {{ t('docs.automationApi.receives') }}
+                                </h4>
+                                <p class="text-gray-500 text-xs mb-2">{{ t('docs.automationApi.keyFields') }}:</p>
+                                <ul class="text-sm text-gray-700 space-y-1">
+                                    <li><code class="bg-gray-100 px-1 rounded text-purple-600">title</code> — {{ t('docs.automationApi.imageGenerationWebhook.keyField1') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-purple-600">main_caption</code> — {{ t('docs.automationApi.imageGenerationWebhook.keyField2') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-purple-600">brand_context</code> — {{ t('docs.automationApi.imageGenerationWebhook.keyField3') }}</li>
+                                </ul>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;post_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;title&quot;: &quot;AI trends in marketing&quot;,
+  &quot;main_caption&quot;: &quot;Here are the top 5 AI trends...&quot;,
+  &quot;image_prompt&quot;: null,
+  &quot;status&quot;: &quot;draft&quot;,
+  &quot;prompt&quot;: &quot;Create a visual description...&quot;,
+  &quot;brand_context&quot;: { &quot;...&quot;: &quot;...&quot; }
+}`" />
+                            </div>
+                            <!-- OUTPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold">OUT</span>
+                                    {{ t('docs.automationApi.mustReturn') }}
+                                </h4>
+                                <ul class="text-sm text-gray-700 space-y-1 mb-3">
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">success</code> — {{ t('docs.automationApi.imageGenerationWebhook.returnField1') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">image_base64</code> — {{ t('docs.automationApi.imageGenerationWebhook.returnField2') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">filename</code> — {{ t('docs.automationApi.imageGenerationWebhook.returnField3') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">image_prompt</code> — {{ t('docs.automationApi.imageGenerationWebhook.returnField4') }}</li>
+                                </ul>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;success&quot;: true,
+  &quot;image_base64&quot;: &quot;data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...&quot;,
+  &quot;filename&quot;: &quot;ai-marketing-post.png&quot;,
+  &quot;image_prompt&quot;: &quot;A futuristic illustration of AI in marketing&quot;
+}`" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== 3. PUBLISH WEBHOOK ===== -->
+                    <div class="border-2 border-emerald-200 rounded-xl mb-8 overflow-hidden">
+                        <div class="bg-emerald-50 px-5 py-4 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-emerald-900 text-lg">{{ t('docs.automationApi.publishWebhook.title') }}</h3>
+                                <code class="text-emerald-600 text-xs">{{ t('docs.automationApi.publishWebhook.settingKey') }}</code>
+                            </div>
+                            <span class="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-full text-xs font-medium">{{ t('docs.automationApi.webhookTypesTable.fallback') }}: {{ t('docs.automationApi.webhookTypesTable.publishFallback') }}</span>
+                        </div>
+                        <div class="px-5 py-4 border-t border-emerald-200">
+                            <p class="text-gray-700 text-sm mb-2">{{ t('docs.automationApi.publishWebhook.description') }}</p>
+                            <p class="text-red-600 text-xs italic">{{ t('docs.automationApi.publishWebhook.fallbackNote') }}</p>
+                        </div>
+                        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-emerald-200 border-t border-emerald-200">
+                            <!-- INPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs font-bold">IN</span>
+                                    {{ t('docs.automationApi.receives') }}
+                                </h4>
+                                <p class="text-gray-500 text-xs mb-2">{{ t('docs.automationApi.keyFields') }}:</p>
+                                <ul class="text-sm text-gray-700 space-y-1">
+                                    <li><code class="bg-gray-100 px-1 rounded text-emerald-600">main_caption</code> — {{ t('docs.automationApi.publishWebhook.keyField1') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-emerald-600">image_prompt</code> — {{ t('docs.automationApi.publishWebhook.keyField2') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-emerald-600">scheduled_at</code> — {{ t('docs.automationApi.publishWebhook.keyField3') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-emerald-600">title</code> — {{ t('docs.automationApi.publishWebhook.keyField4') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-emerald-600">brand_context.enabled_platforms</code> — {{ t('docs.automationApi.publishWebhook.keyField5') }}</li>
+                                </ul>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;post_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;brand_id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+  &quot;brand_name&quot;: &quot;My Brand&quot;,
+  &quot;title&quot;: &quot;AI trends in marketing&quot;,
+  &quot;main_caption&quot;: &quot;Here are the top 5 AI trends...&quot;,
+  &quot;image_prompt&quot;: &quot;A futuristic digital illustration...&quot;,
+  &quot;status&quot;: &quot;approved&quot;,
+  &quot;scheduled_at&quot;: &quot;2024-01-20T15:00:00+00:00&quot;,
+  &quot;brand_context&quot;: {
+    &quot;name&quot;: &quot;My Brand&quot;,
+    &quot;enabled_platforms&quot;: [&quot;facebook&quot;, &quot;instagram&quot;],
+    &quot;...&quot;: &quot;...&quot;
+  }
+}`" />
+                            </div>
+                            <!-- OUTPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold">OUT</span>
+                                    {{ t('docs.automationApi.mustReturn') }}
+                                </h4>
+                                <ul class="text-sm text-gray-700 space-y-1 mb-3">
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">success</code> — {{ t('docs.automationApi.publishWebhook.returnField1') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-orange-600">message</code> — {{ t('docs.automationApi.publishWebhook.returnField2') }}</li>
+                                </ul>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Published to Facebook and Instagram&quot;
+}`" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ===== 4. ON APPROVE WEBHOOK ===== -->
+                    <div class="border-2 border-amber-200 rounded-xl mb-8 overflow-hidden">
+                        <div class="bg-amber-50 px-5 py-4 flex items-center justify-between">
+                            <div>
+                                <h3 class="font-bold text-amber-900 text-lg">{{ t('docs.automationApi.onApproveWebhook.title') }}</h3>
+                                <code class="text-amber-600 text-xs">{{ t('docs.automationApi.onApproveWebhook.settingKey') }}</code>
+                            </div>
+                            <span class="px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-medium">{{ t('docs.automationApi.webhookTypesTable.fallback') }}: {{ t('docs.automationApi.webhookTypesTable.onApproveFallback') }}</span>
+                        </div>
+                        <div class="px-5 py-4 border-t border-amber-200">
+                            <p class="text-gray-700 text-sm mb-2">{{ t('docs.automationApi.onApproveWebhook.description') }}</p>
+                            <p class="text-amber-600 text-xs italic">{{ t('docs.automationApi.onApproveWebhook.fallbackNote') }}</p>
+                        </div>
+                        <div class="grid md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-amber-200 border-t border-amber-200">
+                            <!-- INPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-green-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-xs font-bold">IN</span>
+                                    {{ t('docs.automationApi.receives') }}
+                                </h4>
+                                <p class="text-gray-500 text-xs mb-2">{{ t('docs.automationApi.keyFields') }}:</p>
+                                <ul class="text-sm text-gray-700 space-y-1">
+                                    <li><code class="bg-gray-100 px-1 rounded text-amber-600">status</code> — {{ t('docs.automationApi.onApproveWebhook.keyField1') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-amber-600">main_caption</code> — {{ t('docs.automationApi.onApproveWebhook.keyField2') }}</li>
+                                    <li><code class="bg-gray-100 px-1 rounded text-amber-600">brand_context</code> — {{ t('docs.automationApi.onApproveWebhook.keyField3') }}</li>
+                                </ul>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;post_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;title&quot;: &quot;AI trends in marketing&quot;,
+  &quot;main_caption&quot;: &quot;Here are the top 5 AI trends...&quot;,
+  &quot;status&quot;: &quot;approved&quot;,
+  &quot;brand_context&quot;: { &quot;...&quot;: &quot;...&quot; }
+}`" />
+                            </div>
+                            <!-- OUTPUT -->
+                            <div class="px-5 py-4">
+                                <h4 class="font-semibold text-orange-700 mb-3 flex items-center gap-2">
+                                    <span class="w-6 h-6 bg-orange-100 rounded-full flex items-center justify-center text-xs font-bold">OUT</span>
+                                    {{ t('docs.automationApi.mustReturn') }}
+                                </h4>
+                                <p class="text-sm text-gray-600 mb-3">{{ t('docs.automationApi.onApproveWebhook.returnNote') }}</p>
+                                <DocsCodeBlock language="json" class="mt-3" :code="`{
+  &quot;success&quot;: true
+}`" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Configure Webhook Settings -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/brands/{brand_id}/automation/settings</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.automationApi.configureSettings') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;webhooks&quot;: {
+    &quot;text_generation_url&quot;: &quot;https://your-n8n.com/webhook/generate-text&quot;,
+    &quot;text_generation_prompt&quot;: &quot;Generate a social media post about the given topic&quot;,
+    &quot;image_generation_url&quot;: &quot;https://your-n8n.com/webhook/generate-image&quot;,
+    &quot;image_generation_prompt&quot;: &quot;Create an image description for the post&quot;,
+    &quot;publish_url&quot;: &quot;https://your-n8n.com/webhook/publish&quot;,
+    &quot;on_approve_url&quot;: &quot;https://your-n8n.com/webhook/on-approve&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- ========== ENDPOINTS ========== -->
+                    <h2 id="automation-endpoints" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">Endpoints</h2>
+
+                    <!-- Generate Text -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/generate-text</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">
+                                {{ t('docs.automationApi.generateText.description') }}
+                            </p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body (optional)</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1 w-32">prompt</td><td class="text-gray-400 w-20">optional</td><td>{{ t('docs.automationApi.generateText.promptParam') }}</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;prompt&quot;: &quot;Write a LinkedIn post about AI trends in marketing&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;AI Trends in Marketing 2024&quot;,
+    &quot;main_caption&quot;: &quot;Here are the top 5 AI trends...&quot;,
+    &quot;image_prompt&quot;: null,
+    &quot;status&quot;: &quot;draft&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Generate Image Prompt -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/generate-image-prompt</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">
+                                {{ t('docs.automationApi.generateImagePrompt.description') }}
+                            </p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;success&quot;: true,
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;AI Trends&quot;,
+    &quot;main_caption&quot;: &quot;Here are the top 5...&quot;,
+    &quot;image_prompt&quot;: &quot;A futuristic digital illustration showing AI brain...&quot;,
+    &quot;status&quot;: &quot;draft&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Webhook Publish -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/{id}/webhook-publish</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">
+                                {{ t('docs.automationApi.webhookPublish.description') }}
+                            </p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;success&quot;: true,
+  &quot;message&quot;: &quot;Post sent for publishing&quot;,
+  &quot;data&quot;: { &quot;...&quot;: &quot;full post object&quot; }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Bulk Generate Text -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/bulk-generate-text</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.automationApi.bulkGenerateText') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;post_ids&quot;: [&quot;01HQ7X5GNPQ8...&quot;, &quot;01HQ7X5GNPQ9...&quot;]
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;success&quot;: 2,
+  &quot;failed&quot;: 0,
+  &quot;errors&quot;: []
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Bulk Generate Image Prompt -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/posts/bulk-generate-image-prompt</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.automationApi.bulkGenerateImagePrompt') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;post_ids&quot;: [&quot;01HQ7X5GNPQ8...&quot;, &quot;01HQ7X5GNPQ9...&quot;]
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;success&quot;: 1,
+  &quot;failed&quot;: 1,
+  &quot;errors&quot;: [
+    {
+      &quot;post_id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+      &quot;error&quot;: &quot;No image generation webhook configured&quot;
+    }
+  ]
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Automation List -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/posts/automation</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.automationApi.automationList') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1 w-32">brand_id</td><td class="text-gray-400 w-20">optional</td><td>{{ t('docs.automationApi.queryParams.brandId') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">status</td><td class="text-gray-400">optional</td><td>{{ t('docs.automationApi.queryParams.status') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">search</td><td class="text-gray-400">optional</td><td>{{ t('docs.automationApi.queryParams.search') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">page</td><td class="text-gray-400">optional</td><td>{{ t('docs.automationApi.queryParams.page') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">per_page</td><td class="text-gray-400">optional</td><td>{{ t('docs.automationApi.queryParams.perPage') }}</td></tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- ========== N8N INTEGRATION ========== -->
+                    <h2 id="n8n-integration" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.automationApi.n8nExample.title') }}</h2>
+
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-8">
+                        <p class="text-emerald-700 text-sm mb-3">{{ t('docs.automationApi.n8nExample.description') }}</p>
+                        <ol class="list-decimal list-inside text-emerald-700 space-y-2 text-sm">
+                            <li>{{ t('docs.automationApi.n8nExample.step1') }}</li>
+                            <li>{{ t('docs.automationApi.n8nExample.step2') }}</li>
+                            <li>{{ t('docs.automationApi.n8nExample.step3') }}</li>
+                            <li>{{ t('docs.automationApi.n8nExample.step4') }}</li>
+                            <li>{{ t('docs.automationApi.n8nExample.step5') }}</li>
+                        </ol>
+                    </div>
+
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-4 mb-8">
+                        <h4 class="font-medium text-emerald-800 mb-3">{{ t('docs.automationApi.n8nApproveExample.title') }}</h4>
+                        <p class="text-emerald-700 text-sm mb-3">{{ t('docs.automationApi.n8nApproveExample.description') }}</p>
+                        <ol class="list-decimal list-inside text-emerald-700 space-y-2 text-sm">
+                            <li>{{ t('docs.automationApi.n8nApproveExample.step1') }}</li>
+                            <li>{{ t('docs.automationApi.n8nApproveExample.step2') }}</li>
+                            <li>{{ t('docs.automationApi.n8nApproveExample.step3') }}</li>
+                            <li>{{ t('docs.automationApi.n8nApproveExample.step4') }}</li>
+                        </ol>
+                        <p class="text-emerald-600 text-xs mt-3">{{ t('docs.automationApi.n8nApproveExample.note') }}</p>
+                    </div>
+
+                    <!-- ========== CURL EXAMPLES ========== -->
+                    <h2 id="automation-curl" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.automationApi.curlExamples') }}</h2>
+
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <p class="text-gray-500 text-xs mb-3">{{ t('docs.automationApi.curlGenerateText') }}</p>
+                        <DocsCodeBlock language="bash" :code="`curl -X POST '${baseUrl}/posts/{post_id}/generate-text' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
+  -H 'Content-Type: application/json' \\
+  -d '{&quot;prompt&quot;: &quot;Write an engaging post about summer sales&quot;}'`" />
+                        <p class="text-gray-500 text-xs mb-3 mt-4">{{ t('docs.automationApi.curlGenerateImage') }}</p>
+                        <DocsCodeBlock language="bash" :code="`curl -X POST '${baseUrl}/posts/{post_id}/generate-image-prompt' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN'`" />
+                        <p class="text-gray-500 text-xs mb-3 mt-4">{{ t('docs.automationApi.curlBulkText') }}</p>
+                        <DocsCodeBlock language="bash" :code="`curl -X POST '${baseUrl}/posts/bulk-generate-text' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
+  -H 'Content-Type: application/json' \\
+  -d '{&quot;post_ids&quot;: [&quot;POST_ID_1&quot;, &quot;POST_ID_2&quot;]}'`" />
+                        <p class="text-gray-500 text-xs mb-3 mt-4">{{ t('docs.automationApi.curlConfigureWebhooks') }}</p>
+                        <DocsCodeBlock language="bash" :code="`curl -X PUT '${baseUrl}/brands/{brand_id}/automation/settings' \\
+  -H 'Authorization: Bearer YOUR_API_TOKEN' \\
+  -H 'Content-Type: application/json' \\
+  -d '{&quot;webhooks&quot;: {&quot;text_generation_url&quot;: &quot;https://n8n.example.com/webhook/abc123&quot;}}'`" />
+                    </div>
+
                 </template>
 
                 <!-- ===== CALENDAR TAB ===== -->
@@ -2139,7 +3022,19 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
-                            <p class="text-gray-500 text-sm">Returns created event object with ID</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Team Meeting&quot;,
+    &quot;description&quot;: &quot;Weekly sync with the team&quot;,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;event_type&quot;: &quot;meeting&quot;,
+    &quot;starts_at&quot;: &quot;2024-01-20T10:00:00Z&quot;,
+    &quot;ends_at&quot;: &quot;2024-01-20T11:00:00Z&quot;,
+    &quot;all_day&quot;: false,
+    &quot;created_at&quot;: &quot;2024-01-20T09:00:00Z&quot;
+  }
+}`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
@@ -2170,6 +3065,15 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">title</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.title') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.description') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.color') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">event_type</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.eventType') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">starts_at</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.startsAt') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">ends_at</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.endsAt') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">all_day</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.calendar.fields.allDay') }}</td></tr>
+                            </table>
                             <DocsCodeBlock language="json" :code="`{
   &quot;title&quot;: &quot;Updated Meeting Title&quot;,
   &quot;color&quot;: &quot;#10B981&quot;,
@@ -2178,7 +3082,19 @@ X-RateLimit-Reset: 1705764000`" />
                         </div>
                         <div class="px-4 py-3 border-t">
                             <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
-                            <p class="text-gray-500 text-sm">Returns updated event object</p>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;title&quot;: &quot;Updated Meeting Title&quot;,
+    &quot;description&quot;: &quot;Weekly sync with the team&quot;,
+    &quot;color&quot;: &quot;#10B981&quot;,
+    &quot;event_type&quot;: &quot;meeting&quot;,
+    &quot;starts_at&quot;: &quot;2024-01-20T14:00:00Z&quot;,
+    &quot;ends_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;all_day&quot;: false,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
                         </div>
                     </div>
 
@@ -2304,6 +3220,665 @@ X-RateLimit-Reset: 1705764000`" />
                             The reschedule endpoint is optimized for drag & drop calendar interactions.
                             When a user drags an event to a new date/time, call this endpoint to update the event's schedule without modifying other properties.
                         </p>
+                    </div>
+                </template>
+
+                <!-- ===== BOARDS TAB ===== -->
+                <template v-else-if="currentTab === 'boards'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.boards.title') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.boards.description') }}</p>
+
+                    <!-- Authentication info -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                        <h3 class="font-medium text-blue-800 mb-2">{{ t('docs.authentication') }}</h3>
+                        <p class="text-blue-700 text-sm mb-2">{{ t('docs.auth.usingTokenDescription') }}</p>
+                        <code class="bg-blue-100 px-2 py-1 rounded text-xs">Authorization: Bearer YOUR_API_TOKEN</code>
+                    </div>
+
+                    <!-- ========== OVERVIEW ========== -->
+                    <h2 id="boards-overview" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.boards.overview') }}</h2>
+                    <p class="text-gray-600 mb-4">{{ t('docs.boards.overviewDescription') }}</p>
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-gray-800 mb-3">{{ t('docs.boards.structure') }}</h4>
+                        <ul class="space-y-2 text-sm text-gray-600">
+                            <li><strong>Board</strong> - {{ t('docs.boards.boardDesc') }}</li>
+                            <li class="pl-4"><strong>Column</strong> - {{ t('docs.boards.columnDesc') }}</li>
+                            <li class="pl-8"><strong>Card</strong> - {{ t('docs.boards.cardDesc') }}</li>
+                        </ul>
+                    </div>
+
+                    <!-- Board Object -->
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <h4 class="font-medium mb-3">Board Object</h4>
+                        <DocsCodeBlock language="json" :code="`{
+  &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+  &quot;name&quot;: &quot;Content Pipeline&quot;,
+  &quot;description&quot;: &quot;Track content from idea to publication&quot;,
+  &quot;color&quot;: &quot;#3B82F6&quot;,
+  &quot;settings&quot;: null,
+  &quot;columns_count&quot;: 3,
+  &quot;cards_count&quot;: 12,
+  &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+  &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+}`" />
+                    </div>
+
+                    <!-- ========== BOARDS CRUD ========== -->
+                    <h2 id="boards-crud" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.boards.boardsCrud') }}</h2>
+
+                    <!-- List Boards -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/boards</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.listDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Query Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.page') }}</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">per_page</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>{{ t('docs.paginationSection.parameters.perPage') }}</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: [
+    {
+      &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+      &quot;name&quot;: &quot;Content Pipeline&quot;,
+      &quot;description&quot;: &quot;Track content from idea to publication&quot;,
+      &quot;color&quot;: &quot;#3B82F6&quot;,
+      &quot;settings&quot;: null,
+      &quot;columns_count&quot;: 3,
+      &quot;cards_count&quot;: 12,
+      &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+      &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+    }
+  ],
+  &quot;meta&quot;: {
+    &quot;current_page&quot;: 1,
+    &quot;per_page&quot;: 50,
+    &quot;total&quot;: 5
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Get Board -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded text-xs font-mono font-bold">GET</span>
+                            <code class="text-sm">/api/v1/boards/{board_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.showDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">board_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Board public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;Content Pipeline&quot;,
+    &quot;description&quot;: &quot;Track content from idea to publication&quot;,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;settings&quot;: null,
+    &quot;columns_count&quot;: 3,
+    &quot;cards_count&quot;: 12,
+    &quot;columns&quot;: [
+      {
+        &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+        &quot;board_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+        &quot;name&quot;: &quot;To Do&quot;,
+        &quot;color&quot;: &quot;#6B7280&quot;,
+        &quot;position&quot;: 0,
+        &quot;card_limit&quot;: null,
+        &quot;cards&quot;: [
+          {
+            &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+            &quot;column_id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+            &quot;title&quot;: &quot;Write blog post&quot;,
+            &quot;description&quot;: &quot;Draft about new features&quot;,
+            &quot;position&quot;: 0,
+            &quot;color&quot;: null,
+            &quot;due_date&quot;: &quot;2024-02-01&quot;,
+            &quot;is_overdue&quot;: false,
+            &quot;labels&quot;: [&quot;content&quot;, &quot;blog&quot;],
+            &quot;created_by&quot;: { &quot;id&quot;: 1, &quot;name&quot;: &quot;John Doe&quot; },
+            &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+            &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+          }
+        ]
+      }
+    ],
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-15T10:30:00Z&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 404</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;Board not found.&quot;
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Create Board -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/boards</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.createDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Board name (max 255 chars)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Board description</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Hex color code (default: #3B82F6)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Content Pipeline&quot;,
+  &quot;description&quot;: &quot;Track content from idea to publication&quot;,
+  &quot;color&quot;: &quot;#3B82F6&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;Content Pipeline&quot;,
+    &quot;description&quot;: &quot;Track content from idea to publication&quot;,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;settings&quot;: null,
+    &quot;columns_count&quot;: 3,
+    &quot;cards_count&quot;: 0,
+    &quot;columns&quot;: [
+      { &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;, &quot;name&quot;: &quot;To Do&quot;, &quot;position&quot;: 0, &quot;cards&quot;: [] },
+      { &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;, &quot;name&quot;: &quot;In Progress&quot;, &quot;position&quot;: 1, &quot;cards&quot;: [] },
+      { &quot;id&quot;: &quot;01HQ7X5GNPQB...&quot;, &quot;name&quot;: &quot;Done&quot;, &quot;position&quot;: 2, &quot;cards&quot;: [] }
+    ],
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;The given data was invalid.&quot;,
+  &quot;errors&quot;: {
+    &quot;name&quot;: [&quot;The name field is required.&quot;]
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Update Board -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/boards/{board_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.updateDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">board_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Board public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Board name</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Board description</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Hex color code</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">settings</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Board settings (JSON object)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Updated Pipeline&quot;,
+  &quot;color&quot;: &quot;#10B981&quot;
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;Updated Pipeline&quot;,
+    &quot;description&quot;: &quot;Track content from idea to publication&quot;,
+    &quot;color&quot;: &quot;#10B981&quot;,
+    &quot;settings&quot;: null,
+    &quot;columns_count&quot;: 3,
+    &quot;cards_count&quot;: 12,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Delete Board -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/boards/{board_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.deleteDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">board_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Board public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== COLUMNS CRUD ========== -->
+                    <h2 id="columns-crud" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.boards.columnsCrud') }}</h2>
+
+                    <!-- Create Column -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/boards/{board_id}/columns</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.createColumnDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">board_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Board public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Column name (max 255 chars)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Hex color code (default: #6B7280)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">card_limit</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>WIP limit (integer, min: 1)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;In Review&quot;,
+  &quot;color&quot;: &quot;#F59E0B&quot;,
+  &quot;card_limit&quot;: 5
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQC...&quot;,
+    &quot;board_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;In Review&quot;,
+    &quot;color&quot;: &quot;#F59E0B&quot;,
+    &quot;position&quot;: 3,
+    &quot;card_limit&quot;: 5,
+    &quot;cards_count&quot;: 0,
+    &quot;cards&quot;: [],
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Update Column -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/columns/{column_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.updateColumnDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">column_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Column public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">name</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Column name</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Hex color code</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">card_limit</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>WIP limit (null to remove)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;name&quot;: &quot;Done&quot;,
+  &quot;card_limit&quot;: 10
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+    &quot;board_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;Done&quot;,
+    &quot;color&quot;: &quot;#6B7280&quot;,
+    &quot;position&quot;: 0,
+    &quot;card_limit&quot;: 10,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Delete Column -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/columns/{column_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.deleteColumnDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">column_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Column public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+
+                    <!-- Reorder Column -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/columns/{column_id}/reorder</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.reorderColumnDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">column_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Column public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">position</td><td class="text-red-500">{{ t('docs.required') }}</td><td>New position index (integer, min: 0)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;position&quot;: 2
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+    &quot;board_id&quot;: &quot;01HQ7X5GNPQ8...&quot;,
+    &quot;name&quot;: &quot;To Do&quot;,
+    &quot;color&quot;: &quot;#6B7280&quot;,
+    &quot;position&quot;: 2,
+    &quot;card_limit&quot;: null,
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- ========== CARDS CRUD ========== -->
+                    <h2 id="cards-crud" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.boards.cardsCrud') }}</h2>
+
+                    <!-- Create Card -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/columns/{column_id}/cards</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.createCardDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">column_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Column public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">title</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Card title (max 255 chars)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Card description (text)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Hex color code</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">due_date</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Due date (YYYY-MM-DD)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">labels</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Array of label strings</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;title&quot;: &quot;Write blog post&quot;,
+  &quot;description&quot;: &quot;Draft about new features&quot;,
+  &quot;color&quot;: &quot;#3B82F6&quot;,
+  &quot;due_date&quot;: &quot;2024-02-01&quot;,
+  &quot;labels&quot;: [&quot;content&quot;, &quot;blog&quot;]
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 201</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+    &quot;column_id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+    &quot;title&quot;: &quot;Write blog post&quot;,
+    &quot;description&quot;: &quot;Draft about new features&quot;,
+    &quot;position&quot;: 0,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;due_date&quot;: &quot;2024-02-01&quot;,
+    &quot;is_overdue&quot;: false,
+    &quot;labels&quot;: [&quot;content&quot;, &quot;blog&quot;],
+    &quot;created_by&quot;: { &quot;id&quot;: 1, &quot;name&quot;: &quot;John Doe&quot; },
+    &quot;created_at&quot;: &quot;2024-01-20T15:00:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-red-700">Error 422</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;message&quot;: &quot;The given data was invalid.&quot;,
+  &quot;errors&quot;: {
+    &quot;title&quot;: [&quot;The title field is required.&quot;]
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Update Card -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/cards/{card_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.updateCardDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">card_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Card public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">title</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Card title</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">description</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Card description</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">color</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Hex color (null to remove)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">due_date</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Due date (null to remove)</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">labels</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td>Array of label strings</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;title&quot;: &quot;Updated blog post&quot;,
+  &quot;description&quot;: &quot;Added more details&quot;,
+  &quot;labels&quot;: [&quot;content&quot;, &quot;blog&quot;, &quot;priority&quot;]
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+    &quot;column_id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+    &quot;title&quot;: &quot;Updated blog post&quot;,
+    &quot;description&quot;: &quot;Added more details&quot;,
+    &quot;position&quot;: 0,
+    &quot;color&quot;: &quot;#3B82F6&quot;,
+    &quot;due_date&quot;: &quot;2024-02-01&quot;,
+    &quot;is_overdue&quot;: false,
+    &quot;labels&quot;: [&quot;content&quot;, &quot;blog&quot;, &quot;priority&quot;],
+    &quot;created_by&quot;: { &quot;id&quot;: 1, &quot;name&quot;: &quot;John Doe&quot; },
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Delete Card -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded text-xs font-mono font-bold">DELETE</span>
+                            <code class="text-sm">/api/v1/cards/{card_id}</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.deleteCardDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">card_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Card public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 204</h4>
+                            <p class="text-gray-500 text-sm">No content</p>
+                        </div>
+                    </div>
+
+                    <!-- ========== MOVING CARDS ========== -->
+                    <h2 id="cards-move" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.boards.movingCards') }}</h2>
+                    <p class="text-gray-600 mb-4">{{ t('docs.boards.moveDescription') }}</p>
+
+                    <!-- Move Card -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded text-xs font-mono font-bold">PUT</span>
+                            <code class="text-sm">/api/v1/cards/{card_id}/move</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.moveCardDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">card_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Card public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">column_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Target column public ID</td></tr>
+                                <tr><td class="font-mono text-blue-600 py-1">position</td><td class="text-red-500">{{ t('docs.required') }}</td><td>New position index (integer, min: 0)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;column_id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+  &quot;position&quot;: 0
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQB...&quot;,
+    &quot;column_id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+    &quot;title&quot;: &quot;Write blog post&quot;,
+    &quot;description&quot;: &quot;Draft about new features&quot;,
+    &quot;position&quot;: 0,
+    &quot;color&quot;: null,
+    &quot;due_date&quot;: &quot;2024-02-01&quot;,
+    &quot;is_overdue&quot;: false,
+    &quot;labels&quot;: [&quot;content&quot;],
+    &quot;created_by&quot;: { &quot;id&quot;: 1, &quot;name&quot;: &quot;John Doe&quot; },
+    &quot;created_at&quot;: &quot;2024-01-15T10:30:00Z&quot;,
+    &quot;updated_at&quot;: &quot;2024-01-20T15:00:00Z&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Reorder Card -->
+                    <div class="border rounded-lg mb-6 overflow-hidden">
+                        <div class="bg-gray-50 px-4 py-3 flex items-center gap-3">
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded text-xs font-mono font-bold">POST</span>
+                            <code class="text-sm">/api/v1/cards/{card_id}/reorder</code>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <p class="text-gray-600">{{ t('docs.boards.reorderDescription') }}</p>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Path Parameters</h4>
+                            <table class="w-full text-sm">
+                                <tr><td class="font-mono text-blue-600 py-1">card_id</td><td class="text-red-500">{{ t('docs.required') }}</td><td>Card public ID</td></tr>
+                            </table>
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2">Request Body</h4>
+                            <table class="w-full text-sm mb-3">
+                                <tr><td class="font-mono text-blue-600 py-1">position</td><td class="text-red-500">{{ t('docs.required') }}</td><td>New position index (integer, min: 0)</td></tr>
+                            </table>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;position&quot;: 2
+}`" />
+                        </div>
+                        <div class="px-4 py-3 border-t">
+                            <h4 class="font-medium mb-2 text-green-700">Response 200</h4>
+                            <DocsCodeBlock language="json" :code="`{
+  &quot;data&quot;: {
+    &quot;id&quot;: &quot;01HQ7X5GNPQA...&quot;,
+    &quot;column_id&quot;: &quot;01HQ7X5GNPQ9...&quot;,
+    &quot;title&quot;: &quot;Write blog post&quot;,
+    &quot;position&quot;: 2,
+    &quot;...&quot;: &quot;...&quot;
+  }
+}`" />
+                        </div>
+                    </div>
+
+                    <!-- Drag & Drop Tip -->
+                    <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-8">
+                        <h4 class="font-medium text-green-800 mb-2">{{ t('docs.boards.dragDropTip') }}</h4>
+                        <p class="text-green-700 text-sm">{{ t('docs.boards.dragDropDescription') }}</p>
                     </div>
                 </template>
                 </div>

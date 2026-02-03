@@ -23,6 +23,37 @@ const renderHtmlTemplate = fs.readFileSync(renderHtmlPath, 'utf-8');
 const konvaJsPath = path.join(__dirname, 'static', 'konva.min.js');
 const konvaJs = fs.readFileSync(konvaJsPath, 'utf-8');
 
+// System fonts that don't need to be loaded from Google Fonts
+const SYSTEM_FONTS = ['Arial', 'Helvetica', 'Times New Roman', 'Georgia', 'Verdana', 'Courier New', 'Impact', 'Comic Sans MS'];
+
+/**
+ * Extract unique font families from template layers.
+ * Used to preload Google Fonts before rendering.
+ */
+function extractFontsFromTemplate(template) {
+    const fonts = new Set();
+
+    function processLayers(layers) {
+        if (!Array.isArray(layers)) return;
+        for (const layer of layers) {
+            if (layer.properties?.fontFamily) {
+                const font = layer.properties.fontFamily;
+                // Skip system fonts
+                if (!SYSTEM_FONTS.includes(font)) {
+                    fonts.add(font);
+                }
+            }
+            // Process nested layers (groups)
+            if (layer.children) {
+                processLayers(layer.children);
+            }
+        }
+    }
+
+    processLayers(template.layers || []);
+    return [...fonts];
+}
+
 // Generate PNG from template data
 async function renderTemplate(templateData, width, height, deviceScaleFactor = 2) {
     const browser = await puppeteer.launch({
@@ -135,9 +166,30 @@ app.post('/render-vue', async (req, res) => {
             });
         }
 
-        // Encode template data as base64 for URL
-        const templateJson = JSON.stringify({ template });
-        const base64Data = Buffer.from(templateJson).toString('base64');
+        // Store template data in Laravel cache and get a key
+        // This avoids URL length limits when template contains large base64 images
+        let renderKey;
+        try {
+            const storeResponse = await fetch(`${LARAVEL_URL}/api/v1/render-data`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ template }),
+            });
+
+            if (!storeResponse.ok) {
+                throw new Error(`Failed to store render data: ${storeResponse.status}`);
+            }
+
+            const storeResult = await storeResponse.json();
+            renderKey = storeResult.key;
+            console.log('Stored render data with key:', renderKey);
+        } catch (storeError) {
+            console.error('Failed to store render data:', storeError);
+            throw new Error(`Could not store render data: ${storeError.message}`);
+        }
 
         // Open the Vue render-preview page
         const browser = await puppeteer.launch({
@@ -163,14 +215,54 @@ app.post('/render-vue', async (req, res) => {
                 deviceScaleFactor: scale,
             });
 
-            // Navigate to render-preview page
-            const url = `${LARAVEL_URL}/render-preview?data=${encodeURIComponent(base64Data)}`;
-            console.log('Opening URL:', url.substring(0, 100) + '...');
+            // Extract fonts from template layers
+            const fonts = extractFontsFromTemplate(template);
+            if (fonts.length > 0) {
+                console.log('Template uses fonts:', fonts);
+
+                // Inject Google Fonts CSS BEFORE page loads via evaluateOnNewDocument
+                const fontFamilies = fonts.map(f => `family=${encodeURIComponent(f)}:wght@400;600;700`).join('&');
+                const fontUrl = `https://fonts.googleapis.com/css2?${fontFamilies}&display=swap`;
+
+                await page.evaluateOnNewDocument((url) => {
+                    const link = document.createElement('link');
+                    link.rel = 'stylesheet';
+                    link.href = url;
+                    document.head.appendChild(link);
+                }, fontUrl);
+            }
+
+            // Navigate to the render page
+            const url = `${LARAVEL_URL}/render-preview?key=${encodeURIComponent(renderKey)}`;
+            console.log('Opening URL:', url);
 
             await page.goto(url, {
                 waitUntil: 'networkidle0',
                 timeout: 30000,
             });
+
+            // After page loads, explicitly force fonts to be loaded and wait
+            if (fonts.length > 0) {
+                console.log('Waiting for fonts to be ready...');
+                const fontsReady = await page.evaluate(async (fontList) => {
+                    // Force load all font weights using document.fonts.load()
+                    const loadPromises = [];
+                    for (const font of fontList) {
+                        loadPromises.push(document.fonts.load(`400 48px "${font}"`).catch(() => null));
+                        loadPromises.push(document.fonts.load(`600 48px "${font}"`).catch(() => null));
+                        loadPromises.push(document.fonts.load(`700 48px "${font}"`).catch(() => null));
+                    }
+                    await Promise.all(loadPromises);
+                    await document.fonts.ready;
+
+                    // Return status
+                    return fontList.map(font => ({
+                        font,
+                        loaded: document.fonts.check(`700 48px "${font}"`)
+                    }));
+                }, fonts);
+                console.log('Fonts status:', JSON.stringify(fontsReady));
+            }
 
             // Wait for Vue to signal render complete
             await page.waitForFunction(

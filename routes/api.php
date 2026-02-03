@@ -1,7 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AiChatController;
 use App\Http\Controllers\Api\V1\ApiTokenController;
+use App\Http\Controllers\Api\V1\BoardCardController;
+use App\Http\Controllers\Api\V1\BoardColumnController;
+use App\Http\Controllers\Api\V1\BoardController;
 use App\Http\Controllers\Api\V1\CalendarEventController;
 use App\Http\Controllers\Api\V1\DebugRenderController;
 use App\Http\Controllers\Api\V1\ApprovalTokenController;
@@ -20,6 +24,7 @@ use App\Http\Controllers\Api\V1\CellController;
 use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\PlatformPostController;
 use App\Http\Controllers\Api\V1\PostMediaController;
+use App\Http\Controllers\Api\V1\PostAutomationController;
 use App\Http\Controllers\Api\V1\SocialPostController;
 use App\Http\Controllers\Api\V1\TemplateController;
 use App\Http\Controllers\Api\V1\TemplateLibraryController;
@@ -136,6 +141,16 @@ Route::put('/user/password', function (Request $request) {
 
     return ['message' => 'Password updated'];
 })->middleware('auth:sanctum');
+
+// === ADMIN ROUTES ===
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+    Route::get('users', [AdminUserController::class, 'index']);
+    Route::get('users/{user}', [AdminUserController::class, 'show']);
+    Route::put('users/{user}', [AdminUserController::class, 'update']);
+    Route::put('users/{user}/password', [AdminUserController::class, 'updatePassword']);
+    Route::delete('users/{user}', [AdminUserController::class, 'destroy']);
+    Route::get('users/{user}/notifications', [AdminUserController::class, 'notifications']);
+});
 
 Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
 
@@ -302,6 +317,14 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::post('{name}/preview-all', [PsdFileController::class, 'previewAllVariants'])->where('name', '.*\.psd');
     });
 
+    // === POST AUTOMATION ===
+    Route::get('posts/automation', [PostAutomationController::class, 'index']);
+    Route::post('posts/{post}/generate-text', [PostAutomationController::class, 'generateText']);
+    Route::post('posts/{post}/generate-image-prompt', [PostAutomationController::class, 'generateImagePrompt']);
+    Route::post('posts/{post}/webhook-publish', [PostAutomationController::class, 'webhookPublish']);
+    Route::post('posts/bulk-generate-text', [PostAutomationController::class, 'bulkGenerateText']);
+    Route::post('posts/bulk-generate-image-prompt', [PostAutomationController::class, 'bulkGenerateImagePrompt']);
+
     // === SOCIAL POSTS ===
     Route::get('posts', [SocialPostController::class, 'index']);
     Route::get('posts/calendar', [SocialPostController::class, 'calendar']);
@@ -349,6 +372,26 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
     Route::post('approval-tokens/{approvalToken}/regenerate', [ApprovalTokenController::class, 'regenerate']);
     Route::get('approval-tokens/{approvalToken}/stats', [ApprovalTokenController::class, 'stats']);
 
+    // === BOARDS (Kanban) ===
+    Route::get('boards', [BoardController::class, 'index']);
+    Route::post('boards', [BoardController::class, 'store']);
+    Route::get('boards/{board}', [BoardController::class, 'show']);
+    Route::put('boards/{board}', [BoardController::class, 'update']);
+    Route::delete('boards/{board}', [BoardController::class, 'destroy']);
+
+    // Board Columns
+    Route::post('boards/{board}/columns', [BoardColumnController::class, 'store']);
+    Route::put('columns/{column}', [BoardColumnController::class, 'update']);
+    Route::delete('columns/{column}', [BoardColumnController::class, 'destroy']);
+    Route::post('columns/{column}/reorder', [BoardColumnController::class, 'reorder']);
+
+    // Board Cards
+    Route::post('columns/{column}/cards', [BoardCardController::class, 'store']);
+    Route::put('cards/{card}', [BoardCardController::class, 'update']);
+    Route::delete('cards/{card}', [BoardCardController::class, 'destroy']);
+    Route::put('cards/{card}/move', [BoardCardController::class, 'move']);
+    Route::post('cards/{card}/reorder', [BoardCardController::class, 'reorder']);
+
     // === CALENDAR EVENTS ===
     Route::prefix('events')->group(function () {
         Route::get('/', [CalendarEventController::class, 'index']);
@@ -374,4 +417,10 @@ Route::prefix('v1/approve/{token}')->group(function () {
 Route::prefix('v1/webhooks')->group(function () {
     Route::post('/publish-result', [WebhookController::class, 'publishResult'])->name('webhooks.publish-result');
     Route::get('/health', [WebhookController::class, 'health'])->name('webhooks.health');
+});
+
+// === RENDER DATA (No Auth, used by template-renderer service) ===
+Route::prefix('v1/render-data')->group(function () {
+    Route::post('/', [App\Http\Controllers\Api\V1\RenderDataController::class, 'store']);
+    Route::get('/{key}', [App\Http\Controllers\Api\V1\RenderDataController::class, 'show']);
 });

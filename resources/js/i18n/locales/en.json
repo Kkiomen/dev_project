@@ -298,7 +298,10 @@
         "approval": "Approval",
         "tokens": "Tokens",
         "noBasesForGraphics": "Create a database first",
-        "language": "Language"
+        "language": "Language",
+        "boards": "Boards",
+        "postAutomation": "Automation",
+        "admin": "Admin"
     },
     "settings": {
         "title": "Settings",
@@ -398,6 +401,59 @@
             "weeklyReportHint": "Receive a weekly summary of your content performance."
         }
     },
+    "boards": {
+        "title": "Boards",
+        "subtitle": "Organize your tasks with kanban boards",
+        "newBoard": "New Board",
+        "editBoard": "Edit Board",
+        "deleteBoard": "Delete Board",
+        "deleteBoardConfirm": "Are you sure you want to delete the board \"{name}\"? All columns and cards will be permanently deleted.",
+        "boardCreated": "Board created",
+        "boardUpdated": "Board updated",
+        "boardDeleted": "Board deleted",
+        "noBoards": "No boards yet",
+        "noBoardsDescription": "Create your first kanban board to start organizing tasks.",
+        "boardName": "Board name",
+        "boardNamePlaceholder": "e.g. Content Pipeline",
+        "boardDescription": "Description",
+        "boardDescriptionPlaceholder": "Optional board description",
+        "boardColor": "Board color",
+        "columns": "Columns",
+        "addColumn": "Add Column",
+        "editColumn": "Edit Column",
+        "deleteColumn": "Delete Column",
+        "deleteColumnConfirm": "Are you sure you want to delete the column \"{name}\"? All cards in this column will be permanently deleted.",
+        "columnName": "Column name",
+        "columnNamePlaceholder": "e.g. To Do",
+        "columnColor": "Column color",
+        "cardLimit": "Card limit (WIP)",
+        "cardLimitPlaceholder": "No limit",
+        "cards": "Cards",
+        "addCard": "Add Card",
+        "editCard": "Edit Card",
+        "deleteCard": "Delete Card",
+        "deleteCardConfirm": "Are you sure you want to delete the card \"{title}\"?",
+        "cardTitle": "Card title",
+        "cardTitlePlaceholder": "Enter card title...",
+        "cardDescription": "Description",
+        "cardDescriptionPlaceholder": "Add a more detailed description...",
+        "cardColor": "Card color",
+        "dueDate": "Due date",
+        "labels": "Labels",
+        "addLabel": "Add label",
+        "overdue": "Overdue",
+        "noCards": "No cards",
+        "dragToReorder": "Drag to reorder",
+        "moveCard": "Move card",
+        "cardCreated": "Card created",
+        "cardUpdated": "Card updated",
+        "cardDeleted": "Card deleted",
+        "columnCreated": "Column created",
+        "columnUpdated": "Column updated",
+        "columnDeleted": "Column deleted",
+        "backToBoards": "Back to boards",
+        "searchBoards": "Search boards..."
+    },
     "docs": {
         "title": "API Documentation",
         "subtitle": "Complete guide to integrate with your applications",
@@ -407,6 +463,8 @@
         "copyCode": "Copy",
         "copied": "Copied!",
         "tryIt": "Try it",
+        "field": "Field",
+        "type": "Type",
         "required": "Required",
         "optional": "Optional",
         "deprecated": "Deprecated",
@@ -426,7 +484,9 @@
             "database": "Database",
             "templates": "Templates",
             "posts": "Posts",
-            "calendar": "Calendar"
+            "calendar": "Calendar",
+            "boards": "Boards",
+            "automation": "Automation"
         },
         "general": {
             "title": "About Aisello",
@@ -1116,6 +1176,171 @@
                 "reschedule": "Reschedule Event",
                 "rescheduleDescription": "Changes event date/time (for drag & drop)."
             }
+        },
+        "boards": {
+            "title": "Kanban Boards",
+            "description": "API for managing kanban boards with columns and cards. Boards belong to the current brand.",
+            "overview": "Overview",
+            "overviewDescription": "Kanban boards provide a visual way to organize tasks into columns with cards. Each board belongs to a brand and contains multiple columns, which in turn contain cards.",
+            "structure": "Data Structure",
+            "boardDesc": "Top-level container belonging to a brand",
+            "columnDesc": "Ordered list within a board (e.g., To Do, In Progress, Done)",
+            "cardDesc": "Individual task or item within a column",
+            "boardsCrud": "Boards CRUD",
+            "columnsCrud": "Columns",
+            "cardsCrud": "Cards",
+            "movingCards": "Moving Cards",
+            "listDescription": "Gets a paginated list of boards for the current brand.",
+            "createDescription": "Creates a new board with default columns (To Do, In Progress, Done).",
+            "showDescription": "Gets full board details including all columns and cards.",
+            "moveDescription": "Move a card to a different column or reorder within the same column.",
+            "reorderDescription": "Reorder a card within its current column.",
+            "dragDropTip": "Drag & Drop Integration",
+            "dragDropDescription": "The move endpoint supports both cross-column moves and within-column reordering. For drag & drop UI: use the move endpoint with the target column_id and desired position index."
+        },
+        "automationApi": {
+            "title": "Automation (Webhooks)",
+            "howItWorks": "How it works",
+            "howItWorksDescription": "The automation system uses configurable webhooks per brand. When you trigger \"Generate Text\" or \"Generate Image\" from the UI (or API), the system sends a POST request to your configured webhook URL (e.g. n8n) with post data. Your webhook processes the data and returns the result. The system then updates the post automatically.",
+            "createPost": {
+                "title": "Create a Post (starting point)",
+                "description": "Before generating content or images, you need to create a post with a topic idea. You can create it via the Calendar UI or via API. The main_caption is optional - you can leave it empty and generate the content later using webhooks.",
+                "endpoint": "POST /api/v1/posts",
+                "titleField": "title (required) - post topic / idea, e.g. \"5 AI trends in marketing\"",
+                "captionField": "main_caption (optional) - initial content, can be empty if you plan to generate it via webhook",
+                "scheduledField": "scheduled_at (optional) - planned publish date in ISO 8601 format",
+                "platformsField": "platforms (optional) - array of platforms: facebook, instagram, youtube",
+                "note": "The post is created with status \"draft\". Then use the automation endpoints to generate text, image, approve and publish.",
+                "exampleTitle": "Example: create post with just a topic"
+            },
+            "howItWorksSteps": {
+                "step1": "Create a post with a topic idea (via Calendar UI or POST /api/v1/posts)",
+                "step2": "Configure webhook URLs in brand automation settings",
+                "step3": "Trigger generation (Generate Text / Generate Image) via UI or API",
+                "step4": "System sends POST with post data + brand context to your webhook",
+                "step5": "Your webhook (n8n) processes and returns result",
+                "step6": "System updates the post with returned content / image"
+            },
+            "webhookTypes": "Webhook Types",
+            "webhookTypesTable": {
+                "type": "Type",
+                "settingKey": "Setting Key",
+                "fallback": "Fallback",
+                "textGeneration": "text_generation",
+                "textGenerationKey": "text_generation_url",
+                "textGenerationFallback": "Built-in AI (OpenAI)",
+                "imageGeneration": "image_generation",
+                "imageGenerationKey": "image_generation_url",
+                "imageGenerationFallback": "None (returns error)",
+                "publish": "publish",
+                "publishKey": "publish_url",
+                "publishFallback": "None (returns error)",
+                "onApprove": "on_approve",
+                "onApproveKey": "on_approve_url",
+                "onApproveFallback": "None (skipped silently)"
+            },
+            "webhookReference": "Webhook Reference - Input / Output",
+            "webhookReferenceDescription": "Each webhook type receives the same base payload (post data + brand context) and must return a specific JSON response. Below is a detailed description of what each webhook receives and what it must return.",
+            "receives": "Your webhook receives (POST)",
+            "mustReturn": "Your webhook must return (JSON)",
+            "keyFields": "Key fields in the payload",
+            "textGenerationWebhook": {
+                "title": "Text Generation Webhook",
+                "settingKey": "text_generation_url",
+                "description": "Called when user clicks \"Generate Text\" in the UI or calls the API. The system sends full post data with brand context and prompt. Your webhook should generate post content (caption) and optionally a new title.",
+                "fallbackNote": "If no webhook URL is configured, the system automatically falls back to built-in AI (OpenAI) using the brand context.",
+                "keyField1": "prompt - default prompt from webhook settings (or override from request)",
+                "keyField2": "title - current post topic/title",
+                "keyField3": "brand_context - full brand info (tone, audience, pillars, etc.)",
+                "returnField1": "success - true if generation succeeded",
+                "returnField2": "caption - generated post content text (saved to main_caption)",
+                "returnField3": "title - (optional) new title for the post"
+            },
+            "imageGenerationWebhook": {
+                "title": "Image Generation Webhook",
+                "settingKey": "image_generation_url",
+                "description": "Called when user clicks \"Generate Image\" in the UI or calls the API. The system sends full post data including the current content. Your webhook should generate an actual image (e.g. via DALL-E, Midjourney, Stable Diffusion) and return it as base64. The image is automatically saved as media attachment on the post.",
+                "fallbackNote": "No fallback - returns error if no webhook URL is configured.",
+                "keyField1": "title - post topic/title",
+                "keyField2": "main_caption - current post content (use it to generate a matching image)",
+                "keyField3": "brand_context - full brand info (use for style/branding)",
+                "returnField1": "success - true if generation succeeded",
+                "returnField2": "image_base64 - the generated image as base64 string (supports data URI prefix or raw base64). Formats: PNG, JPG, WebP, GIF",
+                "returnField3": "filename - (optional) original filename for the image",
+                "returnField4": "image_prompt - (optional) text description of the image, saved alongside"
+            },
+            "publishWebhook": {
+                "title": "Publish Webhook",
+                "settingKey": "publish_url",
+                "description": "Called when user clicks \"Publish\" in the UI or calls the API. Post must be in approved or scheduled status. The system sends the complete post with content, image description, schedule date and brand context. Your webhook should use this data to publish the post to external platforms (Facebook, Instagram, LinkedIn, etc.).",
+                "fallbackNote": "No fallback - returns error if no webhook URL is configured.",
+                "keyField1": "main_caption - final post content to publish",
+                "keyField2": "image_prompt - image description for generating/attaching visuals",
+                "keyField3": "scheduled_at - planned publish date (ISO 8601) or null for immediate",
+                "keyField4": "title - post topic/title",
+                "keyField5": "brand_context.enabled_platforms - list of platforms to publish to",
+                "returnField1": "success - true if publishing succeeded",
+                "returnField2": "message - status message (e.g. \"Published to Facebook and Instagram\")"
+            },
+            "onApproveWebhook": {
+                "title": "On Approve Webhook",
+                "settingKey": "on_approve_url",
+                "description": "Called automatically when a post is approved (via UI or API). Fire-and-forget - the system does not wait for a response and failures are logged silently. Use this to trigger follow-up workflows (e.g. auto-generate images, schedule publishing, send notifications).",
+                "fallbackNote": "If no webhook URL is configured, nothing happens (skipped silently).",
+                "keyField1": "status - always \"approved\"",
+                "keyField2": "main_caption - approved post content",
+                "keyField3": "brand_context - full brand info",
+                "returnNote": "Response is ignored (fire-and-forget). Recommended to return success: true for logging."
+            },
+            "configureSettings": "Configure webhook URLs and default prompts for a brand. All fields are optional - only set the webhooks you need.",
+            "outboundPayload": "Outbound Payload (what your webhook receives)",
+            "outboundPayloadDescription": "Every webhook call sends this JSON body to your endpoint:",
+            "generateText": {
+                "description": "Trigger text generation for a post. Calls the text_generation_url webhook. If no webhook is configured, falls back to built-in AI generation using the brand context. The returned caption and title are automatically saved to the post.",
+                "promptParam": "Override the default prompt for this request",
+                "webhookMustReturn": "Your webhook must return"
+            },
+            "generateImagePrompt": {
+                "description": "Trigger image generation for a post. Calls the image_generation_url webhook. No fallback - returns error if no webhook is configured. The webhook should return the image as base64 in the image_base64 field. The image is automatically saved as a media attachment on the post.",
+                "webhookMustReturn": "Your webhook must return"
+            },
+            "webhookPublish": {
+                "description": "Publish a post via the configured publish_url webhook. Post must be in approved or scheduled status. Returns error if no publish webhook is configured.",
+                "webhookMustReturn": "Your webhook must return"
+            },
+            "bulkGenerateText": "Generate text for multiple posts at once (max 20). Calls the text generation webhook for each post sequentially.",
+            "bulkGenerateImagePrompt": "Generate images for multiple posts at once (max 20). Calls the image generation webhook for each post sequentially. Each webhook response should return the image as base64.",
+            "automationList": "List posts for the automation table view. Supports filtering by brand, status, and search.",
+            "queryParams": {
+                "brandId": "Filter by brand public ID",
+                "status": "Filter by status (draft, approved, etc.)",
+                "search": "Search in title and main_caption",
+                "page": "Page number (default 1)",
+                "perPage": "Items per page (default 20)"
+            },
+            "n8nExample": {
+                "title": "n8n Integration Example",
+                "description": "Complete flow for generating text content via n8n:",
+                "step1": "Set up n8n webhook node - Create a Webhook trigger node, copy the URL",
+                "step2": "Configure in app - Paste the URL as text_generation_url in Automation Settings",
+                "step3": "Process in n8n - Your webhook receives the post data with brand_context. Use an AI node (OpenAI, Claude, etc.) to generate content",
+                "step4": "Return result - Respond with JSON containing: success, caption, title",
+                "step5": "Post is updated - The app saves the returned caption/title to the post automatically"
+            },
+            "n8nApproveExample": {
+                "title": "n8n On-Approve Workflow Example",
+                "description": "Automatically trigger actions when a post is approved:",
+                "step1": "Set up webhook - Configure on_approve_url in settings",
+                "step2": "Approve a post - Via UI or POST /api/v1/posts/[id]/approve",
+                "step3": "Webhook fires - n8n receives full post data including brand_context",
+                "step4": "Do anything - Generate images, schedule to social media, send notifications, etc.",
+                "note": "Note: on_approve is fire-and-forget. Failures are logged but won't block the approval."
+            },
+            "curlExamples": "curl Examples",
+            "curlGenerateText": "Generate text for a single post:",
+            "curlGenerateImage": "Generate image description:",
+            "curlBulkText": "Bulk generate text for multiple posts:",
+            "curlConfigureWebhooks": "Configure webhook settings:"
         }
     },
     "graphics": {
@@ -2024,6 +2249,74 @@
         "extendStarted": "Queue extension started! New posts will appear shortly.",
         "extendError": "Failed to extend queue"
     },
+    "postAutomation": {
+        "title": "Post Automation",
+        "subtitle": "Manage automated post generation and publishing",
+        "table": {
+            "id": "#",
+            "topic": "Topic",
+            "status": "Status",
+            "content": "Content",
+            "imageDescription": "Image Description",
+            "image": "Image",
+            "preview": "Preview",
+            "actions": "Actions",
+            "scheduledAt": "Scheduled"
+        },
+        "actions": {
+            "generateText": "Generate Text",
+            "generatingText": "Generating...",
+            "generateImage": "Generate Image",
+            "generatingImage": "Generating...",
+            "publish": "Publish",
+            "publishing": "Publishing...",
+            "approve": "Approve",
+            "approved": "Approved",
+            "preview": "Preview",
+            "edit": "Edit",
+            "bulkGenerateText": "Generate Text",
+            "bulkGenerateImage": "Generate Image",
+            "bulkApprove": "Approve Selected"
+        },
+        "webhookSettings": {
+            "title": "Webhook Settings",
+            "description": "Configure webhook URLs for automated actions. Leave empty to use built-in AI for text generation.",
+            "textGenerationUrl": "Text Generation Webhook URL",
+            "textGenerationPrompt": "Default Text Generation Prompt",
+            "imageGenerationUrl": "Image Generation Webhook URL",
+            "imageGenerationPrompt": "Default Image Generation Prompt",
+            "publishUrl": "Publish Webhook URL",
+            "onApproveUrl": "On Approve Webhook URL",
+            "saved": "Webhook settings saved",
+            "urlPlaceholder": "https://your-webhook-url.com/endpoint",
+            "promptPlaceholder": "Enter default prompt template..."
+        },
+        "preview": {
+            "title": "Post Preview",
+            "openEditor": "Open in Editor",
+            "noContent": "No content yet",
+            "noImagePrompt": "No image description yet"
+        },
+        "empty": "No posts found. Create posts in the Calendar to see them here.",
+        "errors": {
+            "generateFailed": "Text generation failed",
+            "imageFailed": "Image generation failed",
+            "publishFailed": "Publishing failed",
+            "fetchFailed": "Failed to load posts"
+        },
+        "success": {
+            "textGenerated": "Text generated successfully",
+            "imageGenerated": "Image generated and saved",
+            "published": "Post sent for publishing",
+            "approved": "Post approved",
+            "bulkTextGenerated": "{success} of {total} posts generated",
+            "bulkImageGenerated": "{success} of {total} images generated"
+        },
+        "filters": {
+            "allStatuses": "All Statuses",
+            "searchPlaceholder": "Search by topic or content..."
+        }
+    },
     "notifications": {
         "title": "Notifications",
         "empty": "No notifications yet",
@@ -2218,5 +2511,34 @@
                 "addCTA": "Add a compelling call to action at the end of this post."
             }
         }
+    },
+    "admin": {
+        "title": "User Management",
+        "subtitle": "Manage all registered users",
+        "users": "Users",
+        "searchUsers": "Search users by name or email...",
+        "editUser": "Edit User",
+        "deleteUser": "Delete User",
+        "deleteUserConfirm": "Are you sure you want to delete user \"{name}\"? This action cannot be undone.",
+        "name": "Name",
+        "email": "Email",
+        "role": "Role",
+        "createdAt": "Created",
+        "adminBadge": "Admin",
+        "userBadge": "User",
+        "changePassword": "Change Password",
+        "newPassword": "New Password",
+        "confirmPassword": "Confirm Password",
+        "passwordChanged": "Password changed successfully",
+        "userUpdated": "User updated successfully",
+        "userDeleted": "User deleted successfully",
+        "notifications": "Notifications",
+        "noNotifications": "No notifications",
+        "noUsers": "No users found",
+        "profile": "Profile",
+        "password": "Password",
+        "isAdmin": "Administrator",
+        "preventSelfDelete": "You cannot delete your own account",
+        "totalUsers": "{count} users total"
     }
 }

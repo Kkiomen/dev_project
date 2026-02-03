@@ -78,7 +78,7 @@ class TemplateRenderService
         $templateData = $this->prepareTemplateDataWithModifications($template, $modifications);
 
         $response = Http::timeout($this->timeout)
-            ->post("{$this->baseUrl}/render", [
+            ->post("{$this->baseUrl}/render-vue", [
                 'template' => $templateData,
                 'width' => $template->width,
                 'height' => $template->height,

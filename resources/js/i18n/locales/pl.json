@@ -299,7 +299,10 @@
         "approval": "Akceptacja",
         "tokens": "Tokeny",
         "noBasesForGraphics": "Najpierw utwórz bazę danych",
-        "language": "Język"
+        "language": "Język",
+        "boards": "Tablice",
+        "postAutomation": "Automatyzacja",
+        "admin": "Admin"
     },
     "settings": {
         "title": "Ustawienia",
@@ -399,6 +402,59 @@
             "weeklyReportHint": "Otrzymuj tygodniowe podsumowanie wyników Twoich treści."
         }
     },
+    "boards": {
+        "title": "Tablice",
+        "subtitle": "Organizuj zadania za pomocą tablic kanban",
+        "newBoard": "Nowa tablica",
+        "editBoard": "Edytuj tablicę",
+        "deleteBoard": "Usuń tablicę",
+        "deleteBoardConfirm": "Czy na pewno chcesz usunąć tablicę \"{name}\"? Wszystkie kolumny i karty zostaną trwale usunięte.",
+        "boardCreated": "Tablica utworzona",
+        "boardUpdated": "Tablica zaktualizowana",
+        "boardDeleted": "Tablica usunięta",
+        "noBoards": "Brak tablic",
+        "noBoardsDescription": "Utwórz swoją pierwszą tablicę kanban, aby zacząć organizować zadania.",
+        "boardName": "Nazwa tablicy",
+        "boardNamePlaceholder": "np. Pipeline treści",
+        "boardDescription": "Opis",
+        "boardDescriptionPlaceholder": "Opcjonalny opis tablicy",
+        "boardColor": "Kolor tablicy",
+        "columns": "Kolumny",
+        "addColumn": "Dodaj kolumnę",
+        "editColumn": "Edytuj kolumnę",
+        "deleteColumn": "Usuń kolumnę",
+        "deleteColumnConfirm": "Czy na pewno chcesz usunąć kolumnę \"{name}\"? Wszystkie karty w tej kolumnie zostaną trwale usunięte.",
+        "columnName": "Nazwa kolumny",
+        "columnNamePlaceholder": "np. Do zrobienia",
+        "columnColor": "Kolor kolumny",
+        "cardLimit": "Limit kart (WIP)",
+        "cardLimitPlaceholder": "Bez limitu",
+        "cards": "Karty",
+        "addCard": "Dodaj kartę",
+        "editCard": "Edytuj kartę",
+        "deleteCard": "Usuń kartę",
+        "deleteCardConfirm": "Czy na pewno chcesz usunąć kartę \"{title}\"?",
+        "cardTitle": "Tytuł karty",
+        "cardTitlePlaceholder": "Wpisz tytuł karty...",
+        "cardDescription": "Opis",
+        "cardDescriptionPlaceholder": "Dodaj bardziej szczegółowy opis...",
+        "cardColor": "Kolor karty",
+        "dueDate": "Termin",
+        "labels": "Etykiety",
+        "addLabel": "Dodaj etykietę",
+        "overdue": "Po terminie",
+        "noCards": "Brak kart",
+        "dragToReorder": "Przeciągnij, aby zmienić kolejność",
+        "moveCard": "Przenieś kartę",
+        "cardCreated": "Karta utworzona",
+        "cardUpdated": "Karta zaktualizowana",
+        "cardDeleted": "Karta usunięta",
+        "columnCreated": "Kolumna utworzona",
+        "columnUpdated": "Kolumna zaktualizowana",
+        "columnDeleted": "Kolumna usunięta",
+        "backToBoards": "Powrót do tablic",
+        "searchBoards": "Szukaj tablic..."
+    },
     "docs": {
         "title": "Dokumentacja API",
         "subtitle": "Kompletny przewodnik po API do integracji z Twoimi aplikacjami",
@@ -408,6 +464,8 @@
         "copyCode": "Kopiuj",
         "copied": "Skopiowano!",
         "tryIt": "Wypróbuj",
+        "field": "Pole",
+        "type": "Typ",
         "required": "Wymagane",
         "optional": "Opcjonalne",
         "deprecated": "Przestarzałe",
@@ -427,7 +485,9 @@
             "database": "Baza danych",
             "templates": "Szablony",
             "posts": "Posty",
-            "calendar": "Kalendarz"
+            "calendar": "Kalendarz",
+            "boards": "Tablice",
+            "automation": "Automatyzacja"
         },
         "general": {
             "title": "O Aisello",
@@ -1117,6 +1177,171 @@
                 "reschedule": "Zmień termin wydarzenia",
                 "rescheduleDescription": "Zmienia datę/godzinę wydarzenia (dla drag & drop)."
             }
+        },
+        "boards": {
+            "title": "Tablice Kanban",
+            "description": "API do zarządzania tablicami kanban z kolumnami i kartami. Tablice należą do aktualnej marki.",
+            "overview": "Przegląd",
+            "overviewDescription": "Tablice kanban zapewniają wizualny sposób organizacji zadań w kolumny z kartami. Każda tablica należy do marki i zawiera wiele kolumn, które z kolei zawierają karty.",
+            "structure": "Struktura danych",
+            "boardDesc": "Kontener najwyższego poziomu należący do marki",
+            "columnDesc": "Uporządkowana lista w tablicy (np. Do zrobienia, W trakcie, Gotowe)",
+            "cardDesc": "Pojedyncze zadanie lub element w kolumnie",
+            "boardsCrud": "CRUD Tablic",
+            "columnsCrud": "Kolumny",
+            "cardsCrud": "Karty",
+            "movingCards": "Przenoszenie kart",
+            "listDescription": "Pobiera paginowaną listę tablic dla aktualnej marki.",
+            "createDescription": "Tworzy nową tablicę z domyślnymi kolumnami (Do zrobienia, W trakcie, Gotowe).",
+            "showDescription": "Pobiera pełne szczegóły tablicy wraz ze wszystkimi kolumnami i kartami.",
+            "moveDescription": "Przenieś kartę do innej kolumny lub zmień kolejność w tej samej kolumnie.",
+            "reorderDescription": "Zmień kolejność karty w jej aktualnej kolumnie.",
+            "dragDropTip": "Integracja Drag & Drop",
+            "dragDropDescription": "Endpoint move obsługuje zarówno przenoszenie między kolumnami, jak i zmianę kolejności w ramach kolumny. Dla interfejsu drag & drop: użyj endpointu move z docelowym column_id i żądanym indeksem pozycji."
+        },
+        "automationApi": {
+            "title": "Automatyzacja (Webhooki)",
+            "howItWorks": "Jak to działa",
+            "howItWorksDescription": "System automatyzacji używa konfigurowalnych webhooków per marka. Gdy uruchomisz \"Generuj Tekst\" lub \"Generuj Obraz\" z interfejsu (lub API), system wysyła żądanie POST na skonfigurowany URL webhooka (np. n8n) z danymi posta. Twój webhook przetwarza dane i zwraca wynik. System automatycznie aktualizuje post.",
+            "createPost": {
+                "title": "Utwórz post (punkt wyjścia)",
+                "description": "Zanim zaczniesz generować treść lub obrazy, musisz utworzyć post z pomysłem na temat. Możesz to zrobić przez Kalendarz lub przez API. Pole main_caption jest opcjonalne - możesz je zostawić puste i wygenerować treść później przez webhooki.",
+                "endpoint": "POST /api/v1/posts",
+                "titleField": "title (wymagane) - temat / pomysł na post, np. \"5 trendów AI w marketingu\"",
+                "captionField": "main_caption (opcjonalne) - początkowa treść, może być pusta jeśli planujesz wygenerować ją webhookiem",
+                "scheduledField": "scheduled_at (opcjonalne) - planowana data publikacji w formacie ISO 8601",
+                "platformsField": "platforms (opcjonalne) - tablica platform: facebook, instagram, youtube",
+                "note": "Post jest tworzony ze statusem \"draft\". Następnie użyj endpointów automatyzacji aby wygenerować tekst, obraz, zatwierdzić i opublikować.",
+                "exampleTitle": "Przykład: utwórz post z samym tematem"
+            },
+            "howItWorksSteps": {
+                "step1": "Utwórz post z pomysłem na temat (przez Kalendarz lub POST /api/v1/posts)",
+                "step2": "Skonfiguruj URL-e webhooków w ustawieniach automatyzacji marki",
+                "step3": "Uruchom generowanie (Generuj Tekst / Generuj Obraz) przez interfejs lub API",
+                "step4": "System wysyła POST z danymi posta + kontekstem marki na twój webhook",
+                "step5": "Twój webhook (n8n) przetwarza i zwraca wynik",
+                "step6": "System aktualizuje post zwróconą treścią / obrazem"
+            },
+            "webhookTypes": "Typy Webhooków",
+            "webhookTypesTable": {
+                "type": "Typ",
+                "settingKey": "Klucz ustawienia",
+                "fallback": "Fallback",
+                "textGeneration": "text_generation",
+                "textGenerationKey": "text_generation_url",
+                "textGenerationFallback": "Wbudowane AI (OpenAI)",
+                "imageGeneration": "image_generation",
+                "imageGenerationKey": "image_generation_url",
+                "imageGenerationFallback": "Brak (zwraca błąd)",
+                "publish": "publish",
+                "publishKey": "publish_url",
+                "publishFallback": "Brak (zwraca błąd)",
+                "onApprove": "on_approve",
+                "onApproveKey": "on_approve_url",
+                "onApproveFallback": "Brak (pomijany cicho)"
+            },
+            "webhookReference": "Dokumentacja Webhooków - Wejście / Wyjście",
+            "webhookReferenceDescription": "Każdy typ webhooka otrzymuje ten sam bazowy payload (dane posta + kontekst marki) i musi zwrócić konkretną odpowiedź JSON. Poniżej szczegółowy opis co każdy webhook otrzymuje i co musi zwrócić.",
+            "receives": "Twój webhook otrzymuje (POST)",
+            "mustReturn": "Twój webhook musi zwrócić (JSON)",
+            "keyFields": "Kluczowe pola w payloadzie",
+            "textGenerationWebhook": {
+                "title": "Webhook Generowania Tekstu",
+                "settingKey": "text_generation_url",
+                "description": "Wywoływany gdy użytkownik kliknie \"Generuj tekst\" w interfejsie lub wywoła API. System wysyła pełne dane posta z kontekstem marki i promptem. Twój webhook powinien wygenerować treść posta (caption) i opcjonalnie nowy tytuł.",
+                "fallbackNote": "Jeśli nie skonfigurowano URL webhooka, system automatycznie używa wbudowanego AI (OpenAI) z kontekstem marki.",
+                "keyField1": "prompt - domyślny prompt z ustawień webhooka (lub nadpisany z żądania)",
+                "keyField2": "title - aktualny temat/tytuł posta",
+                "keyField3": "brand_context - pełne info o marce (ton, grupa docelowa, filary, itp.)",
+                "returnField1": "success - true jeśli generowanie się powiodło",
+                "returnField2": "caption - wygenerowana treść posta (zapisywana do main_caption)",
+                "returnField3": "title - (opcjonalnie) nowy tytuł posta"
+            },
+            "imageGenerationWebhook": {
+                "title": "Webhook Generowania Obrazu",
+                "settingKey": "image_generation_url",
+                "description": "Wywoływany gdy użytkownik kliknie \"Generuj obraz\" w interfejsie lub wywoła API. System wysyła pełne dane posta włącznie z aktualną treścią. Twój webhook powinien wygenerować faktyczny obraz (np. przez DALL-E, Midjourney, Stable Diffusion) i zwrócić go jako base64. Obraz jest automatycznie zapisywany jako załącznik mediów posta.",
+                "fallbackNote": "Brak fallbacku - zwraca błąd jeśli nie skonfigurowano URL webhooka.",
+                "keyField1": "title - temat/tytuł posta",
+                "keyField2": "main_caption - aktualna treść posta (użyj do wygenerowania pasującego obrazu)",
+                "keyField3": "brand_context - pełne info o marce (użyj do stylizacji/brandingu)",
+                "returnField1": "success - true jeśli generowanie się powiodło",
+                "returnField2": "image_base64 - wygenerowany obraz jako string base64 (obsługuje prefix data URI lub czysty base64). Formaty: PNG, JPG, WebP, GIF",
+                "returnField3": "filename - (opcjonalnie) oryginalna nazwa pliku obrazu",
+                "returnField4": "image_prompt - (opcjonalnie) tekstowy opis obrazu, zapisywany obok"
+            },
+            "publishWebhook": {
+                "title": "Webhook Publikacji",
+                "settingKey": "publish_url",
+                "description": "Wywoływany gdy użytkownik kliknie \"Publikuj\" w interfejsie lub wywoła API. Post musi mieć status approved lub scheduled. System wysyła kompletnego posta z treścią, opisem obrazu, datą planowania i kontekstem marki. Twój webhook powinien użyć tych danych do opublikowania posta na zewnętrznych platformach (Facebook, Instagram, LinkedIn, itp.).",
+                "fallbackNote": "Brak fallbacku - zwraca błąd jeśli nie skonfigurowano URL webhooka.",
+                "keyField1": "main_caption - finalna treść posta do publikacji",
+                "keyField2": "image_prompt - opis obrazu do wygenerowania/dołączenia grafiki",
+                "keyField3": "scheduled_at - planowana data publikacji (ISO 8601) lub null dla natychmiastowej",
+                "keyField4": "title - temat/tytuł posta",
+                "keyField5": "brand_context.enabled_platforms - lista platform do publikacji",
+                "returnField1": "success - true jeśli publikacja się powiodła",
+                "returnField2": "message - komunikat statusu (np. \"Opublikowano na Facebook i Instagram\")"
+            },
+            "onApproveWebhook": {
+                "title": "Webhook On Approve",
+                "settingKey": "on_approve_url",
+                "description": "Wywoływany automatycznie gdy post zostanie zatwierdzony (przez interfejs lub API). Fire-and-forget - system nie czeka na odpowiedź, a błędy są logowane cicho. Użyj do uruchamiania kolejnych workflow (np. auto-generowanie obrazów, planowanie publikacji, wysyłanie powiadomień).",
+                "fallbackNote": "Jeśli nie skonfigurowano URL webhooka, nic się nie dzieje (pomijany cicho).",
+                "keyField1": "status - zawsze \"approved\"",
+                "keyField2": "main_caption - zatwierdzona treść posta",
+                "keyField3": "brand_context - pełne info o marce",
+                "returnNote": "Odpowiedź jest ignorowana (fire-and-forget). Zalecane zwrócenie success: true do logowania."
+            },
+            "configureSettings": "Skonfiguruj URL-e webhooków i domyślne prompty dla marki. Wszystkie pola są opcjonalne - ustaw tylko te webhooki, których potrzebujesz.",
+            "outboundPayload": "Payload wychodzący (co dostaje twój webhook)",
+            "outboundPayloadDescription": "Każde wywołanie webhooka wysyła ten JSON na twój endpoint:",
+            "generateText": {
+                "description": "Uruchom generowanie tekstu dla posta. Wywołuje webhook text_generation_url. Jeśli webhook nie jest skonfigurowany, używa wbudowanego AI z kontekstem marki. Zwrócony caption i title są automatycznie zapisywane w poście.",
+                "promptParam": "Nadpisz domyślny prompt dla tego żądania",
+                "webhookMustReturn": "Twój webhook musi zwrócić"
+            },
+            "generateImagePrompt": {
+                "description": "Uruchom generowanie obrazu dla posta. Wywołuje webhook image_generation_url. Brak fallbacka - zwraca błąd jeśli webhook nie jest skonfigurowany. Webhook powinien zwrócić obraz jako base64 w polu image_base64. Obraz jest automatycznie zapisywany jako załącznik mediów posta.",
+                "webhookMustReturn": "Twój webhook musi zwrócić"
+            },
+            "webhookPublish": {
+                "description": "Opublikuj post przez skonfigurowany webhook publish_url. Post musi mieć status approved lub scheduled. Zwraca błąd jeśli webhook publikacji nie jest skonfigurowany.",
+                "webhookMustReturn": "Twój webhook musi zwrócić"
+            },
+            "bulkGenerateText": "Generuj tekst dla wielu postów naraz (maks. 20). Wywołuje webhook generowania tekstu dla każdego posta sekwencyjnie.",
+            "bulkGenerateImagePrompt": "Generuj obrazy dla wielu postów naraz (maks. 20). Wywołuje webhook generowania obrazu dla każdego posta sekwencyjnie. Każda odpowiedź webhooka powinna zwrócić obraz jako base64.",
+            "automationList": "Lista postów dla widoku tabeli automatyzacji. Obsługuje filtrowanie po marce, statusie i wyszukiwanie.",
+            "queryParams": {
+                "brandId": "Filtruj po publicznym ID marki",
+                "status": "Filtruj po statusie (draft, approved, itp.)",
+                "search": "Szukaj w tytule i main_caption",
+                "page": "Numer strony (domyślnie 1)",
+                "perPage": "Elementów na stronę (domyślnie 20)"
+            },
+            "n8nExample": {
+                "title": "Przykład integracji z n8n",
+                "description": "Pełny przepływ generowania treści tekstowej przez n8n:",
+                "step1": "Utwórz węzeł webhook w n8n - Stwórz węzeł Webhook trigger, skopiuj URL",
+                "step2": "Skonfiguruj w aplikacji - Wklej URL jako text_generation_url w Ustawieniach Automatyzacji",
+                "step3": "Przetwarzaj w n8n - Twój webhook otrzymuje dane posta z brand_context. Użyj węzła AI (OpenAI, Claude, itp.) do generowania treści",
+                "step4": "Zwróć wynik - Odpowiedz JSON-em zawierającym: success, caption, title",
+                "step5": "Post jest zaktualizowany - Aplikacja automatycznie zapisuje zwrócony caption/title do posta"
+            },
+            "n8nApproveExample": {
+                "title": "Przykład workflow On-Approve w n8n",
+                "description": "Automatycznie uruchom akcje gdy post zostanie zatwierdzony:",
+                "step1": "Skonfiguruj webhook - Ustaw on_approve_url w ustawieniach",
+                "step2": "Zatwierdź post - Przez interfejs lub POST /api/v1/posts/[id]/approve",
+                "step3": "Webhook się uruchamia - n8n otrzymuje pełne dane posta z brand_context",
+                "step4": "Zrób cokolwiek - Generuj obrazy, planuj na social media, wysyłaj powiadomienia, itp.",
+                "note": "Uwaga: on_approve jest typu fire-and-forget. Błędy są logowane, ale nie blokują zatwierdzenia."
+            },
+            "curlExamples": "Przykłady curl",
+            "curlGenerateText": "Generuj tekst dla pojedynczego posta:",
+            "curlGenerateImage": "Generuj opis obrazka:",
+            "curlBulkText": "Hurtowe generowanie tekstu dla wielu postów:",
+            "curlConfigureWebhooks": "Skonfiguruj ustawienia webhooków:"
         }
     },
     "graphics": {
@@ -2027,6 +2252,74 @@
         "extendStarted": "Rozszerzanie kolejki rozpoczęte! Nowe posty pojawią się wkrótce.",
         "extendError": "Nie udało się rozszerzyć kolejki"
     },
+    "postAutomation": {
+        "title": "Automatyzacja Postów",
+        "subtitle": "Zarządzaj automatycznym generowaniem i publikowaniem postów",
+        "table": {
+            "id": "#",
+            "topic": "Temat",
+            "status": "Status",
+            "content": "Treść",
+            "imageDescription": "Opis Obrazka",
+            "image": "Obraz",
+            "preview": "Podgląd",
+            "actions": "Akcje",
+            "scheduledAt": "Zaplanowano"
+        },
+        "actions": {
+            "generateText": "Generuj Tekst",
+            "generatingText": "Generowanie...",
+            "generateImage": "Generuj Obraz",
+            "generatingImage": "Generowanie...",
+            "publish": "Publikuj",
+            "publishing": "Publikowanie...",
+            "approve": "Zatwierdź",
+            "approved": "Zatwierdzono",
+            "preview": "Podgląd",
+            "edit": "Edytuj",
+            "bulkGenerateText": "Generuj Tekst",
+            "bulkGenerateImage": "Generuj Obraz",
+            "bulkApprove": "Zatwierdź Zaznaczone"
+        },
+        "webhookSettings": {
+            "title": "Ustawienia Webhooków",
+            "description": "Skonfiguruj adresy URL webhooków dla automatycznych akcji. Pozostaw puste, aby użyć wbudowanego AI do generowania tekstu.",
+            "textGenerationUrl": "URL Webhooka Generowania Tekstu",
+            "textGenerationPrompt": "Domyślny Prompt Generowania Tekstu",
+            "imageGenerationUrl": "URL Webhooka Generowania Obrazu",
+            "imageGenerationPrompt": "Domyślny Prompt Generowania Obrazu",
+            "publishUrl": "URL Webhooka Publikacji",
+            "onApproveUrl": "URL Webhooka Po Zatwierdzeniu",
+            "saved": "Ustawienia webhooków zapisane",
+            "urlPlaceholder": "https://twoj-webhook-url.com/endpoint",
+            "promptPlaceholder": "Wprowadź domyślny szablon promptu..."
+        },
+        "preview": {
+            "title": "Podgląd Posta",
+            "openEditor": "Otwórz w Edytorze",
+            "noContent": "Brak treści",
+            "noImagePrompt": "Brak opisu obrazka"
+        },
+        "empty": "Nie znaleziono postów. Utwórz posty w Kalendarzu, aby je tutaj zobaczyć.",
+        "errors": {
+            "generateFailed": "Generowanie tekstu nie powiodło się",
+            "imageFailed": "Generowanie obrazu nie powiodło się",
+            "publishFailed": "Publikacja nie powiodła się",
+            "fetchFailed": "Nie udało się załadować postów"
+        },
+        "success": {
+            "textGenerated": "Tekst wygenerowany pomyślnie",
+            "imageGenerated": "Obraz wygenerowany i zapisany",
+            "published": "Post wysłany do publikacji",
+            "approved": "Post zatwierdzony",
+            "bulkTextGenerated": "{success} z {total} postów wygenerowanych",
+            "bulkImageGenerated": "{success} z {total} obrazów wygenerowanych"
+        },
+        "filters": {
+            "allStatuses": "Wszystkie Statusy",
+            "searchPlaceholder": "Szukaj po temacie lub treści..."
+        }
+    },
     "notifications": {
         "title": "Powiadomienia",
         "empty": "Brak powiadomień",
@@ -2221,5 +2514,34 @@
                 "addCTA": "Dodaj przekonujace wezwanie do dzialania na koncu tego posta."
             }
         }
+    },
+    "admin": {
+        "title": "Zarządzanie użytkownikami",
+        "subtitle": "Zarządzaj wszystkimi zarejestrowanymi użytkownikami",
+        "users": "Użytkownicy",
+        "searchUsers": "Szukaj użytkowników po nazwie lub emailu...",
+        "editUser": "Edytuj użytkownika",
+        "deleteUser": "Usuń użytkownika",
+        "deleteUserConfirm": "Czy na pewno chcesz usunąć użytkownika \"{name}\"? Tej operacji nie można cofnąć.",
+        "name": "Nazwa",
+        "email": "Email",
+        "role": "Rola",
+        "createdAt": "Utworzony",
+        "adminBadge": "Admin",
+        "userBadge": "Użytkownik",
+        "changePassword": "Zmień hasło",
+        "newPassword": "Nowe hasło",
+        "confirmPassword": "Potwierdź hasło",
+        "passwordChanged": "Hasło zostało zmienione",
+        "userUpdated": "Użytkownik zaktualizowany",
+        "userDeleted": "Użytkownik usunięty",
+        "notifications": "Powiadomienia",
+        "noNotifications": "Brak powiadomień",
+        "noUsers": "Nie znaleziono użytkowników",
+        "profile": "Profil",
+        "password": "Hasło",
+        "isAdmin": "Administrator",
+        "preventSelfDelete": "Nie możesz usunąć własnego konta",
+        "totalUsers": "Łącznie {count} użytkowników"
     }
 }

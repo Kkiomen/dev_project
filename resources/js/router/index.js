@@ -54,6 +54,18 @@ const routes = [
         component: () => import('@/pages/GraphicsEditorPage.vue'),
         props: true,
     },
+    // Boards (Kanban)
+    {
+        path: '/boards',
+        name: 'boards',
+        component: () => import('@/pages/BoardsPage.vue'),
+    },
+    {
+        path: '/boards/:boardId',
+        name: 'board.view',
+        component: () => import('@/pages/BoardViewPage.vue'),
+        props: true,
+    },
     // Calendar & Social Posts
     {
         path: '/calendar',
@@ -64,6 +76,11 @@ const routes = [
         path: '/posts/new',
         name: 'post.create',
         component: () => import('@/pages/PostEditorPage.vue'),
+    },
+    {
+        path: '/posts/automation',
+        name: 'post.automation',
+        component: () => import('@/pages/PostAutomationPage.vue'),
     },
     {
         path: '/posts/:postId/edit',
@@ -108,6 +125,13 @@ const routes = [
         path: '/settings',
         name: 'settings',
         component: () => import('@/pages/SettingsPage.vue'),
+    },
+    // Admin
+    {
+        path: '/admin/users',
+        name: 'admin.users',
+        component: () => import('@/pages/AdminUsersPage.vue'),
+        meta: { requiresAdmin: true },
     },
     // PSD Editor (admin only)
     {

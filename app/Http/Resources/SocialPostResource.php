@@ -13,6 +13,7 @@ class SocialPostResource extends JsonResource
             'id' => $this->public_id,
             'title' => $this->title,
             'main_caption' => $this->main_caption,
+            'image_prompt' => $this->image_prompt,
             'status' => $this->status->value,
             'status_label' => $this->status->label(),
             'status_color' => $this->status->color(),

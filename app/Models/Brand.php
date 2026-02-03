@@ -110,6 +110,11 @@ class Brand extends Model
         return $this->hasMany(PlatformCredential::class);
     }
 
+    public function boards(): HasMany
+    {
+        return $this->hasMany(Board::class);
+    }
+
     // Member helpers
     public function getMemberRole(User $user): ?string
     {
@@ -351,6 +356,22 @@ class Brand extends Model
     public function scopeWithAutomationEnabled(Builder $query): Builder
     {
         return $query->where('automation_enabled', true);
+    }
+
+    // Webhook Helpers
+    public function getWebhookUrl(string $type): ?string
+    {
+        return $this->automation_settings['webhooks'][$type . '_url'] ?? null;
+    }
+
+    public function getWebhookPrompt(string $type): ?string
+    {
+        return $this->automation_settings['webhooks'][$type . '_prompt'] ?? null;
+    }
+
+    public function hasWebhook(string $type): bool
+    {
+        return !empty($this->getWebhookUrl($type));
     }
 
     // Platform Credential Helpers

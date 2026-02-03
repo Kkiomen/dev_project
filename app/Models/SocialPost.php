@@ -22,6 +22,7 @@ class SocialPost extends Model
         'brand_id',
         'title',
         'main_caption',
+        'image_prompt',
         'status',
         'scheduled_at',
         'published_at',

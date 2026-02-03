@@ -18,6 +18,9 @@ class DatabaseSeeder extends Seeder
         // Create system user for library templates
         $this->call(SystemUserSeeder::class);
 
+        // Create admin account with full example data
+        $this->call(AdminSeeder::class);
+
         // User::factory(10)->create();
 
         User::factory()->create([

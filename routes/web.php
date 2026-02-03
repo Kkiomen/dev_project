@@ -34,11 +34,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Approval Dashboard
     Route::get('/approval-dashboard', fn () => view('spa'))->name('approval-dashboard');
 
+    // Boards (Kanban)
+    Route::get('/boards/{any?}', fn () => view('spa'))->where('any', '.*')->name('boards');
+
     // Brands management
     Route::get('/brands/{any?}', fn () => view('spa'))->where('any', '.*')->name('brands');
 
     // Settings
     Route::get('/settings', fn () => view('spa'))->name('settings');
+
+    // Admin panel
+    Route::get('/admin/{any?}', fn () => view('spa'))->where('any', '.*')->name('admin')->middleware('admin');
 
     // PSD Editor (admin only)
     Route::get('/psd-editor', fn () => view('spa'))->name('psd-editor')->middleware('admin');

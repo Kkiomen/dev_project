@@ -14,6 +14,7 @@ use App\Models\ApprovalToken;
 use App\Models\SocialPost;
 use App\Services\ApprovalService;
 use App\Services\ContentSyncService;
+use App\Services\Webhook\WebhookDispatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -22,7 +23,8 @@ class SocialPostController extends Controller
 {
     public function __construct(
         protected ContentSyncService $contentSyncService,
-        protected ApprovalService $approvalService
+        protected ApprovalService $approvalService,
+        protected WebhookDispatchService $webhookService
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -222,6 +224,17 @@ class SocialPostController extends Controller
             'status' => PostStatus::Approved,
         ]);
 
+        if ($post->brand?->hasWebhook('on_approve')) {
+            try {
+                $this->webhookService->onApprove($post);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('on_approve webhook failed', [
+                    'post_id' => $post->public_id,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
         return new SocialPostResource($post->load(['platformPosts', 'media']));
     }
 
@@ -262,6 +275,17 @@ class SocialPostController extends Controller
         foreach ($posts as $post) {
             $post->update(['status' => PostStatus::Approved]);
             $approvedCount++;
+
+            if ($post->brand?->hasWebhook('on_approve')) {
+                try {
+                    $this->webhookService->onApprove($post);
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('on_approve webhook failed in batch', [
+                        'post_id' => $post->public_id,
+                        'error' => $e->getMessage(),
+                    ]);
+                }
+            }
         }
 
         return response()->json([

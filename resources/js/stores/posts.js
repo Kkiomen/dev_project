@@ -9,6 +9,11 @@ export const usePostsStore = defineStore('posts', {
         loading: false,
         saving: false,
         generatingAi: false,
+        automationPosts: [],
+        automationPagination: { currentPage: 1, lastPage: 1, total: 0 },
+        generatingText: {},
+        generatingImage: {},
+        webhookPublishing: {},
         error: null,
         pagination: {
             currentPage: 1,
@@ -467,6 +472,113 @@ export const usePostsStore = defineStore('posts', {
             }
         },
 
+        // Automation
+        async fetchAutomationPosts(params = {}) {
+            this.loading = true;
+            this.error = null;
+            try {
+                const response = await axios.get('/api/v1/posts/automation', { params });
+                this.automationPosts = response.data.data;
+                if (response.data.meta) {
+                    this.automationPagination = {
+                        currentPage: response.data.meta.current_page,
+                        lastPage: response.data.meta.last_page,
+                        total: response.data.meta.total,
+                    };
+                }
+                return response.data;
+            } catch (error) {
+                this.error = error.response?.data?.message || 'Failed to fetch posts';
+                throw error;
+            } finally {
+                this.loading = false;
+            }
+        },
+
+        async generatePostText(postId, prompt = null) {
+            this.generatingText = { ...this.generatingText, [postId]: true };
+            try {
+                const payload = prompt ? { prompt } : {};
+                const response = await axios.post(`/api/v1/posts/${postId}/generate-text`, payload);
+                if (response.data.success && response.data.data) {
+                    const index = this.automationPosts.findIndex(p => p.id === postId);
+                    if (index !== -1) {
+                        this.automationPosts[index] = response.data.data;
+                    }
+                }
+                return response.data;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.generatingText = { ...this.generatingText, [postId]: false };
+            }
+        },
+
+        async generatePostImagePrompt(postId) {
+            this.generatingImage = { ...this.generatingImage, [postId]: true };
+            try {
+                const response = await axios.post(`/api/v1/posts/${postId}/generate-image-prompt`);
+                if (response.data.success && response.data.data) {
+                    const index = this.automationPosts.findIndex(p => p.id === postId);
+                    if (index !== -1) {
+                        this.automationPosts[index] = response.data.data;
+                    }
+                }
+                return response.data;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.generatingImage = { ...this.generatingImage, [postId]: false };
+            }
+        },
+
+        async webhookPublishPost(postId) {
+            this.webhookPublishing = { ...this.webhookPublishing, [postId]: true };
+            try {
+                const response = await axios.post(`/api/v1/posts/${postId}/webhook-publish`);
+                if (response.data.success && response.data.data) {
+                    const index = this.automationPosts.findIndex(p => p.id === postId);
+                    if (index !== -1) {
+                        this.automationPosts[index] = response.data.data;
+                    }
+                }
+                return response.data;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.webhookPublishing = { ...this.webhookPublishing, [postId]: false };
+            }
+        },
+
+        async bulkGenerateText(postIds) {
+            try {
+                const response = await axios.post('/api/v1/posts/bulk-generate-text', {
+                    post_ids: postIds,
+                });
+                return response.data;
+            } catch (error) {
+                throw error;
+            }
+        },
+
+        async bulkGenerateImagePrompt(postIds) {
+            try {
+                const response = await axios.post('/api/v1/posts/bulk-generate-image-prompt', {
+                    post_ids: postIds,
+                });
+                return response.data;
+            } catch (error) {
+                throw error;
+            }
+        },
+
+        updateAutomationPost(postId, data) {
+            const index = this.automationPosts.findIndex(p => p.id === postId);
+            if (index !== -1) {
+                this.automationPosts[index] = { ...this.automationPosts[index], ...data };
+            }
+        },
+
         reset() {
             this.posts = [];
             this.currentPost = null;
@@ -474,6 +586,11 @@ export const usePostsStore = defineStore('posts', {
             this.loading = false;
             this.saving = false;
             this.generatingAi = false;
+            this.automationPosts = [];
+            this.automationPagination = { currentPage: 1, lastPage: 1, total: 0 };
+            this.generatingText = {};
+            this.generatingImage = {};
+            this.webhookPublishing = {};
             this.error = null;
         },
     },

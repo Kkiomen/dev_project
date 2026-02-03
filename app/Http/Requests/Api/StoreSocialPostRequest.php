@@ -17,7 +17,7 @@ class StoreSocialPostRequest extends FormRequest
     {
         return [
             'title' => ['required', 'string', 'max:255'],
-            'main_caption' => ['required', 'string', 'max:5000'],
+            'main_caption' => ['nullable', 'string', 'max:5000'],
             'scheduled_at' => ['nullable', 'date', 'after_or_equal:now'],
             'settings' => ['nullable', 'array'],
             'platforms' => ['nullable', 'array'],
