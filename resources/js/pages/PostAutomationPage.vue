@@ -25,6 +25,14 @@ const editingField = ref(null); // { postId, field }
 const editingValue = ref('');
 const bulkGeneratingText = ref(false);
 const bulkGeneratingImage = ref(false);
+const newTagInput = ref({}); // { [postId-platform]: string }
+const showTagInput = ref(null); // 'postId-platform'
+
+const platformColors = {
+    facebook: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
+    instagram: { bg: 'bg-pink-100', text: 'text-pink-700', dot: 'bg-pink-500' },
+    youtube: { bg: 'bg-red-100', text: 'text-red-700', dot: 'bg-red-500' },
+};
 
 // Computed
 const posts = computed(() => postsStore.automationPosts);
@@ -223,6 +231,90 @@ function truncate(text, length = 80) {
     return text.length > length ? text.substring(0, length) + '...' : text;
 }
 
+function formatDate(dateStr) {
+    if (!dateStr) return null;
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return null;
+    return d.toLocaleDateString(undefined, { day: '2-digit', month: '2-digit', year: 'numeric' })
+        + ' ' + d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+}
+
+// Platform toggle
+async function togglePlatform(post, platform) {
+    const pp = post.platform_posts?.find(p => p.platform === platform);
+    if (!pp) return;
+    try {
+        await postsStore.updateAutomationPlatformPost(post.id, platform, { enabled: !pp.enabled });
+    } catch {
+        toast.error(t('posts.errors.saveFailed'));
+    }
+}
+
+// Tags
+function getPostTags(post) {
+    if (!post.platform_posts) return [];
+    const tags = [];
+    for (const pp of post.platform_posts) {
+        if (pp.enabled && pp.hashtags?.length) {
+            for (const tag of pp.hashtags) {
+                if (!tags.includes(tag)) tags.push(tag);
+            }
+        }
+    }
+    return tags;
+}
+
+function getTagsPerPlatform(post) {
+    if (!post.platform_posts) return [];
+    return post.platform_posts
+        .filter(pp => pp.enabled)
+        .map(pp => ({ platform: pp.platform, hashtags: pp.hashtags || [] }));
+}
+
+function startAddingTag(postId, platform) {
+    const key = `${postId}-${platform}`;
+    showTagInput.value = key;
+    newTagInput.value[key] = '';
+}
+
+async function addTag(post, platform) {
+    const key = `${post.id}-${platform}`;
+    const tag = (newTagInput.value[key] || '').trim().replace(/^#/, '');
+    if (!tag) {
+        showTagInput.value = null;
+        return;
+    }
+    const pp = post.platform_posts?.find(p => p.platform === platform);
+    if (!pp) return;
+    const current = pp.hashtags || [];
+    if (current.includes(tag)) {
+        showTagInput.value = null;
+        return;
+    }
+    try {
+        await postsStore.updateAutomationPlatformPost(post.id, platform, {
+            hashtags: [...current, tag],
+        });
+    } catch {
+        toast.error(t('posts.errors.saveFailed'));
+    }
+    showTagInput.value = null;
+    newTagInput.value[key] = '';
+}
+
+async function removeTag(post, platform, tagToRemove) {
+    const pp = post.platform_posts?.find(p => p.platform === platform);
+    if (!pp) return;
+    const updated = (pp.hashtags || []).filter(t => t !== tagToRemove);
+    try {
+        await postsStore.updateAutomationPlatformPost(post.id, platform, {
+            hashtags: updated,
+        });
+    } catch {
+        toast.error(t('posts.errors.saveFailed'));
+    }
+}
+
 // Watchers
 let searchTimeout = null;
 watch(search, () => {
@@ -368,6 +460,15 @@ onMounted(() => {
                         <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                             {{ t('postAutomation.table.image') }}
                         </th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32">
+                            {{ t('postAutomation.table.platforms') }}
+                        </th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48">
+                            {{ t('postAutomation.table.hashtags') }}
+                        </th>
+                        <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-36">
+                            {{ t('postAutomation.table.scheduledAt') }}
+                        </th>
                         <th class="px-3 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-64">
                             {{ t('postAutomation.table.actions') }}
                         </th>
@@ -455,6 +556,92 @@ onMounted(() => {
                                     {{ post.media_count }}
                                 </span>
                             </div>
+                            <span v-else class="text-gray-300 text-sm">—</span>
+                        </td>
+
+                        <!-- Platforms -->
+                        <td class="px-3 py-3">
+                            <div class="flex flex-wrap gap-1.5">
+                                <button
+                                    v-for="pp in post.platform_posts"
+                                    :key="pp.platform"
+                                    @click="togglePlatform(post, pp.platform)"
+                                    class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors cursor-pointer"
+                                    :class="pp.enabled
+                                        ? `${platformColors[pp.platform]?.bg || 'bg-gray-100'} ${platformColors[pp.platform]?.text || 'text-gray-700'}`
+                                        : 'bg-gray-50 text-gray-400 line-through'
+                                    "
+                                    :title="pp.platform_label"
+                                >
+                                    <span
+                                        class="w-2 h-2 rounded-full shrink-0"
+                                        :class="pp.enabled ? (platformColors[pp.platform]?.dot || 'bg-gray-400') : 'bg-gray-300'"
+                                    />
+                                    {{ pp.platform_label }}
+                                </button>
+                                <span v-if="!post.platform_posts?.length" class="text-gray-300 text-xs">
+                                    {{ t('postAutomation.table.noPlatforms') }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- Tags -->
+                        <td class="px-3 py-3">
+                            <div class="space-y-1.5">
+                                <template v-for="ppData in getTagsPerPlatform(post)" :key="ppData.platform">
+                                    <div class="flex flex-wrap items-center gap-1">
+                                        <span
+                                            class="text-[10px] font-semibold uppercase shrink-0"
+                                            :class="platformColors[ppData.platform]?.text || 'text-gray-500'"
+                                        >
+                                            {{ ppData.platform.charAt(0).toUpperCase() }}
+                                        </span>
+                                        <span
+                                            v-for="tag in ppData.hashtags"
+                                            :key="tag"
+                                            class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700"
+                                        >
+                                            #{{ tag }}
+                                            <button
+                                                @click="removeTag(post, ppData.platform, tag)"
+                                                class="text-gray-400 hover:text-red-500 ml-0.5"
+                                            >
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                            </button>
+                                        </span>
+                                        <!-- Add tag input -->
+                                        <div v-if="showTagInput === `${post.id}-${ppData.platform}`" class="inline-flex">
+                                            <input
+                                                v-model="newTagInput[`${post.id}-${ppData.platform}`]"
+                                                @keydown.enter.prevent="addTag(post, ppData.platform)"
+                                                @keydown.escape="showTagInput = null"
+                                                @blur="addTag(post, ppData.platform)"
+                                                :placeholder="t('postAutomation.table.tagPlaceholder')"
+                                                class="w-20 px-1.5 py-0.5 text-[11px] border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                                autofocus
+                                            />
+                                        </div>
+                                        <button
+                                            v-else
+                                            @click="startAddingTag(post.id, ppData.platform)"
+                                            class="text-gray-400 hover:text-blue-600 transition-colors"
+                                            :title="t('postAutomation.table.addTag')"
+                                        >
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                        </button>
+                                    </div>
+                                </template>
+                                <span v-if="!getTagsPerPlatform(post).length" class="text-gray-300 text-xs">
+                                    {{ t('postAutomation.table.noTags') }}
+                                </span>
+                            </div>
+                        </td>
+
+                        <!-- Scheduled At -->
+                        <td class="px-3 py-3">
+                            <span v-if="formatDate(post.scheduled_at)" class="text-sm text-gray-600 whitespace-nowrap">
+                                {{ formatDate(post.scheduled_at) }}
+                            </span>
                             <span v-else class="text-gray-300 text-sm">—</span>
                         </td>
 
@@ -576,6 +763,80 @@ onMounted(() => {
                     <span v-if="post.media_count > 1" class="absolute -top-1 -right-1 bg-gray-700 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
                         {{ post.media_count }}
                     </span>
+                </div>
+
+                <!-- Platforms -->
+                <div v-if="post.platform_posts?.length" class="flex flex-wrap gap-1.5">
+                    <button
+                        v-for="pp in post.platform_posts"
+                        :key="pp.platform"
+                        @click="togglePlatform(post, pp.platform)"
+                        class="inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium transition-colors"
+                        :class="pp.enabled
+                            ? `${platformColors[pp.platform]?.bg || 'bg-gray-100'} ${platformColors[pp.platform]?.text || 'text-gray-700'}`
+                            : 'bg-gray-50 text-gray-400 line-through'
+                        "
+                    >
+                        <span
+                            class="w-2 h-2 rounded-full shrink-0"
+                            :class="pp.enabled ? (platformColors[pp.platform]?.dot || 'bg-gray-400') : 'bg-gray-300'"
+                        />
+                        {{ pp.platform_label }}
+                    </button>
+                </div>
+
+                <!-- Tags -->
+                <div v-if="getTagsPerPlatform(post).length" class="space-y-1.5">
+                    <template v-for="ppData in getTagsPerPlatform(post)" :key="ppData.platform">
+                        <div class="flex flex-wrap items-center gap-1">
+                            <span
+                                class="text-[10px] font-semibold uppercase shrink-0"
+                                :class="platformColors[ppData.platform]?.text || 'text-gray-500'"
+                            >
+                                {{ ppData.platform.charAt(0).toUpperCase() }}
+                            </span>
+                            <span
+                                v-for="tag in ppData.hashtags"
+                                :key="tag"
+                                class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700"
+                            >
+                                #{{ tag }}
+                                <button
+                                    @click="removeTag(post, ppData.platform, tag)"
+                                    class="text-gray-400 hover:text-red-500 ml-0.5"
+                                >
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </span>
+                            <div v-if="showTagInput === `${post.id}-${ppData.platform}`" class="inline-flex">
+                                <input
+                                    v-model="newTagInput[`${post.id}-${ppData.platform}`]"
+                                    @keydown.enter.prevent="addTag(post, ppData.platform)"
+                                    @keydown.escape="showTagInput = null"
+                                    @blur="addTag(post, ppData.platform)"
+                                    :placeholder="t('postAutomation.table.tagPlaceholder')"
+                                    class="w-20 px-1.5 py-0.5 text-[11px] border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                    autofocus
+                                />
+                            </div>
+                            <button
+                                v-else
+                                @click="startAddingTag(post.id, ppData.platform)"
+                                class="text-gray-400 hover:text-blue-600 transition-colors"
+                                :title="t('postAutomation.table.addTag')"
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- Scheduled At -->
+                <div v-if="formatDate(post.scheduled_at)" class="flex items-center gap-1.5 text-sm text-gray-500">
+                    <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                    </svg>
+                    {{ formatDate(post.scheduled_at) }}
                 </div>
 
                 <!-- Actions -->

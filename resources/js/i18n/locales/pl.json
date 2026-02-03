@@ -2262,9 +2262,15 @@
             "content": "Treść",
             "imageDescription": "Opis Obrazka",
             "image": "Obraz",
+            "platforms": "Platformy",
+            "hashtags": "Tagi",
             "preview": "Podgląd",
             "actions": "Akcje",
-            "scheduledAt": "Zaplanowano"
+            "scheduledAt": "Zaplanowano",
+            "noPlatforms": "Brak platform",
+            "noTags": "Brak tagów",
+            "addTag": "Dodaj tag...",
+            "tagPlaceholder": "Nazwa tagu"
         },
         "actions": {
             "generateText": "Generuj Tekst",

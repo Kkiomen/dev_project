@@ -579,6 +579,29 @@ export const usePostsStore = defineStore('posts', {
             }
         },
 
+        async updateAutomationPlatformPost(postId, platform, data) {
+            try {
+                const response = await axios.put(`/api/v1/posts/${postId}/platforms/${platform}`, data);
+                // Update local automation state
+                const index = this.automationPosts.findIndex(p => p.id === postId);
+                if (index !== -1) {
+                    const platformIndex = this.automationPosts[index].platform_posts.findIndex(
+                        p => p.platform === platform
+                    );
+                    if (platformIndex !== -1) {
+                        this.automationPosts[index].platform_posts[platformIndex] = response.data.data;
+                    }
+                    // Update enabled_platforms
+                    this.automationPosts[index].enabled_platforms = this.automationPosts[index].platform_posts
+                        .filter(p => p.enabled)
+                        .map(p => p.platform);
+                }
+                return response.data.data;
+            } catch (error) {
+                throw error;
+            }
+        },
+
         reset() {
             this.posts = [];
             this.currentPost = null;

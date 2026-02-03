@@ -95,7 +95,7 @@ onUnmounted(() => {
         >
             <div
                 v-if="isOpen"
-                class="absolute right-0 z-50 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-1"
+                class="absolute left-0 z-50 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 py-1"
             >
                 <div v-if="sortedBrands.length > 0">
                     <button

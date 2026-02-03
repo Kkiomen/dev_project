@@ -1,20 +1,21 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
-import { RouterLink } from 'vue-router';
+import { RouterLink, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useAuthStore } from '@/stores/auth';
 import { useBrandsStore } from '@/stores/brands';
 import { useSettingsStore } from '@/stores/settings';
-import Dropdown from '@/components/common/Dropdown.vue';
 import BrandSwitcher from '@/components/brand/BrandSwitcher.vue';
 import NotificationBell from '@/components/notifications/NotificationBell.vue';
 import ActiveTasksIndicator from '@/components/tasks/ActiveTasksIndicator.vue';
 
 const { t, locale } = useI18n();
+const route = useRoute();
 const authStore = useAuthStore();
 const brandsStore = useBrandsStore();
 const settingsStore = useSettingsStore();
 const showMobileMenu = ref(false);
+const showLangMenu = ref(false);
 
 const availableLanguages = [
     { code: 'en', name: 'English', flag: '🇬🇧' },
@@ -27,6 +28,11 @@ const currentLanguage = computed(() => {
 
 const changeLanguage = (langCode) => {
     settingsStore.setLanguage(langCode);
+    showLangMenu.value = false;
+};
+
+const closeMobileMenu = () => {
+    showMobileMenu.value = false;
 };
 
 onMounted(() => {
@@ -36,129 +42,254 @@ onMounted(() => {
 const logout = () => {
     authStore.logout();
 };
+
+const navLinks = computed(() => [
+    {
+        to: '/dashboard',
+        label: t('navigation.dashboard'),
+        icon: 'dashboard',
+        isActive: route.path === '/dashboard',
+    },
+    {
+        to: '/data',
+        label: t('navigation.data'),
+        icon: 'data',
+        isActive: route.path.startsWith('/data') || route.path.startsWith('/bases') || route.path.startsWith('/tables'),
+    },
+    {
+        to: '/templates',
+        label: t('navigation.graphics'),
+        icon: 'graphics',
+        isActive: route.path.startsWith('/templates'),
+    },
+    {
+        to: '/calendar',
+        label: t('navigation.calendar'),
+        icon: 'calendar',
+        isActive: route.path.startsWith('/calendar') || (route.path.startsWith('/posts') && route.path !== '/posts/automation'),
+    },
+    {
+        to: '/posts/automation',
+        label: t('navigation.postAutomation'),
+        icon: 'automation',
+        isActive: route.path === '/posts/automation',
+    },
+    {
+        to: '/boards',
+        label: t('navigation.boards'),
+        icon: 'boards',
+        isActive: route.path.startsWith('/boards'),
+    },
+    {
+        to: '/docs',
+        label: t('navigation.docs'),
+        icon: 'docs',
+        isActive: route.path.startsWith('/docs'),
+    },
+]);
+
+const bottomLinks = computed(() => [
+    {
+        to: '/settings',
+        label: t('navigation.settings'),
+        icon: 'settings',
+        isActive: route.path.startsWith('/settings'),
+    },
+    {
+        to: '/brands',
+        label: t('navigation.brands'),
+        icon: 'brands',
+        isActive: route.path === '/brands',
+    },
+]);
 </script>
 
 <template>
-    <nav class="bg-white border-b border-gray-100">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex justify-between h-16">
-                <div class="flex">
-                    <!-- Logo -->
-                    <div class="shrink-0 flex items-center mr-4">
-                        <RouterLink to="/dashboard">
-                            <img src="/assets/images/logo_aisello_black.svg" alt="Logo" class="h-9 w-auto" />
-                        </RouterLink>
-                    </div>
+    <!-- Mobile top bar -->
+    <div class="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white border-b border-gray-200 h-14 flex items-center px-4">
+        <button
+            @click="showMobileMenu = true"
+            class="p-2 -ml-2 rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none"
+        >
+            <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+        </button>
+        <RouterLink to="/dashboard" class="ml-3">
+            <img src="/assets/images/logo_aisello_black.svg" alt="Logo" class="h-7 w-auto" />
+        </RouterLink>
+        <div class="ml-auto flex items-center space-x-2">
+            <ActiveTasksIndicator />
+            <NotificationBell />
+        </div>
+    </div>
 
-                    <!-- Brand Switcher -->
-                    <div class="hidden sm:flex sm:items-center mr-6">
-                        <BrandSwitcher />
-                    </div>
+    <!-- Mobile overlay backdrop -->
+    <Transition
+        enter-active-class="transition-opacity duration-300"
+        enter-from-class="opacity-0"
+        enter-to-class="opacity-100"
+        leave-active-class="transition-opacity duration-300"
+        leave-from-class="opacity-100"
+        leave-to-class="opacity-0"
+    >
+        <div
+            v-if="showMobileMenu"
+            class="lg:hidden fixed inset-0 z-40 bg-black/50"
+            @click="closeMobileMenu"
+        />
+    </Transition>
 
-                    <!-- Navigation Links -->
-                    <div class="hidden sm:flex sm:space-x-8">
-                        <RouterLink
-                            to="/dashboard"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            active-class="border-blue-500 text-gray-900"
-                            :class="{
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': $route.path !== '/dashboard',
-                            }"
-                        >
-                            {{ t('navigation.dashboard') }}
-                        </RouterLink>
-                        <RouterLink
-                            to="/data"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/data') || $route.path.startsWith('/bases') || $route.path.startsWith('/tables'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/data') && !$route.path.startsWith('/bases') && !$route.path.startsWith('/tables'),
-                            }"
-                        >
-                            {{ t('navigation.data') }}
-                        </RouterLink>
-                        <RouterLink
-                            to="/templates"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/templates'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/templates'),
-                            }"
-                        >
-                            {{ t('navigation.graphics') }}
-                        </RouterLink>
-                        <RouterLink
-                            to="/calendar"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/calendar') || ($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/calendar') && !($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
-                            }"
-                        >
-                            {{ t('navigation.calendar') }}
-                        </RouterLink>
-                        <RouterLink
-                            to="/posts/automation"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            :class="{
-                                'border-blue-500 text-gray-900': $route.path === '/posts/automation',
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': $route.path !== '/posts/automation',
-                            }"
-                        >
-                            {{ t('navigation.postAutomation') }}
-                        </RouterLink>
-                        <RouterLink
-                            to="/boards"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/boards'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/boards'),
-                            }"
-                        >
-                            {{ t('navigation.boards') }}
-                        </RouterLink>
-                        <RouterLink
-                            to="/docs"
-                            class="inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium leading-5 transition duration-150 ease-in-out focus:outline-none"
-                            :class="{
-                                'border-blue-500 text-gray-900': $route.path.startsWith('/docs'),
-                                'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300': !$route.path.startsWith('/docs'),
-                            }"
-                        >
-                            {{ t('navigation.docs') }}
-                        </RouterLink>
-                    </div>
-                </div>
+    <!-- Sidebar -->
+    <aside
+        :class="[
+            'fixed lg:static inset-y-0 left-0 z-50 w-60 bg-white border-r border-gray-200 flex flex-col transition-transform duration-300 lg:translate-x-0 lg:transition-none',
+            showMobileMenu ? 'translate-x-0' : '-translate-x-full'
+        ]"
+    >
+        <!-- Logo -->
+        <div class="h-14 flex items-center px-5 border-b border-gray-100 shrink-0">
+            <RouterLink to="/dashboard" class="flex items-center" @click="closeMobileMenu">
+                <img src="/assets/images/logo_aisello_black.svg" alt="Logo" class="h-8 w-auto" />
+            </RouterLink>
+            <button
+                @click="closeMobileMenu"
+                class="ml-auto lg:hidden p-1 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100"
+            >
+                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        </div>
 
-                <div class="hidden sm:flex sm:items-center sm:ml-6 sm:space-x-4">
-                    <!-- Active Tasks -->
-                    <ActiveTasksIndicator />
+        <!-- Brand Switcher -->
+        <div class="px-3 py-3 border-b border-gray-100 shrink-0">
+            <BrandSwitcher />
+        </div>
 
-                    <!-- Notifications -->
-                    <NotificationBell />
+        <!-- Main Navigation -->
+        <nav class="flex-1 overflow-y-auto px-3 py-3 space-y-1">
+            <RouterLink
+                v-for="link in navLinks"
+                :key="link.to"
+                :to="link.to"
+                @click="closeMobileMenu"
+                class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150"
+                :class="link.isActive
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                "
+            >
+                <!-- Dashboard -->
+                <svg v-if="link.icon === 'dashboard'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 12 8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" />
+                </svg>
+                <!-- Data -->
+                <svg v-else-if="link.icon === 'data'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 6.375c0 2.278-3.694 4.125-8.25 4.125S3.75 8.653 3.75 6.375m16.5 0c0-2.278-3.694-4.125-8.25-4.125S3.75 4.097 3.75 6.375m16.5 0v11.25c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125V6.375m16.5 0v3.75m-16.5-3.75v3.75m16.5 0v3.75C20.25 16.153 16.556 18 12 18s-8.25-1.847-8.25-4.125v-3.75m16.5 0c0 2.278-3.694 4.125-8.25 4.125s-8.25-1.847-8.25-4.125" />
+                </svg>
+                <!-- Graphics -->
+                <svg v-else-if="link.icon === 'graphics'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+                </svg>
+                <!-- Calendar -->
+                <svg v-else-if="link.icon === 'calendar'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
+                </svg>
+                <!-- Automation -->
+                <svg v-else-if="link.icon === 'automation'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                </svg>
+                <!-- Boards -->
+                <svg v-else-if="link.icon === 'boards'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 4.5v15m6-15v15m-10.875 0h15.75c.621 0 1.125-.504 1.125-1.125V5.625c0-.621-.504-1.125-1.125-1.125H4.125C3.504 4.5 3 5.004 3 5.625v12.75c0 .621.504 1.125 1.125 1.125Z" />
+                </svg>
+                <!-- Docs -->
+                <svg v-else-if="link.icon === 'docs'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25" />
+                </svg>
+                <span class="truncate">{{ link.label }}</span>
+            </RouterLink>
+        </nav>
 
-                    <!-- Language Switcher -->
-                    <Dropdown align="right" width="36">
-                        <template #trigger>
-                            <button
-                                type="button"
-                                class="inline-flex items-center px-2 py-1.5 text-sm font-medium rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 focus:outline-none transition"
-                                :title="t('navigation.language')"
-                            >
-                                <span class="text-base mr-1">{{ currentLanguage.flag }}</span>
-                                <span class="hidden lg:inline">{{ currentLanguage.code.toUpperCase() }}</span>
-                                <svg class="ml-1 h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
-                            </button>
-                        </template>
-                        <template #content>
+        <!-- Bottom Section -->
+        <div class="border-t border-gray-200 shrink-0">
+            <!-- Bottom nav links -->
+            <div class="px-3 py-2 space-y-1">
+                <RouterLink
+                    v-for="link in bottomLinks"
+                    :key="link.to"
+                    :to="link.to"
+                    @click="closeMobileMenu"
+                    class="flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150"
+                    :class="link.isActive
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    "
+                >
+                    <!-- Settings -->
+                    <svg v-if="link.icon === 'settings'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.325.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.241-.438.613-.43.992a7.723 7.723 0 0 1 0 .255c-.008.378.137.75.43.991l1.004.827c.424.35.534.955.26 1.43l-1.298 2.247a1.125 1.125 0 0 1-1.369.491l-1.217-.456c-.355-.133-.75-.072-1.076.124a6.47 6.47 0 0 1-.22.128c-.331.183-.581.495-.644.869l-.213 1.281c-.09.543-.56.94-1.11.94h-2.594c-.55 0-1.019-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.644-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.369-.49l-1.297-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.991a6.932 6.932 0 0 1 0-.255c.007-.38-.138-.751-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.43l1.297-2.247a1.125 1.125 0 0 1 1.37-.491l1.216.456c.356.133.751.072 1.076-.124.072-.044.146-.086.22-.128.332-.183.582-.495.644-.869l.214-1.28Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+                    </svg>
+                    <!-- Brands -->
+                    <svg v-else-if="link.icon === 'brands'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 6h.008v.008H6V6Z" />
+                    </svg>
+                    <span class="truncate">{{ link.label }}</span>
+                </RouterLink>
+                <RouterLink
+                    v-if="authStore.isAdmin"
+                    to="/admin/users"
+                    @click="closeMobileMenu"
+                    class="flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-colors duration-150"
+                    :class="$route.path.startsWith('/admin')
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                    "
+                >
+                    <svg class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
+                    </svg>
+                    <span class="truncate">{{ t('navigation.admin') }}</span>
+                </RouterLink>
+            </div>
+
+            <!-- Indicators row -->
+            <div class="hidden lg:flex items-center px-5 py-2 border-t border-gray-100 space-x-3">
+                <ActiveTasksIndicator />
+                <NotificationBell />
+
+                <!-- Language toggle -->
+                <div class="relative ml-auto">
+                    <button
+                        @click="showLangMenu = !showLangMenu"
+                        class="flex items-center px-2 py-1 text-sm rounded-md text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition"
+                    >
+                        <span class="text-base">{{ currentLanguage.flag }}</span>
+                        <span class="ml-1 text-xs">{{ currentLanguage.code.toUpperCase() }}</span>
+                    </button>
+                    <!-- Backdrop to close menu -->
+                    <div v-if="showLangMenu" class="fixed inset-0 z-40" @click="showLangMenu = false" />
+                    <Transition
+                        enter-active-class="transition ease-out duration-100"
+                        enter-from-class="opacity-0 scale-95"
+                        enter-to-class="opacity-100 scale-100"
+                        leave-active-class="transition ease-in duration-75"
+                        leave-from-class="opacity-100 scale-100"
+                        leave-to-class="opacity-0 scale-95"
+                    >
+                        <div
+                            v-if="showLangMenu"
+                            class="absolute bottom-full left-0 mb-1 w-36 bg-white rounded-md shadow-lg ring-1 ring-black/5 py-1 z-50"
+                        >
                             <button
                                 v-for="lang in availableLanguages"
                                 :key="lang.code"
                                 @click="changeLanguage(lang.code)"
-                                class="w-full flex items-center px-4 py-2 text-sm text-left hover:bg-gray-100 transition"
-                                :class="{ 'bg-blue-50 text-blue-700': locale === lang.code, 'text-gray-700': locale !== lang.code }"
+                                class="w-full flex items-center px-3 py-2 text-sm hover:bg-gray-100 transition"
+                                :class="locale === lang.code ? 'bg-blue-50 text-blue-700' : 'text-gray-700'"
                             >
                                 <span class="text-base mr-2">{{ lang.flag }}</span>
                                 <span>{{ lang.name }}</span>
@@ -166,234 +297,53 @@ const logout = () => {
                                     <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd" />
                                 </svg>
                             </button>
-                        </template>
-                    </Dropdown>
+                        </div>
+                    </Transition>
+                </div>
+            </div>
 
-                    <!-- User Dropdown -->
-                    <Dropdown align="right" width="48">
-                        <template #trigger>
-                            <button
-                                type="button"
-                                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150"
-                            >
-                                {{ authStore.user?.name || t('navigation.menu') }}
-
-                                <svg
-                                    class="ml-2 -mr-0.5 h-4 w-4"
-                                    fill="currentColor"
-                                    viewBox="0 0 20 20"
-                                >
-                                    <path
-                                        fill-rule="evenodd"
-                                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                                        clip-rule="evenodd"
-                                    />
-                                </svg>
-                            </button>
-                        </template>
-
-                        <template #content>
-                            <RouterLink
-                                to="/settings"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                                {{ t('navigation.settings') }}
-                            </RouterLink>
-                            <RouterLink
-                                to="/settings?tab=tokens"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                                {{ t('navigation.tokens') }}
-                            </RouterLink>
-                            <RouterLink
-                                to="/brands"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                                {{ t('navigation.brands') }}
-                            </RouterLink>
-                            <RouterLink
-                                v-if="authStore.isAdmin"
-                                to="/admin/users"
-                                class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                                {{ t('navigation.admin') }}
-                            </RouterLink>
-                            <button
-                                @click="logout"
-                                class="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                            >
-                                {{ t('navigation.logout') }}
-                            </button>
-                        </template>
-                    </Dropdown>
+            <!-- User section -->
+            <div class="px-3 py-3 border-t border-gray-100">
+                <!-- Mobile language switcher -->
+                <div class="lg:hidden mb-3">
+                    <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2 px-3">
+                        {{ t('navigation.language') }}
+                    </div>
+                    <div class="flex space-x-2 px-3">
+                        <button
+                            v-for="lang in availableLanguages"
+                            :key="lang.code"
+                            @click="changeLanguage(lang.code)"
+                            class="flex items-center px-3 py-1.5 rounded-lg text-sm font-medium transition"
+                            :class="locale === lang.code ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
+                        >
+                            <span class="mr-1.5">{{ lang.flag }}</span>
+                            <span>{{ lang.code.toUpperCase() }}</span>
+                        </button>
+                    </div>
                 </div>
 
-                <!-- Hamburger -->
-                <div class="-mr-2 flex items-center sm:hidden">
+                <!-- User info + logout -->
+                <div class="flex items-center px-3 py-2">
+                    <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-sm font-semibold shrink-0">
+                        {{ (authStore.user?.name || '?').charAt(0).toUpperCase() }}
+                    </div>
+                    <div class="ml-3 min-w-0 flex-1">
+                        <p class="text-sm font-medium text-gray-700 truncate">{{ authStore.user?.name }}</p>
+                        <p class="text-xs text-gray-500 truncate">{{ authStore.user?.email }}</p>
+                    </div>
                     <button
-                        @click="showMobileMenu = !showMobileMenu"
-                        class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:bg-gray-100 focus:text-gray-500 transition duration-150 ease-in-out"
+                        @click="logout"
+                        class="ml-2 p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition shrink-0"
+                        :title="t('navigation.logout')"
                     >
-                        <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                            <path
-                                :class="{ hidden: showMobileMenu, 'inline-flex': !showMobileMenu }"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16"
-                            />
-                            <path
-                                :class="{ hidden: !showMobileMenu, 'inline-flex': showMobileMenu }"
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M6 18L18 6M6 6l12 12"
-                            />
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15m3 0 3-3m0 0-3-3m3 3H9" />
                         </svg>
                     </button>
                 </div>
             </div>
         </div>
+    </aside>
 
-        <!-- Mobile menu -->
-        <div :class="{ block: showMobileMenu, hidden: !showMobileMenu }" class="sm:hidden">
-            <div class="pt-2 pb-3 space-y-1">
-                <RouterLink
-                    to="/dashboard"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    active-class="border-blue-500 text-blue-700 bg-blue-50"
-                >
-                    {{ t('navigation.dashboard') }}
-                </RouterLink>
-                <RouterLink
-                    to="/data"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/data') || $route.path.startsWith('/bases') || $route.path.startsWith('/tables'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/data') && !$route.path.startsWith('/bases') && !$route.path.startsWith('/tables'),
-                    }"
-                >
-                    {{ t('navigation.data') }}
-                </RouterLink>
-                <RouterLink
-                    to="/templates"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/templates'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/templates'),
-                    }"
-                >
-                    {{ t('navigation.graphics') }}
-                </RouterLink>
-                <RouterLink
-                    to="/calendar"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/calendar') || ($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/calendar') && !($route.path.startsWith('/posts') && $route.path !== '/posts/automation'),
-                    }"
-                >
-                    {{ t('navigation.calendar') }}
-                </RouterLink>
-                <RouterLink
-                    to="/posts/automation"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path === '/posts/automation',
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': $route.path !== '/posts/automation',
-                    }"
-                >
-                    {{ t('navigation.postAutomation') }}
-                </RouterLink>
-                <RouterLink
-                    to="/boards"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/boards'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/boards'),
-                    }"
-                >
-                    {{ t('navigation.boards') }}
-                </RouterLink>
-                <RouterLink
-                    to="/docs"
-                    class="block pl-3 pr-4 py-2 border-l-4 text-base font-medium transition duration-150 ease-in-out"
-                    :class="{
-                        'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/docs'),
-                        'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300': !$route.path.startsWith('/docs'),
-                    }"
-                >
-                    {{ t('navigation.docs') }}
-                </RouterLink>
-            </div>
-
-            <div class="pt-4 pb-1 border-t border-gray-200">
-                <div class="px-4">
-                    <div class="font-medium text-base text-gray-800">
-                        {{ authStore.user?.name }}
-                    </div>
-                    <div class="font-medium text-sm text-gray-500">
-                        {{ authStore.user?.email }}
-                    </div>
-                </div>
-
-                <div class="mt-3 space-y-1">
-                    <!-- Language Switcher (Mobile) -->
-                    <div class="px-3 py-2">
-                        <div class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                            {{ t('navigation.language') }}
-                        </div>
-                        <div class="flex space-x-2">
-                            <button
-                                v-for="lang in availableLanguages"
-                                :key="lang.code"
-                                @click="changeLanguage(lang.code)"
-                                class="flex items-center px-3 py-2 rounded-lg text-sm font-medium transition"
-                                :class="locale === lang.code ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'"
-                            >
-                                <span class="mr-1.5">{{ lang.flag }}</span>
-                                <span>{{ lang.code.toUpperCase() }}</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    <RouterLink
-                        to="/settings"
-                        class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
-                    >
-                        {{ t('navigation.settings') }}
-                    </RouterLink>
-                    <RouterLink
-                        to="/settings?tab=tokens"
-                        class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
-                    >
-                        {{ t('navigation.tokens') }}
-                    </RouterLink>
-                    <RouterLink
-                        to="/brands"
-                        class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
-                    >
-                        {{ t('navigation.brands') }}
-                    </RouterLink>
-                    <RouterLink
-                        v-if="authStore.isAdmin"
-                        to="/admin/users"
-                        class="block pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
-                        :class="{
-                            'border-blue-500 text-blue-700 bg-blue-50': $route.path.startsWith('/admin'),
-                            'border-transparent': !$route.path.startsWith('/admin'),
-                        }"
-                    >
-                        {{ t('navigation.admin') }}
-                    </RouterLink>
-                    <button
-                        @click="logout"
-                        class="block w-full text-left pl-3 pr-4 py-2 border-l-4 border-transparent text-base font-medium text-gray-600 hover:text-gray-800 hover:bg-gray-50 hover:border-gray-300"
-                    >
-                        {{ t('navigation.logout') }}
-                    </button>
-                </div>
-            </div>
-        </div>
-    </nav>
 </template>

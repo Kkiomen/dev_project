@@ -2259,9 +2259,15 @@
             "content": "Content",
             "imageDescription": "Image Description",
             "image": "Image",
+            "platforms": "Platforms",
+            "hashtags": "Tags",
             "preview": "Preview",
             "actions": "Actions",
-            "scheduledAt": "Scheduled"
+            "scheduledAt": "Scheduled",
+            "noPlatforms": "No platforms",
+            "noTags": "No tags",
+            "addTag": "Add tag...",
+            "tagPlaceholder": "Tag name"
         },
         "actions": {
             "generateText": "Generate Text",
