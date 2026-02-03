@@ -9,29 +9,39 @@ use Symfony\Component\HttpFoundation\Response;
 
 class SetLocale
 {
+    private const SUPPORTED_LOCALES = ['en', 'pl'];
+
     /**
      * Handle an incoming request.
+     *
+     * Priority: X-Locale header > session > cookie > Accept-Language > default
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // Check for X-Locale header first (explicit frontend setting)
-        $locale = $request->header('X-Locale');
+        $locale = $request->header('X-Locale')
+            ?? ($request->hasSession() ? $request->session()->get('locale') : null)
+            ?? $request->cookie('locale')
+            ?? $this->parseAcceptLanguage($request);
 
-        // Fallback to Accept-Language header
-        if (!$locale) {
-            $acceptLanguage = $request->header('Accept-Language', '');
-            if (str_contains($acceptLanguage, 'pl')) {
-                $locale = 'pl';
-            } elseif (str_contains($acceptLanguage, 'en')) {
-                $locale = 'en';
-            }
-        }
-
-        // Set locale if valid
-        if ($locale && in_array($locale, ['en', 'pl'])) {
+        if ($locale && in_array($locale, self::SUPPORTED_LOCALES)) {
             App::setLocale($locale);
         }
 
         return $next($request);
+    }
+
+    private function parseAcceptLanguage(Request $request): ?string
+    {
+        $acceptLanguage = $request->header('Accept-Language', '');
+
+        if (str_contains($acceptLanguage, 'pl')) {
+            return 'pl';
+        }
+
+        if (str_contains($acceptLanguage, 'en')) {
+            return 'en';
+        }
+
+        return null;
     }
 }

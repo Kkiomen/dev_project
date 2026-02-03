@@ -1,3 +1,79 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer components {
+    .landing-gradient-text {
+        background: linear-gradient(135deg, #6366f1, #a855f7, #6366f1);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+
+    .landing-glow {
+        box-shadow: 0 0 40px rgba(99, 102, 241, 0.15), 0 0 80px rgba(168, 85, 247, 0.1);
+    }
+
+    .landing-card {
+        background-color: #111118;
+        border: 1px solid #1e1e2e;
+        border-radius: 0.75rem;
+        transition: all 0.3s ease;
+    }
+
+    .landing-card:hover {
+        border-color: rgba(99, 102, 241, 0.3);
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.08);
+        transform: translateY(-2px);
+    }
+
+    .landing-btn-primary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 2rem;
+        background: linear-gradient(135deg, #6366f1, #7c3aed);
+        color: #fff;
+        font-weight: 600;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .landing-btn-primary:hover {
+        box-shadow: 0 0 30px rgba(99, 102, 241, 0.4);
+        transform: translateY(-1px);
+    }
+
+    .landing-btn-secondary {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0.75rem 2rem;
+        background-color: transparent;
+        color: #c4c4d4;
+        font-weight: 600;
+        border: 1px solid #2e2e3e;
+        border-radius: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .landing-btn-secondary:hover {
+        border-color: rgba(99, 102, 241, 0.5);
+        color: #fff;
+    }
+
+    .animate-on-scroll {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+    }
+
+    .animate-on-scroll.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+html {
+    scroll-behavior: smooth;
+}

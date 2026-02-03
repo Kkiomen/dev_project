@@ -75,6 +75,7 @@ $userRoutes = function () {
                 'name' => $currentBrand->name,
                 'onboarding_completed' => $currentBrand->onboarding_completed,
             ] : null,
+            'onboarding_completed' => $user->onboarding_completed,
             'brands_count' => $user->brands()->active()->count(),
             'email_verified_at' => $user->email_verified_at,
             'created_at' => $user->created_at,
@@ -124,6 +125,33 @@ $userRoutes = function () {
             'name' => $user->name,
             'email' => $user->email,
         ]];
+    });
+
+    Route::post('/user/onboarding', function (Request $request) {
+        $request->validate([
+            'role' => 'required|string|max:100',
+            'purpose' => 'required|array|min:1',
+            'purpose.*' => 'string|max:100',
+            'referral_source' => 'required|string|max:100',
+        ]);
+
+        $user = $request->user();
+        $user->onboarding_data = [
+            'role' => $request->input('role'),
+            'purpose' => $request->input('purpose'),
+            'referral_source' => $request->input('referral_source'),
+        ];
+        $user->save();
+
+        return ['message' => 'Onboarding data saved'];
+    });
+
+    Route::post('/user/onboarding/complete', function (Request $request) {
+        $user = $request->user();
+        $user->onboarding_completed = true;
+        $user->save();
+
+        return ['message' => 'Onboarding completed', 'onboarding_completed' => true];
     });
 
     Route::put('/user/password', function (Request $request) {

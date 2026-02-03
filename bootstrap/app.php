@@ -18,6 +18,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'admin' => \App\Http\Middleware\IsAdmin::class,
             'brand.selected' => \App\Http\Middleware\EnsureBrandSelected::class,
         ]);
+        $middleware->web(append: [
+            \App\Http\Middleware\SetLocale::class,
+        ]);
         $middleware->api(prepend: [
             \App\Http\Middleware\SetLocale::class,
         ]);

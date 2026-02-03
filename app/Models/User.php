@@ -26,6 +26,8 @@ class User extends Authenticatable
         'password',
         'is_admin',
         'settings',
+        'onboarding_completed',
+        'onboarding_data',
     ];
 
     /**
@@ -50,6 +52,8 @@ class User extends Authenticatable
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'settings' => 'array',
+            'onboarding_completed' => 'boolean',
+            'onboarding_data' => 'array',
         ];
     }
 

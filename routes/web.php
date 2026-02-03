@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\PlatformCredentialController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\BaseController;
+use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\TableController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
@@ -13,6 +14,17 @@ Broadcast::routes(['middleware' => ['web', 'auth']]);
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::get('/features', function () {
+    return view('landing.features');
+})->name('features');
+
+Route::get('/locale/{locale}', [LocaleController::class, 'switch'])->name('locale.switch');
+
+// Onboarding route (auth required, email verification NOT required)
+Route::middleware(['auth'])->group(function () {
+    Route::get('/onboarding', fn () => view('spa'))->name('onboarding');
 });
 
 // Vue SPA routes (authenticated)

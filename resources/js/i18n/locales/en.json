@@ -2546,5 +2546,46 @@
         "isAdmin": "Administrator",
         "preventSelfDelete": "You cannot delete your own account",
         "totalUsers": "{count} users total"
+    },
+    "onboarding": {
+        "stepOf": "Step {current} of {total}",
+        "error": "An error occurred while saving. Please try again.",
+        "role": {
+            "title": "Who are you?",
+            "subtitle": "Help us tailor the app to your needs.",
+            "options": {
+                "content_creator": "Content Creator",
+                "influencer": "Influencer",
+                "company": "Company / Brand",
+                "agency": "Marketing Agency",
+                "developer": "Developer",
+                "student": "Student",
+                "other": "Other"
+            }
+        },
+        "purpose": {
+            "title": "What will you use it for?",
+            "subtitle": "Select the goals that matter most to you. You can pick multiple.",
+            "options": {
+                "post_automation": "Post Automation",
+                "graphics": "Creating Graphics",
+                "brand_management": "Brand Management",
+                "content_planning": "Content Planning",
+                "everything": "A bit of everything",
+                "other": "Other"
+            }
+        },
+        "referral": {
+            "title": "How did you hear about us?",
+            "subtitle": "This helps us understand where we reach people best.",
+            "options": {
+                "social_media": "Social Media",
+                "google": "Google",
+                "friend": "Friend's recommendation",
+                "youtube": "YouTube",
+                "blog": "Blog / Article",
+                "other": "Other"
+            }
+        }
     }
 }

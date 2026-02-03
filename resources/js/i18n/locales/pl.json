@@ -2549,5 +2549,46 @@
         "isAdmin": "Administrator",
         "preventSelfDelete": "Nie możesz usunąć własnego konta",
         "totalUsers": "Łącznie {count} użytkowników"
+    },
+    "onboarding": {
+        "stepOf": "Krok {current} z {total}",
+        "error": "Wystąpił błąd podczas zapisywania. Spróbuj ponownie.",
+        "role": {
+            "title": "Kim jesteś?",
+            "subtitle": "Pomóż nam dostosować aplikację do Twoich potrzeb.",
+            "options": {
+                "content_creator": "Content Creator",
+                "influencer": "Influencer",
+                "company": "Firma / Marka",
+                "agency": "Agencja Marketingowa",
+                "developer": "Programista",
+                "student": "Student",
+                "other": "Inne"
+            }
+        },
+        "purpose": {
+            "title": "Do czego będziesz korzystać?",
+            "subtitle": "Wybierz cele, które są dla Ciebie najważniejsze. Możesz zaznaczyć kilka.",
+            "options": {
+                "post_automation": "Automatyzacja postów",
+                "graphics": "Tworzenie grafik",
+                "brand_management": "Zarządzanie marką",
+                "content_planning": "Planowanie contentu",
+                "everything": "Wszystko po trochu",
+                "other": "Inne"
+            }
+        },
+        "referral": {
+            "title": "Skąd o nas wiesz?",
+            "subtitle": "Dzięki temu będziemy wiedzieć, gdzie najlepiej docieramy.",
+            "options": {
+                "social_media": "Social media",
+                "google": "Google",
+                "friend": "Polecenie znajomego",
+                "youtube": "YouTube",
+                "blog": "Blog / Artykuł",
+                "other": "Inne"
+            }
+        }
     }
 }

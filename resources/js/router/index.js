@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { useAuthStore } from '@/stores/auth';
 
 const routes = [
     {
@@ -9,6 +10,13 @@ const routes = [
         path: '/dashboard',
         name: 'dashboard',
         component: () => import('@/pages/DashboardPage.vue'),
+    },
+    // Onboarding (after registration)
+    {
+        path: '/onboarding',
+        name: 'onboarding',
+        component: () => import('@/pages/OnboardingPage.vue'),
+        meta: { hideLayout: true, onboarding: true },
     },
     {
         path: '/data',
@@ -113,6 +121,7 @@ const routes = [
         path: '/brands/new',
         name: 'brand.create',
         component: () => import('@/pages/BrandCreatePage.vue'),
+        meta: { allowDuringOnboarding: true },
     },
     {
         path: '/brands/:brandId/edit',
@@ -160,6 +169,30 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes,
+});
+
+router.beforeEach((to, from) => {
+    const authStore = useAuthStore();
+
+    // Skip guard for public routes
+    if (to.meta?.public) return true;
+
+    // Skip guard if user data not loaded yet
+    if (!authStore.user) return true;
+
+    const isOnboarded = authStore.isOnboarded;
+
+    // User not onboarded → redirect to /onboarding (except allowed routes)
+    if (!isOnboarded && !to.meta?.onboarding && !to.meta?.allowDuringOnboarding) {
+        return { name: 'onboarding' };
+    }
+
+    // User already onboarded → don't allow visiting /onboarding
+    if (isOnboarded && to.meta?.onboarding) {
+        return { name: 'dashboard' };
+    }
+
+    return true;
 });
 
 export default router;

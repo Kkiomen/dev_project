@@ -3,7 +3,9 @@ import { computed, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useBrandsStore } from '@/stores/brands';
+import { useAuthStore } from '@/stores/auth';
 import { storeToRefs } from 'pinia';
+import axios from 'axios';
 import OnboardingStep1 from './OnboardingStep1.vue';
 import OnboardingStep2 from './OnboardingStep2.vue';
 import OnboardingStep3 from './OnboardingStep3.vue';
@@ -14,7 +16,10 @@ import Button from '@/components/common/Button.vue';
 const { t } = useI18n();
 const router = useRouter();
 const brandsStore = useBrandsStore();
+const authStore = useAuthStore();
 const { onboardingStep, onboardingData, saving } = storeToRefs(brandsStore);
+
+const isUserOnboarding = computed(() => !authStore.isOnboarded);
 
 const error = ref(null);
 
@@ -73,6 +78,13 @@ const handleSubmit = async () => {
     error.value = null;
     try {
         await brandsStore.saveOnboardingBrand();
+
+        // Complete user onboarding if this is the first brand creation during onboarding
+        if (isUserOnboarding.value) {
+            await axios.post('/api/user/onboarding/complete');
+            await authStore.fetchUser();
+        }
+
         router.push('/dashboard');
     } catch (e) {
         error.value = e.response?.data?.message || t('brands.onboarding.error');
@@ -166,12 +178,13 @@ const handleCancel = () => {
                     {{ t('common.back') }}
                 </button>
                 <button
-                    v-else
+                    v-else-if="!isUserOnboarding"
                     @click="handleCancel"
                     class="px-4 py-2 text-sm font-medium text-gray-500 hover:text-gray-700"
                 >
                     {{ t('common.cancel') }}
                 </button>
+                <div v-else></div>
 
                 <div class="flex items-center gap-3">
                     <span class="text-sm text-gray-500">
