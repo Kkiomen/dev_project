@@ -54,105 +54,121 @@ if (!function_exists('array_merge_recursive_distinct')) {
     }
 }
 
-Route::get('/user', function (Request $request) {
-    $user = $request->user();
-    $currentBrand = $user->getCurrentBrand();
+// === USER ROUTES ===
+$userRoutes = function () {
+    Route::get('/user', function (Request $request) {
+        $user = $request->user();
+        $currentBrand = $user->getCurrentBrand();
 
-    return [
-        'id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-        'is_admin' => $user->is_admin,
-        'settings' => $user->settings ?? [
-            'weekStartsOn' => 1,
-            'timeFormat' => '24h',
-            'language' => 'pl',
-        ],
-        'current_brand' => $currentBrand ? [
-            'id' => $currentBrand->public_id,
-            'name' => $currentBrand->name,
-            'onboarding_completed' => $currentBrand->onboarding_completed,
-        ] : null,
-        'brands_count' => $user->brands()->active()->count(),
-        'email_verified_at' => $user->email_verified_at,
-        'created_at' => $user->created_at,
-        'updated_at' => $user->updated_at,
-    ];
-})->middleware('auth:sanctum');
+        return [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'is_admin' => $user->is_admin,
+            'settings' => $user->settings ?? [
+                'weekStartsOn' => 1,
+                'timeFormat' => '24h',
+                'language' => 'pl',
+            ],
+            'current_brand' => $currentBrand ? [
+                'id' => $currentBrand->public_id,
+                'name' => $currentBrand->name,
+                'onboarding_completed' => $currentBrand->onboarding_completed,
+            ] : null,
+            'brands_count' => $user->brands()->active()->count(),
+            'email_verified_at' => $user->email_verified_at,
+            'created_at' => $user->created_at,
+            'updated_at' => $user->updated_at,
+        ];
+    });
 
-Route::put('/user/settings', function (Request $request) {
-    $request->validate([
-        'settings' => 'required|array',
-        'settings.weekStartsOn' => 'sometimes|integer|in:0,1',
-        'settings.timeFormat' => 'sometimes|string|in:12h,24h',
-        'settings.language' => 'sometimes|string|in:pl,en',
-        'settings.timezone' => 'sometimes|string|max:50',
-        // AI Settings
-        'settings.ai.creativity' => 'sometimes|string|in:low,medium,high',
-        'settings.ai.defaultLength' => 'sometimes|string|in:short,medium,long',
-        'settings.ai.customInstructions' => 'sometimes|nullable|string|max:1000',
-        'settings.ai.autoSuggest' => 'sometimes|boolean',
-        // Notification Settings
-        'settings.notifications.email' => 'sometimes|boolean',
-        'settings.notifications.postPublished' => 'sometimes|boolean',
-        'settings.notifications.approvalRequired' => 'sometimes|boolean',
-        'settings.notifications.weeklyReport' => 'sometimes|boolean',
-    ]);
+    Route::put('/user/settings', function (Request $request) {
+        $request->validate([
+            'settings' => 'required|array',
+            'settings.weekStartsOn' => 'sometimes|integer|in:0,1',
+            'settings.timeFormat' => 'sometimes|string|in:12h,24h',
+            'settings.language' => 'sometimes|string|in:pl,en',
+            'settings.timezone' => 'sometimes|string|max:50',
+            // AI Settings
+            'settings.ai.creativity' => 'sometimes|string|in:low,medium,high',
+            'settings.ai.defaultLength' => 'sometimes|string|in:short,medium,long',
+            'settings.ai.customInstructions' => 'sometimes|nullable|string|max:1000',
+            'settings.ai.autoSuggest' => 'sometimes|boolean',
+            // Notification Settings
+            'settings.notifications.email' => 'sometimes|boolean',
+            'settings.notifications.postPublished' => 'sometimes|boolean',
+            'settings.notifications.approvalRequired' => 'sometimes|boolean',
+            'settings.notifications.weeklyReport' => 'sometimes|boolean',
+        ]);
 
-    $user = $request->user();
-    $user->settings = array_merge_recursive_distinct($user->settings ?? [], $request->input('settings'));
-    $user->save();
+        $user = $request->user();
+        $user->settings = array_merge_recursive_distinct($user->settings ?? [], $request->input('settings'));
+        $user->save();
 
-    return ['message' => 'Settings updated', 'settings' => $user->settings];
-})->middleware('auth:sanctum');
+        return ['message' => 'Settings updated', 'settings' => $user->settings];
+    });
 
-Route::put('/user/profile', function (Request $request) {
-    $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|max:255|unique:users,email,' . $request->user()->id,
-    ]);
+    Route::put('/user/profile', function (Request $request) {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|max:255|unique:users,email,' . $request->user()->id,
+        ]);
 
-    $user = $request->user();
-    $user->name = $request->input('name');
-    $user->email = $request->input('email');
-    $user->save();
+        $user = $request->user();
+        $user->name = $request->input('name');
+        $user->email = $request->input('email');
+        $user->save();
 
-    return ['message' => 'Profile updated', 'user' => [
-        'id' => $user->id,
-        'name' => $user->name,
-        'email' => $user->email,
-    ]];
-})->middleware('auth:sanctum');
+        return ['message' => 'Profile updated', 'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+        ]];
+    });
 
-Route::put('/user/password', function (Request $request) {
-    $request->validate([
-        'current_password' => 'required|string',
-        'password' => 'required|string|min:8|confirmed',
-    ]);
+    Route::put('/user/password', function (Request $request) {
+        $request->validate([
+            'current_password' => 'required|string',
+            'password' => 'required|string|min:8|confirmed',
+        ]);
 
-    $user = $request->user();
+        $user = $request->user();
 
-    if (!Hash::check($request->input('current_password'), $user->password)) {
-        return response()->json(['message' => 'Current password is incorrect'], 422);
-    }
+        if (!Hash::check($request->input('current_password'), $user->password)) {
+            return response()->json(['message' => 'Current password is incorrect'], 422);
+        }
 
-    $user->password = $request->input('password');
-    $user->save();
+        $user->password = $request->input('password');
+        $user->save();
 
-    return ['message' => 'Password updated'];
-})->middleware('auth:sanctum');
+        return ['message' => 'Password updated'];
+    });
+};
+
+// User routes for external API consumers (Sanctum tokens)
+Route::middleware('auth:sanctum')->group($userRoutes);
+
+// User routes for panel SPA (session auth)
+Route::prefix('panel')->middleware('auth')->group($userRoutes);
 
 // === ADMIN ROUTES ===
-Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group(function () {
+$adminRoutes = function () {
     Route::get('users', [AdminUserController::class, 'index']);
     Route::get('users/{user}', [AdminUserController::class, 'show']);
     Route::put('users/{user}', [AdminUserController::class, 'update']);
     Route::put('users/{user}/password', [AdminUserController::class, 'updatePassword']);
     Route::delete('users/{user}', [AdminUserController::class, 'destroy']);
     Route::get('users/{user}/notifications', [AdminUserController::class, 'notifications']);
-});
+};
 
-Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
+// Admin routes for external API consumers (Sanctum tokens)
+Route::prefix('admin')->middleware(['auth:sanctum', 'admin'])->group($adminRoutes);
+
+// Admin routes for panel SPA (session auth)
+Route::prefix('panel/admin')->middleware(['auth', 'admin'])->group($adminRoutes);
+
+// === V1 ROUTES ===
+$v1Routes = function () {
 
     // === NOTIFICATIONS ===
     Route::get('notifications', [NotificationController::class, 'index']);
@@ -402,7 +418,13 @@ Route::prefix('v1')->middleware(['auth:sanctum'])->group(function () {
         Route::delete('/{event}', [CalendarEventController::class, 'destroy']);
         Route::post('/{event}/reschedule', [CalendarEventController::class, 'reschedule']);
     });
-});
+};
+
+// V1 routes for external API consumers (Sanctum tokens)
+Route::prefix('v1')->middleware(['auth:sanctum'])->group($v1Routes);
+
+// V1 routes for panel SPA (session auth)
+Route::prefix('panel')->middleware(['auth'])->group($v1Routes);
 
 // === PUBLIC APPROVAL ROUTES (No Auth) ===
 Route::prefix('v1/approve/{token}')->group(function () {
