@@ -6,6 +6,7 @@ use App\Services\FieldTypeRegistry;
 use App\Services\StockPhoto\PexelsClient;
 use App\Services\StockPhoto\StockPhotoService;
 use App\Services\StockPhoto\UnsplashClient;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -34,6 +35,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
     }
 }
