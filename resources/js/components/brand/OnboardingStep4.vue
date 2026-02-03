@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useBrandsStore } from '@/stores/brands';
 import { useToast } from '@/composables/useToast';
@@ -9,6 +9,7 @@ const { t } = useI18n();
 const brandsStore = useBrandsStore();
 const toast = useToast();
 const { onboardingData } = storeToRefs(brandsStore);
+const dark = inject('onboardingDark', false);
 
 const generatingPillars = ref(false);
 
@@ -61,7 +62,6 @@ const distributeEvenly = () => {
     }));
 };
 
-// Suggested pillars for quick start
 const suggestedPillars = [
     { name: 'Educational content', percentage: 30 },
     { name: 'Industry news', percentage: 20 },
@@ -95,26 +95,23 @@ const generateWithAi = async () => {
 
 <template>
     <div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">
+        <h2 class="text-xl font-semibold mb-2" :class="dark ? 'text-white' : 'text-gray-900'">
             {{ t('brands.onboarding.step4.title') }}
         </h2>
-        <p class="text-gray-600 mb-6">
+        <p class="mb-6" :class="dark ? 'text-gray-400' : 'text-gray-600'">
             {{ t('brands.onboarding.step4.description') }}
         </p>
 
         <!-- Quick start options -->
         <div v-if="contentPillars.length === 0" class="mb-6 space-y-3">
             <!-- AI Generate -->
-            <div class="p-4 bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200 rounded-lg">
+            <div class="p-4 rounded-lg" :class="dark ? 'bg-purple-500/10 border border-purple-500/20' : 'bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200'">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-sm font-medium text-purple-900">
+                        <p class="text-sm font-medium" :class="dark ? 'text-purple-300' : 'text-purple-900'">
                             {{ t('brands.onboarding.step4.generateWithAi') }}
                         </p>
-                        <p v-if="hasDescription" class="text-xs text-purple-600 mt-0.5">
-                            {{ t('brands.onboarding.step4.description') }}
-                        </p>
-                        <p v-else class="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
+                        <p v-if="!hasDescription" class="text-xs text-amber-600 mt-0.5 flex items-center gap-1">
                             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                             </svg>
@@ -128,7 +125,7 @@ const generateWithAi = async () => {
                         :class="[
                             hasDescription
                                 ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-sm hover:shadow'
-                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                : (dark ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-200 text-gray-400 cursor-not-allowed')
                         ]"
                     >
                         <svg
@@ -149,14 +146,15 @@ const generateWithAi = async () => {
             </div>
 
             <!-- Use suggested -->
-            <div class="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="p-4 rounded-lg" :class="dark ? 'bg-blue-500/10 border border-blue-500/20' : 'bg-blue-50 border border-blue-200'">
                 <div class="flex items-center justify-between">
-                    <p class="text-sm text-blue-700">
+                    <p class="text-sm" :class="dark ? 'text-blue-400' : 'text-blue-700'">
                         {{ t('brands.onboarding.step4.suggestedHint') }}
                     </p>
                     <button
                         @click="applySuggested"
-                        class="px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-100 rounded-lg transition-colors"
+                        class="px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                        :class="dark ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10' : 'text-blue-600 hover:text-blue-700 hover:bg-blue-100'"
                     >
                         {{ t('brands.onboarding.step4.useSuggested') }}
                     </button>
@@ -177,7 +175,8 @@ const generateWithAi = async () => {
                 <div
                     v-for="(pillar, index) in contentPillars"
                     :key="index"
-                    class="p-4 bg-gray-50 rounded-lg border border-gray-200"
+                    class="p-4 rounded-lg border"
+                    :class="dark ? 'bg-gray-800/50 border-gray-700' : 'bg-gray-50 border-gray-200'"
                 >
                     <div class="flex items-start gap-4">
                         <div class="flex-1 space-y-3">
@@ -185,14 +184,16 @@ const generateWithAi = async () => {
                                 :value="pillar.name"
                                 @input="updatePillar(index, 'name', $event.target.value)"
                                 :placeholder="t('brands.onboarding.step4.pillarName')"
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                class="block w-full rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                :class="dark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'border-gray-300'"
                             />
                             <textarea
                                 :value="pillar.description"
                                 @input="updatePillar(index, 'description', $event.target.value)"
                                 :placeholder="t('brands.onboarding.step4.pillarDescription')"
                                 rows="2"
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                class="block w-full rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                                :class="dark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'border-gray-300'"
                             />
                         </div>
                         <div class="flex items-center gap-2">
@@ -203,9 +204,10 @@ const generateWithAi = async () => {
                                     @input="updatePillar(index, 'percentage', parseInt($event.target.value) || 0)"
                                     min="0"
                                     max="100"
-                                    class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-center"
+                                    class="block w-full rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm text-center"
+                                    :class="dark ? 'bg-gray-800 border-gray-600 text-white' : 'border-gray-300'"
                                 />
-                                <span class="text-xs text-gray-500 text-center block mt-1">%</span>
+                                <span class="text-xs text-center block mt-1" :class="dark ? 'text-gray-500' : 'text-gray-500'">%</span>
                             </div>
                             <button
                                 @click="removePillar(index)"
@@ -226,7 +228,8 @@ const generateWithAi = async () => {
             <div class="flex items-center gap-4">
                 <button
                     @click="addPillar"
-                    class="flex items-center gap-2 px-4 py-2 text-sm font-medium text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+                    class="flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg transition-colors"
+                    :class="dark ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10' : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50'"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
@@ -243,7 +246,7 @@ const generateWithAi = async () => {
                     :class="[
                         hasDescription
                             ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-sm hover:shadow'
-                            : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                            : (dark ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
                     ]"
                     :title="!hasDescription ? t('brands.onboarding.step4.aiRequiresDescription') : ''"
                 >
@@ -266,15 +269,18 @@ const generateWithAi = async () => {
             <div v-if="contentPillars.length > 0" class="flex items-center gap-4">
                 <button
                     @click="distributeEvenly"
-                    class="text-sm text-gray-500 hover:text-gray-700 transition-colors"
+                    class="text-sm transition-colors"
+                    :class="dark ? 'text-gray-400 hover:text-gray-300' : 'text-gray-500 hover:text-gray-700'"
                 >
                     {{ t('brands.onboarding.step4.distributeEvenly') }}
                 </button>
                 <span
                     class="text-sm font-medium px-3 py-1 rounded-full"
                     :class="{
-                        'bg-green-100 text-green-700': isValidPercentage && contentPillars.length > 0,
-                        'bg-red-100 text-red-700': !isValidPercentage,
+                        'bg-green-100 text-green-700': !dark && isValidPercentage && contentPillars.length > 0,
+                        'bg-green-500/20 text-green-400': dark && isValidPercentage && contentPillars.length > 0,
+                        'bg-red-100 text-red-700': !dark && !isValidPercentage,
+                        'bg-red-500/20 text-red-400': dark && !isValidPercentage,
                     }"
                 >
                     {{ t('brands.onboarding.step4.total') }}: {{ totalPercentage }}%

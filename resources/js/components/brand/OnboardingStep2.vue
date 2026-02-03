@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue';
+import { computed, ref, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useBrandsStore } from '@/stores/brands';
 import { useToast } from '@/composables/useToast';
@@ -9,6 +9,7 @@ const { t } = useI18n();
 const brandsStore = useBrandsStore();
 const toast = useToast();
 const { onboardingData } = storeToRefs(brandsStore);
+const dark = inject('onboardingDark', false);
 
 const newInterest = ref('');
 const newPainPoint = ref('');
@@ -84,7 +85,6 @@ const generateInterests = async () => {
     try {
         const result = await brandsStore.generateAiSuggestions('interests');
         if (result.interests && result.interests.length > 0) {
-            // Merge with existing, avoid duplicates
             const newInterests = result.interests.filter(
                 (i) => !interests.value.includes(i)
             );
@@ -106,7 +106,6 @@ const generatePainPoints = async () => {
     try {
         const result = await brandsStore.generateAiSuggestions('painPoints');
         if (result.painPoints && result.painPoints.length > 0) {
-            // Merge with existing, avoid duplicates
             const newPainPoints = result.painPoints.filter(
                 (p) => !painPoints.value.includes(p)
             );
@@ -124,17 +123,17 @@ const generatePainPoints = async () => {
 
 <template>
     <div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">
+        <h2 class="text-xl font-semibold mb-2" :class="dark ? 'text-white' : 'text-gray-900'">
             {{ t('brands.onboarding.step2.title') }}
         </h2>
-        <p class="text-gray-600 mb-6">
+        <p class="mb-6" :class="dark ? 'text-gray-400' : 'text-gray-600'">
             {{ t('brands.onboarding.step2.description') }}
         </p>
 
         <div class="space-y-6">
             <!-- Age Range -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block text-sm font-medium mb-2" :class="dark ? 'text-gray-300' : 'text-gray-700'">
                     {{ t('brands.onboarding.step2.ageRange') }}
                 </label>
                 <div class="flex flex-wrap gap-2">
@@ -145,7 +144,7 @@ const generatePainPoints = async () => {
                         class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
                         :class="{
                             'bg-blue-600 text-white border-blue-600': ageRange === range,
-                            'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': ageRange !== range,
+                            [dark ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50']: ageRange !== range,
                         }"
                     >
                         {{ range }}
@@ -155,7 +154,7 @@ const generatePainPoints = async () => {
 
             <!-- Gender -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-2">
+                <label class="block text-sm font-medium mb-2" :class="dark ? 'text-gray-300' : 'text-gray-700'">
                     {{ t('brands.onboarding.step2.gender') }}
                 </label>
                 <div class="flex flex-wrap gap-2">
@@ -166,7 +165,7 @@ const generatePainPoints = async () => {
                         class="px-4 py-2 text-sm font-medium rounded-lg border transition-colors"
                         :class="{
                             'bg-blue-600 text-white border-blue-600': gender === g,
-                            'bg-white text-gray-700 border-gray-300 hover:bg-gray-50': gender !== g,
+                            [dark ? 'bg-gray-800 text-gray-300 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50']: gender !== g,
                         }"
                     >
                         {{ t(`brands.onboarding.step2.genders.${g}`) }}
@@ -177,7 +176,7 @@ const generatePainPoints = async () => {
             <!-- Interests -->
             <div>
                 <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium text-gray-700">
+                    <label class="block text-sm font-medium" :class="dark ? 'text-gray-300' : 'text-gray-700'">
                         {{ t('brands.onboarding.step2.interests') }}
                     </label>
                     <button
@@ -187,7 +186,7 @@ const generatePainPoints = async () => {
                         :class="[
                             hasDescription
                                 ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-sm hover:shadow'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : (dark ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
                         ]"
                         :title="!hasDescription ? t('brands.onboarding.step2.aiRequiresDescription') : ''"
                     >
@@ -220,12 +219,14 @@ const generatePainPoints = async () => {
                         v-model="newInterest"
                         @keydown="handleKeydown($event, 'interest')"
                         :placeholder="t('brands.onboarding.step2.interestPlaceholder')"
-                        class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="flex-1 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        :class="dark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'border-gray-300'"
                     />
                     <button
                         @click="addInterest"
                         :disabled="!newInterest.trim()"
-                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                        class="px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
+                        :class="dark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                     >
                         {{ t('common.add') }}
                     </button>
@@ -234,10 +235,11 @@ const generatePainPoints = async () => {
                     <span
                         v-for="(interest, index) in interests"
                         :key="index"
-                        class="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm animate-fadeIn"
+                        class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm animate-fadeIn"
+                        :class="dark ? 'bg-blue-500/20 text-blue-400' : 'bg-blue-100 text-blue-700'"
                     >
                         {{ interest }}
-                        <button @click="removeInterest(index)" class="hover:text-blue-900 transition-colors">
+                        <button @click="removeInterest(index)" class="transition-colors" :class="dark ? 'hover:text-blue-300' : 'hover:text-blue-900'">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>
@@ -249,7 +251,7 @@ const generatePainPoints = async () => {
             <!-- Pain Points -->
             <div>
                 <div class="flex items-center justify-between mb-2">
-                    <label class="block text-sm font-medium text-gray-700">
+                    <label class="block text-sm font-medium" :class="dark ? 'text-gray-300' : 'text-gray-700'">
                         {{ t('brands.onboarding.step2.painPoints') }}
                     </label>
                     <button
@@ -259,7 +261,7 @@ const generatePainPoints = async () => {
                         :class="[
                             hasDescription
                                 ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 shadow-sm hover:shadow'
-                                : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                : (dark ? 'bg-gray-700 text-gray-500 cursor-not-allowed' : 'bg-gray-100 text-gray-400 cursor-not-allowed')
                         ]"
                         :title="!hasDescription ? t('brands.onboarding.step2.aiRequiresDescription') : ''"
                     >
@@ -292,12 +294,14 @@ const generatePainPoints = async () => {
                         v-model="newPainPoint"
                         @keydown="handleKeydown($event, 'painPoint')"
                         :placeholder="t('brands.onboarding.step2.painPointPlaceholder')"
-                        class="flex-1 rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        class="flex-1 rounded-lg shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                        :class="dark ? 'bg-gray-800 border-gray-600 text-white placeholder-gray-500' : 'border-gray-300'"
                     />
                     <button
                         @click="addPainPoint"
                         :disabled="!newPainPoint.trim()"
-                        class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 transition-colors"
+                        class="px-4 py-2 rounded-lg disabled:opacity-50 transition-colors"
+                        :class="dark ? 'bg-gray-700 text-gray-300 hover:bg-gray-600' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
                     >
                         {{ t('common.add') }}
                     </button>
@@ -306,10 +310,11 @@ const generatePainPoints = async () => {
                     <span
                         v-for="(point, index) in painPoints"
                         :key="index"
-                        class="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-sm animate-fadeIn"
+                        class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm animate-fadeIn"
+                        :class="dark ? 'bg-orange-500/20 text-orange-400' : 'bg-orange-100 text-orange-700'"
                     >
                         {{ point }}
-                        <button @click="removePainPoint(index)" class="hover:text-orange-900 transition-colors">
+                        <button @click="removePainPoint(index)" class="transition-colors" :class="dark ? 'hover:text-orange-300' : 'hover:text-orange-900'">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                             </svg>

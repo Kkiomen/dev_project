@@ -2553,6 +2553,20 @@
     "onboarding": {
         "stepOf": "Krok {current} z {total}",
         "error": "Wystąpił błąd podczas zapisywania. Spróbuj ponownie.",
+        "phases": {
+            "aboutYou": "O Tobie",
+            "yourBrand": "Twoja marka"
+        },
+        "brandIntro": {
+            "title": "Teraz skonfigurujmy Twoją markę",
+            "subtitle": "Te informacje pozwolą AI generować treści idealnie dopasowane do Twojego stylu i odbiorców.",
+            "benefit1Title": "Spersonalizowane treści",
+            "benefit1Description": "AI będzie tworzyć posty w Twoim tonie i stylu komunikacji.",
+            "benefit2Title": "Precyzyjne dotarcie",
+            "benefit2Description": "Zdefiniuj grupę docelową, a treści będą trafiać dokładnie tam, gdzie powinny.",
+            "benefit3Title": "Pełna automatyzacja",
+            "benefit3Description": "Raz skonfiguruj markę, a potem tylko zatwierdzaj - AI zajmie się resztą."
+        },
         "role": {
             "title": "Kim jesteś?",
             "subtitle": "Pomóż nam dostosować aplikację do Twoich potrzeb.",

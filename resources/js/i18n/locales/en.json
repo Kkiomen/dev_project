@@ -2550,6 +2550,20 @@
     "onboarding": {
         "stepOf": "Step {current} of {total}",
         "error": "An error occurred while saving. Please try again.",
+        "phases": {
+            "aboutYou": "About You",
+            "yourBrand": "Your Brand"
+        },
+        "brandIntro": {
+            "title": "Now let's set up your brand",
+            "subtitle": "This information will help AI generate content perfectly tailored to your style and audience.",
+            "benefit1Title": "Personalized content",
+            "benefit1Description": "AI will create posts in your tone and communication style.",
+            "benefit2Title": "Precise targeting",
+            "benefit2Description": "Define your target audience and content will reach exactly the right people.",
+            "benefit3Title": "Full automation",
+            "benefit3Description": "Set up your brand once, then just approve - AI handles the rest."
+        },
         "role": {
             "title": "Who are you?",
             "subtitle": "Help us tailor the app to your needs.",

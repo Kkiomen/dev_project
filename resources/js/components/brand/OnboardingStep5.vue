@@ -1,5 +1,5 @@
 <script setup>
-import { computed } from 'vue';
+import { computed, inject } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useBrandsStore } from '@/stores/brands';
 import { storeToRefs } from 'pinia';
@@ -7,6 +7,7 @@ import { storeToRefs } from 'pinia';
 const { t } = useI18n();
 const brandsStore = useBrandsStore();
 const { onboardingData } = storeToRefs(brandsStore);
+const dark = inject('onboardingDark', false);
 
 const platformConfigs = [
     {
@@ -58,12 +59,10 @@ const autoSchedule = computed({
     set: (value) => brandsStore.updateOnboardingData({ autoSchedule: value }),
 });
 
-// Helper to check if platform is enabled - fixes reactivity
 const isPlatformEnabled = (key) => {
     return platforms.value[key]?.enabled === true;
 };
 
-// Get list of enabled platforms for iteration
 const enabledPlatforms = computed(() => {
     return platformConfigs.filter(p => platforms.value[p.key]?.enabled === true);
 });
@@ -115,17 +114,17 @@ const isTimeSelected = (platformKey, time) => {
 
 <template>
     <div>
-        <h2 class="text-xl font-semibold text-gray-900 mb-2">
+        <h2 class="text-xl font-semibold mb-2" :class="dark ? 'text-white' : 'text-gray-900'">
             {{ t('brands.onboarding.step5.title') }}
         </h2>
-        <p class="text-gray-600 mb-6">
+        <p class="mb-6" :class="dark ? 'text-gray-400' : 'text-gray-600'">
             {{ t('brands.onboarding.step5.description') }}
         </p>
 
         <div class="space-y-6">
             <!-- Platform selection -->
             <div>
-                <label class="block text-sm font-medium text-gray-700 mb-3">
+                <label class="block text-sm font-medium mb-3" :class="dark ? 'text-gray-300' : 'text-gray-700'">
                     {{ t('brands.onboarding.step5.selectPlatforms') }}
                 </label>
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -135,8 +134,9 @@ const isTimeSelected = (platformKey, time) => {
                         @click="togglePlatform(platform.key)"
                         class="relative p-4 rounded-xl border-2 transition-all"
                         :class="{
-                            'border-blue-500 bg-blue-50': isPlatformEnabled(platform.key),
-                            'border-gray-200 bg-white hover:border-gray-300': !isPlatformEnabled(platform.key),
+                            'border-blue-500': isPlatformEnabled(platform.key),
+                            [dark ? 'bg-blue-500/10' : 'bg-blue-50']: isPlatformEnabled(platform.key),
+                            [dark ? 'border-gray-700 bg-gray-800 hover:border-gray-600' : 'border-gray-200 bg-white hover:border-gray-300']: !isPlatformEnabled(platform.key),
                         }"
                     >
                         <div class="flex items-center gap-3">
@@ -148,7 +148,7 @@ const isTimeSelected = (platformKey, time) => {
                             >
                                 <path :d="platform.icon" />
                             </svg>
-                            <span class="font-medium text-gray-900">{{ platform.name }}</span>
+                            <span class="font-medium" :class="dark ? 'text-white' : 'text-gray-900'">{{ platform.name }}</span>
                         </div>
                         <div
                             v-if="isPlatformEnabled(platform.key)"
@@ -164,7 +164,7 @@ const isTimeSelected = (platformKey, time) => {
 
             <!-- Frequency settings for enabled platforms -->
             <div v-if="hasEnabledPlatforms">
-                <label class="block text-sm font-medium text-gray-700 mb-3">
+                <label class="block text-sm font-medium mb-3" :class="dark ? 'text-gray-300' : 'text-gray-700'">
                     {{ t('brands.onboarding.step5.postsPerWeek') }}
                 </label>
                 <div class="space-y-4">
@@ -182,7 +182,7 @@ const isTimeSelected = (platformKey, time) => {
                             >
                                 <path :d="platform.icon" />
                             </svg>
-                            <span class="text-sm font-medium text-gray-700">{{ platform.name }}</span>
+                            <span class="text-sm font-medium" :class="dark ? 'text-gray-300' : 'text-gray-700'">{{ platform.name }}</span>
                         </div>
                         <input
                             type="range"
@@ -190,9 +190,10 @@ const isTimeSelected = (platformKey, time) => {
                             @input="updateFrequency(platform.key, $event.target.value)"
                             min="0"
                             :max="platform.maxPostsPerWeek"
-                            class="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+                            class="flex-1 h-2 rounded-lg appearance-none cursor-pointer"
+                            :class="dark ? 'bg-gray-700' : 'bg-gray-200'"
                         />
-                        <span class="w-16 text-sm text-gray-600 text-right">
+                        <span class="w-16 text-sm text-right" :class="dark ? 'text-gray-400' : 'text-gray-600'">
                             {{ getFrequencyValue(platform.key) }} / {{ t('brands.onboarding.step5.week') }}
                         </span>
                     </div>
@@ -201,7 +202,7 @@ const isTimeSelected = (platformKey, time) => {
 
             <!-- Best times -->
             <div v-if="hasEnabledPlatforms">
-                <label class="block text-sm font-medium text-gray-700 mb-3">
+                <label class="block text-sm font-medium mb-3" :class="dark ? 'text-gray-300' : 'text-gray-700'">
                     {{ t('brands.onboarding.step5.bestTimes') }}
                 </label>
                 <div class="space-y-4">
@@ -218,7 +219,7 @@ const isTimeSelected = (platformKey, time) => {
                             >
                                 <path :d="platform.icon" />
                             </svg>
-                            <span class="text-sm font-medium text-gray-700">{{ platform.name }}</span>
+                            <span class="text-sm font-medium" :class="dark ? 'text-gray-300' : 'text-gray-700'">{{ platform.name }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <button
@@ -228,7 +229,7 @@ const isTimeSelected = (platformKey, time) => {
                                 class="px-2 py-1 text-xs font-medium rounded border transition-colors"
                                 :class="{
                                     'bg-blue-600 text-white border-blue-600': isTimeSelected(platform.key, time),
-                                    'bg-white text-gray-600 border-gray-300 hover:bg-gray-50': !isTimeSelected(platform.key, time),
+                                    [dark ? 'bg-gray-800 text-gray-400 border-gray-600 hover:bg-gray-700' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50']: !isTimeSelected(platform.key, time),
                                 }"
                             >
                                 {{ time }}
@@ -239,19 +240,19 @@ const isTimeSelected = (platformKey, time) => {
             </div>
 
             <!-- Auto schedule -->
-            <div v-if="hasEnabledPlatforms" class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+            <div v-if="hasEnabledPlatforms" class="flex items-center justify-between p-4 rounded-lg" :class="dark ? 'bg-gray-800/50' : 'bg-gray-50'">
                 <div>
-                    <p class="text-sm font-medium text-gray-900">
+                    <p class="text-sm font-medium" :class="dark ? 'text-white' : 'text-gray-900'">
                         {{ t('brands.onboarding.step5.autoSchedule') }}
                     </p>
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm" :class="dark ? 'text-gray-400' : 'text-gray-500'">
                         {{ t('brands.onboarding.step5.autoScheduleDescription') }}
                     </p>
                 </div>
                 <button
                     @click="autoSchedule = !autoSchedule"
                     class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                    :class="{ 'bg-blue-600': autoSchedule, 'bg-gray-200': !autoSchedule }"
+                    :class="{ 'bg-blue-600': autoSchedule, [dark ? 'bg-gray-600' : 'bg-gray-200']: !autoSchedule }"
                 >
                     <span
                         class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
@@ -261,8 +262,8 @@ const isTimeSelected = (platformKey, time) => {
             </div>
 
             <!-- Warning if no platform selected -->
-            <div v-if="!hasEnabledPlatforms" class="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p class="text-sm text-yellow-700">
+            <div v-if="!hasEnabledPlatforms" class="p-4 rounded-lg" :class="dark ? 'bg-yellow-500/10 border border-yellow-500/20' : 'bg-yellow-50 border border-yellow-200'">
+                <p class="text-sm" :class="dark ? 'text-yellow-400' : 'text-yellow-700'">
                     {{ t('brands.onboarding.step5.selectAtLeastOne') }}
                 </p>
             </div>
