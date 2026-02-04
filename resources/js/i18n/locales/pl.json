@@ -2324,6 +2324,55 @@
         "filters": {
             "allStatuses": "Wszystkie Statusy",
             "searchPlaceholder": "Szukaj po temacie lub treści..."
+        },
+        "stats": {
+            "total": "Łącznie",
+            "draft": "Szkice",
+            "pending": "Oczekujące",
+            "approved": "Zatwierdzone",
+            "scheduled": "Zaplanowane",
+            "published": "Opublikowane",
+            "failed": "Nieudane",
+            "queueCoverage": "Pokrycie kolejki",
+            "days": "dni"
+        },
+        "tabs": {
+            "all": "Wszystkie"
+        },
+        "toolbar": {
+            "settings": "Ustawienia",
+            "refresh": "Odśwież"
+        },
+        "bulk": {
+            "selected": "{count} zaznaczono",
+            "close": "Zamknij"
+        },
+        "row": {
+            "content": "Treść",
+            "imageDescription": "Opis obrazka",
+            "platformsAndTags": "Platformy i tagi",
+            "noContent": "Brak treści",
+            "noImageDescription": "Brak opisu obrazka",
+            "clickToEdit": "Kliknij aby edytować",
+            "mediaCount": "{count} mediów",
+            "uploadImage": "Wgraj zdjęcie",
+            "uploadHint": "Kliknij lub przeciągnij plik",
+            "uploading": "Przesyłanie...",
+            "uploadSuccess": "Zdjęcie wgrane pomyślnie",
+            "uploadFailed": "Nie udało się wgrać zdjęcia",
+            "deleteMedia": "Usuń",
+            "deleteConfirm": "Czy na pewno chcesz usunąć to medium?",
+            "scheduledAt": "Data publikacji",
+            "notScheduled": "Nie zaplanowano",
+            "scheduleChanged": "Data publikacji zmieniona"
+        },
+        "pagination": {
+            "showing": "Wyświetlanie {from}-{to} z {total} postów"
+        },
+        "emptyState": {
+            "title": "Brak postów do automatyzacji",
+            "description": "Utwórz posty w Kalendarzu, aby rozpocząć automatyzację publikacji.",
+            "goToCalendar": "Przejdź do Kalendarza"
         }
     },
     "notifications": {

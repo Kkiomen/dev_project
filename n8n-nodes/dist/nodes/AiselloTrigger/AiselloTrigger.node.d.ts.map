@@ -1,0 +1,1 @@
+{"version":3,"file":"AiselloTrigger.node.d.ts","sourceRoot":"","sources":["../../../src/nodes/AiselloTrigger/AiselloTrigger.node.ts"],"names":[],"mappings":"AAAA,OAAO,EACN,iBAAiB,EACjB,SAAS,EACT,oBAAoB,EACpB,oBAAoB,EAEpB,MAAM,cAAc,CAAC;AAEtB,qBAAa,cAAe,YAAW,SAAS;IAC/C,WAAW,EAAE,oBAAoB,CAmC/B;IAEI,OAAO,CAAC,IAAI,EAAE,iBAAiB,GAAG,OAAO,CAAC,oBAAoB,CAAC;CAsBrE"}

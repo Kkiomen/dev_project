@@ -1,0 +1,115 @@
+import { INodeProperties } from 'n8n-workflow';
+
+export const postAutomationOperations: INodeProperties[] = [
+	{
+		displayName: 'Operation',
+		name: 'operation',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: { show: { resource: ['postAutomation'] } },
+		options: [
+			{ name: 'Bulk Generate Image', value: 'bulkGenerateImage', description: 'Bulk generate image prompts for posts', action: 'Bulk generate image prompts' },
+			{ name: 'Bulk Generate Text', value: 'bulkGenerateText', description: 'Bulk generate text for posts', action: 'Bulk generate text' },
+			{ name: 'Generate Image Prompt', value: 'generateImagePrompt', description: 'Generate image prompt for a post', action: 'Generate image prompt' },
+			{ name: 'Generate Text', value: 'generateText', description: 'Generate text for a post', action: 'Generate text' },
+			{ name: 'Get Many', value: 'getAll', description: 'Get automation posts', action: 'Get automation posts' },
+			{ name: 'Webhook Publish', value: 'webhookPublish', description: 'Publish a post via webhook', action: 'Webhook publish a post' },
+		],
+		default: 'getAll',
+	},
+];
+
+export const postAutomationFields: INodeProperties[] = [
+	// ----------------------------------
+	//         postAutomation: getAll
+	// ----------------------------------
+	{
+		displayName: 'Return All',
+		name: 'returnAll',
+		type: 'boolean',
+		default: false,
+		description: 'Whether to return all results or only up to a given limit',
+		displayOptions: { show: { resource: ['postAutomation'], operation: ['getAll'] } },
+	},
+	{
+		displayName: 'Limit',
+		name: 'limit',
+		type: 'number',
+		default: 50,
+		typeOptions: { minValue: 1 },
+		description: 'Max number of results to return',
+		displayOptions: { show: { resource: ['postAutomation'], operation: ['getAll'], returnAll: [false] } },
+	},
+	{
+		displayName: 'Filters',
+		name: 'filters',
+		type: 'collection',
+		placeholder: 'Add Filter',
+		default: {},
+		displayOptions: { show: { resource: ['postAutomation'], operation: ['getAll'] } },
+		options: [
+			{ displayName: 'Brand ID', name: 'brand_id', type: 'string', default: '', description: 'Filter by brand' },
+			{
+				displayName: 'Status',
+				name: 'status',
+				type: 'options',
+				options: [
+					{ name: 'All', value: '' },
+					{ name: 'Pending', value: 'pending' },
+					{ name: 'Processing', value: 'processing' },
+					{ name: 'Completed', value: 'completed' },
+					{ name: 'Failed', value: 'failed' },
+				],
+				default: '',
+				description: 'Filter by automation status',
+			},
+		],
+	},
+
+	// ----------------------------------
+	//         postAutomation: generateText / generateImagePrompt / webhookPublish
+	// ----------------------------------
+	{
+		displayName: 'Post Name or ID',
+		name: 'postId',
+		type: 'options',
+		typeOptions: { loadOptionsMethod: 'getPosts' },
+		required: true,
+		default: '',
+		description: 'The post to use. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
+		displayOptions: {
+			show: { resource: ['postAutomation'], operation: ['generateText', 'generateImagePrompt', 'webhookPublish'] },
+		},
+	},
+
+	// ----------------------------------
+	//         postAutomation: webhookPublish
+	// ----------------------------------
+	{
+		displayName: 'Additional Fields',
+		name: 'additionalFields',
+		type: 'collection',
+		placeholder: 'Add Field',
+		default: {},
+		displayOptions: { show: { resource: ['postAutomation'], operation: ['webhookPublish'] } },
+		options: [
+			{ displayName: 'Platform', name: 'platform', type: 'string', default: '', description: 'Target platform for publishing' },
+			{ displayName: 'Webhook URL', name: 'webhook_url', type: 'string', default: '', description: 'Custom webhook URL' },
+		],
+	},
+
+	// ----------------------------------
+	//         postAutomation: bulkGenerateText / bulkGenerateImage
+	// ----------------------------------
+	{
+		displayName: 'Post IDs',
+		name: 'postIds',
+		type: 'string',
+		required: true,
+		default: '',
+		description: 'Comma-separated list of post IDs',
+		displayOptions: {
+			show: { resource: ['postAutomation'], operation: ['bulkGenerateText', 'bulkGenerateImage'] },
+		},
+	},
+];

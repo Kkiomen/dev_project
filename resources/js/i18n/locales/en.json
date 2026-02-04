@@ -2321,6 +2321,55 @@
         "filters": {
             "allStatuses": "All Statuses",
             "searchPlaceholder": "Search by topic or content..."
+        },
+        "stats": {
+            "total": "Total",
+            "draft": "Drafts",
+            "pending": "Pending",
+            "approved": "Approved",
+            "scheduled": "Scheduled",
+            "published": "Published",
+            "failed": "Failed",
+            "queueCoverage": "Queue coverage",
+            "days": "days"
+        },
+        "tabs": {
+            "all": "All"
+        },
+        "toolbar": {
+            "settings": "Settings",
+            "refresh": "Refresh"
+        },
+        "bulk": {
+            "selected": "{count} selected",
+            "close": "Close"
+        },
+        "row": {
+            "content": "Content",
+            "imageDescription": "Image description",
+            "platformsAndTags": "Platforms & tags",
+            "noContent": "No content",
+            "noImageDescription": "No image description",
+            "clickToEdit": "Click to edit",
+            "mediaCount": "{count} media",
+            "uploadImage": "Upload image",
+            "uploadHint": "Click or drag file here",
+            "uploading": "Uploading...",
+            "uploadSuccess": "Image uploaded successfully",
+            "uploadFailed": "Failed to upload image",
+            "deleteMedia": "Delete",
+            "deleteConfirm": "Are you sure you want to delete this media?",
+            "scheduledAt": "Scheduled date",
+            "notScheduled": "Not scheduled",
+            "scheduleChanged": "Schedule updated"
+        },
+        "pagination": {
+            "showing": "Showing {from}-{to} of {total} posts"
+        },
+        "emptyState": {
+            "title": "No posts to automate",
+            "description": "Create posts in the Calendar to start automating your publishing.",
+            "goToCalendar": "Go to Calendar"
         }
     },
     "notifications": {

@@ -1,0 +1,4 @@
+import { IExecuteFunctions, IHookFunctions, ILoadOptionsFunctions, IDataObject, IHttpRequestMethods } from 'n8n-workflow';
+export declare function aiselloApiRequest(this: IExecuteFunctions | ILoadOptionsFunctions | IHookFunctions, method: IHttpRequestMethods, endpoint: string, body?: IDataObject | IDataObject[], qs?: IDataObject, uri?: string, option?: IDataObject): Promise<any>;
+export declare function aiselloApiRequestAllItems(this: IExecuteFunctions | ILoadOptionsFunctions, method: IHttpRequestMethods, endpoint: string, body?: IDataObject, qs?: IDataObject): Promise<any[]>;
+//# sourceMappingURL=GenericFunctions.d.ts.map

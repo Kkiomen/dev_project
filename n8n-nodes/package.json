@@ -1,0 +1,42 @@
+{
+	"name": "n8n-nodes-aisello",
+	"version": "1.0.1",
+	"description": "n8n community node for Aisello - personal brand automation platform",
+	"keywords": [
+		"n8n",
+		"n8n-community-node-package",
+		"aisello",
+		"automation",
+		"personal-brand"
+	],
+	"license": "MIT",
+	"main": "dist/nodes/Aisello/Aisello.node.js",
+	"scripts": {
+		"build": "tsc -p tsconfig.build.json && gulp build:icons",
+		"dev": "tsc -p tsconfig.build.json -w",
+		"lint": "tsc -p tsconfig.build.json --noEmit",
+		"prepublishOnly": "npm run build"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"credentials": [
+			"dist/credentials/AiselloApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Aisello/Aisello.node.js",
+			"dist/nodes/AiselloDatabase/AiselloDatabase.node.js",
+			"dist/nodes/AiselloTrigger/AiselloTrigger.node.js"
+		]
+	},
+	"devDependencies": {
+		"gulp": "^5.0.0",
+		"n8n-workflow": "^1.70.0",
+		"typescript": "^5.7.0"
+	},
+	"peerDependencies": {
+		"n8n-workflow": ">=1.0.0"
+	}
+}
