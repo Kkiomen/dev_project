@@ -6,6 +6,7 @@ use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\BaseController;
 use App\Http\Controllers\Web\LocaleController;
 use App\Http\Controllers\Web\TableController;
+use App\Http\Controllers\Web\TestController;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +76,8 @@ Route::middleware(['auth', 'verified'])->prefix('legacy')->group(function () {
     Route::get('/tables/{table}', [TableController::class, 'show'])->name('legacy.tables.show');
     Route::get('/tables/{table}/kanban', [TableController::class, 'kanban'])->name('legacy.tables.kanban');
 });
+
+Route::get('/test', TestController::class)->middleware('auth')->name('test');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

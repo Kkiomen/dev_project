@@ -40,8 +40,8 @@ class BrandController extends Controller
             'accepted_at' => now(),
         ]);
 
-        // Set as current brand if it's the user's first brand
-        if ($request->user()->brands()->count() === 1) {
+        // Set as current brand if user doesn't have one selected
+        if (!$request->user()->getCurrentBrand()) {
             $request->user()->setCurrentBrand($brand);
         }
 

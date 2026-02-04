@@ -314,7 +314,9 @@ export const useBrandsStore = defineStore('brands', {
                 const response = await axios.post('/api/v1/brands', brandData);
                 const newBrand = response.data.data;
                 this.brands.unshift(newBrand);
-                this.currentBrand = newBrand;
+
+                // Set as current brand on backend and frontend
+                await this.setCurrentBrand(newBrand.id);
 
                 // Complete onboarding
                 await this.completeOnboarding(newBrand.id);
