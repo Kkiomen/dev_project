@@ -495,7 +495,7 @@
             "subtitle": "Oficjalna paczka community nodes dla n8n umożliwiająca integrację z Aisello.",
             "packageInfo": "Paczka n8n-nodes-aisello zawiera 3 węzły z ponad 80 operacjami pokrywającymi posty, marki, generowanie treści AI, bazy danych i więcej.",
             "overview": "Przegląd",
-            "overviewDescription": "Paczka n8n-nodes-aisello to zestaw community nodes dla platformy n8n, który pozwala na pełną integrację z API Aisello. Możesz automatyzować tworzenie treści, zarządzanie markami, publikowanie postów i operacje na bazie danych — wszystko bez pisania kodu.",
+            "overviewDescription": "Paczka n8n-nodes-aisello to zestaw community nodes dla platformy n8n, który pozwala na pełną integrację z API Aisello. Możesz automatyzować tworzenie treści, zarządzanie markami, publikowanie postów i operacje na bazie danych - wszystko bez pisania kodu.",
             "resources": "zasobów",
             "operations": "operacji",
             "resource": "Zasób",
@@ -531,7 +531,7 @@
             "databaseNode": {
                 "title": "Węzeł Aisello Database",
                 "summary": "Operacje na bazie danych typu Airtable z kaskadowymi dropdownami.",
-                "description": "Węzeł do operacji na bazie danych: bazy, tabele, pola, wiersze, komórki i załączniki. Dropdowny działają kaskadowo — wybierz bazę, a tabele załadują się automatycznie.",
+                "description": "Węzeł do operacji na bazie danych: bazy, tabele, pola, wiersze, komórki i załączniki. Dropdowny działają kaskadowo - wybierz bazę, a tabele załadują się automatycznie.",
                 "fieldTypes": "Typy pól"
             },
             "triggerNode": {
@@ -594,7 +594,7 @@
                 "title": "Dynamiczne dropdown-y",
                 "aiselloDescription": "Wszystkie pola ID (Brand, Post, Board, Approval Token) ładują opcje automatycznie z API. Możesz też używać wyrażeń (expressions) aby przekazywać ID dynamicznie z poprzednich węzłów.",
                 "cascadingTitle": "Kaskadowe dropdown-y",
-                "cascadingDescription": "W węźle Database dropdown-y działają kaskadowo — wybór bazy automatycznie ładuje tabele, a wybór tabeli ładuje pola:"
+                "cascadingDescription": "W węźle Database dropdown-y działają kaskadowo - wybór bazy automatycznie ładuje tabele, a wybór tabeli ładuje pola:"
             },
             "examples": {
                 "title": "Przykłady użycia",
@@ -612,13 +612,13 @@
                 "database": {
                     "title": "Tworzenie wiersza w bazie",
                     "step1": "Dodaj węzeł Aisello Database, ustaw Resource: Row, Operation: Create",
-                    "step2": "Wybierz bazę z dropdown-a — tabele załadują się automatycznie",
+                    "step2": "Wybierz bazę z dropdown-a - tabele załadują się automatycznie",
                     "step3": "Wpisz dane komórek jako JSON:"
                 }
             },
             "expressionsTip": {
                 "title": "Wyrażenia (Expressions)",
-                "description": "Wszystkie dropdown-y wspierają tryb wyrażeń. Możesz przekazywać ID dynamicznie z poprzednich węzłów zamiast wybierać z listy — przydatne w pętlach i dynamicznych workflow-ach."
+                "description": "Wszystkie dropdown-y wspierają tryb wyrażeń. Możesz przekazywać ID dynamicznie z poprzednich węzłów zamiast wybierać z listy - przydatne w pętlach i dynamicznych workflow-ach."
             }
         },
         "general": {

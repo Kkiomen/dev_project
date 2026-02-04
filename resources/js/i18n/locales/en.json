@@ -494,7 +494,7 @@
             "subtitle": "Official community nodes package for n8n enabling integration with Aisello.",
             "packageInfo": "The n8n-nodes-aisello package contains 3 nodes with over 80 operations covering posts, brands, AI content generation, databases and more.",
             "overview": "Overview",
-            "overviewDescription": "n8n-nodes-aisello is a community nodes package for the n8n platform that provides full integration with the Aisello API. You can automate content creation, brand management, post publishing and database operations — all without writing code.",
+            "overviewDescription": "n8n-nodes-aisello is a community nodes package for the n8n platform that provides full integration with the Aisello API. You can automate content creation, brand management, post publishing and database operations - all without writing code.",
             "resources": "resources",
             "operations": "operations",
             "resource": "Resource",
@@ -530,7 +530,7 @@
             "databaseNode": {
                 "title": "Aisello Database Node",
                 "summary": "Airtable-like database operations with cascading dropdowns.",
-                "description": "Database operations node: bases, tables, fields, rows, cells and attachments. Dropdowns work in a cascading fashion — select a base and the tables will load automatically.",
+                "description": "Database operations node: bases, tables, fields, rows, cells and attachments. Dropdowns work in a cascading fashion - select a base and the tables will load automatically.",
                 "fieldTypes": "Field types"
             },
             "triggerNode": {
@@ -593,7 +593,7 @@
                 "title": "Dynamic dropdowns",
                 "aiselloDescription": "All ID fields (Brand, Post, Board, Approval Token) load options automatically from the API. You can also use expressions to pass IDs dynamically from previous nodes.",
                 "cascadingTitle": "Cascading dropdowns",
-                "cascadingDescription": "In the Database node, dropdowns work in a cascading fashion — selecting a base automatically loads tables, and selecting a table loads fields:"
+                "cascadingDescription": "In the Database node, dropdowns work in a cascading fashion - selecting a base automatically loads tables, and selecting a table loads fields:"
             },
             "examples": {
                 "title": "Usage examples",
@@ -611,13 +611,13 @@
                 "database": {
                     "title": "Create a database row",
                     "step1": "Add an Aisello Database node, set Resource: Row, Operation: Create",
-                    "step2": "Select a base from the dropdown — tables will load automatically",
+                    "step2": "Select a base from the dropdown - tables will load automatically",
                     "step3": "Enter cell data as JSON:"
                 }
             },
             "expressionsTip": {
                 "title": "Expressions",
-                "description": "All dropdowns support expression mode. You can pass IDs dynamically from previous nodes instead of selecting from the list — useful for loops and dynamic workflows."
+                "description": "All dropdowns support expression mode. You can pass IDs dynamically from previous nodes instead of selecting from the list - useful for loops and dynamic workflows."
             }
         },
         "general": {
