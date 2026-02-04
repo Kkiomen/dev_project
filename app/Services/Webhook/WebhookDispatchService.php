@@ -3,30 +3,26 @@
 namespace App\Services\Webhook;
 
 use App\Models\SocialPost;
-use App\Services\PostAiGenerationService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WebhookDispatchService
 {
-    public function __construct(
-        protected PostAiGenerationService $aiGenerationService
-    ) {}
 
     public function generateText(SocialPost $post, ?string $promptOverride = null): array
     {
         $brand = $post->brand;
 
-        if ($brand && $brand->hasWebhook('text_generation')) {
-            $payload = $this->buildPayload($post, [
-                'prompt' => $promptOverride ?? $brand->getWebhookPrompt('text_generation'),
-            ]);
-
-            return $this->sendWebhook($brand->getWebhookUrl('text_generation'), $payload);
+        if (!$brand || !$brand->hasWebhook('text_generation')) {
+            // No webhook configured - this is not an error, just skip
+            return ['success' => true, 'skipped' => true, 'message' => 'No text generation webhook configured'];
         }
 
-        // Fallback to AI generation
-        return $this->fallbackTextGeneration($post);
+        $payload = $this->buildPayload($post, [
+            'prompt' => $promptOverride ?? $brand->getWebhookPrompt('text_generation'),
+        ]);
+
+        return $this->sendWebhook($brand->getWebhookUrl('text_generation'), $payload);
     }
 
     public function generateImagePrompt(SocialPost $post): array
@@ -34,7 +30,8 @@ class WebhookDispatchService
         $brand = $post->brand;
 
         if (!$brand || !$brand->hasWebhook('image_generation')) {
-            return ['success' => false, 'error' => 'No image generation webhook configured'];
+            // No webhook configured - this is not an error, just skip
+            return ['success' => true, 'skipped' => true, 'message' => 'No image generation webhook configured'];
         }
 
         $payload = $this->buildPayload($post, [
@@ -49,7 +46,8 @@ class WebhookDispatchService
         $brand = $post->brand;
 
         if (!$brand || !$brand->hasWebhook('publish')) {
-            return ['success' => false, 'error' => 'No publish webhook configured'];
+            // No webhook configured - this is not an error, just skip
+            return ['success' => true, 'skipped' => true, 'message' => 'No publish webhook configured'];
         }
 
         $payload = $this->buildPayload($post);
@@ -134,39 +132,4 @@ class WebhookDispatchService
         }
     }
 
-    protected function fallbackTextGeneration(SocialPost $post): array
-    {
-        $brand = $post->brand;
-
-        try {
-            $config = [
-                'topic' => $post->title ?? 'Social media post',
-                'tone' => $brand?->getTone() ?? 'professional',
-                'length' => 'medium',
-                'platforms' => ['facebook'],
-            ];
-
-            $result = $this->aiGenerationService->generate($config, $brand);
-
-            $caption = $result['facebook']['caption'] ?? $result['caption'] ?? null;
-            $title = $result['facebook']['title'] ?? $result['title'] ?? null;
-
-            if ($caption) {
-                return [
-                    'success' => true,
-                    'caption' => $caption,
-                    'title' => $title,
-                ];
-            }
-
-            return ['success' => false, 'error' => 'AI generation returned no content'];
-        } catch (\Throwable $e) {
-            Log::error('AI fallback text generation failed', [
-                'post_id' => $post->public_id,
-                'error' => $e->getMessage(),
-            ]);
-
-            return ['success' => false, 'error' => $e->getMessage()];
-        }
-    }
 }

@@ -63,6 +63,15 @@ class PostAutomationController extends Controller
         $result = $this->webhookService->generateText($post, $request->prompt);
 
         if ($result['success']) {
+            // No webhook configured - just return success (nothing to do)
+            if (!empty($result['skipped'])) {
+                return response()->json([
+                    'success' => true,
+                    'skipped' => true,
+                    'message' => $result['message'] ?? 'No text generation webhook configured',
+                ]);
+            }
+
             // Async mode: n8n trigger accepted the request, result will come via callback
             if (!empty($result['async'])) {
                 return response()->json([
@@ -103,6 +112,15 @@ class PostAutomationController extends Controller
         $result = $this->webhookService->generateImagePrompt($post);
 
         if ($result['success']) {
+            // No webhook configured - just return success (nothing to do)
+            if (!empty($result['skipped'])) {
+                return response()->json([
+                    'success' => true,
+                    'skipped' => true,
+                    'message' => $result['message'] ?? 'No image generation webhook configured',
+                ]);
+            }
+
             // Async mode: n8n trigger accepted the request, result will come via callback
             if (!empty($result['async'])) {
                 return response()->json([
@@ -149,6 +167,15 @@ class PostAutomationController extends Controller
         $result = $this->webhookService->publish($post);
 
         if ($result['success']) {
+            // No webhook configured - just return success (nothing to do)
+            if (!empty($result['skipped'])) {
+                return response()->json([
+                    'success' => true,
+                    'skipped' => true,
+                    'message' => $result['message'] ?? 'No publish webhook configured',
+                ]);
+            }
+
             // Async mode: n8n trigger accepted the request, result will come via callback
             if (!empty($result['async'])) {
                 return response()->json([
