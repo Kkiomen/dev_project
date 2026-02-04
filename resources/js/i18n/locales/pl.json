@@ -487,7 +487,139 @@
             "posts": "Posty",
             "calendar": "Kalendarz",
             "boards": "Tablice",
-            "automation": "Automatyzacja"
+            "automation": "Automatyzacja",
+            "n8n": "n8n (paczka)"
+        },
+        "n8n": {
+            "title": "Paczka n8n - Aisello",
+            "subtitle": "Oficjalna paczka community nodes dla n8n umożliwiająca integrację z Aisello.",
+            "packageInfo": "Paczka n8n-nodes-aisello zawiera 3 węzły z ponad 80 operacjami pokrywającymi posty, marki, generowanie treści AI, bazy danych i więcej.",
+            "overview": "Przegląd",
+            "overviewDescription": "Paczka n8n-nodes-aisello to zestaw community nodes dla platformy n8n, który pozwala na pełną integrację z API Aisello. Możesz automatyzować tworzenie treści, zarządzanie markami, publikowanie postów i operacje na bazie danych — wszystko bez pisania kodu.",
+            "resources": "zasobów",
+            "operations": "operacji",
+            "resource": "Zasób",
+            "installation": {
+                "title": "Instalacja",
+                "description": "Możesz zainstalować paczkę na trzy sposoby:",
+                "communityTitle": "Community Nodes (zalecane)",
+                "communityStep1": "W n8n przejdź do Settings > Community Nodes",
+                "communityStep2": "Kliknij Install a community node",
+                "communityStep3": "Wpisz n8n-nodes-aisello",
+                "communityStep4": "Zaakceptuj ostrzeżenie i zainstaluj",
+                "npmTitle": "Instalacja ręczna (npm)",
+                "npmDescription": "Zainstaluj paczkę w katalogu nodes n8n:",
+                "dockerDescription": "Jeśli n8n działa w Dockerze, zainstaluj paczkę wewnątrz kontenera:",
+                "restartNote": "Po instalacji zrestartuj n8n."
+            },
+            "credentials": {
+                "title": "Konfiguracja uwierzytelniania",
+                "description": "Aby węzły mogły komunikować się z API, musisz skonfigurować credentials w n8n:",
+                "step1": "Zaloguj się do Aisello i przejdź do Ustawienia > Tokeny API",
+                "step2": "Utwórz nowy token dostępu (Personal Access Token)",
+                "step3": "W n8n utwórz nowe credential typu Aisello API",
+                "step4": "Wklej token i opcjonalnie zmień URL API (domyślnie: https://aisello.com)",
+                "fieldsTitle": "Pola credential",
+                "tokenDescription": "Token Sanctum z ustawień Aisello",
+                "urlDescription": "Bazowy URL instancji Aisello (domyślnie: https://aisello.com)"
+            },
+            "aiselloNode": {
+                "title": "Węzeł Aisello",
+                "summary": "Główny węzeł do zarządzania automatyzacją marki osobistej.",
+                "description": "Główny węzeł pokrywający 14 zasobów: posty, marki, automatyzację, plany treści, kalendarz, tablice, media, powiadomienia i więcej. Wszystkie pola ID posiadają dynamiczne dropdown-y pobierające dane z API."
+            },
+            "databaseNode": {
+                "title": "Węzeł Aisello Database",
+                "summary": "Operacje na bazie danych typu Airtable z kaskadowymi dropdownami.",
+                "description": "Węzeł do operacji na bazie danych: bazy, tabele, pola, wiersze, komórki i załączniki. Dropdowny działają kaskadowo — wybierz bazę, a tabele załadują się automatycznie.",
+                "fieldTypes": "Typy pól"
+            },
+            "triggerNode": {
+                "title": "Węzeł Aisello Trigger",
+                "summary": "Webhook trigger odbierający callbacki z wynikami publikacji.",
+                "description": "Węzeł triggerowy (webhook), który odbiera callbacki z Aisello gdy posty zostaną opublikowane. Pozwala reagować na zdarzenia w czasie rzeczywistym.",
+                "step1": "Dodaj węzeł Aisello Trigger do workflow",
+                "step2": "Opcjonalnie ustaw Webhook Secret dla bezpieczeństwa",
+                "step3": "Skopiuj wygenerowany URL webhooka",
+                "step4": "Wklej URL w ustawieniach automatyzacji Aisello",
+                "secretTitle": "Webhook Secret",
+                "secretDescription": "Opcjonalnie możesz ustawić sekret, który będzie walidowany przez nagłówek X-Webhook-Secret. Jeśli sekret nie pasuje, webhook zwróci 401 Unauthorized."
+            },
+            "generationTriggers": {
+                "title": "Triggery generowania",
+                "description": "Specjalne węzły trigger do asynchronicznego generowania treści i publikacji. Pozwalają na tworzenie własnych workflow-ów z dowolnymi modelami AI.",
+                "webhookPath": "Ścieżka webhook",
+                "outputData": "Dane wyjściowe",
+                "asyncFlow": {
+                    "title": "Asynchroniczny przepływ danych",
+                    "aiselloBackend": "Aisello",
+                    "n8nTrigger": "n8n Trigger",
+                    "aiProcessing": "AI / Przetwarzanie",
+                    "aiselloRespond": "Aisello Respond",
+                    "description": "Trigger natychmiast zwraca HTTP 202 (Accepted), a workflow kontynuuje przetwarzanie w tle. Po zakończeniu węzeł Aisello Respond odsyła wyniki do callback_url."
+                },
+                "textTrigger": {
+                    "title": "Aisello Text Generation Trigger",
+                    "description": "Uruchamia workflow gdy Aisello żąda generowania tekstu dla posta. Połącz z węzłami AI (OpenAI, Claude) i zakończ węzłem Aisello Respond."
+                },
+                "imageTrigger": {
+                    "title": "Aisello Image Generation Trigger",
+                    "description": "Uruchamia workflow gdy Aisello żąda generowania obrazu. Połącz z węzłami AI (DALL-E, Stable Diffusion) i zakończ węzłem Aisello Respond."
+                },
+                "publishTrigger": {
+                    "title": "Aisello Publish Trigger",
+                    "description": "Uruchamia workflow gdy Aisello wysyła post do publikacji. Obsłuż publikację na własny sposób (API platformy, Zapier) i zakończ węzłem Aisello Respond."
+                },
+                "respondNode": {
+                    "title": "Aisello Respond",
+                    "description": "Węzeł do odsyłania wyników przetwarzania z powrotem do Aisello. Automatycznie wysyła dane do callback_url otrzymanego od triggera.",
+                    "responseTypes": "Typy odpowiedzi",
+                    "textFields": "Pola dla text_generation",
+                    "imageFields": "Pola dla image_generation",
+                    "publishFields": "Pola dla publish"
+                },
+                "setup": {
+                    "title": "Konfiguracja",
+                    "step1": "Utwórz workflow w n8n z odpowiednim triggerem (Text/Image/Publish)",
+                    "step2": "Dodaj węzły przetwarzania (np. OpenAI, DALL-E)",
+                    "step3": "Zakończ workflow węzłem Aisello Respond",
+                    "step4": "Skopiuj URL webhooka i wklej w ustawieniach automatyzacji marki (text_generation_url / image_generation_url / publish_url)"
+                },
+                "exampleWorkflow": {
+                    "title": "Przykładowy workflow",
+                    "description": "Prosty workflow generowania tekstu z OpenAI:"
+                }
+            },
+            "dropdowns": {
+                "title": "Dynamiczne dropdown-y",
+                "aiselloDescription": "Wszystkie pola ID (Brand, Post, Board, Approval Token) ładują opcje automatycznie z API. Możesz też używać wyrażeń (expressions) aby przekazywać ID dynamicznie z poprzednich węzłów.",
+                "cascadingTitle": "Kaskadowe dropdown-y",
+                "cascadingDescription": "W węźle Database dropdown-y działają kaskadowo — wybór bazy automatycznie ładuje tabele, a wybór tabeli ładuje pola:"
+            },
+            "examples": {
+                "title": "Przykłady użycia",
+                "aiGenerate": {
+                    "title": "Generowanie posta z AI",
+                    "step1": "Dodaj węzeł Aisello, ustaw Resource: Post, Operation: AI Generate",
+                    "step2": "Wybierz markę z dropdown-a",
+                    "step3": "Wpisz prompt (np. \"Napisz post na LinkedIn o produktywności\")",
+                    "step4": "Opcjonalnie ustaw platformę, ton i język"
+                },
+                "pipeline": {
+                    "title": "Automatyczny pipeline treści",
+                    "description": "Przykład pełnego pipeline-u automatyzacji treści:"
+                },
+                "database": {
+                    "title": "Tworzenie wiersza w bazie",
+                    "step1": "Dodaj węzeł Aisello Database, ustaw Resource: Row, Operation: Create",
+                    "step2": "Wybierz bazę z dropdown-a — tabele załadują się automatycznie",
+                    "step3": "Wpisz dane komórek jako JSON:"
+                }
+            },
+            "expressionsTip": {
+                "title": "Wyrażenia (Expressions)",
+                "description": "Wszystkie dropdown-y wspierają tryb wyrażeń. Możesz przekazywać ID dynamicznie z poprzednich węzłów zamiast wybierać z listy — przydatne w pętlach i dynamicznych workflow-ach."
+            }
         },
         "general": {
             "title": "O Aisello",

@@ -1,0 +1,256 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.AiselloRespond = void 0;
+const n8n_workflow_1 = require("n8n-workflow");
+class AiselloRespond {
+    constructor() {
+        this.description = {
+            displayName: 'Aisello Respond',
+            name: 'aiselloRespond',
+            icon: 'file:aisello.svg',
+            group: ['transform'],
+            version: 1,
+            subtitle: '={{ $parameter["responseType"] }}',
+            description: 'Sends processing results back to Aisello via the callback URL. Use at the end of workflows started by Aisello triggers.',
+            defaults: { name: 'Aisello Respond' },
+            inputs: ['main'],
+            outputs: ['main'],
+            credentials: [],
+            properties: [
+                {
+                    displayName: 'Response Type',
+                    name: 'responseType',
+                    type: 'options',
+                    options: [
+                        {
+                            name: 'Text Generation',
+                            value: 'text_generation',
+                            description: 'Return generated caption and/or title',
+                        },
+                        {
+                            name: 'Image Generation',
+                            value: 'image_generation',
+                            description: 'Return image prompt and/or generated image',
+                        },
+                        {
+                            name: 'Publish',
+                            value: 'publish',
+                            description: 'Return publishing result with platform and external ID',
+                        },
+                    ],
+                    default: 'text_generation',
+                    description: 'Type of response to send back to Aisello',
+                },
+                // Text generation fields
+                {
+                    displayName: 'Caption',
+                    name: 'caption',
+                    type: 'string',
+                    typeOptions: {
+                        rows: 4,
+                    },
+                    default: '',
+                    description: 'Generated caption/content for the post',
+                    displayOptions: {
+                        show: {
+                            responseType: ['text_generation'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Title',
+                    name: 'title',
+                    type: 'string',
+                    default: '',
+                    description: 'Generated title for the post (optional)',
+                    displayOptions: {
+                        show: {
+                            responseType: ['text_generation'],
+                        },
+                    },
+                },
+                // Image generation fields
+                {
+                    displayName: 'Image Prompt',
+                    name: 'imagePrompt',
+                    type: 'string',
+                    typeOptions: {
+                        rows: 2,
+                    },
+                    default: '',
+                    description: 'Image generation prompt to save on the post',
+                    displayOptions: {
+                        show: {
+                            responseType: ['image_generation'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Image Base64',
+                    name: 'imageBase64',
+                    type: 'string',
+                    default: '',
+                    description: 'Base64-encoded image data (with or without data URI prefix). The image will be saved as post media.',
+                    displayOptions: {
+                        show: {
+                            responseType: ['image_generation'],
+                        },
+                    },
+                },
+                // Publish fields
+                {
+                    displayName: 'Platform',
+                    name: 'platform',
+                    type: 'options',
+                    options: [
+                        { name: 'Facebook', value: 'facebook' },
+                        { name: 'Instagram', value: 'instagram' },
+                        { name: 'YouTube', value: 'youtube' },
+                        { name: 'TikTok', value: 'tiktok' },
+                        { name: 'LinkedIn', value: 'linkedin' },
+                        { name: 'Twitter/X', value: 'twitter' },
+                        { name: 'Other', value: 'other' },
+                    ],
+                    default: 'facebook',
+                    description: 'Platform where the post was published',
+                    displayOptions: {
+                        show: {
+                            responseType: ['publish'],
+                        },
+                    },
+                },
+                {
+                    displayName: 'External ID',
+                    name: 'externalId',
+                    type: 'string',
+                    default: '',
+                    description: 'Platform-specific post ID returned after publishing',
+                    displayOptions: {
+                        show: {
+                            responseType: ['publish'],
+                        },
+                    },
+                },
+                // Common fields
+                {
+                    displayName: 'Success',
+                    name: 'success',
+                    type: 'boolean',
+                    default: true,
+                    description: 'Whether the operation was successful',
+                },
+                {
+                    displayName: 'Error Message',
+                    name: 'errorMessage',
+                    type: 'string',
+                    default: '',
+                    description: 'Error message if the operation failed',
+                    displayOptions: {
+                        show: {
+                            success: [false],
+                        },
+                    },
+                },
+                {
+                    displayName: 'Webhook Secret',
+                    name: 'webhookSecret',
+                    type: 'string',
+                    typeOptions: { password: true },
+                    default: '',
+                    description: 'Optional secret to send in X-Webhook-Secret header. Should match Aisello configuration.',
+                },
+            ],
+        };
+    }
+    async execute() {
+        const items = this.getInputData();
+        const returnData = [];
+        for (let i = 0; i < items.length; i++) {
+            try {
+                const responseType = this.getNodeParameter('responseType', i);
+                const success = this.getNodeParameter('success', i);
+                const webhookSecret = this.getNodeParameter('webhookSecret', i, '');
+                // Get callback_url from input data
+                const inputData = items[i].json;
+                const callbackUrl = inputData.callback_url;
+                const postId = inputData.post_id;
+                if (!callbackUrl) {
+                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'No callback_url found in input data. This node must be used after an Aisello trigger.', { itemIndex: i });
+                }
+                if (!postId) {
+                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'No post_id found in input data. This node must be used after an Aisello trigger.', { itemIndex: i });
+                }
+                // Build payload based on response type
+                const payload = {
+                    post_id: postId,
+                    type: responseType,
+                    success,
+                };
+                if (!success) {
+                    payload.error = this.getNodeParameter('errorMessage', i, '');
+                }
+                if (responseType === 'text_generation') {
+                    const caption = this.getNodeParameter('caption', i, '');
+                    const title = this.getNodeParameter('title', i, '');
+                    if (caption)
+                        payload.caption = caption;
+                    if (title)
+                        payload.title = title;
+                }
+                else if (responseType === 'image_generation') {
+                    const imagePrompt = this.getNodeParameter('imagePrompt', i, '');
+                    const imageBase64 = this.getNodeParameter('imageBase64', i, '');
+                    if (imagePrompt)
+                        payload.image_prompt = imagePrompt;
+                    if (imageBase64)
+                        payload.image_base64 = imageBase64;
+                }
+                else if (responseType === 'publish') {
+                    const platform = this.getNodeParameter('platform', i);
+                    const externalId = this.getNodeParameter('externalId', i, '');
+                    payload.platform = platform;
+                    if (externalId)
+                        payload.external_id = externalId;
+                }
+                // Send callback request
+                const headers = {
+                    'Content-Type': 'application/json',
+                };
+                if (webhookSecret) {
+                    headers['X-Webhook-Secret'] = webhookSecret;
+                }
+                const response = await this.helpers.httpRequest({
+                    method: 'POST',
+                    url: callbackUrl,
+                    body: payload,
+                    headers,
+                    json: true,
+                });
+                returnData.push({
+                    json: {
+                        success: true,
+                        callback_url: callbackUrl,
+                        payload,
+                        response,
+                    },
+                    pairedItem: { item: i },
+                });
+            }
+            catch (error) {
+                if (this.continueOnFail()) {
+                    returnData.push({
+                        json: {
+                            success: false,
+                            error: error.message,
+                        },
+                        pairedItem: { item: i },
+                    });
+                    continue;
+                }
+                throw error;
+            }
+        }
+        return [returnData];
+    }
+}
+exports.AiselloRespond = AiselloRespond;

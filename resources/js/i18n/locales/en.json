@@ -486,7 +486,139 @@
             "posts": "Posts",
             "calendar": "Calendar",
             "boards": "Boards",
-            "automation": "Automation"
+            "automation": "Automation",
+            "n8n": "n8n (package)"
+        },
+        "n8n": {
+            "title": "n8n Package - Aisello",
+            "subtitle": "Official community nodes package for n8n enabling integration with Aisello.",
+            "packageInfo": "The n8n-nodes-aisello package contains 3 nodes with over 80 operations covering posts, brands, AI content generation, databases and more.",
+            "overview": "Overview",
+            "overviewDescription": "n8n-nodes-aisello is a community nodes package for the n8n platform that provides full integration with the Aisello API. You can automate content creation, brand management, post publishing and database operations — all without writing code.",
+            "resources": "resources",
+            "operations": "operations",
+            "resource": "Resource",
+            "installation": {
+                "title": "Installation",
+                "description": "You can install the package in three ways:",
+                "communityTitle": "Community Nodes (recommended)",
+                "communityStep1": "In n8n, go to Settings > Community Nodes",
+                "communityStep2": "Click Install a community node",
+                "communityStep3": "Enter n8n-nodes-aisello",
+                "communityStep4": "Accept the warning and install",
+                "npmTitle": "Manual installation (npm)",
+                "npmDescription": "Install the package in the n8n nodes directory:",
+                "dockerDescription": "If n8n runs in Docker, install the package inside the container:",
+                "restartNote": "Restart n8n after installation."
+            },
+            "credentials": {
+                "title": "Credentials setup",
+                "description": "To allow nodes to communicate with the API, you need to configure credentials in n8n:",
+                "step1": "Log into Aisello and go to Settings > API Tokens",
+                "step2": "Create a new Personal Access Token",
+                "step3": "In n8n, create a new Aisello API credential",
+                "step4": "Paste the token and optionally change the API URL (default: https://aisello.com)",
+                "fieldsTitle": "Credential fields",
+                "tokenDescription": "Sanctum token from Aisello settings",
+                "urlDescription": "Base URL of the Aisello instance (default: https://aisello.com)"
+            },
+            "aiselloNode": {
+                "title": "Aisello Node",
+                "summary": "Main node for managing personal brand automation.",
+                "description": "Main node covering 14 resources: posts, brands, automation, content plans, calendar, boards, media, notifications and more. All ID fields have dynamic dropdowns that fetch data from the API."
+            },
+            "databaseNode": {
+                "title": "Aisello Database Node",
+                "summary": "Airtable-like database operations with cascading dropdowns.",
+                "description": "Database operations node: bases, tables, fields, rows, cells and attachments. Dropdowns work in a cascading fashion — select a base and the tables will load automatically.",
+                "fieldTypes": "Field types"
+            },
+            "triggerNode": {
+                "title": "Aisello Trigger Node",
+                "summary": "Webhook trigger receiving publishing result callbacks.",
+                "description": "A trigger (webhook) node that receives callbacks from Aisello when posts are published. Allows reacting to events in real time.",
+                "step1": "Add an Aisello Trigger node to your workflow",
+                "step2": "Optionally set a Webhook Secret for security",
+                "step3": "Copy the generated webhook URL",
+                "step4": "Paste the URL in Aisello automation settings",
+                "secretTitle": "Webhook Secret",
+                "secretDescription": "You can optionally set a secret that will be validated via the X-Webhook-Secret header. If the secret doesn't match, the webhook returns 401 Unauthorized."
+            },
+            "generationTriggers": {
+                "title": "Generation Triggers",
+                "description": "Special trigger nodes for asynchronous content generation and publishing. Allows building custom workflows with any AI models.",
+                "webhookPath": "Webhook path",
+                "outputData": "Output data",
+                "asyncFlow": {
+                    "title": "Async data flow",
+                    "aiselloBackend": "Aisello",
+                    "n8nTrigger": "n8n Trigger",
+                    "aiProcessing": "AI / Processing",
+                    "aiselloRespond": "Aisello Respond",
+                    "description": "The trigger immediately returns HTTP 202 (Accepted), and the workflow continues processing in the background. When finished, the Aisello Respond node sends results back to callback_url."
+                },
+                "textTrigger": {
+                    "title": "Aisello Text Generation Trigger",
+                    "description": "Starts the workflow when Aisello requests text generation for a post. Connect with AI nodes (OpenAI, Claude) and finish with Aisello Respond node."
+                },
+                "imageTrigger": {
+                    "title": "Aisello Image Generation Trigger",
+                    "description": "Starts the workflow when Aisello requests image generation. Connect with AI nodes (DALL-E, Stable Diffusion) and finish with Aisello Respond node."
+                },
+                "publishTrigger": {
+                    "title": "Aisello Publish Trigger",
+                    "description": "Starts the workflow when Aisello sends a post for publishing. Handle publishing your own way (platform API, Zapier) and finish with Aisello Respond node."
+                },
+                "respondNode": {
+                    "title": "Aisello Respond",
+                    "description": "Node for sending processing results back to Aisello. Automatically posts data to the callback_url received from the trigger.",
+                    "responseTypes": "Response types",
+                    "textFields": "Fields for text_generation",
+                    "imageFields": "Fields for image_generation",
+                    "publishFields": "Fields for publish"
+                },
+                "setup": {
+                    "title": "Setup",
+                    "step1": "Create a workflow in n8n with the appropriate trigger (Text/Image/Publish)",
+                    "step2": "Add processing nodes (e.g. OpenAI, DALL-E)",
+                    "step3": "End the workflow with Aisello Respond node",
+                    "step4": "Copy the webhook URL and paste it in brand automation settings (text_generation_url / image_generation_url / publish_url)"
+                },
+                "exampleWorkflow": {
+                    "title": "Example workflow",
+                    "description": "Simple text generation workflow with OpenAI:"
+                }
+            },
+            "dropdowns": {
+                "title": "Dynamic dropdowns",
+                "aiselloDescription": "All ID fields (Brand, Post, Board, Approval Token) load options automatically from the API. You can also use expressions to pass IDs dynamically from previous nodes.",
+                "cascadingTitle": "Cascading dropdowns",
+                "cascadingDescription": "In the Database node, dropdowns work in a cascading fashion — selecting a base automatically loads tables, and selecting a table loads fields:"
+            },
+            "examples": {
+                "title": "Usage examples",
+                "aiGenerate": {
+                    "title": "Generate a post with AI",
+                    "step1": "Add an Aisello node, set Resource: Post, Operation: AI Generate",
+                    "step2": "Select a brand from the dropdown",
+                    "step3": "Enter a prompt (e.g. \"Write a LinkedIn post about productivity\")",
+                    "step4": "Optionally set platform, tone and language"
+                },
+                "pipeline": {
+                    "title": "Automated content pipeline",
+                    "description": "Example of a full content automation pipeline:"
+                },
+                "database": {
+                    "title": "Create a database row",
+                    "step1": "Add an Aisello Database node, set Resource: Row, Operation: Create",
+                    "step2": "Select a base from the dropdown — tables will load automatically",
+                    "step3": "Enter cell data as JSON:"
+                }
+            },
+            "expressionsTip": {
+                "title": "Expressions",
+                "description": "All dropdowns support expression mode. You can pass IDs dynamically from previous nodes instead of selecting from the list — useful for loops and dynamic workflows."
+            }
         },
         "general": {
             "title": "About Aisello",

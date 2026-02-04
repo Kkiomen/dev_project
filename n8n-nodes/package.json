@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-aisello",
-	"version": "1.0.1",
+	"version": "1.0.2",
 	"description": "n8n community node for Aisello - personal brand automation platform",
 	"keywords": [
 		"n8n",
@@ -28,7 +28,11 @@
 		"nodes": [
 			"dist/nodes/Aisello/Aisello.node.js",
 			"dist/nodes/AiselloDatabase/AiselloDatabase.node.js",
-			"dist/nodes/AiselloTrigger/AiselloTrigger.node.js"
+			"dist/nodes/AiselloTrigger/AiselloTrigger.node.js",
+			"dist/nodes/AiselloTextGenerationTrigger/AiselloTextGenerationTrigger.node.js",
+			"dist/nodes/AiselloImageGenerationTrigger/AiselloImageGenerationTrigger.node.js",
+			"dist/nodes/AiselloPublishTrigger/AiselloPublishTrigger.node.js",
+			"dist/nodes/AiselloRespond/AiselloRespond.node.js"
 		]
 	},
 	"devDependencies": {

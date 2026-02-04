@@ -17,6 +17,7 @@ const tabs = computed(() => [
     { id: 'calendar', label: t('docs.tabs.calendar') },
     { id: 'boards', label: t('docs.tabs.boards') },
     { id: 'automation', label: t('docs.tabs.automation') },
+    { id: 'n8n', label: t('docs.tabs.n8n') },
 ]);
 
 // Sidebar sections for each tab
@@ -76,6 +77,17 @@ const sidebarSections = computed(() => {
             { id: 'automation-endpoints', label: 'Endpoints' },
             { id: 'n8n-integration', label: t('docs.automationApi.n8nExample.title') },
             { id: 'automation-curl', label: t('docs.automationApi.curlExamples') },
+        ];
+    } else if (currentTab.value === 'n8n') {
+        return [
+            { id: 'n8n-overview', label: t('docs.n8n.overview') },
+            { id: 'n8n-installation', label: t('docs.n8n.installation.title') },
+            { id: 'n8n-credentials', label: t('docs.n8n.credentials.title') },
+            { id: 'n8n-aisello-node', label: t('docs.n8n.aiselloNode.title') },
+            { id: 'n8n-database-node', label: t('docs.n8n.databaseNode.title') },
+            { id: 'n8n-trigger-node', label: t('docs.n8n.triggerNode.title') },
+            { id: 'n8n-generation-triggers', label: t('docs.n8n.generationTriggers.title') },
+            { id: 'n8n-examples', label: t('docs.n8n.examples.title') },
         ];
     }
     return [];
@@ -3879,6 +3891,388 @@ X-RateLimit-Reset: 1705764000`" />
                     <div class="bg-green-50 border border-green-200 rounded-lg p-4 mt-8">
                         <h4 class="font-medium text-green-800 mb-2">{{ t('docs.boards.dragDropTip') }}</h4>
                         <p class="text-green-700 text-sm">{{ t('docs.boards.dragDropDescription') }}</p>
+                    </div>
+                </template>
+
+                <!-- ===== N8N TAB ===== -->
+                <template v-else-if="currentTab === 'n8n'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.n8n.title') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.n8n.subtitle') }}</p>
+
+                    <!-- Package info badge -->
+                    <div class="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-8">
+                        <div class="flex items-center gap-3 mb-2">
+                            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-semibold">npm</span>
+                            <code class="text-orange-800 font-mono text-sm">n8n-nodes-aisello</code>
+                        </div>
+                        <p class="text-orange-700 text-sm">{{ t('docs.n8n.packageInfo') }}</p>
+                    </div>
+
+                    <!-- ========== OVERVIEW ========== -->
+                    <h2 id="n8n-overview" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.overview') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.n8n.overviewDescription') }}</p>
+
+                    <!-- 3 Nodes summary -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-blue-900 mb-2">Aisello</h4>
+                            <p class="text-blue-700 text-sm mb-2">{{ t('docs.n8n.aiselloNode.summary') }}</p>
+                            <span class="text-blue-500 text-xs">14 {{ t('docs.n8n.resources') }} &middot; 62 {{ t('docs.n8n.operations') }}</span>
+                        </div>
+                        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-purple-900 mb-2">Aisello Database</h4>
+                            <p class="text-purple-700 text-sm mb-2">{{ t('docs.n8n.databaseNode.summary') }}</p>
+                            <span class="text-purple-500 text-xs">6 {{ t('docs.n8n.resources') }} &middot; 31 {{ t('docs.n8n.operations') }}</span>
+                        </div>
+                        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h4 class="font-semibold text-green-900 mb-2">Aisello Trigger</h4>
+                            <p class="text-green-700 text-sm mb-2">{{ t('docs.n8n.triggerNode.summary') }}</p>
+                            <span class="text-green-500 text-xs">Webhook</span>
+                        </div>
+                    </div>
+
+                    <!-- ========== INSTALLATION ========== -->
+                    <h2 id="n8n-installation" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.installation.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.n8n.installation.description') }}</p>
+
+                    <!-- Method 1: Community Nodes -->
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ t('docs.n8n.installation.communityTitle') }}</h3>
+                    <ol class="list-decimal list-inside text-gray-600 space-y-2 mb-6">
+                        <li>{{ t('docs.n8n.installation.communityStep1') }}</li>
+                        <li>{{ t('docs.n8n.installation.communityStep2') }}</li>
+                        <li>{{ t('docs.n8n.installation.communityStep3') }}</li>
+                        <li>{{ t('docs.n8n.installation.communityStep4') }}</li>
+                    </ol>
+
+                    <!-- Method 2: npm -->
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ t('docs.n8n.installation.npmTitle') }}</h3>
+                    <p class="text-gray-600 mb-3">{{ t('docs.n8n.installation.npmDescription') }}</p>
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <DocsCodeBlock language="bash" code="cd ~/.n8n/nodes
+npm install n8n-nodes-aisello" />
+                    </div>
+                    <p class="text-gray-500 text-sm mb-6">{{ t('docs.n8n.installation.restartNote') }}</p>
+
+                    <!-- Method 3: Docker -->
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">Docker</h3>
+                    <p class="text-gray-600 mb-3">{{ t('docs.n8n.installation.dockerDescription') }}</p>
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <DocsCodeBlock language="bash" code="docker exec -it <n8n-container> sh
+cd /home/node/.n8n/nodes
+npm install n8n-nodes-aisello" />
+                    </div>
+
+                    <!-- ========== CREDENTIALS ========== -->
+                    <h2 id="n8n-credentials" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.credentials.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.n8n.credentials.description') }}</p>
+
+                    <ol class="list-decimal list-inside text-gray-600 space-y-3 mb-6">
+                        <li>{{ t('docs.n8n.credentials.step1') }}</li>
+                        <li>{{ t('docs.n8n.credentials.step2') }}</li>
+                        <li>{{ t('docs.n8n.credentials.step3') }}</li>
+                        <li>{{ t('docs.n8n.credentials.step4') }}</li>
+                    </ol>
+
+                    <div class="bg-gray-50 border rounded-lg p-4 mb-6">
+                        <h4 class="font-medium mb-3">{{ t('docs.n8n.credentials.fieldsTitle') }}</h4>
+                        <table class="w-full text-sm">
+                            <tr><td class="font-mono text-blue-600 py-1">API Token</td><td class="text-red-500">{{ t('docs.required') }}</td><td class="text-gray-600">{{ t('docs.n8n.credentials.tokenDescription') }}</td></tr>
+                            <tr><td class="font-mono text-blue-600 py-1">API URL</td><td class="text-gray-400">{{ t('docs.optional') }}</td><td class="text-gray-600">{{ t('docs.n8n.credentials.urlDescription') }}</td></tr>
+                        </table>
+                    </div>
+
+                    <!-- ========== AISELLO NODE ========== -->
+                    <h2 id="n8n-aisello-node" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.aiselloNode.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.n8n.aiselloNode.description') }}</p>
+
+                    <div class="overflow-x-auto mb-8">
+                        <table class="w-full text-sm border border-gray-200 rounded-lg">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="text-left px-4 py-2 font-medium text-gray-700">{{ t('docs.n8n.resource') }}</th>
+                                    <th class="text-left px-4 py-2 font-medium text-gray-700">{{ t('docs.n8n.operations') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr><td class="px-4 py-2 font-medium">Post</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete, Duplicate, Publish, Approve, Reject, Reschedule, AI Generate, AI Modify</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Brand</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete, Set Current</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Brand Automation</td><td class="px-4 py-2 text-gray-600">Get Stats, Enable, Disable, Trigger, Extend Queue, Update Settings</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Post Automation</td><td class="px-4 py-2 text-gray-600">Get Many, Generate Text, Generate Image Prompt, Bulk Generate Text, Bulk Generate Image, Webhook Publish</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Content Plan</td><td class="px-4 py-2 text-gray-600">Generate Plan, Generate Content, Regenerate Content</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Platform Post</td><td class="px-4 py-2 text-gray-600">Update, Sync, Toggle</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Post Media</td><td class="px-4 py-2 text-gray-600">Get Many, Upload, Delete, Reorder</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Calendar Event</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete, Reschedule</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Board</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Board Column</td><td class="px-4 py-2 text-gray-600">Create, Update, Delete, Reorder</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Board Card</td><td class="px-4 py-2 text-gray-600">Create, Update, Delete, Move, Reorder</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Approval Token</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Delete, Regenerate, Get Stats</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Notification</td><td class="px-4 py-2 text-gray-600">Get Many, Mark Read, Mark All Read, Get Unread Count</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Stock Photo</td><td class="px-4 py-2 text-gray-600">Search, Get Featured</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-8">
+                        <h4 class="font-medium text-blue-800 mb-2">{{ t('docs.n8n.dropdowns.title') }}</h4>
+                        <p class="text-blue-700 text-sm">{{ t('docs.n8n.dropdowns.aiselloDescription') }}</p>
+                    </div>
+
+                    <!-- ========== DATABASE NODE ========== -->
+                    <h2 id="n8n-database-node" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.databaseNode.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.n8n.databaseNode.description') }}</p>
+
+                    <div class="overflow-x-auto mb-8">
+                        <table class="w-full text-sm border border-gray-200 rounded-lg">
+                            <thead class="bg-gray-50">
+                                <tr>
+                                    <th class="text-left px-4 py-2 font-medium text-gray-700">{{ t('docs.n8n.resource') }}</th>
+                                    <th class="text-left px-4 py-2 font-medium text-gray-700">{{ t('docs.n8n.operations') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                <tr><td class="px-4 py-2 font-medium">Base</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Table</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete, Reorder</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Field</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete, Reorder, Add Choice</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Row</td><td class="px-4 py-2 text-gray-600">Get Many, Get, Create, Update, Delete, Bulk Create, Bulk Delete, Reorder</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Cell</td><td class="px-4 py-2 text-gray-600">Update, Bulk Update</td></tr>
+                                <tr><td class="px-4 py-2 font-medium">Attachment</td><td class="px-4 py-2 text-gray-600">Upload, Delete, Reorder</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="bg-purple-50 border border-purple-200 rounded-lg p-4 mb-8">
+                        <h4 class="font-medium text-purple-800 mb-2">{{ t('docs.n8n.dropdowns.cascadingTitle') }}</h4>
+                        <p class="text-purple-700 text-sm mb-2">{{ t('docs.n8n.dropdowns.cascadingDescription') }}</p>
+                        <div class="flex items-center gap-2 text-purple-600 text-sm font-mono">
+                            <span class="bg-purple-100 px-2 py-1 rounded">Base</span>
+                            <span>&rarr;</span>
+                            <span class="bg-purple-100 px-2 py-1 rounded">Table</span>
+                            <span>&rarr;</span>
+                            <span class="bg-purple-100 px-2 py-1 rounded">Field</span>
+                        </div>
+                    </div>
+
+                    <!-- Field types -->
+                    <h3 class="text-lg font-semibold text-gray-800 mb-3">{{ t('docs.n8n.databaseNode.fieldTypes') }}</h3>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-8 text-sm">
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">text</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">long_text</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">number</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">date</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">checkbox</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">select</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">multi_select</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">email</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">phone</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">url</code></div>
+                        <div><code class="bg-gray-100 px-2 py-1 rounded">attachment</code></div>
+                    </div>
+
+                    <!-- ========== TRIGGER NODE ========== -->
+                    <h2 id="n8n-trigger-node" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.triggerNode.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.n8n.triggerNode.description') }}</p>
+
+                    <ol class="list-decimal list-inside text-gray-600 space-y-3 mb-6">
+                        <li>{{ t('docs.n8n.triggerNode.step1') }}</li>
+                        <li>{{ t('docs.n8n.triggerNode.step2') }}</li>
+                        <li>{{ t('docs.n8n.triggerNode.step3') }}</li>
+                        <li>{{ t('docs.n8n.triggerNode.step4') }}</li>
+                    </ol>
+
+                    <div class="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
+                        <h4 class="font-medium text-amber-800 mb-2">{{ t('docs.n8n.triggerNode.secretTitle') }}</h4>
+                        <p class="text-amber-700 text-sm">{{ t('docs.n8n.triggerNode.secretDescription') }}</p>
+                    </div>
+
+                    <!-- ========== GENERATION TRIGGERS ========== -->
+                    <h2 id="n8n-generation-triggers" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.generationTriggers.title') }}</h2>
+                    <p class="text-gray-600 mb-6">{{ t('docs.n8n.generationTriggers.description') }}</p>
+
+                    <!-- Async Flow Diagram -->
+                    <div class="bg-gray-50 border rounded-lg p-6 mb-8">
+                        <h3 class="font-semibold text-gray-800 mb-4">{{ t('docs.n8n.generationTriggers.asyncFlow.title') }}</h3>
+                        <div class="flex flex-wrap items-center gap-2 text-sm font-mono mb-4">
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded">{{ t('docs.n8n.generationTriggers.asyncFlow.aiselloBackend') }}</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-green-100 text-green-700 px-3 py-1 rounded">{{ t('docs.n8n.generationTriggers.asyncFlow.n8nTrigger') }}</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded">{{ t('docs.n8n.generationTriggers.asyncFlow.aiProcessing') }}</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded">{{ t('docs.n8n.generationTriggers.asyncFlow.aiselloRespond') }}</span>
+                        </div>
+                        <p class="text-gray-600 text-sm">{{ t('docs.n8n.generationTriggers.asyncFlow.description') }}</p>
+                    </div>
+
+                    <!-- Text Generation Trigger -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">TRIGGER</span>
+                            {{ t('docs.n8n.generationTriggers.textTrigger.title') }}
+                        </h3>
+                        <p class="text-gray-600 mb-4">{{ t('docs.n8n.generationTriggers.textTrigger.description') }}</p>
+                        <div class="text-sm text-gray-500 mb-3">
+                            <strong>{{ t('docs.n8n.generationTriggers.webhookPath') }}:</strong> <code class="bg-gray-100 px-2 py-1 rounded">/webhook/aisello-text-generation</code>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <strong>{{ t('docs.n8n.generationTriggers.outputData') }}:</strong>
+                            <code class="bg-gray-100 px-2 py-1 rounded ml-1">post_id</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">brand_id</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">title</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">main_caption</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">brand_context</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">prompt</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">callback_url</code>
+                        </div>
+                    </div>
+
+                    <!-- Image Generation Trigger -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">TRIGGER</span>
+                            {{ t('docs.n8n.generationTriggers.imageTrigger.title') }}
+                        </h3>
+                        <p class="text-gray-600 mb-4">{{ t('docs.n8n.generationTriggers.imageTrigger.description') }}</p>
+                        <div class="text-sm text-gray-500 mb-3">
+                            <strong>{{ t('docs.n8n.generationTriggers.webhookPath') }}:</strong> <code class="bg-gray-100 px-2 py-1 rounded">/webhook/aisello-image-generation</code>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <strong>{{ t('docs.n8n.generationTriggers.outputData') }}:</strong>
+                            <code class="bg-gray-100 px-2 py-1 rounded ml-1">post_id</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">brand_id</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">main_caption</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">image_prompt</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">brand_context</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">callback_url</code>
+                        </div>
+                    </div>
+
+                    <!-- Publish Trigger -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="bg-blue-500 text-white px-2 py-0.5 rounded text-xs">TRIGGER</span>
+                            {{ t('docs.n8n.generationTriggers.publishTrigger.title') }}
+                        </h3>
+                        <p class="text-gray-600 mb-4">{{ t('docs.n8n.generationTriggers.publishTrigger.description') }}</p>
+                        <div class="text-sm text-gray-500 mb-3">
+                            <strong>{{ t('docs.n8n.generationTriggers.webhookPath') }}:</strong> <code class="bg-gray-100 px-2 py-1 rounded">/webhook/aisello-publish</code>
+                        </div>
+                        <div class="text-sm text-gray-600">
+                            <strong>{{ t('docs.n8n.generationTriggers.outputData') }}:</strong>
+                            <code class="bg-gray-100 px-2 py-1 rounded ml-1">post_id</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">brand_id</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">title</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">main_caption</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">scheduled_at</code>,
+                            <code class="bg-gray-100 px-2 py-1 rounded">callback_url</code>
+                        </div>
+                    </div>
+
+                    <!-- Aisello Respond Node -->
+                    <div class="bg-white border border-gray-200 rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3 flex items-center gap-2">
+                            <span class="bg-green-500 text-white px-2 py-0.5 rounded text-xs">NODE</span>
+                            {{ t('docs.n8n.generationTriggers.respondNode.title') }}
+                        </h3>
+                        <p class="text-gray-600 mb-4">{{ t('docs.n8n.generationTriggers.respondNode.description') }}</p>
+                        <div class="text-sm text-gray-600 space-y-2">
+                            <div>
+                                <strong>{{ t('docs.n8n.generationTriggers.respondNode.responseTypes') }}:</strong>
+                                <code class="bg-gray-100 px-2 py-1 rounded ml-1">text_generation</code>,
+                                <code class="bg-gray-100 px-2 py-1 rounded">image_generation</code>,
+                                <code class="bg-gray-100 px-2 py-1 rounded">publish</code>
+                            </div>
+                            <div>
+                                <strong>{{ t('docs.n8n.generationTriggers.respondNode.textFields') }}:</strong>
+                                <code class="bg-gray-100 px-2 py-1 rounded ml-1">caption</code>,
+                                <code class="bg-gray-100 px-2 py-1 rounded">title</code>
+                            </div>
+                            <div>
+                                <strong>{{ t('docs.n8n.generationTriggers.respondNode.imageFields') }}:</strong>
+                                <code class="bg-gray-100 px-2 py-1 rounded ml-1">image_prompt</code>,
+                                <code class="bg-gray-100 px-2 py-1 rounded">image_base64</code>
+                            </div>
+                            <div>
+                                <strong>{{ t('docs.n8n.generationTriggers.respondNode.publishFields') }}:</strong>
+                                <code class="bg-gray-100 px-2 py-1 rounded ml-1">platform</code>,
+                                <code class="bg-gray-100 px-2 py-1 rounded">external_id</code>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Setup Instructions -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <h4 class="font-medium text-blue-800 mb-2">{{ t('docs.n8n.generationTriggers.setup.title') }}</h4>
+                        <ol class="list-decimal list-inside text-blue-700 text-sm space-y-2">
+                            <li>{{ t('docs.n8n.generationTriggers.setup.step1') }}</li>
+                            <li>{{ t('docs.n8n.generationTriggers.setup.step2') }}</li>
+                            <li>{{ t('docs.n8n.generationTriggers.setup.step3') }}</li>
+                            <li>{{ t('docs.n8n.generationTriggers.setup.step4') }}</li>
+                        </ol>
+                    </div>
+
+                    <!-- Example Workflow -->
+                    <div class="bg-gray-50 border rounded-lg p-6 mb-8">
+                        <h3 class="font-semibold text-gray-800 mb-3">{{ t('docs.n8n.generationTriggers.exampleWorkflow.title') }}</h3>
+                        <p class="text-gray-600 mb-4">{{ t('docs.n8n.generationTriggers.exampleWorkflow.description') }}</p>
+                        <div class="flex flex-wrap items-center gap-2 text-sm font-mono">
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded">Text Generation Trigger</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-purple-100 text-purple-700 px-3 py-1 rounded">OpenAI</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-orange-100 text-orange-700 px-3 py-1 rounded">Aisello Respond</span>
+                        </div>
+                    </div>
+
+                    <!-- ========== EXAMPLES ========== -->
+                    <h2 id="n8n-examples" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.n8n.examples.title') }}</h2>
+
+                    <!-- Example 1: AI Post Generation -->
+                    <div class="bg-gray-50 border rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3">{{ t('docs.n8n.examples.aiGenerate.title') }}</h3>
+                        <ol class="list-decimal list-inside text-gray-600 space-y-2 mb-4">
+                            <li>{{ t('docs.n8n.examples.aiGenerate.step1') }}</li>
+                            <li>{{ t('docs.n8n.examples.aiGenerate.step2') }}</li>
+                            <li>{{ t('docs.n8n.examples.aiGenerate.step3') }}</li>
+                            <li>{{ t('docs.n8n.examples.aiGenerate.step4') }}</li>
+                        </ol>
+                    </div>
+
+                    <!-- Example 2: Content Pipeline -->
+                    <div class="bg-gray-50 border rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3">{{ t('docs.n8n.examples.pipeline.title') }}</h3>
+                        <p class="text-gray-600 mb-3">{{ t('docs.n8n.examples.pipeline.description') }}</p>
+                        <div class="flex flex-wrap items-center gap-2 text-sm font-mono">
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded">Schedule Trigger</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded">Generate Text</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded">Generate Image</span>
+                            <span class="text-gray-400">&rarr;</span>
+                            <span class="bg-blue-100 text-blue-700 px-3 py-1 rounded">Publish</span>
+                        </div>
+                    </div>
+
+                    <!-- Example 3: Database Row -->
+                    <div class="bg-gray-50 border rounded-lg p-6 mb-6">
+                        <h3 class="font-semibold text-gray-800 mb-3">{{ t('docs.n8n.examples.database.title') }}</h3>
+                        <ol class="list-decimal list-inside text-gray-600 space-y-2 mb-4">
+                            <li>{{ t('docs.n8n.examples.database.step1') }}</li>
+                            <li>{{ t('docs.n8n.examples.database.step2') }}</li>
+                            <li>{{ t('docs.n8n.examples.database.step3') }}</li>
+                        </ol>
+                        <div class="mt-3">
+                            <DocsCodeBlock language="json" code='{
+  "field_id_1": "John Doe",
+  "field_id_2": "john@example.com",
+  "field_id_3": 42
+}' />
+                        </div>
+                    </div>
+
+                    <!-- Expressions tip -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-8">
+                        <h4 class="font-medium text-blue-800 mb-2">{{ t('docs.n8n.expressionsTip.title') }}</h4>
+                        <p class="text-blue-700 text-sm">{{ t('docs.n8n.expressionsTip.description') }}</p>
                     </div>
                 </template>
                 </div>

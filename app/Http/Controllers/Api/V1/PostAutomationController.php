@@ -63,6 +63,16 @@ class PostAutomationController extends Controller
         $result = $this->webhookService->generateText($post, $request->prompt);
 
         if ($result['success']) {
+            // Async mode: n8n trigger accepted the request, result will come via callback
+            if (!empty($result['async'])) {
+                return response()->json([
+                    'success' => true,
+                    'async' => true,
+                    'message' => $result['message'] ?? 'Processing in background',
+                ], 202);
+            }
+
+            // Synchronous mode: result is immediately available
             $updateData = [];
             if (!empty($result['caption'])) {
                 $updateData['main_caption'] = $result['caption'];
@@ -93,6 +103,16 @@ class PostAutomationController extends Controller
         $result = $this->webhookService->generateImagePrompt($post);
 
         if ($result['success']) {
+            // Async mode: n8n trigger accepted the request, result will come via callback
+            if (!empty($result['async'])) {
+                return response()->json([
+                    'success' => true,
+                    'async' => true,
+                    'message' => $result['message'] ?? 'Processing in background',
+                ], 202);
+            }
+
+            // Synchronous mode: result is immediately available
             // Handle base64 image from webhook
             if (!empty($result['image_base64'])) {
                 $this->saveBase64Image($post, $result['image_base64'], $result['filename'] ?? null);
@@ -129,6 +149,15 @@ class PostAutomationController extends Controller
         $result = $this->webhookService->publish($post);
 
         if ($result['success']) {
+            // Async mode: n8n trigger accepted the request, result will come via callback
+            if (!empty($result['async'])) {
+                return response()->json([
+                    'success' => true,
+                    'async' => true,
+                    'message' => $result['message'] ?? 'Publishing in background',
+                ], 202);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => $result['message'] ?? 'Post sent for publishing',

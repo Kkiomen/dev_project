@@ -102,6 +102,16 @@ class WebhookDispatchService
         try {
             $response = Http::timeout(30)->retry(2, 100)->post($url, $payload);
 
+            // HTTP 202 = Accepted for async processing
+            // The n8n trigger responds immediately, result comes via callback
+            if ($response->status() === 202) {
+                return [
+                    'success' => true,
+                    'async' => true,
+                    'message' => 'Request accepted for processing',
+                ];
+            }
+
             if ($response->successful()) {
                 $data = $response->json();
                 return array_merge(['success' => true], $data ?? []);

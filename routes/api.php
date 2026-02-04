@@ -466,6 +466,7 @@ Route::prefix('v1/approve/{token}')->group(function () {
 // === WEBHOOKS (No Auth, protected by secret) ===
 Route::prefix('v1/webhooks')->group(function () {
     Route::post('/publish-result', [WebhookController::class, 'publishResult'])->name('webhooks.publish-result');
+    Route::post('/automation-callback', [WebhookController::class, 'automationCallback'])->name('webhooks.automation-callback');
     Route::get('/health', [WebhookController::class, 'health'])->name('webhooks.health');
 });
 
