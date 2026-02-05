@@ -48,39 +48,13 @@ class Row extends Model
     {
         $field = $this->resolveField($fieldId);
 
-        \Log::info('setCellValue - field resolved', [
-            'input_field_id' => $fieldId,
-            'resolved_field_id' => $field->id,
-            'field_public_id' => $field->public_id,
-            'field_type' => $field->type->value ?? $field->type,
-        ]);
-
         $cell = $this->cells()->firstOrNew(['field_id' => $field->id]);
-        $isNew = !$cell->exists;
-
-        \Log::info('setCellValue - cell found/created', [
-            'is_new' => $isNew,
-            'cell_id' => $cell->id ?? 'new',
-        ]);
-
         $cell->row_id = $this->id;
         $cell->field_id = $field->id;
         // Set relationship to avoid extra query and ensure field is available
         $cell->setRelation('field', $field);
         $cell->setValue($value);
-
-        \Log::info('setCellValue - before save', [
-            'value_boolean' => $cell->value_boolean,
-            'value_text' => $cell->value_text,
-            'dirty' => $cell->getDirty(),
-        ]);
-
         $cell->save();
-
-        \Log::info('setCellValue - after save', [
-            'cell_id' => $cell->id,
-            'value_boolean' => $cell->fresh()->value_boolean,
-        ]);
 
         return $cell;
     }

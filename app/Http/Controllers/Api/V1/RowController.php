@@ -70,12 +70,6 @@ class RowController extends Controller
     {
         $this->authorize('update', $row->table->base);
 
-        \Log::info('=== ROW UPDATE DEBUG ===', [
-            'row_id' => $row->public_id,
-            'raw_input' => $request->all(),
-            'values_from_getValues' => $request->getValues(),
-        ]);
-
         // Update position if provided
         if ($request->has('position')) {
             $row->update(['position' => $request->position]);
@@ -83,11 +77,6 @@ class RowController extends Controller
 
         // Update cell values (use getValues() to preserve boolean false)
         foreach ($request->getValues() as $fieldId => $value) {
-            \Log::info('Updating cell', [
-                'field_id' => $fieldId,
-                'value' => $value,
-                'value_type' => gettype($value),
-            ]);
             $row->setCellValue($fieldId, $value);
         }
 

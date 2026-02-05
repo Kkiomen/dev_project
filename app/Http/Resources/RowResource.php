@@ -13,7 +13,8 @@ class RowResource extends JsonResource
 
         if ($this->relationLoaded('cells')) {
             $cells = $this->cells->keyBy('field_id');
-            $fields = $this->table->fields;
+            // Always sort fields by position to ensure consistent order
+            $fields = $this->table->fields->sortBy('position');
 
             foreach ($fields as $field) {
                 $cell = $cells->get($field->id);
