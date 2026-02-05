@@ -25,7 +25,6 @@ class AiselloPublishTrigger {
                     name: 'default',
                     httpMethod: 'POST',
                     responseMode: 'onReceived',
-                    responseCode: '202',
                     path: 'aisello-publish',
                 },
             ],

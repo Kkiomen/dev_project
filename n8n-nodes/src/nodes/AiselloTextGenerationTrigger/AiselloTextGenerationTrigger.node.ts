@@ -29,7 +29,6 @@ export class AiselloTextGenerationTrigger implements INodeType {
 				name: 'default',
 				httpMethod: 'POST',
 				responseMode: 'onReceived',
-				responseCode: '202',
 				path: 'aisello-text-generation',
 			},
 		],

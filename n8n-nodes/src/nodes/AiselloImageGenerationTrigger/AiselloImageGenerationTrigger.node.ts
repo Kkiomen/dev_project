@@ -29,7 +29,6 @@ export class AiselloImageGenerationTrigger implements INodeType {
 				name: 'default',
 				httpMethod: 'POST',
 				responseMode: 'onReceived',
-				responseCode: '202',
 				path: 'aisello-image-generation',
 			},
 		],

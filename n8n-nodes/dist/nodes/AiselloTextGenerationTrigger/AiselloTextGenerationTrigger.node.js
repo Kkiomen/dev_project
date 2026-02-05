@@ -25,7 +25,6 @@ class AiselloTextGenerationTrigger {
                     name: 'default',
                     httpMethod: 'POST',
                     responseMode: 'onReceived',
-                    responseCode: '202',
                     path: 'aisello-text-generation',
                 },
             ],
