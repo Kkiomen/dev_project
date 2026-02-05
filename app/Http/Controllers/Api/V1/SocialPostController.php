@@ -119,7 +119,14 @@ class SocialPostController extends Controller
         $post->load(['platformPosts', 'media']);
 
         // Broadcast the update for real-time sync (e.g., verification page)
-        broadcast(new CalendarPostUpdated($post));
+        try {
+            broadcast(new CalendarPostUpdated($post));
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast failed', [
+                'post_id' => $post->public_id,
+                'error' => $e->getMessage(),
+            ]);
+        }
 
         return new SocialPostResource($post);
     }
