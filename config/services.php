@@ -84,4 +84,9 @@ return [
         'laravel_url' => env('TEMPLATE_RENDERER_LARAVEL_URL', 'http://laravel.test'),
     ],
 
+    'dev_bot' => [
+        'url' => env('DEV_BOT_URL', 'http://dev-bot:3337/trigger'),
+        'timeout' => env('DEV_BOT_TIMEOUT', 30),
+    ],
+
 ];

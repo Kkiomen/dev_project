@@ -142,6 +142,12 @@ const routes = [
         component: () => import('@/pages/AdminUsersPage.vue'),
         meta: { requiresAdmin: true },
     },
+    {
+        path: '/admin/dev-tasks',
+        name: 'admin.dev-tasks',
+        component: () => import('@/pages/AdminDevTasksPage.vue'),
+        meta: { requiresAdmin: true },
+    },
     // PSD Editor (admin only)
     {
         path: '/psd-editor',

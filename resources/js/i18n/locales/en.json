@@ -4,6 +4,7 @@
         "confirm": "Confirm",
         "save": "Save",
         "delete": "Delete",
+        "clear": "Clear",
         "edit": "Edit",
         "create": "Create",
         "update": "Update",
@@ -38,7 +39,9 @@
         "selected": "selected",
         "selectAll": "Select all",
         "deselectAll": "Deselect all",
-        "more": "more"
+        "more": "more",
+        "refresh": "Refresh",
+        "clickToEdit": "Click to edit"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -301,7 +304,9 @@
         "language": "Language",
         "boards": "Boards",
         "postAutomation": "Automation",
-        "admin": "Admin"
+        "admin": "Admin",
+        "adminUsers": "Users",
+        "devTasks": "Dev Tasks"
     },
     "settings": {
         "title": "Settings",
@@ -2781,6 +2786,234 @@
                 "blog": "Blog / Article",
                 "other": "Other"
             }
+        }
+    },
+    "devTasks": {
+        "title": "Dev Tasks",
+        "subtitle": "Kanban board for development tasks",
+        "newTask": "New Task",
+        "editTask": "Edit Task",
+        "deleteTask": "Delete Task",
+        "deleteTaskConfirm": "Are you sure you want to delete task {identifier}?",
+        "createTask": "Create Task",
+        "createTaskSubtitle": "Add a new task to the backlog",
+        "taskCreated": "Task created",
+        "taskUpdated": "Task updated",
+        "taskDeleted": "Task deleted",
+        "fetchError": "Failed to fetch tasks",
+        "createError": "Failed to create task",
+        "updateError": "Failed to update task",
+        "deleteError": "Failed to delete task",
+        "moveError": "Failed to move task",
+        "noTasks": "No tasks",
+        "allProjects": "All projects",
+        "allPriorities": "All priorities",
+        "noProjects": "No projects",
+        "newProject": "New Project",
+        "createProject": "Create Project",
+        "projectCreated": "Project created",
+        "projectCreateError": "Failed to create project",
+        "addLabel": "Add label",
+        "advancedOptions": "Advanced options",
+        "hours": "hours",
+        "unassigned": "Unassigned",
+        "searchPlaceholder": "Search tasks...",
+        "clearFilters": "Clear filters",
+        "tasksCount": "tasks",
+        "created": "Created",
+        "updated": "Updated",
+        "justNow": "just now",
+        "columns": {
+            "backlog": "Backlog",
+            "in_progress": "In Progress",
+            "review": "Review",
+            "done": "Done"
+        },
+        "priorities": {
+            "low": "Low",
+            "medium": "Medium",
+            "high": "High",
+            "urgent": "Urgent"
+        },
+        "fields": {
+            "identifier": "Identifier",
+            "project": "Project",
+            "prefix": "Prefix",
+            "projectName": "Project name",
+            "title": "Title",
+            "titlePlaceholder": "Enter task title...",
+            "status": "Status",
+            "priority": "Priority",
+            "labels": "Labels",
+            "estimatedHours": "Estimated hours",
+            "actualHours": "Actual hours",
+            "hours": "Hours",
+            "pmDescription": "PM Description",
+            "pmDescriptionHint": "Task description from product/business perspective",
+            "pmDescriptionPlaceholder": "Describe what needs to be done from user perspective...",
+            "techDescription": "Technical Description",
+            "techDescriptionHint": "Architecture and technical approach description",
+            "techDescriptionPlaceholder": "Describe the technical approach and architecture...",
+            "implementationPlan": "Implementation Plan",
+            "implementationPlanHint": "Detailed step-by-step plan",
+            "implementationPlanPlaceholder": "Detailed step-by-step implementation plan..."
+        },
+        "tabs": {
+            "details": "Details",
+            "pm": "PM",
+            "tech": "Tech",
+            "plan": "Plan",
+            "logs": "Logs"
+        },
+        "sections": {
+            "description": "Description",
+            "technical": "Technical",
+            "plan": "Plan",
+            "checklist": "Checklist",
+            "files": "Files",
+            "time": "Time",
+            "activity": "Activity"
+        },
+        "bot": {
+            "trigger": "Trigger Bot",
+            "triggering": "Triggering bot...",
+            "triggered": "Bot triggered",
+            "failed": "Failed to trigger bot"
+        },
+        "plan": {
+            "generate": "Generate Plan",
+            "generating": "Generating plan...",
+            "generated": "Plan generated",
+            "failed": "Failed to generate plan"
+        },
+        "logs": {
+            "title": "Logs",
+            "noLogs": "No logs",
+            "addComment": "Add a comment...",
+            "postComment": "Post",
+            "commentAdded": "Comment added",
+            "commentError": "Failed to add comment",
+            "by": "by",
+            "failed": "Failed",
+            "showDetails": "Show details",
+            "types": {
+                "bot_trigger": "Bot Trigger",
+                "bot_response": "Bot Response",
+                "plan_generation": "Plan Generation",
+                "status_change": "Status Change",
+                "comment": "Comment"
+            }
+        },
+        "modal": {
+            "aiActions": "AI Actions",
+            "aiProcessing": "Processing...",
+            "comments": "Comments",
+            "commentPlaceholder": "Write a comment...",
+            "noActivity": "No activity yet"
+        },
+        "dueDate": {
+            "label": "Due Date",
+            "setDueDate": "Set due date",
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "inDays": "In {days} days",
+            "overdueDays": "{days}d overdue",
+            "overdue": "Overdue",
+            "dueSoon": "Due soon"
+        },
+        "subtasks": {
+            "title": "Checklist",
+            "empty": "No subtasks yet",
+            "addPlaceholder": "Add a subtask...",
+            "addError": "Failed to add subtask",
+            "toggleError": "Failed to toggle subtask",
+            "updateError": "Failed to update subtask",
+            "deleteError": "Failed to delete subtask",
+            "reorderError": "Failed to reorder subtasks",
+            "completed": "completed",
+            "remaining": "remaining"
+        },
+        "attachments": {
+            "title": "Attachments",
+            "files": "files",
+            "empty": "No attachments yet",
+            "dropHere": "Drop files here or",
+            "browse": "browse",
+            "uploading": "Uploading...",
+            "uploadError": "Failed to upload {name}",
+            "deleteError": "Failed to delete attachment",
+            "maxSize": "Max file size: 20MB"
+        },
+        "timeTracking": {
+            "title": "Time Tracking",
+            "start": "Start",
+            "stop": "Stop",
+            "notRunning": "Timer not running",
+            "recentEntries": "Recent entries",
+            "noEntries": "No time entries yet",
+            "today": "Today",
+            "yesterday": "Yesterday",
+            "startError": "Failed to start timer",
+            "stopError": "Failed to stop timer",
+            "deleteError": "Failed to delete entry",
+            "runningOnOther": "Timer running on {task}"
+        },
+        "quickFilters": {
+            "all": "All tasks",
+            "my": "My tasks",
+            "overdue": "Overdue",
+            "due_soon": "Due soon",
+            "saveFilter": "Save current filter",
+            "filterNamePlaceholder": "Filter name...",
+            "saveCurrentFilter": "Save filter",
+            "saved": "Filter saved",
+            "deleted": "Filter deleted",
+            "saveError": "Failed to save filter",
+            "deleteError": "Failed to delete filter"
+        },
+        "mentions": {
+            "noUsers": "No users found",
+            "mentionUser": "Mention a user",
+            "notified": "User will be notified"
+        },
+        "shortcuts": {
+            "title": "Keyboard Shortcuts",
+            "hint": "Press ? anytime to show this help",
+            "categories": {
+                "navigation": "Navigation",
+                "actions": "Actions",
+                "status": "Change Status",
+                "other": "Other"
+            },
+            "actions": {
+                "nextTask": "Next task",
+                "prevTask": "Previous task",
+                "openTask": "Open task details",
+                "closePanel": "Close panel",
+                "newTask": "Create new task",
+                "editTask": "Edit selected task",
+                "deleteTask": "Delete selected task",
+                "addComment": "Add comment",
+                "moveToBacklog": "Move to Backlog",
+                "moveToInProgress": "Move to In Progress",
+                "moveToReview": "Move to Review",
+                "moveToDone": "Move to Done",
+                "showHelp": "Show keyboard shortcuts",
+                "focusSearch": "Focus search",
+                "openFilters": "Open filters"
+            }
+        },
+        "editor": {
+            "bold": "Bold",
+            "italic": "Italic",
+            "strikethrough": "Strikethrough",
+            "heading": "Heading",
+            "bulletList": "Bullet list",
+            "orderedList": "Numbered list",
+            "code": "Code block",
+            "link": "Add link",
+            "quote": "Quote",
+            "enterUrl": "Enter URL"
         }
     }
 }

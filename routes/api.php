@@ -1,5 +1,11 @@
 <?php
 
+use App\Http\Controllers\Admin\DevTaskController;
+use App\Http\Controllers\Admin\DevTaskLogController;
+use App\Http\Controllers\Admin\DevTaskSubtaskController;
+use App\Http\Controllers\Admin\DevTaskAttachmentController;
+use App\Http\Controllers\Admin\DevTaskTimeEntryController;
+use App\Http\Controllers\Admin\DevTaskFilterController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\AiChatController;
 use App\Http\Controllers\Api\V1\ApiTokenController;
@@ -187,6 +193,60 @@ $adminRoutes = function () {
     Route::put('users/{user}/password', [AdminUserController::class, 'updatePassword']);
     Route::delete('users/{user}', [AdminUserController::class, 'destroy']);
     Route::get('users/{user}/notifications', [AdminUserController::class, 'notifications']);
+
+    // === DEV TASKS (Mini-Jira) ===
+    Route::prefix('dev-tasks')->group(function () {
+        Route::get('projects', [DevTaskController::class, 'projects']);
+        Route::post('projects', [DevTaskController::class, 'createProject']);
+
+        // Saved filters
+        Route::get('filters/saved', [DevTaskFilterController::class, 'index']);
+        Route::post('filters/saved', [DevTaskFilterController::class, 'store']);
+        Route::put('filters/saved/{filter}', [DevTaskFilterController::class, 'update']);
+        Route::delete('filters/saved/{filter}', [DevTaskFilterController::class, 'destroy']);
+        Route::post('filters/saved/reorder', [DevTaskFilterController::class, 'reorder']);
+        Route::post('filters/saved/{filter}/default', [DevTaskFilterController::class, 'setDefault']);
+
+        // Active time entry (user-level)
+        Route::get('time-entries/active', [DevTaskTimeEntryController::class, 'active']);
+
+        // Tasks CRUD
+        Route::get('/', [DevTaskController::class, 'index']);
+        Route::post('/', [DevTaskController::class, 'store']);
+        Route::get('/{task}', [DevTaskController::class, 'show']);
+        Route::put('/{task}', [DevTaskController::class, 'update']);
+        Route::delete('/{task}', [DevTaskController::class, 'destroy']);
+        Route::put('/{task}/move', [DevTaskController::class, 'move']);
+        Route::post('/{task}/reorder', [DevTaskController::class, 'reorder']);
+        Route::post('/{task}/trigger-bot', [DevTaskController::class, 'triggerBot']);
+        Route::post('/{task}/generate-plan', [DevTaskController::class, 'generatePlan']);
+
+        // Logs
+        Route::get('/{task}/logs', [DevTaskLogController::class, 'index']);
+        Route::post('/{task}/logs', [DevTaskLogController::class, 'store']);
+
+        // Subtasks
+        Route::get('/{task}/subtasks', [DevTaskSubtaskController::class, 'index']);
+        Route::post('/{task}/subtasks', [DevTaskSubtaskController::class, 'store']);
+        Route::put('/{task}/subtasks/{subtask}', [DevTaskSubtaskController::class, 'update']);
+        Route::patch('/{task}/subtasks/{subtask}/toggle', [DevTaskSubtaskController::class, 'toggle']);
+        Route::delete('/{task}/subtasks/{subtask}', [DevTaskSubtaskController::class, 'destroy']);
+        Route::post('/{task}/subtasks/reorder', [DevTaskSubtaskController::class, 'reorder']);
+
+        // Attachments
+        Route::get('/{task}/attachments', [DevTaskAttachmentController::class, 'index']);
+        Route::post('/{task}/attachments', [DevTaskAttachmentController::class, 'store']);
+        Route::delete('/{task}/attachments/{attachment}', [DevTaskAttachmentController::class, 'destroy']);
+        Route::post('/{task}/attachments/reorder', [DevTaskAttachmentController::class, 'reorder']);
+
+        // Time entries
+        Route::get('/{task}/time-entries', [DevTaskTimeEntryController::class, 'index']);
+        Route::post('/{task}/time-entries/start', [DevTaskTimeEntryController::class, 'start']);
+        Route::post('/{task}/time-entries/{entry}/stop', [DevTaskTimeEntryController::class, 'stop']);
+        Route::put('/{task}/time-entries/{entry}', [DevTaskTimeEntryController::class, 'update']);
+        Route::delete('/{task}/time-entries/{entry}', [DevTaskTimeEntryController::class, 'destroy']);
+        Route::get('/{task}/time-entries/stats', [DevTaskTimeEntryController::class, 'stats']);
+    });
 };
 
 // Admin routes for external API consumers (Sanctum tokens)

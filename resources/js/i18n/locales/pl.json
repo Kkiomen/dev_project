@@ -4,6 +4,7 @@
         "confirm": "Potwierdź",
         "save": "Zapisz",
         "delete": "Usuń",
+        "clear": "Wyczyść",
         "edit": "Edytuj",
         "create": "Utwórz",
         "update": "Aktualizuj",
@@ -39,7 +40,9 @@
         "selected": "zaznaczonych",
         "selectAll": "Zaznacz wszystko",
         "deselectAll": "Odznacz wszystko",
-        "more": "więcej"
+        "more": "więcej",
+        "refresh": "Odśwież",
+        "clickToEdit": "Kliknij, aby edytować"
     },
     "dashboard": {
         "title": "Dashboard",
@@ -302,7 +305,9 @@
         "language": "Język",
         "boards": "Tablice",
         "postAutomation": "Automatyzacja",
-        "admin": "Admin"
+        "admin": "Admin",
+        "adminUsers": "Uzytkownicy",
+        "devTasks": "Dev Tasks"
     },
     "settings": {
         "title": "Ustawienia",
@@ -2784,6 +2789,234 @@
                 "blog": "Blog / Artykuł",
                 "other": "Inne"
             }
+        }
+    },
+    "devTasks": {
+        "title": "Dev Tasks",
+        "subtitle": "Kanban dla zadań developerskich",
+        "newTask": "Nowe zadanie",
+        "editTask": "Edytuj zadanie",
+        "deleteTask": "Usuń zadanie",
+        "deleteTaskConfirm": "Czy na pewno chcesz usunąć zadanie {identifier}?",
+        "createTask": "Utwórz zadanie",
+        "createTaskSubtitle": "Dodaj nowe zadanie do backlogu",
+        "taskCreated": "Zadanie utworzone",
+        "taskUpdated": "Zadanie zaktualizowane",
+        "taskDeleted": "Zadanie usunięte",
+        "fetchError": "Nie udało się pobrać zadań",
+        "createError": "Nie udało się utworzyć zadania",
+        "updateError": "Nie udało się zaktualizować zadania",
+        "deleteError": "Nie udało się usunąć zadania",
+        "moveError": "Nie udało się przenieść zadania",
+        "noTasks": "Brak zadań",
+        "allProjects": "Wszystkie projekty",
+        "allPriorities": "Wszystkie priorytety",
+        "noProjects": "Brak projektów",
+        "newProject": "Nowy projekt",
+        "createProject": "Utwórz projekt",
+        "projectCreated": "Projekt utworzony",
+        "projectCreateError": "Nie udało się utworzyć projektu",
+        "addLabel": "Dodaj etykietę",
+        "advancedOptions": "Opcje zaawansowane",
+        "hours": "godz.",
+        "unassigned": "Nieprzypisane",
+        "searchPlaceholder": "Szukaj zadań...",
+        "clearFilters": "Wyczyść filtry",
+        "tasksCount": "zadań",
+        "created": "Utworzono",
+        "updated": "Zaktualizowano",
+        "justNow": "przed chwilą",
+        "columns": {
+            "backlog": "Backlog",
+            "in_progress": "W trakcie",
+            "review": "Review",
+            "done": "Gotowe"
+        },
+        "priorities": {
+            "low": "Niski",
+            "medium": "Średni",
+            "high": "Wysoki",
+            "urgent": "Pilny"
+        },
+        "fields": {
+            "identifier": "Identyfikator",
+            "project": "Projekt",
+            "prefix": "Prefiks",
+            "projectName": "Nazwa projektu",
+            "title": "Tytuł",
+            "titlePlaceholder": "Wprowadź tytuł zadania...",
+            "status": "Status",
+            "priority": "Priorytet",
+            "labels": "Etykiety",
+            "estimatedHours": "Szacowany czas (h)",
+            "actualHours": "Rzeczywisty czas (h)",
+            "hours": "Godziny",
+            "pmDescription": "Opis PM",
+            "pmDescriptionHint": "Opis zadania z perspektywy produktu/biznesu",
+            "pmDescriptionPlaceholder": "Opisz co ma być zrobione z perspektywy użytkownika...",
+            "techDescription": "Opis techniczny",
+            "techDescriptionHint": "Opis architektury i podejścia technicznego",
+            "techDescriptionPlaceholder": "Opisz podejście techniczne i architekturę...",
+            "implementationPlan": "Plan implementacji",
+            "implementationPlanHint": "Szczegółowy plan kroków do wykonania",
+            "implementationPlanPlaceholder": "Szczegółowy plan implementacji krok po kroku..."
+        },
+        "tabs": {
+            "details": "Szczegóły",
+            "pm": "PM",
+            "tech": "Tech",
+            "plan": "Plan",
+            "logs": "Logi"
+        },
+        "sections": {
+            "description": "Opis",
+            "technical": "Techniczny",
+            "plan": "Plan",
+            "checklist": "Checklist",
+            "files": "Pliki",
+            "time": "Czas",
+            "activity": "Aktywność"
+        },
+        "bot": {
+            "trigger": "Uruchom bota",
+            "triggering": "Uruchamianie bota...",
+            "triggered": "Bot uruchomiony",
+            "failed": "Nie udało się uruchomić bota"
+        },
+        "plan": {
+            "generate": "Generuj plan",
+            "generating": "Generowanie planu...",
+            "generated": "Plan wygenerowany",
+            "failed": "Nie udało się wygenerować planu"
+        },
+        "logs": {
+            "title": "Logi",
+            "noLogs": "Brak logów",
+            "addComment": "Dodaj komentarz...",
+            "postComment": "Dodaj",
+            "commentAdded": "Komentarz dodany",
+            "commentError": "Nie udało się dodać komentarza",
+            "by": "przez",
+            "failed": "Błąd",
+            "showDetails": "Pokaż szczegóły",
+            "types": {
+                "bot_trigger": "Trigger bota",
+                "bot_response": "Odpowiedź bota",
+                "plan_generation": "Generowanie planu",
+                "status_change": "Zmiana statusu",
+                "comment": "Komentarz"
+            }
+        },
+        "modal": {
+            "aiActions": "Akcje AI",
+            "aiProcessing": "Przetwarzanie...",
+            "comments": "Komentarze",
+            "commentPlaceholder": "Napisz komentarz...",
+            "noActivity": "Brak aktywności"
+        },
+        "dueDate": {
+            "label": "Termin",
+            "setDueDate": "Ustaw termin",
+            "today": "Dziś",
+            "tomorrow": "Jutro",
+            "inDays": "Za {days} dni",
+            "overdueDays": "{days}d po terminie",
+            "overdue": "Po terminie",
+            "dueSoon": "Wkrótce"
+        },
+        "subtasks": {
+            "title": "Lista zadań",
+            "empty": "Brak podzadań",
+            "addPlaceholder": "Dodaj podzadanie...",
+            "addError": "Nie udało się dodać podzadania",
+            "toggleError": "Nie udało się zmienić statusu podzadania",
+            "updateError": "Nie udało się zaktualizować podzadania",
+            "deleteError": "Nie udało się usunąć podzadania",
+            "reorderError": "Nie udało się zmienić kolejności podzadań",
+            "completed": "ukończonych",
+            "remaining": "pozostało"
+        },
+        "attachments": {
+            "title": "Załączniki",
+            "files": "plików",
+            "empty": "Brak załączników",
+            "dropHere": "Upuść pliki tutaj lub",
+            "browse": "przeglądaj",
+            "uploading": "Przesyłanie...",
+            "uploadError": "Nie udało się przesłać {name}",
+            "deleteError": "Nie udało się usunąć załącznika",
+            "maxSize": "Maks. rozmiar pliku: 20MB"
+        },
+        "timeTracking": {
+            "title": "Śledzenie czasu",
+            "start": "Start",
+            "stop": "Stop",
+            "notRunning": "Timer nie działa",
+            "recentEntries": "Ostatnie wpisy",
+            "noEntries": "Brak wpisów czasu",
+            "today": "Dziś",
+            "yesterday": "Wczoraj",
+            "startError": "Nie udało się uruchomić timera",
+            "stopError": "Nie udało się zatrzymać timera",
+            "deleteError": "Nie udało się usunąć wpisu",
+            "runningOnOther": "Timer działa na {task}"
+        },
+        "quickFilters": {
+            "all": "Wszystkie",
+            "my": "Moje zadania",
+            "overdue": "Po terminie",
+            "due_soon": "Wkrótce",
+            "saveFilter": "Zapisz bieżący filtr",
+            "filterNamePlaceholder": "Nazwa filtra...",
+            "saveCurrentFilter": "Zapisz filtr",
+            "saved": "Filtr zapisany",
+            "deleted": "Filtr usunięty",
+            "saveError": "Nie udało się zapisać filtra",
+            "deleteError": "Nie udało się usunąć filtra"
+        },
+        "mentions": {
+            "noUsers": "Nie znaleziono użytkowników",
+            "mentionUser": "Oznacz użytkownika",
+            "notified": "Użytkownik zostanie powiadomiony"
+        },
+        "shortcuts": {
+            "title": "Skróty klawiszowe",
+            "hint": "Naciśnij ? aby wyświetlić tę pomoc",
+            "categories": {
+                "navigation": "Nawigacja",
+                "actions": "Akcje",
+                "status": "Zmiana statusu",
+                "other": "Inne"
+            },
+            "actions": {
+                "nextTask": "Następne zadanie",
+                "prevTask": "Poprzednie zadanie",
+                "openTask": "Otwórz szczegóły",
+                "closePanel": "Zamknij panel",
+                "newTask": "Nowe zadanie",
+                "editTask": "Edytuj zadanie",
+                "deleteTask": "Usuń zadanie",
+                "addComment": "Dodaj komentarz",
+                "moveToBacklog": "Przenieś do Backlog",
+                "moveToInProgress": "Przenieś do W trakcie",
+                "moveToReview": "Przenieś do Review",
+                "moveToDone": "Przenieś do Gotowe",
+                "showHelp": "Pokaż skróty",
+                "focusSearch": "Przejdź do wyszukiwania",
+                "openFilters": "Otwórz filtry"
+            }
+        },
+        "editor": {
+            "bold": "Pogrubienie",
+            "italic": "Kursywa",
+            "strikethrough": "Przekreślenie",
+            "heading": "Nagłówek",
+            "bulletList": "Lista punktowa",
+            "orderedList": "Lista numerowana",
+            "code": "Blok kodu",
+            "link": "Dodaj link",
+            "quote": "Cytat",
+            "enterUrl": "Wprowadź URL"
         }
     }
 }
