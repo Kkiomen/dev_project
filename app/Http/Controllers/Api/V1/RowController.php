@@ -25,7 +25,10 @@ class RowController extends Controller
     {
         $this->authorize('view', $table->base);
 
-        $query = $table->rows()->with('cells.field');
+        // Eager load table fields for all rows (needed for new columns without cells)
+        $table->load('fields');
+
+        $query = $table->rows()->with(['cells.field', 'table.fields']);
 
         // Apply filters
         $filters = $request->getFilters();
@@ -53,14 +56,14 @@ class RowController extends Controller
             $row->setCellValue($fieldId, $value);
         }
 
-        return new RowResource($row->load('cells.field'));
+        return new RowResource($row->load(['cells.field', 'table.fields']));
     }
 
     public function show(Row $row): RowResource
     {
         $this->authorize('view', $row->table->base);
 
-        return new RowResource($row->load('cells.field', 'cells.attachments'));
+        return new RowResource($row->load(['cells.field', 'cells.attachments', 'table.fields']));
     }
 
     public function update(UpdateRowRequest $request, Row $row): RowResource
@@ -77,7 +80,7 @@ class RowController extends Controller
             $row->setCellValue($fieldId, $value);
         }
 
-        return new RowResource($row->fresh()->load('cells.field'));
+        return new RowResource($row->fresh()->load(['cells.field', 'table.fields']));
     }
 
     public function destroy(Row $row)
@@ -98,6 +101,9 @@ class RowController extends Controller
             'rows.*.values' => 'nullable|array',
         ]);
 
+        // Eager load table fields for new rows
+        $table->load('fields');
+
         $rows = collect($request->rows)->map(function ($rowData) use ($table) {
             $row = $table->rows()->create();
 
@@ -105,7 +111,7 @@ class RowController extends Controller
                 $row->setCellValue($fieldId, $value);
             }
 
-            return $row->load('cells.field');
+            return $row->load(['cells.field', 'table.fields']);
         });
 
         return RowResource::collection($rows);
