@@ -69,13 +69,23 @@ class SocialPostController extends Controller
 
     public function store(StoreSocialPostRequest $request): SocialPostResource
     {
-        $post = $request->user()->socialPosts()->create([
+        $data = [
             'title' => $request->title,
             'main_caption' => $request->main_caption,
+            'text_prompt' => $request->text_prompt,
+            'image_prompt' => $request->image_prompt,
             'scheduled_at' => $request->scheduled_at,
             'settings' => $request->settings,
             'status' => PostStatus::Draft,
-        ]);
+        ];
+
+        // Associate with brand if provided
+        if ($request->has('brand_id')) {
+            $brand = \App\Models\Brand::findByPublicIdOrFail($request->brand_id);
+            $data['brand_id'] = $brand->id;
+        }
+
+        $post = $request->user()->socialPosts()->create($data);
 
         // Create platform posts
         $post->createPlatformPosts();

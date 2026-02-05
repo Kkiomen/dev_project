@@ -281,16 +281,41 @@ class Aisello {
                         const language = this.getNodeParameter('language', i, 'pl');
                         const aiOptions = this.getNodeParameter('aiOptions', i, {});
                         const additionalFields = this.getNodeParameter('additionalFields', i, {});
+                        // Build settings object for extra fields
+                        const settings = {};
+                        if (language)
+                            settings.language = language;
+                        if (aiOptions.tone)
+                            settings.tone = aiOptions.tone;
+                        if (aiOptions.content_type)
+                            settings.content_type = aiOptions.content_type;
+                        if (aiOptions.include_hashtags !== undefined)
+                            settings.include_hashtags = aiOptions.include_hashtags;
+                        if (aiOptions.include_emojis !== undefined)
+                            settings.include_emojis = aiOptions.include_emojis;
+                        if (aiOptions.include_cta !== undefined)
+                            settings.include_cta = aiOptions.include_cta;
                         const body = {
                             brand_id: brandId,
-                            title,
-                            content,
+                            title: title || 'Untitled Post',
+                            main_caption: content,
                             platforms,
-                            status,
-                            language,
-                            ...aiOptions,
-                            ...additionalFields,
+                            settings: Object.keys(settings).length > 0 ? settings : undefined,
                         };
+                        // Add AI prompts if provided
+                        if (aiOptions.text_prompt)
+                            body.text_prompt = aiOptions.text_prompt;
+                        if (aiOptions.image_prompt)
+                            body.image_prompt = aiOptions.image_prompt;
+                        // Add additional fields
+                        if (additionalFields.hashtags)
+                            body.hashtags = additionalFields.hashtags;
+                        if (additionalFields.link_url)
+                            body.link_url = additionalFields.link_url;
+                        if (additionalFields.location)
+                            body.location = additionalFields.location;
+                        if (additionalFields.first_comment)
+                            body.first_comment = additionalFields.first_comment;
                         if (scheduledAt) {
                             body.scheduled_at = scheduledAt;
                         }

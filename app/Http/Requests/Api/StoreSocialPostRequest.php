@@ -16,8 +16,11 @@ class StoreSocialPostRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'brand_id' => ['nullable', 'string', 'exists:brands,public_id'],
             'title' => ['required', 'string', 'max:255'],
             'main_caption' => ['nullable', 'string', 'max:5000'],
+            'text_prompt' => ['nullable', 'string', 'max:2000'],
+            'image_prompt' => ['nullable', 'string', 'max:2000'],
             'scheduled_at' => ['nullable', 'date', 'after_or_equal:now'],
             'settings' => ['nullable', 'array'],
             'platforms' => ['nullable', 'array'],
