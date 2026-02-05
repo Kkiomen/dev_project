@@ -231,6 +231,13 @@ class BrandController extends Controller
             'automation_settings' => 'sometimes|array',
         ]);
 
+        \Log::info('updateAutomationSettings called', [
+            'brand_id' => $brand->id,
+            'request_all' => $request->all(),
+            'has_automation_settings' => $request->has('automation_settings'),
+            'existing_settings' => $brand->automation_settings,
+        ]);
+
         if ($request->has('content_queue_days')) {
             $brand->content_queue_days = $request->input('content_queue_days');
         }
@@ -241,6 +248,8 @@ class BrandController extends Controller
                 $request->input('automation_settings')
             );
         }
+
+        \Log::info('After merge', ['new_settings' => $brand->automation_settings]);
 
         $brand->save();
 

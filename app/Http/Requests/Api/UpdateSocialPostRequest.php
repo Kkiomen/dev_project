@@ -19,6 +19,7 @@ class UpdateSocialPostRequest extends FormRequest
         return [
             'title' => ['sometimes', 'string', 'max:255'],
             'main_caption' => ['sometimes', 'string', 'max:5000'],
+            'text_prompt' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'image_prompt' => ['sometimes', 'nullable', 'string', 'max:5000'],
             'status' => ['sometimes', 'string', Rule::in(PostStatus::values())],
             'scheduled_at' => ['nullable', 'date', 'after_or_equal:now'],
