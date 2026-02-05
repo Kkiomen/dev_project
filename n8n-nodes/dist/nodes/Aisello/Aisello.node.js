@@ -274,19 +274,22 @@ class Aisello {
                     else if (operation === 'create') {
                         const brandId = this.getNodeParameter('brandId', i);
                         const title = this.getNodeParameter('title', i, '');
+                        const textPrompt = this.getNodeParameter('text_prompt', i, '');
+                        const imagePrompt = this.getNodeParameter('image_prompt', i, '');
                         const content = this.getNodeParameter('content', i, '');
                         const platforms = this.getNodeParameter('platforms', i, []);
                         const status = this.getNodeParameter('status', i, 'draft');
                         const scheduledAt = this.getNodeParameter('scheduled_at', i, '');
                         const language = this.getNodeParameter('language', i, 'pl');
+                        const tone = this.getNodeParameter('tone', i, 'professional');
                         const aiOptions = this.getNodeParameter('aiOptions', i, {});
                         const additionalFields = this.getNodeParameter('additionalFields', i, {});
                         // Build settings object for extra fields
                         const settings = {};
                         if (language)
                             settings.language = language;
-                        if (aiOptions.tone)
-                            settings.tone = aiOptions.tone;
+                        if (tone)
+                            settings.tone = tone;
                         if (aiOptions.content_type)
                             settings.content_type = aiOptions.content_type;
                         if (aiOptions.include_hashtags !== undefined)
@@ -295,18 +298,22 @@ class Aisello {
                             settings.include_emojis = aiOptions.include_emojis;
                         if (aiOptions.include_cta !== undefined)
                             settings.include_cta = aiOptions.include_cta;
+                        if (aiOptions.max_length)
+                            settings.max_length = aiOptions.max_length;
                         const body = {
                             brand_id: brandId,
                             title: title || 'Untitled Post',
-                            main_caption: content,
                             platforms,
                             settings: Object.keys(settings).length > 0 ? settings : undefined,
                         };
-                        // Add AI prompts if provided
-                        if (aiOptions.text_prompt)
-                            body.text_prompt = aiOptions.text_prompt;
-                        if (aiOptions.image_prompt)
-                            body.image_prompt = aiOptions.image_prompt;
+                        // Add main content (optional - AI can generate from text_prompt)
+                        if (content)
+                            body.main_caption = content;
+                        // Add AI prompts (main fields now)
+                        if (textPrompt)
+                            body.text_prompt = textPrompt;
+                        if (imagePrompt)
+                            body.image_prompt = imagePrompt;
                         // Add additional fields
                         if (additionalFields.hashtags)
                             body.hashtags = additionalFields.hashtags;

@@ -261,34 +261,40 @@ export class Aisello implements INodeType {
 					} else if (operation === 'create') {
 						const brandId = this.getNodeParameter('brandId', i) as string;
 						const title = this.getNodeParameter('title', i, '') as string;
+						const textPrompt = this.getNodeParameter('text_prompt', i, '') as string;
+						const imagePrompt = this.getNodeParameter('image_prompt', i, '') as string;
 						const content = this.getNodeParameter('content', i, '') as string;
 						const platforms = this.getNodeParameter('platforms', i, []) as string[];
 						const status = this.getNodeParameter('status', i, 'draft') as string;
 						const scheduledAt = this.getNodeParameter('scheduled_at', i, '') as string;
 						const language = this.getNodeParameter('language', i, 'pl') as string;
+						const tone = this.getNodeParameter('tone', i, 'professional') as string;
 						const aiOptions = this.getNodeParameter('aiOptions', i, {}) as IDataObject;
 						const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
 
 						// Build settings object for extra fields
 						const settings: IDataObject = {};
 						if (language) settings.language = language;
-						if (aiOptions.tone) settings.tone = aiOptions.tone;
+						if (tone) settings.tone = tone;
 						if (aiOptions.content_type) settings.content_type = aiOptions.content_type;
 						if (aiOptions.include_hashtags !== undefined) settings.include_hashtags = aiOptions.include_hashtags;
 						if (aiOptions.include_emojis !== undefined) settings.include_emojis = aiOptions.include_emojis;
 						if (aiOptions.include_cta !== undefined) settings.include_cta = aiOptions.include_cta;
+						if (aiOptions.max_length) settings.max_length = aiOptions.max_length;
 
 						const body: IDataObject = {
 							brand_id: brandId,
 							title: title || 'Untitled Post',
-							main_caption: content,
 							platforms,
 							settings: Object.keys(settings).length > 0 ? settings : undefined,
 						};
 
-						// Add AI prompts if provided
-						if (aiOptions.text_prompt) body.text_prompt = aiOptions.text_prompt;
-						if (aiOptions.image_prompt) body.image_prompt = aiOptions.image_prompt;
+						// Add main content (optional - AI can generate from text_prompt)
+						if (content) body.main_caption = content;
+
+						// Add AI prompts (main fields now)
+						if (textPrompt) body.text_prompt = textPrompt;
+						if (imagePrompt) body.image_prompt = imagePrompt;
 
 						// Add additional fields
 						if (additionalFields.hashtags) body.hashtags = additionalFields.hashtags;
