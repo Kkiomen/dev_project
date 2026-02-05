@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, watch, onUnmounted } from 'vue';
 import { useRouter, useRoute, RouterLink } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { useTablesStore } from '@/stores/tables';
@@ -26,6 +26,7 @@ const rowsStore = useRowsStore();
 
 const loading = ref(true);
 const groupByFieldId = ref(null);
+const pollingInterval = ref(null);
 
 const selectFields = computed(() => fieldsStore.selectFields);
 
@@ -50,8 +51,45 @@ const fetchData = async () => {
     }
 };
 
-onMounted(fetchData);
-watch(() => props.tableId, fetchData);
+// Silent refresh for polling (no loading spinner)
+const refreshData = async () => {
+    try {
+        const table = await tablesStore.refreshTable(props.tableId);
+        if (table) {
+            fieldsStore.setFields(table.fields || []);
+            rowsStore.setRows(table.rows || []);
+        }
+    } catch (error) {
+        console.error('Failed to refresh table:', error);
+    }
+};
+
+const startPolling = () => {
+    stopPolling();
+    pollingInterval.value = setInterval(refreshData, 5000);
+};
+
+const stopPolling = () => {
+    if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
+    }
+};
+
+onMounted(async () => {
+    await fetchData();
+    startPolling();
+});
+
+watch(() => props.tableId, async () => {
+    stopPolling();
+    await fetchData();
+    startPolling();
+});
+
+onUnmounted(() => {
+    stopPolling();
+});
 
 const changeGroupBy = (fieldId) => {
     groupByFieldId.value = fieldId;

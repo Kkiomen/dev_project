@@ -42,6 +42,18 @@ export const useTablesStore = defineStore('tables', {
             }
         },
 
+        // Silent refresh without loading state (for polling)
+        async refreshTable(id) {
+            try {
+                const response = await axios.get(`/api/v1/tables/${id}`);
+                this.currentTable = response.data.data;
+                return this.currentTable;
+            } catch (error) {
+                console.error('Silent refresh failed:', error);
+                return null;
+            }
+        },
+
         async createTable(baseId, data) {
             try {
                 const response = await axios.post(`/api/v1/bases/${baseId}/tables`, data);

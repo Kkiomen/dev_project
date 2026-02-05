@@ -28,6 +28,7 @@ const filtersStore = useFiltersStore();
 const gridTableRef = ref(null);
 const searchQuery = ref('');
 const loading = ref(true);
+const pollingInterval = ref(null);
 
 const fetchData = async () => {
     loading.value = true;
@@ -44,11 +45,45 @@ const fetchData = async () => {
     }
 };
 
-onMounted(fetchData);
-watch(() => props.tableId, fetchData);
+// Silent refresh for polling (no loading spinner)
+const refreshData = async () => {
+    try {
+        const table = await tablesStore.refreshTable(props.tableId);
+        if (table) {
+            fieldsStore.setFields(table.fields || []);
+            rowsStore.setRows(table.rows || []);
+        }
+    } catch (error) {
+        console.error('Failed to refresh table:', error);
+    }
+};
+
+const startPolling = () => {
+    stopPolling();
+    pollingInterval.value = setInterval(refreshData, 5000);
+};
+
+const stopPolling = () => {
+    if (pollingInterval.value) {
+        clearInterval(pollingInterval.value);
+        pollingInterval.value = null;
+    }
+};
+
+onMounted(async () => {
+    await fetchData();
+    startPolling();
+});
+
+watch(() => props.tableId, async () => {
+    stopPolling();
+    await fetchData();
+    startPolling();
+});
 
 // Cleanup on unmount
 onUnmounted(() => {
+    stopPolling();
     filtersStore.reset();
 });
 
