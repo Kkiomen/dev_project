@@ -130,6 +130,8 @@ exports.postFields = [
         displayOptions: { show: { resource: ['post'], operation: ['create'] } },
         options: [
             { displayName: 'Title', name: 'title', type: 'string', default: '', description: 'Post title' },
+            { displayName: 'Text Prompt', name: 'text_prompt', type: 'string', typeOptions: { rows: 3 }, default: '', description: 'Prompt/description for AI text generation' },
+            { displayName: 'Image Prompt', name: 'image_prompt', type: 'string', typeOptions: { rows: 3 }, default: '', description: 'Prompt/description for AI image generation' },
             {
                 displayName: 'Status',
                 name: 'status',
@@ -156,8 +158,10 @@ exports.postFields = [
         default: {},
         displayOptions: { show: { resource: ['post'], operation: ['update'] } },
         options: [
-            { displayName: 'Content', name: 'content', type: 'string', typeOptions: { rows: 5 }, default: '', description: 'Post content' },
+            { displayName: 'Content', name: 'content', type: 'string', typeOptions: { rows: 5 }, default: '', description: 'Post content (main_caption)' },
             { displayName: 'Title', name: 'title', type: 'string', default: '', description: 'Post title' },
+            { displayName: 'Text Prompt', name: 'text_prompt', type: 'string', typeOptions: { rows: 3 }, default: '', description: 'Prompt/description for AI text generation' },
+            { displayName: 'Image Prompt', name: 'image_prompt', type: 'string', typeOptions: { rows: 3 }, default: '', description: 'Prompt/description for AI image generation' },
             {
                 displayName: 'Status',
                 name: 'status',

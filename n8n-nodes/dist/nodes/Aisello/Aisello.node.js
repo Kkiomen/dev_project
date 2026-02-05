@@ -234,6 +234,20 @@ class Aisello {
                         }
                         responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/brands/${brandId}/automation/settings`, body);
                     }
+                    else if (operation === 'getSystemPrompts') {
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/brands/${brandId}/automation/system-prompts`);
+                        responseData = responseData.data || responseData;
+                    }
+                    else if (operation === 'updateSystemPrompts') {
+                        const prompts = this.getNodeParameter('prompts', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/brands/${brandId}/automation/system-prompts`, prompts);
+                        responseData = responseData.data || responseData;
+                    }
+                    else if (operation === 'getResolvedPrompt') {
+                        const promptType = this.getNodeParameter('promptType', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/brands/${brandId}/automation/resolved-prompt`, {}, { type: promptType });
+                        responseData = responseData.data || responseData;
+                    }
                 }
                 // ==================== POST ====================
                 else if (resource === 'post') {
@@ -352,6 +366,16 @@ class Aisello {
                     else if (operation === 'bulkGenerateImage') {
                         const postIds = this.getNodeParameter('postIds', i).split(',').map((id) => id.trim());
                         responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', '/posts/bulk-generate-image-prompt', { post_ids: postIds });
+                    }
+                    else if (operation === 'getTextGenerationData') {
+                        const postId = this.getNodeParameter('postId', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/posts/${postId}/text-generation-data`);
+                        responseData = responseData.data || responseData;
+                    }
+                    else if (operation === 'getImageGenerationData') {
+                        const postId = this.getNodeParameter('postId', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/posts/${postId}/image-generation-data`);
+                        responseData = responseData.data || responseData;
                     }
                 }
                 // ==================== POST MEDIA ====================

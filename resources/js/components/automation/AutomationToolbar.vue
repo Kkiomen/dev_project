@@ -5,7 +5,7 @@ const props = defineProps({
     modelValue: { type: String, default: '' },
 });
 
-const emit = defineEmits(['update:modelValue', 'settings', 'refresh']);
+const emit = defineEmits(['update:modelValue', 'settings', 'refresh', 'text-prompt', 'image-prompt']);
 
 const { t } = useI18n();
 
@@ -29,6 +29,30 @@ function onInput(e) {
                 class="w-full rounded-lg border border-gray-300 pl-9 pr-3 py-2 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
             />
         </div>
+
+        <!-- Text System Prompt button -->
+        <button
+            @click="emit('text-prompt')"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors shrink-0"
+            :title="t('postAutomation.toolbar.textPrompt')"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <span class="hidden lg:inline">{{ t('postAutomation.toolbar.textPrompt') }}</span>
+        </button>
+
+        <!-- Image System Prompt button -->
+        <button
+            @click="emit('image-prompt')"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-purple-700 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors shrink-0"
+            :title="t('postAutomation.toolbar.imagePrompt')"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+            </svg>
+            <span class="hidden lg:inline">{{ t('postAutomation.toolbar.imagePrompt') }}</span>
+        </button>
 
         <!-- Settings button -->
         <button

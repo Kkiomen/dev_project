@@ -234,37 +234,37 @@ function submitTag(platform) {
     <tr v-if="expanded">
         <td colspan="6" class="px-0 py-0">
             <div class="bg-gray-50 border-t border-b border-gray-200 px-6 py-5">
-                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                    <!-- Left: Content + Image Description -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Left Column: Text prompt + Content -->
                     <div class="space-y-4">
-                        <!-- Title editing -->
+                        <!-- Text prompt (AI input) -->
                         <div>
                             <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
-                                {{ t('postAutomation.table.topic') }}
+                                {{ t('postAutomation.row.textPrompt') }}
                             </label>
-                            <div v-if="editingField === 'title'">
+                            <div v-if="editingField === 'text_prompt'">
                                 <textarea
                                     v-model="editingValue"
                                     @blur="saveEditing()"
                                     @keydown.escape="cancelEditing()"
-                                    rows="2"
+                                    rows="3"
                                     class="w-full rounded-lg border border-blue-400 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
                                     autofocus
                                 />
                             </div>
                             <div
                                 v-else
-                                @click.stop="startEditing('title', post.title)"
-                                class="group/edit text-sm text-gray-900 cursor-pointer hover:text-blue-600 flex items-start gap-1.5"
+                                @click.stop="startEditing('text_prompt', post.text_prompt)"
+                                class="group/edit text-sm text-gray-500 italic cursor-pointer hover:text-blue-600 flex items-start gap-1.5 min-h-[60px]"
                             >
-                                <span>{{ post.title || '—' }}</span>
+                                <span>{{ post.text_prompt || t('postAutomation.row.noTextPrompt') }}</span>
                                 <svg class="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover/edit:opacity-100 transition-opacity shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
                             </div>
                         </div>
 
-                        <!-- Content editing -->
+                        <!-- Content (AI output) -->
                         <div>
                             <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
                                 {{ t('postAutomation.row.content') }}
@@ -290,13 +290,16 @@ function submitTag(platform) {
                                 </svg>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Image description editing -->
+                    <!-- Middle Column: Image prompt + Image -->
+                    <div class="space-y-4">
+                        <!-- Image prompt (AI input) -->
                         <div>
                             <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
-                                {{ t('postAutomation.row.imageDescription') }}
+                                {{ t('postAutomation.row.imagePrompt') }}
                             </label>
-                            <div v-if="editingField === 'image_description'">
+                            <div v-if="editingField === 'image_prompt'">
                                 <textarea
                                     v-model="editingValue"
                                     @blur="saveEditing()"
@@ -308,28 +311,28 @@ function submitTag(platform) {
                             </div>
                             <div
                                 v-else
-                                @click.stop="startEditing('image_description', post.image_description)"
-                                class="group/edit text-sm text-gray-500 italic cursor-pointer hover:text-blue-600 flex items-start gap-1.5"
+                                @click.stop="startEditing('image_prompt', post.image_prompt)"
+                                class="group/edit text-sm text-gray-500 italic cursor-pointer hover:text-blue-600 flex items-start gap-1.5 min-h-[60px]"
                             >
-                                <span>{{ post.image_description || t('postAutomation.row.noImageDescription') }}</span>
+                                <span>{{ post.image_prompt || t('postAutomation.row.noImagePrompt') }}</span>
                                 <svg class="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover/edit:opacity-100 transition-opacity shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                 </svg>
                             </div>
                         </div>
-                    </div>
 
-                    <!-- Right: Image + Platforms & Tags -->
-                    <div class="space-y-4">
                         <!-- Image preview + upload -->
-                        <div class="flex items-start gap-4">
-                            <div class="shrink-0">
+                        <div>
+                            <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">
+                                {{ t('postAutomation.table.media') }}
+                            </label>
+                            <div class="flex items-start gap-3">
                                 <!-- Existing image -->
-                                <div v-if="post.first_media_url" class="relative group/img">
+                                <div v-if="post.first_media_url" class="relative group/img shrink-0">
                                     <img
                                         :src="post.first_media_url"
                                         :alt="post.title"
-                                        class="w-28 h-28 object-cover rounded-lg border border-gray-200"
+                                        class="w-32 h-32 object-cover rounded-lg border border-gray-200"
                                     />
                                     <span
                                         v-if="post.media_count > 1"
@@ -352,7 +355,7 @@ function submitTag(platform) {
                                 <label
                                     v-else
                                     :for="`upload-${post.id}`"
-                                    class="flex flex-col items-center justify-center w-28 h-28 rounded-lg border-2 border-dashed cursor-pointer transition-colors"
+                                    class="flex flex-col items-center justify-center w-32 h-32 rounded-lg border-2 border-dashed cursor-pointer transition-colors shrink-0"
                                     :class="dragOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 hover:border-gray-400 bg-gray-50'"
                                     @dragover.prevent="dragOver = true"
                                     @dragleave="dragOver = false"
@@ -373,116 +376,119 @@ function submitTag(platform) {
                                         @change.stop="handleFileSelect"
                                     />
                                 </label>
-                                <!-- Upload button (when image exists, to add more) -->
-                                <label
-                                    v-if="post.first_media_url"
-                                    :for="`upload-more-${post.id}`"
-                                    class="mt-1.5 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 cursor-pointer"
-                                    @click.stop
-                                >
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-                                    </svg>
-                                    {{ t('postAutomation.row.uploadImage') }}
-                                    <input
-                                        :id="`upload-more-${post.id}`"
-                                        type="file"
-                                        accept="image/jpeg,image/png,image/gif,image/webp"
-                                        class="hidden"
-                                        @change.stop="handleFileSelect"
-                                    />
-                                </label>
                             </div>
+                            <!-- Upload more button (when image exists) -->
+                            <label
+                                v-if="post.first_media_url"
+                                :for="`upload-more-${post.id}`"
+                                class="mt-2 inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 cursor-pointer"
+                                @click.stop
+                            >
+                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                                </svg>
+                                {{ t('postAutomation.row.uploadImage') }}
+                                <input
+                                    :id="`upload-more-${post.id}`"
+                                    type="file"
+                                    accept="image/jpeg,image/png,image/gif,image/webp"
+                                    class="hidden"
+                                    @change.stop="handleFileSelect"
+                                />
+                            </label>
+                        </div>
+                    </div>
 
-                            <!-- Platforms & Tags -->
-                            <div class="flex-1 min-w-0">
-                                <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">
-                                    {{ t('postAutomation.row.platformsAndTags') }}
-                                </label>
-                                <div class="space-y-2">
-                                    <div
-                                        v-for="ppData in tagsPerPlatform"
-                                        :key="ppData.platform"
-                                        class="flex items-center gap-2 flex-wrap"
+                    <!-- Right Column: Tags, Date -->
+                    <div class="space-y-4">
+                        <!-- Tags -->
+                        <div>
+                            <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-2 block">
+                                {{ t('postAutomation.row.tags') }}
+                            </label>
+                            <div class="space-y-2">
+                                <div
+                                    v-for="ppData in tagsPerPlatform"
+                                    :key="ppData.platform"
+                                    class="flex items-center gap-2 flex-wrap"
+                                >
+                                    <button
+                                        @click.stop="emit('toggle-platform', { postId: post.id, platform: ppData.platform })"
+                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors"
+                                        :class="`${platformColors[ppData.platform]?.bg || 'bg-gray-100'} ${platformColors[ppData.platform]?.text || 'text-gray-700'}`"
                                     >
-                                        <button
-                                            @click.stop="emit('toggle-platform', { postId: post.id, platform: ppData.platform })"
-                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium transition-colors"
-                                            :class="`${platformColors[ppData.platform]?.bg || 'bg-gray-100'} ${platformColors[ppData.platform]?.text || 'text-gray-700'}`"
-                                        >
-                                            <span
-                                                class="w-2 h-2 rounded-full"
-                                                :class="platformColors[ppData.platform]?.dot || 'bg-gray-400'"
-                                            />
-                                            {{ ppData.platform_label }}
-                                        </button>
                                         <span
-                                            v-for="tag in ppData.hashtags"
-                                            :key="tag"
-                                            class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700"
-                                        >
-                                            #{{ tag }}
-                                            <button
-                                                @click.stop="emit('remove-tag', { postId: post.id, platform: ppData.platform, tag })"
-                                                class="text-gray-400 hover:text-red-500 ml-0.5"
-                                            >
-                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                            </button>
-                                        </span>
-                                        <!-- Add tag -->
-                                        <div v-if="showTagInput === ppData.platform" class="inline-flex" @click.stop>
-                                            <input
-                                                v-model="newTagValue"
-                                                @keydown.enter.prevent="submitTag(ppData.platform)"
-                                                @keydown.escape="showTagInput = null"
-                                                @blur="submitTag(ppData.platform)"
-                                                :placeholder="t('postAutomation.table.tagPlaceholder')"
-                                                class="w-20 px-1.5 py-0.5 text-[11px] border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                                                autofocus
-                                            />
-                                        </div>
+                                            class="w-2 h-2 rounded-full"
+                                            :class="platformColors[ppData.platform]?.dot || 'bg-gray-400'"
+                                        />
+                                        {{ ppData.platform_label }}
+                                    </button>
+                                    <span
+                                        v-for="tag in ppData.hashtags"
+                                        :key="tag"
+                                        class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-medium bg-gray-100 text-gray-700"
+                                    >
+                                        #{{ tag }}
                                         <button
-                                            v-else
-                                            @click.stop="startAddTag(ppData.platform)"
-                                            class="text-gray-400 hover:text-blue-600 transition-colors"
-                                            :title="t('postAutomation.table.addTag')"
+                                            @click.stop="emit('remove-tag', { postId: post.id, platform: ppData.platform, tag })"
+                                            class="text-gray-400 hover:text-red-500 ml-0.5"
                                         >
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                         </button>
+                                    </span>
+                                    <!-- Add tag -->
+                                    <div v-if="showTagInput === ppData.platform" class="inline-flex" @click.stop>
+                                        <input
+                                            v-model="newTagValue"
+                                            @keydown.enter.prevent="submitTag(ppData.platform)"
+                                            @keydown.escape="showTagInput = null"
+                                            @blur="submitTag(ppData.platform)"
+                                            :placeholder="t('postAutomation.table.tagPlaceholder')"
+                                            class="w-20 px-1.5 py-0.5 text-[11px] border border-blue-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                                            autofocus
+                                        />
                                     </div>
-                                    <div v-if="!tagsPerPlatform.length" class="text-xs text-gray-400">
-                                        {{ t('postAutomation.table.noPlatforms') }}
-                                    </div>
+                                    <button
+                                        v-else
+                                        @click.stop="startAddTag(ppData.platform)"
+                                        class="text-gray-400 hover:text-blue-600 transition-colors"
+                                        :title="t('postAutomation.table.addTag')"
+                                    >
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    </button>
+                                </div>
+                                <div v-if="!tagsPerPlatform.length" class="text-xs text-gray-400">
+                                    {{ t('postAutomation.table.noPlatforms') }}
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </div>
 
-                <!-- Schedule editing -->
-                <div class="mt-4">
-                    <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5 block">
-                        {{ t('postAutomation.row.scheduledAt') }}
-                    </label>
-                    <div v-if="editingSchedule" @click.stop>
-                        <DateTimeInput
-                            :model-value="scheduleValue"
-                            @update:model-value="onScheduleChange"
-                        />
-                    </div>
-                    <div
-                        v-else
-                        @click.stop="startEditingSchedule"
-                        class="group/edit inline-flex items-center gap-1.5 text-sm cursor-pointer hover:text-blue-600 transition-colors"
-                        :class="post.scheduled_at ? 'text-gray-700' : 'text-gray-400'"
-                    >
-                        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
-                        <span>{{ formatDate(post.scheduled_at) || t('postAutomation.row.notScheduled') }}</span>
-                        <svg class="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover/edit:opacity-100 transition-opacity shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
+                        <!-- Schedule -->
+                        <div>
+                            <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5 block">
+                                {{ t('postAutomation.row.scheduledAt') }}
+                            </label>
+                            <div v-if="editingSchedule" @click.stop>
+                                <DateTimeInput
+                                    :model-value="scheduleValue"
+                                    @update:model-value="onScheduleChange"
+                                />
+                            </div>
+                            <div
+                                v-else
+                                @click.stop="startEditingSchedule"
+                                class="group/edit inline-flex items-center gap-1.5 text-sm cursor-pointer hover:text-blue-600 transition-colors"
+                                :class="post.scheduled_at ? 'text-gray-700' : 'text-gray-400'"
+                            >
+                                <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                                </svg>
+                                <span>{{ formatDate(post.scheduled_at) || t('postAutomation.row.notScheduled') }}</span>
+                                <svg class="w-3.5 h-3.5 text-gray-300 opacity-0 group-hover/edit:opacity-100 transition-opacity shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                                </svg>
+                            </div>
+                        </div>
                     </div>
                 </div>
 

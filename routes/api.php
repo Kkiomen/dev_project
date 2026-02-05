@@ -283,6 +283,10 @@ $v1Routes = function () {
         Route::post('process', [BrandController::class, 'triggerAutomation']);
         Route::post('extend', [BrandController::class, 'extendQueue']);
         Route::put('settings', [BrandController::class, 'updateAutomationSettings']);
+        // System prompts for n8n
+        Route::get('system-prompts', [BrandController::class, 'getSystemPrompts']);
+        Route::put('system-prompts', [BrandController::class, 'updateSystemPrompts']);
+        Route::get('resolved-prompt', [BrandController::class, 'getResolvedPrompt']);
     });
 
     // === PLATFORM CREDENTIALS (Facebook/Instagram OAuth) ===
@@ -450,6 +454,9 @@ $v1Routes = function () {
     Route::post('posts/{post}/publish', [SocialPostController::class, 'publish']);
     Route::post('posts/{post}/mark-published', [SocialPostController::class, 'markPublished']);
     Route::post('posts/{post}/mark-failed', [SocialPostController::class, 'markFailed']);
+    // Generation data for n8n
+    Route::get('posts/{post}/text-generation-data', [SocialPostController::class, 'getTextGenerationData']);
+    Route::get('posts/{post}/image-generation-data', [SocialPostController::class, 'getImageGenerationData']);
 
     // === PLATFORM POSTS ===
     Route::put('posts/{post}/platforms/{platform}', [PlatformPostController::class, 'update']);

@@ -13,7 +13,9 @@ exports.postAutomationOperations = [
             { name: 'Bulk Generate Text', value: 'bulkGenerateText', description: 'Bulk generate text for posts', action: 'Bulk generate text' },
             { name: 'Generate Image Prompt', value: 'generateImagePrompt', description: 'Generate image prompt for a post', action: 'Generate image prompt' },
             { name: 'Generate Text', value: 'generateText', description: 'Generate text for a post', action: 'Generate text' },
+            { name: 'Get Image Generation Data', value: 'getImageGenerationData', description: 'Get image prompt and system prompt for AI generation', action: 'Get image generation data' },
             { name: 'Get Many', value: 'getAll', description: 'Get automation posts', action: 'Get automation posts' },
+            { name: 'Get Text Generation Data', value: 'getTextGenerationData', description: 'Get text prompt and system prompt for AI generation', action: 'Get text generation data' },
             { name: 'Webhook Publish', value: 'webhookPublish', description: 'Publish a post via webhook', action: 'Webhook publish a post' },
         ],
         default: 'getAll',
@@ -66,7 +68,7 @@ exports.postAutomationFields = [
         ],
     },
     // ----------------------------------
-    //         postAutomation: generateText / generateImagePrompt / webhookPublish
+    //         postAutomation: generateText / generateImagePrompt / webhookPublish / getTextGenerationData / getImageGenerationData
     // ----------------------------------
     {
         displayName: 'Post Name or ID',
@@ -77,7 +79,7 @@ exports.postAutomationFields = [
         default: '',
         description: 'The post to use. Choose from the list, or specify an ID using an <a href="https://docs.n8n.io/code/expressions/">expression</a>.',
         displayOptions: {
-            show: { resource: ['postAutomation'], operation: ['generateText', 'generateImagePrompt', 'webhookPublish'] },
+            show: { resource: ['postAutomation'], operation: ['generateText', 'generateImagePrompt', 'webhookPublish', 'getTextGenerationData', 'getImageGenerationData'] },
         },
     },
     // ----------------------------------

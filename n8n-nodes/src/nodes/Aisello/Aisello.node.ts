@@ -225,6 +225,17 @@ export class Aisello implements INodeType {
 							}
 						}
 						responseData = await aiselloApiRequest.call(this, 'PUT', `/brands/${brandId}/automation/settings`, body);
+					} else if (operation === 'getSystemPrompts') {
+						responseData = await aiselloApiRequest.call(this, 'GET', `/brands/${brandId}/automation/system-prompts`);
+						responseData = responseData.data || responseData;
+					} else if (operation === 'updateSystemPrompts') {
+						const prompts = this.getNodeParameter('prompts', i) as IDataObject;
+						responseData = await aiselloApiRequest.call(this, 'PUT', `/brands/${brandId}/automation/system-prompts`, prompts);
+						responseData = responseData.data || responseData;
+					} else if (operation === 'getResolvedPrompt') {
+						const promptType = this.getNodeParameter('promptType', i) as string;
+						responseData = await aiselloApiRequest.call(this, 'GET', `/brands/${brandId}/automation/resolved-prompt`, {}, { type: promptType });
+						responseData = responseData.data || responseData;
 					}
 				}
 
@@ -325,6 +336,14 @@ export class Aisello implements INodeType {
 					} else if (operation === 'bulkGenerateImage') {
 						const postIds = (this.getNodeParameter('postIds', i) as string).split(',').map((id) => id.trim());
 						responseData = await aiselloApiRequest.call(this, 'POST', '/posts/bulk-generate-image-prompt', { post_ids: postIds });
+					} else if (operation === 'getTextGenerationData') {
+						const postId = this.getNodeParameter('postId', i) as string;
+						responseData = await aiselloApiRequest.call(this, 'GET', `/posts/${postId}/text-generation-data`);
+						responseData = responseData.data || responseData;
+					} else if (operation === 'getImageGenerationData') {
+						const postId = this.getNodeParameter('postId', i) as string;
+						responseData = await aiselloApiRequest.call(this, 'GET', `/posts/${postId}/image-generation-data`);
+						responseData = responseData.data || responseData;
 					}
 				}
 

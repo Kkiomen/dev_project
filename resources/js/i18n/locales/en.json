@@ -2396,6 +2396,7 @@
             "content": "Content",
             "imageDescription": "Image Description",
             "image": "Image",
+            "media": "Image",
             "platforms": "Platforms",
             "hashtags": "Tags",
             "preview": "Preview",
@@ -2475,18 +2476,51 @@
         },
         "toolbar": {
             "settings": "Settings",
-            "refresh": "Refresh"
+            "refresh": "Refresh",
+            "textPrompt": "Text Prompt",
+            "imagePrompt": "Image Prompt"
+        },
+        "systemPrompt": {
+            "textTitle": "Text System Prompt",
+            "imageTitle": "Image System Prompt",
+            "textDescription": "Configure the default system prompt used when generating post text. You can use variables from brand data.",
+            "imageDescription": "Configure the default system prompt used when generating images. You can use variables from brand data.",
+            "availableVars": "Available variables",
+            "clickToInsert": "Click a variable to insert it into the prompt",
+            "promptLabel": "System Prompt",
+            "promptPlaceholder": "Enter system prompt...",
+            "showExample": "Show example",
+            "preview": "Preview (with variables)",
+            "saved": "System prompt saved",
+            "loadError": "Failed to load prompt",
+            "saveError": "Failed to save prompt",
+            "vars": {
+                "brandName": "Brand name",
+                "brandDescription": "Brand description",
+                "industry": "Industry",
+                "tone": "Tone of voice",
+                "language": "Language",
+                "personality": "Personality traits",
+                "ageRange": "Age range",
+                "gender": "Target gender",
+                "interests": "Interests",
+                "painPoints": "Pain points",
+                "contentPillars": "Content pillars"
+            }
         },
         "bulk": {
             "selected": "{count} selected",
             "close": "Close"
         },
         "row": {
-            "content": "Content",
-            "imageDescription": "Image description",
+            "textPrompt": "Text generation prompt",
+            "content": "Post content",
+            "imagePrompt": "Image generation prompt",
             "platformsAndTags": "Platforms & tags",
+            "tags": "Tags",
+            "noTextPrompt": "No text generation prompt",
             "noContent": "No content",
-            "noImageDescription": "No image description",
+            "noImagePrompt": "No image generation prompt",
             "clickToEdit": "Click to edit",
             "mediaCount": "{count} media",
             "uploadImage": "Upload image",

@@ -181,7 +181,55 @@ function submitTag(platform) {
 
         <!-- Expanded content -->
         <div v-if="expanded" class="px-4 pb-4 space-y-4 border-t border-gray-100 pt-4">
-            <!-- Content -->
+            <!-- 1. Topic -->
+            <div>
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
+                    {{ t('postAutomation.table.topic') }}
+                </label>
+                <div v-if="editingField === 'title'">
+                    <textarea
+                        v-model="editingValue"
+                        @blur="saveEditing()"
+                        @keydown.escape="cancelEditing()"
+                        rows="2"
+                        class="w-full rounded-lg border border-blue-400 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
+                        autofocus
+                    />
+                </div>
+                <div
+                    v-else
+                    @click.stop="startEditing('title', post.title)"
+                    class="text-sm text-gray-900 cursor-pointer"
+                >
+                    {{ post.title || '—' }}
+                </div>
+            </div>
+
+            <!-- 2. Text prompt (AI input) -->
+            <div>
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
+                    {{ t('postAutomation.row.textPrompt') }}
+                </label>
+                <div v-if="editingField === 'text_prompt'">
+                    <textarea
+                        v-model="editingValue"
+                        @blur="saveEditing()"
+                        @keydown.escape="cancelEditing()"
+                        rows="3"
+                        class="w-full rounded-lg border border-blue-400 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
+                        autofocus
+                    />
+                </div>
+                <div
+                    v-else
+                    @click.stop="startEditing('text_prompt', post.text_prompt)"
+                    class="text-sm text-gray-500 italic cursor-pointer"
+                >
+                    {{ post.text_prompt || t('postAutomation.row.noTextPrompt') }}
+                </div>
+            </div>
+
+            <!-- 3. Content (AI output) -->
             <div>
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
                     {{ t('postAutomation.row.content') }}
@@ -205,7 +253,31 @@ function submitTag(platform) {
                 </div>
             </div>
 
-            <!-- Image + Upload -->
+            <!-- 4. Image prompt (AI input) -->
+            <div>
+                <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
+                    {{ t('postAutomation.row.imagePrompt') }}
+                </label>
+                <div v-if="editingField === 'image_prompt'">
+                    <textarea
+                        v-model="editingValue"
+                        @blur="saveEditing()"
+                        @keydown.escape="cancelEditing()"
+                        rows="3"
+                        class="w-full rounded-lg border border-blue-400 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 resize-y"
+                        autofocus
+                    />
+                </div>
+                <div
+                    v-else
+                    @click.stop="startEditing('image_prompt', post.image_prompt)"
+                    class="text-sm text-gray-500 italic cursor-pointer"
+                >
+                    {{ post.image_prompt || t('postAutomation.row.noImagePrompt') }}
+                </div>
+            </div>
+
+            <!-- 5. Image + Upload -->
             <div>
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
                     {{ t('postAutomation.table.image') }}
@@ -278,10 +350,10 @@ function submitTag(platform) {
                 </label>
             </div>
 
-            <!-- Platforms & Tags -->
+            <!-- 6. Tags -->
             <div v-if="tagsPerPlatform.length" class="space-y-2">
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1 block">
-                    {{ t('postAutomation.row.platformsAndTags') }}
+                    {{ t('postAutomation.row.tags') }}
                 </label>
                 <div
                     v-for="ppData in tagsPerPlatform"
@@ -330,7 +402,7 @@ function submitTag(platform) {
                 </div>
             </div>
 
-            <!-- Schedule -->
+            <!-- 7. Schedule -->
             <div>
                 <label class="text-xs font-medium text-gray-400 uppercase tracking-wider mb-1.5 block">
                     {{ t('postAutomation.row.scheduledAt') }}

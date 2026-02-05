@@ -46,3 +46,4 @@ export class AiselloApi implements ICredentialType {
 		},
 	};
 }
+// dodaj nowe bloki dla n8n brakujace ktore dodalismy

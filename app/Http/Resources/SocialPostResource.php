@@ -12,6 +12,7 @@ class SocialPostResource extends JsonResource
         return [
             'id' => $this->public_id,
             'title' => $this->title,
+            'text_prompt' => $this->text_prompt,
             'main_caption' => $this->main_caption,
             'image_prompt' => $this->image_prompt,
             'status' => $this->status->value,
@@ -25,6 +26,7 @@ class SocialPostResource extends JsonResource
             'can_delete' => $this->canDelete(),
             'can_schedule' => $this->canSchedule(),
             'first_media_url' => $this->getFirstMediaUrl(),
+            'first_media_id' => $this->getFirstMediaId(),
             'enabled_platforms' => $this->getEnabledPlatforms(),
             'platform_posts' => PlatformPostResource::collection($this->whenLoaded('platformPosts')),
             'media' => PostMediaResource::collection($this->whenLoaded('media')),

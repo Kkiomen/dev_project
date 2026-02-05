@@ -21,6 +21,7 @@ class SocialPost extends Model
         'user_id',
         'brand_id',
         'title',
+        'text_prompt',
         'main_caption',
         'image_prompt',
         'status',
@@ -235,5 +236,16 @@ class SocialPost extends Model
         }
 
         return $firstMedia->url;
+    }
+
+    public function getFirstMediaId(): ?string
+    {
+        $firstMedia = $this->media->first();
+
+        if (!$firstMedia) {
+            return null;
+        }
+
+        return $firstMedia->public_id;
     }
 }

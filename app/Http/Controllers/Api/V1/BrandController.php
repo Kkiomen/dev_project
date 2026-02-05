@@ -292,4 +292,125 @@ class BrandController extends Controller
             'slots_created' => $slotsCreated,
         ]);
     }
+
+    /**
+     * Get system prompts for n8n integration
+     */
+    public function getSystemPrompts(Request $request, Brand $brand): JsonResponse
+    {
+        $this->authorize('view', $brand);
+
+        $settings = $brand->automation_settings ?? [];
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'text_system_prompt' => $settings['text_system_prompt'] ?? '',
+                'image_system_prompt' => $settings['image_system_prompt'] ?? '',
+                'variables' => $this->getAvailableVariables($brand),
+            ],
+        ]);
+    }
+
+    /**
+     * Update system prompts
+     */
+    public function updateSystemPrompts(Request $request, Brand $brand): JsonResponse
+    {
+        $this->authorize('update', $brand);
+
+        $request->validate([
+            'text_system_prompt' => 'nullable|string|max:10000',
+            'image_system_prompt' => 'nullable|string|max:10000',
+        ]);
+
+        $settings = $brand->automation_settings ?? [];
+
+        if ($request->has('text_system_prompt')) {
+            $settings['text_system_prompt'] = $request->input('text_system_prompt');
+        }
+
+        if ($request->has('image_system_prompt')) {
+            $settings['image_system_prompt'] = $request->input('image_system_prompt');
+        }
+
+        $brand->automation_settings = $settings;
+        $brand->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'System prompts updated',
+            'data' => [
+                'text_system_prompt' => $settings['text_system_prompt'] ?? '',
+                'image_system_prompt' => $settings['image_system_prompt'] ?? '',
+            ],
+        ]);
+    }
+
+    /**
+     * Get resolved system prompt for n8n (with variables replaced)
+     */
+    public function getResolvedPrompt(Request $request, Brand $brand): JsonResponse
+    {
+        $this->authorize('view', $brand);
+
+        $request->validate([
+            'type' => 'required|string|in:text,image',
+        ]);
+
+        $type = $request->input('type');
+        $settings = $brand->automation_settings ?? [];
+        $promptKey = $type . '_system_prompt';
+        $prompt = $settings[$promptKey] ?? '';
+
+        // Replace variables with actual brand data
+        $resolvedPrompt = $this->replaceVariables($prompt, $brand);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'type' => $type,
+                'prompt' => $resolvedPrompt,
+                'brand_context' => $brand->buildAiContext(),
+            ],
+        ]);
+    }
+
+    /**
+     * Get available variables for prompts
+     */
+    protected function getAvailableVariables(Brand $brand): array
+    {
+        $targetAudience = $brand->target_audience ?? [];
+        $voice = $brand->voice ?? [];
+
+        return [
+            'brand_name' => $brand->name,
+            'brand_description' => $brand->description,
+            'industry' => $brand->industry,
+            'tone' => $voice['tone'] ?? '',
+            'language' => $voice['language'] ?? 'pl',
+            'emoji_usage' => $voice['emoji_usage'] ?? 'sometimes',
+            'personality' => implode(', ', $voice['personality'] ?? []),
+            'target_age_range' => $targetAudience['age_range'] ?? '',
+            'target_gender' => $targetAudience['gender'] ?? 'all',
+            'interests' => implode(', ', $targetAudience['interests'] ?? []),
+            'pain_points' => implode(', ', $targetAudience['pain_points'] ?? []),
+            'content_pillars' => implode(', ', array_column($brand->content_pillars ?? [], 'name')),
+        ];
+    }
+
+    /**
+     * Replace variables in prompt with brand data
+     */
+    protected function replaceVariables(string $prompt, Brand $brand): string
+    {
+        $variables = $this->getAvailableVariables($brand);
+
+        foreach ($variables as $key => $value) {
+            $prompt = str_replace('{{' . $key . '}}', $value, $prompt);
+        }
+
+        return $prompt;
+    }
 }

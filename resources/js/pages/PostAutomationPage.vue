@@ -17,6 +17,7 @@ import AutomationEmptyState from '@/components/automation/AutomationEmptyState.v
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import WebhookSettingsModal from '@/components/automation/WebhookSettingsModal.vue';
 import PostPreviewModal from '@/components/automation/PostPreviewModal.vue';
+import SystemPromptModal from '@/components/automation/SystemPromptModal.vue';
 
 const { t } = useI18n();
 const router = useRouter();
@@ -29,6 +30,8 @@ const search = ref('');
 const statusFilter = ref('');
 const selectedIds = ref([]);
 const showWebhookSettings = ref(false);
+const showTextPrompt = ref(false);
+const showImagePrompt = ref(false);
 const showPreview = ref(false);
 const previewPost = ref(null);
 const bulkGeneratingText = ref(false);
@@ -359,6 +362,8 @@ onMounted(() => {
         <AutomationToolbar
             v-model="search"
             @settings="showWebhookSettings = true"
+            @text-prompt="showTextPrompt = true"
+            @image-prompt="showImagePrompt = true"
             @refresh="refresh"
         />
 
@@ -449,6 +454,16 @@ onMounted(() => {
         <WebhookSettingsModal
             :show="showWebhookSettings"
             @close="showWebhookSettings = false"
+        />
+        <SystemPromptModal
+            :show="showTextPrompt"
+            type="text"
+            @close="showTextPrompt = false"
+        />
+        <SystemPromptModal
+            :show="showImagePrompt"
+            type="image"
+            @close="showImagePrompt = false"
         />
         <PostPreviewModal
             :show="showPreview"

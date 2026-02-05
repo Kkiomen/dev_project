@@ -2399,6 +2399,7 @@
             "content": "Treść",
             "imageDescription": "Opis Obrazka",
             "image": "Obraz",
+            "media": "Obrazek",
             "platforms": "Platformy",
             "hashtags": "Tagi",
             "preview": "Podgląd",
@@ -2478,18 +2479,51 @@
         },
         "toolbar": {
             "settings": "Ustawienia",
-            "refresh": "Odśwież"
+            "refresh": "Odśwież",
+            "textPrompt": "Prompt Tekstu",
+            "imagePrompt": "Prompt Obrazka"
+        },
+        "systemPrompt": {
+            "textTitle": "System Prompt dla Tekstu",
+            "imageTitle": "System Prompt dla Obrazka",
+            "textDescription": "Skonfiguruj domyślny system prompt, który będzie używany przy generowaniu tekstu postów. Możesz używać zmiennych z danych brandu.",
+            "imageDescription": "Skonfiguruj domyślny system prompt, który będzie używany przy generowaniu obrazków. Możesz używać zmiennych z danych brandu.",
+            "availableVars": "Dostępne zmienne",
+            "clickToInsert": "Kliknij zmienną, aby wstawić ją do prompta",
+            "promptLabel": "System Prompt",
+            "promptPlaceholder": "Wprowadź system prompt...",
+            "showExample": "Pokaż przykład",
+            "preview": "Podgląd (ze zmiennymi)",
+            "saved": "System prompt zapisany",
+            "loadError": "Nie udało się załadować promptu",
+            "saveError": "Nie udało się zapisać promptu",
+            "vars": {
+                "brandName": "Nazwa brandu",
+                "brandDescription": "Opis brandu",
+                "industry": "Branża",
+                "tone": "Ton głosu",
+                "language": "Język",
+                "personality": "Cechy osobowości",
+                "ageRange": "Przedział wiekowy",
+                "gender": "Płeć docelowa",
+                "interests": "Zainteresowania",
+                "painPoints": "Problemy/Wyzwania",
+                "contentPillars": "Filary treści"
+            }
         },
         "bulk": {
             "selected": "{count} zaznaczono",
             "close": "Zamknij"
         },
         "row": {
-            "content": "Treść",
-            "imageDescription": "Opis obrazka",
+            "textPrompt": "Opis do wygenerowania tekstu",
+            "content": "Treść posta",
+            "imagePrompt": "Opis do wygenerowania obrazka",
             "platformsAndTags": "Platformy i tagi",
+            "tags": "Tagi",
+            "noTextPrompt": "Brak opisu do generowania tekstu",
             "noContent": "Brak treści",
-            "noImageDescription": "Brak opisu obrazka",
+            "noImagePrompt": "Brak opisu do generowania obrazka",
             "clickToEdit": "Kliknij aby edytować",
             "mediaCount": "{count} mediów",
             "uploadImage": "Wgraj zdjęcie",

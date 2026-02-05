@@ -43,3 +43,4 @@ class AiselloApi {
     }
 }
 exports.AiselloApi = AiselloApi;
+// dodaj nowe bloki dla n8n brakujace ktore dodalismy

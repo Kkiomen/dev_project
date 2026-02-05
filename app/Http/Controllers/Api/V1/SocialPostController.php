@@ -454,4 +454,96 @@ class SocialPostController extends Controller
 
         return new SocialPostResource($post->load(['platformPosts', 'media']));
     }
+
+    /**
+     * Get text generation data for n8n - combines post's text_prompt with brand's resolved system prompt.
+     */
+    public function getTextGenerationData(Request $request, SocialPost $post): JsonResponse
+    {
+        $this->authorize('view', $post);
+
+        $brand = $post->brand;
+
+        if (!$brand) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Post has no associated brand',
+            ], 400);
+        }
+
+        $settings = $brand->automation_settings ?? [];
+        $systemPrompt = $settings['text_system_prompt'] ?? '';
+        $resolvedSystemPrompt = $this->replaceVariables($systemPrompt, $brand);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'post_id' => $post->public_id,
+                'text_prompt' => $post->text_prompt ?? '',
+                'system_prompt' => $resolvedSystemPrompt,
+                'brand_context' => $brand->buildAiContext(),
+            ],
+        ]);
+    }
+
+    /**
+     * Get image generation data for n8n - combines post's image_prompt with brand's resolved system prompt.
+     */
+    public function getImageGenerationData(Request $request, SocialPost $post): JsonResponse
+    {
+        $this->authorize('view', $post);
+
+        $brand = $post->brand;
+
+        if (!$brand) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Post has no associated brand',
+            ], 400);
+        }
+
+        $settings = $brand->automation_settings ?? [];
+        $systemPrompt = $settings['image_system_prompt'] ?? '';
+        $resolvedSystemPrompt = $this->replaceVariables($systemPrompt, $brand);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'post_id' => $post->public_id,
+                'image_prompt' => $post->image_prompt ?? '',
+                'system_prompt' => $resolvedSystemPrompt,
+                'brand_context' => $brand->buildAiContext(),
+            ],
+        ]);
+    }
+
+    /**
+     * Replace variables in prompt with brand data.
+     */
+    protected function replaceVariables(string $prompt, $brand): string
+    {
+        $targetAudience = $brand->target_audience ?? [];
+        $voice = $brand->voice ?? [];
+
+        $variables = [
+            'brand_name' => $brand->name,
+            'brand_description' => $brand->description,
+            'industry' => $brand->industry,
+            'tone' => $voice['tone'] ?? '',
+            'language' => $voice['language'] ?? 'pl',
+            'emoji_usage' => $voice['emoji_usage'] ?? 'sometimes',
+            'personality' => implode(', ', $voice['personality'] ?? []),
+            'target_age_range' => $targetAudience['age_range'] ?? '',
+            'target_gender' => $targetAudience['gender'] ?? 'all',
+            'interests' => implode(', ', $targetAudience['interests'] ?? []),
+            'pain_points' => implode(', ', $targetAudience['pain_points'] ?? []),
+            'content_pillars' => implode(', ', array_column($brand->content_pillars ?? [], 'name')),
+        ];
+
+        foreach ($variables as $key => $value) {
+            $prompt = str_replace('{{' . $key . '}}', $value, $prompt);
+        }
+
+        return $prompt;
+    }
 }
