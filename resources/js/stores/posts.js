@@ -14,6 +14,7 @@ export const usePostsStore = defineStore('posts', {
         generatingText: {},
         generatingImage: {},
         webhookPublishing: {},
+        pollingIntervals: {},
         error: null,
         pagination: {
             currentPage: 1,
@@ -506,12 +507,14 @@ export const usePostsStore = defineStore('posts', {
                         this.automationPosts[index] = response.data.data;
                     }
                 }
+                // Start polling to check for async result (webhook callback)
+                this.startPolling(postId, 'text');
                 return response.data;
             } catch (error) {
-                throw error;
-            } finally {
                 this.generatingText = { ...this.generatingText, [postId]: false };
+                throw error;
             }
+            // Note: generatingText stays true until polling detects the change
         },
 
         async generatePostImagePrompt(postId) {
@@ -524,12 +527,14 @@ export const usePostsStore = defineStore('posts', {
                         this.automationPosts[index] = response.data.data;
                     }
                 }
+                // Start polling to check for async result (webhook callback)
+                this.startPolling(postId, 'image');
                 return response.data;
             } catch (error) {
-                throw error;
-            } finally {
                 this.generatingImage = { ...this.generatingImage, [postId]: false };
+                throw error;
             }
+            // Note: generatingImage stays true until polling detects the change
         },
 
         async webhookPublishPost(postId) {
@@ -602,7 +607,82 @@ export const usePostsStore = defineStore('posts', {
             }
         },
 
+        // Polling for async generation results
+        startPolling(postId, type) {
+            const key = `${postId}-${type}`;
+            // Clear existing interval if any
+            if (this.pollingIntervals[key]) {
+                clearInterval(this.pollingIntervals[key]);
+            }
+
+            // Get initial state to compare
+            const post = this.automationPosts.find(p => p.id === postId);
+            const initialMediaCount = post?.media?.length || 0;
+            const initialCaption = post?.main_caption || '';
+            let pollCount = 0;
+            const maxPolls = 60; // 60 * 3s = 3 minutes max
+
+            this.pollingIntervals[key] = setInterval(async () => {
+                pollCount++;
+                if (pollCount >= maxPolls) {
+                    this.stopPolling(postId, type);
+                    return;
+                }
+
+                try {
+                    const response = await axios.get(`/api/v1/posts/${postId}`);
+                    const updatedPost = response.data.data;
+                    const index = this.automationPosts.findIndex(p => p.id === postId);
+
+                    if (type === 'image') {
+                        const newMediaCount = updatedPost?.media?.length || 0;
+                        if (newMediaCount > initialMediaCount) {
+                            // New media detected - update and stop polling
+                            if (index !== -1) {
+                                this.automationPosts[index] = updatedPost;
+                            }
+                            this.stopPolling(postId, type);
+                        }
+                    } else if (type === 'text') {
+                        const newCaption = updatedPost?.main_caption || '';
+                        if (newCaption !== initialCaption && newCaption.length > 0) {
+                            // Caption changed - update and stop polling
+                            if (index !== -1) {
+                                this.automationPosts[index] = updatedPost;
+                            }
+                            this.stopPolling(postId, type);
+                        }
+                    }
+                } catch (error) {
+                    // Silently fail, will retry on next poll
+                    console.error('Polling error:', error);
+                }
+            }, 3000); // Poll every 3 seconds
+        },
+
+        stopPolling(postId, type) {
+            const key = `${postId}-${type}`;
+            if (this.pollingIntervals[key]) {
+                clearInterval(this.pollingIntervals[key]);
+                delete this.pollingIntervals[key];
+            }
+            // Reset generating state
+            if (type === 'image') {
+                this.generatingImage = { ...this.generatingImage, [postId]: false };
+            } else if (type === 'text') {
+                this.generatingText = { ...this.generatingText, [postId]: false };
+            }
+        },
+
+        stopAllPolling() {
+            Object.keys(this.pollingIntervals).forEach(key => {
+                clearInterval(this.pollingIntervals[key]);
+            });
+            this.pollingIntervals = {};
+        },
+
         reset() {
+            this.stopAllPolling();
             this.posts = [];
             this.currentPost = null;
             this.calendarPosts = {};
@@ -614,6 +694,7 @@ export const usePostsStore = defineStore('posts', {
             this.generatingText = {};
             this.generatingImage = {};
             this.webhookPublishing = {};
+            this.pollingIntervals = {};
             this.error = null;
         },
     },

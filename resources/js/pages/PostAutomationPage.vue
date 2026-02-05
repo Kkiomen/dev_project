@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { usePostsStore } from '@/stores/posts';
@@ -329,6 +329,10 @@ watch(() => brandsStore.currentBrand?.id, () => {
 onMounted(() => {
     fetchPosts();
     fetchStats();
+});
+
+onUnmounted(() => {
+    postsStore.stopAllPolling();
 });
 </script>
 
