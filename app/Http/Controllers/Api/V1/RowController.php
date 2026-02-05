@@ -25,10 +25,10 @@ class RowController extends Controller
     {
         $this->authorize('view', $table->base);
 
-        // Eager load table fields for all rows (needed for new columns without cells)
+        // Eager load table fields (needed for new columns without cells)
         $table->load('fields');
 
-        $query = $table->rows()->with(['cells.field', 'table.fields']);
+        $query = $table->rows()->with(['cells.field']);
 
         // Apply filters
         $filters = $request->getFilters();
@@ -41,6 +41,11 @@ class RowController extends Controller
         $query = $this->sortService->apply($query, $table, $sort);
 
         $rows = $query->paginate($request->getPerPage());
+
+        // Set table relationship with preloaded fields on each row
+        foreach ($rows as $row) {
+            $row->setRelation('table', $table);
+        }
 
         return RowResource::collection($rows);
     }
@@ -70,12 +75,23 @@ class RowController extends Controller
     {
         $this->authorize('view', $row->table->base);
 
-        return new RowResource($row->load(['cells.field', 'cells.attachments', 'table.fields']));
+        // Load table with all fields
+        $table = $row->table;
+        $table->load('fields');
+
+        $row->load(['cells.field', 'cells.attachments']);
+        $row->setRelation('table', $table);
+
+        return new RowResource($row);
     }
 
     public function update(UpdateRowRequest $request, Row $row): RowResource
     {
         $this->authorize('update', $row->table->base);
+
+        // Load table with all fields
+        $table = $row->table;
+        $table->load('fields');
 
         // Update position if provided
         if ($request->has('position')) {
@@ -87,7 +103,11 @@ class RowController extends Controller
             $row->setCellValue($fieldId, $value);
         }
 
-        return new RowResource($row->fresh()->load(['cells.field', 'table.fields']));
+        $row = $row->fresh();
+        $row->load(['cells.field']);
+        $row->setRelation('table', $table);
+
+        return new RowResource($row);
     }
 
     public function destroy(Row $row)
