@@ -41,6 +41,22 @@ class AiselloRespond {
                     default: 'text_generation',
                     description: 'Type of response to send back to Aisello',
                 },
+                {
+                    displayName: 'Callback URL',
+                    name: 'callbackUrl',
+                    type: 'string',
+                    default: '',
+                    placeholder: '={{ $json.callback_url }}',
+                    description: 'Callback URL to send the response to. Use expression to get from trigger data, e.g. {{ $json.callback_url }} or {{ $(\"Webhook\").item.json.callback_url }}',
+                },
+                {
+                    displayName: 'Post ID',
+                    name: 'postId',
+                    type: 'string',
+                    default: '',
+                    placeholder: '={{ $json.post_id }}',
+                    description: 'Post ID to update. Use expression to get from trigger data, e.g. {{ $json.post_id }} or {{ $(\"Webhook\").item.json.post_id }}',
+                },
                 // Text generation fields
                 {
                     displayName: 'Caption',
@@ -170,15 +186,17 @@ class AiselloRespond {
                 const responseType = this.getNodeParameter('responseType', i);
                 const success = this.getNodeParameter('success', i);
                 const webhookSecret = this.getNodeParameter('webhookSecret', i, '');
-                // Get callback_url from input data
+                // Get callback_url and post_id from parameters (can use expressions) or fall back to input data
                 const inputData = items[i].json;
-                const callbackUrl = inputData.callback_url;
-                const postId = inputData.post_id;
+                const callbackUrlParam = this.getNodeParameter('callbackUrl', i, '');
+                const postIdParam = this.getNodeParameter('postId', i, '');
+                const callbackUrl = callbackUrlParam || inputData.callback_url;
+                const postId = postIdParam || inputData.post_id;
                 if (!callbackUrl) {
-                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'No callback_url found in input data. This node must be used after an Aisello trigger.', { itemIndex: i });
+                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'No callback_url provided. Enter a Callback URL or use an expression like {{ $json.callback_url }}', { itemIndex: i });
                 }
                 if (!postId) {
-                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'No post_id found in input data. This node must be used after an Aisello trigger.', { itemIndex: i });
+                    throw new n8n_workflow_1.NodeOperationError(this.getNode(), 'No post_id provided. Enter a Post ID or use an expression like {{ $json.post_id }}', { itemIndex: i });
                 }
                 // Build payload based on response type
                 const payload = {
