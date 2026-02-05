@@ -84,7 +84,7 @@ exports.rowFields = [
         type: 'json',
         required: true,
         default: '{}',
-        description: 'JSON object mapping field IDs to new values',
+        description: 'JSON object mapping field IDs (public_id) to new values. Example: {"01KGQEY9T27FV2B5CA4R08HP36": false, "01KGQEWZYCM4GT3JY7D2YNJ957": "New text"}',
         displayOptions: { show: { resource: ['row'], operation: ['update'] } },
     },
     {

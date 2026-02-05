@@ -279,12 +279,20 @@ class AiselloDatabase {
                     }
                     else if (operation === 'update') {
                         const rowId = this.getNodeParameter('rowId', i);
-                        const cellsStr = this.getNodeParameter('cells', i);
+                        const cellsParam = this.getNodeParameter('cells', i);
                         let cells;
-                        try {
-                            cells = JSON.parse(cellsStr);
+                        if (typeof cellsParam === 'string') {
+                            try {
+                                cells = JSON.parse(cellsParam);
+                            }
+                            catch {
+                                cells = {};
+                            }
                         }
-                        catch {
+                        else if (typeof cellsParam === 'object' && cellsParam !== null) {
+                            cells = cellsParam;
+                        }
+                        else {
                             cells = {};
                         }
                         responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });

@@ -86,10 +86,15 @@ class Row extends Model
 
     private function resolveField(int|string $fieldId): Field
     {
-        if (is_string($fieldId) && !is_numeric($fieldId)) {
-            return Field::where('public_id', $fieldId)->firstOrFail();
+        // First try to find by public_id (for string IDs like "01KGQEY9T27FV2B5CA4R08HP36")
+        if (is_string($fieldId)) {
+            $field = Field::where('public_id', $fieldId)->first();
+            if ($field) {
+                return $field;
+            }
         }
 
+        // Fallback to numeric ID
         return Field::findOrFail($fieldId);
     }
 }

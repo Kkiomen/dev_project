@@ -258,9 +258,15 @@ export class AiselloDatabase implements INodeType {
 						responseData = responseData.data || responseData;
 					} else if (operation === 'update') {
 						const rowId = this.getNodeParameter('rowId', i) as string;
-						const cellsStr = this.getNodeParameter('cells', i) as string;
+						const cellsParam = this.getNodeParameter('cells', i);
 						let cells: IDataObject;
-						try { cells = JSON.parse(cellsStr); } catch { cells = {}; }
+						if (typeof cellsParam === 'string') {
+							try { cells = JSON.parse(cellsParam); } catch { cells = {}; }
+						} else if (typeof cellsParam === 'object' && cellsParam !== null) {
+							cells = cellsParam as IDataObject;
+						} else {
+							cells = {};
+						}
 						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });
 						responseData = responseData.data || responseData;
 					} else if (operation === 'delete') {
