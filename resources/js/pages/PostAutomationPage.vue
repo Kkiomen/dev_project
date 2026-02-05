@@ -36,6 +36,7 @@ const showPreview = ref(false);
 const previewPost = ref(null);
 const bulkGeneratingText = ref(false);
 const bulkGeneratingImage = ref(false);
+const bulkDeleting = ref(false);
 const stats = ref({});
 const statsLoading = ref(false);
 
@@ -307,6 +308,28 @@ async function bulkApprove() {
     }
 }
 
+async function bulkDelete() {
+    if (!selectedIds.value.length) return;
+    if (!confirm(t('postAutomation.confirm.bulkDelete', { count: selectedIds.value.length }))) {
+        return;
+    }
+    bulkDeleting.value = true;
+    try {
+        const result = await postsStore.bulkDelete(selectedIds.value);
+        toast.success(t('postAutomation.success.bulkDeleted', {
+            success: result.success,
+            total: selectedIds.value.length,
+        }));
+        selectedIds.value = [];
+        fetchPosts(pagination.value.currentPage);
+        fetchStats();
+    } catch {
+        toast.error(t('postAutomation.errors.deleteFailed'));
+    } finally {
+        bulkDeleting.value = false;
+    }
+}
+
 // Page change
 function onPageChange(page) {
     fetchPosts(page);
@@ -448,9 +471,11 @@ onUnmounted(() => {
             :count="selectedIds.length"
             :bulk-generating-text="bulkGeneratingText"
             :bulk-generating-image="bulkGeneratingImage"
+            :bulk-deleting="bulkDeleting"
             @bulk-generate-text="bulkGenerateText"
             @bulk-generate-image="bulkGenerateImage"
             @bulk-approve="bulkApprove"
+            @bulk-delete="bulkDelete"
             @clear="clearSelection"
         />
 

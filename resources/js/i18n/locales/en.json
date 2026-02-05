@@ -2420,7 +2420,9 @@
             "edit": "Edit",
             "bulkGenerateText": "Generate Text",
             "bulkGenerateImage": "Generate Image",
-            "bulkApprove": "Approve Selected"
+            "bulkApprove": "Approve Selected",
+            "bulkDelete": "Delete",
+            "deleting": "Deleting..."
         },
         "webhookSettings": {
             "title": "Webhook Settings",
@@ -2446,7 +2448,8 @@
             "generateFailed": "Text generation failed",
             "imageFailed": "Image generation failed",
             "publishFailed": "Publishing failed",
-            "fetchFailed": "Failed to load posts"
+            "fetchFailed": "Failed to load posts",
+            "deleteFailed": "Delete failed"
         },
         "success": {
             "textGenerated": "Text generated successfully",
@@ -2454,7 +2457,11 @@
             "published": "Post sent for publishing",
             "approved": "Post approved",
             "bulkTextGenerated": "{success} of {total} posts generated",
-            "bulkImageGenerated": "{success} of {total} images generated"
+            "bulkImageGenerated": "{success} of {total} images generated",
+            "bulkDeleted": "{success} of {total} posts deleted"
+        },
+        "confirm": {
+            "bulkDelete": "Are you sure you want to delete {count} posts? This action cannot be undone."
         },
         "filters": {
             "allStatuses": "All Statuses",

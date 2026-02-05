@@ -2423,7 +2423,9 @@
             "edit": "Edytuj",
             "bulkGenerateText": "Generuj Tekst",
             "bulkGenerateImage": "Generuj Obraz",
-            "bulkApprove": "Zatwierdź Zaznaczone"
+            "bulkApprove": "Zatwierdź Zaznaczone",
+            "bulkDelete": "Usuń",
+            "deleting": "Usuwanie..."
         },
         "webhookSettings": {
             "title": "Ustawienia Webhooków",
@@ -2449,7 +2451,8 @@
             "generateFailed": "Generowanie tekstu nie powiodło się",
             "imageFailed": "Generowanie obrazu nie powiodło się",
             "publishFailed": "Publikacja nie powiodła się",
-            "fetchFailed": "Nie udało się załadować postów"
+            "fetchFailed": "Nie udało się załadować postów",
+            "deleteFailed": "Usuwanie nie powiodło się"
         },
         "success": {
             "textGenerated": "Tekst wygenerowany pomyślnie",
@@ -2457,7 +2460,11 @@
             "published": "Post wysłany do publikacji",
             "approved": "Post zatwierdzony",
             "bulkTextGenerated": "{success} z {total} postów wygenerowanych",
-            "bulkImageGenerated": "{success} z {total} obrazów wygenerowanych"
+            "bulkImageGenerated": "{success} z {total} obrazów wygenerowanych",
+            "bulkDeleted": "{success} z {total} postów usunięto"
+        },
+        "confirm": {
+            "bulkDelete": "Czy na pewno chcesz usunąć {count} postów? Tej operacji nie można cofnąć."
         },
         "filters": {
             "allStatuses": "Wszystkie Statusy",

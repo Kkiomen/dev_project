@@ -5,12 +5,14 @@ defineProps({
     count: { type: Number, required: true },
     bulkGeneratingText: { type: Boolean, default: false },
     bulkGeneratingImage: { type: Boolean, default: false },
+    bulkDeleting: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
     'bulk-generate-text',
     'bulk-generate-image',
     'bulk-approve',
+    'bulk-delete',
     'clear',
 ]);
 
@@ -57,6 +59,13 @@ const { t } = useI18n();
                         class="px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-500 whitespace-nowrap transition-colors"
                     >
                         {{ t('postAutomation.actions.bulkApprove') }}
+                    </button>
+                    <button
+                        @click="emit('bulk-delete')"
+                        :disabled="bulkDeleting"
+                        class="px-3 py-1.5 text-xs font-medium bg-red-600 text-white rounded-lg hover:bg-red-500 disabled:opacity-50 whitespace-nowrap transition-colors"
+                    >
+                        {{ bulkDeleting ? t('postAutomation.actions.deleting') : t('postAutomation.actions.bulkDelete') }}
                     </button>
                 </div>
 

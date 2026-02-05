@@ -154,6 +154,24 @@ export const usePostsStore = defineStore('posts', {
             }
         },
 
+        async bulkDelete(ids) {
+            const results = { success: 0, failed: 0 };
+            for (const id of ids) {
+                try {
+                    await axios.delete(`/api/v1/posts/${id}`);
+                    this.posts = this.posts.filter(p => p.id !== id);
+                    this.automationPosts = this.automationPosts.filter(p => p.id !== id);
+                    Object.keys(this.calendarPosts).forEach(date => {
+                        this.calendarPosts[date] = this.calendarPosts[date].filter(p => p.id !== id);
+                    });
+                    results.success++;
+                } catch {
+                    results.failed++;
+                }
+            }
+            return results;
+        },
+
         async reschedulePost(id, scheduledAt) {
             this.saving = true;
             try {
