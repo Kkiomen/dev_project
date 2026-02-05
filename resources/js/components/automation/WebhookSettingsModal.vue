@@ -53,8 +53,10 @@ async function save() {
 
     saving.value = true;
     try {
-        await axios.put(`/api/v1/brands/${brand.id}/automation/settings`, {
-            webhooks: { ...form.value },
+        await brandsStore.updateAutomationSettings(brand.id, {
+            automation_settings: {
+                webhooks: { ...form.value },
+            },
         });
         toast.success(t('postAutomation.webhookSettings.saved'));
         emit('close');
