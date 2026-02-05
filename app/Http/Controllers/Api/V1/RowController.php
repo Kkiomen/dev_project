@@ -49,6 +49,9 @@ class RowController extends Controller
     {
         $this->authorize('update', $table->base);
 
+        // Ensure table has all fields loaded
+        $table->load('fields');
+
         $row = $table->rows()->create();
 
         // Set cell values
@@ -56,7 +59,11 @@ class RowController extends Controller
             $row->setCellValue($fieldId, $value);
         }
 
-        return new RowResource($row->load(['cells.field', 'table.fields']));
+        // Load cells and set table relationship directly (with preloaded fields)
+        $row->load(['cells.field']);
+        $row->setRelation('table', $table);
+
+        return new RowResource($row);
     }
 
     public function show(Row $row): RowResource
@@ -111,7 +118,11 @@ class RowController extends Controller
                 $row->setCellValue($fieldId, $value);
             }
 
-            return $row->load(['cells.field', 'table.fields']);
+            // Load cells and set table relationship directly (with preloaded fields)
+            $row->load(['cells.field']);
+            $row->setRelation('table', $table);
+
+            return $row;
         });
 
         return RowResource::collection($rows);
