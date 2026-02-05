@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\PostStatus;
-use App\Events\CalendarPostUpdated;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\RescheduleSocialPostRequest;
 use App\Http\Requests\Api\StoreSocialPostRequest;
@@ -117,16 +116,6 @@ class SocialPostController extends Controller
         }
 
         $post->load(['platformPosts', 'media']);
-
-        // Broadcast the update for real-time sync (e.g., verification page)
-        try {
-            broadcast(new CalendarPostUpdated($post));
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::warning('Broadcast failed', [
-                'post_id' => $post->public_id,
-                'error' => $e->getMessage(),
-            ]);
-        }
 
         return new SocialPostResource($post);
     }
