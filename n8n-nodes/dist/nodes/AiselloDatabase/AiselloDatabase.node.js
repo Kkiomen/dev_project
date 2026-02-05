@@ -280,22 +280,33 @@ class AiselloDatabase {
                     else if (operation === 'update') {
                         const rowId = this.getNodeParameter('rowId', i);
                         const cellsParam = this.getNodeParameter('cells', i);
-                        let cells;
+                        let cells = {};
                         if (typeof cellsParam === 'string') {
-                            try {
-                                cells = JSON.parse(cellsParam);
-                            }
-                            catch {
+                            const trimmed = cellsParam.trim();
+                            if (trimmed === '' || trimmed === '{}') {
                                 cells = {};
                             }
+                            else {
+                                try {
+                                    const parsed = JSON.parse(trimmed);
+                                    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+                                        cells = parsed;
+                                    }
+                                    else {
+                                        cells = {};
+                                    }
+                                }
+                                catch {
+                                    cells = {};
+                                }
+                            }
                         }
-                        else if (typeof cellsParam === 'object' && cellsParam !== null) {
+                        else if (typeof cellsParam === 'object' && cellsParam !== null && !Array.isArray(cellsParam)) {
                             cells = cellsParam;
                         }
-                        else {
-                            cells = {};
-                        }
-                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });
+                        // Ensure we always send an object (not array) for values
+                        const body = { values: cells };
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, body);
                         responseData = responseData.data || responseData;
                     }
                     else if (operation === 'delete') {

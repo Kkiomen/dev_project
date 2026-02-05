@@ -259,15 +259,31 @@ export class AiselloDatabase implements INodeType {
 					} else if (operation === 'update') {
 						const rowId = this.getNodeParameter('rowId', i) as string;
 						const cellsParam = this.getNodeParameter('cells', i);
-						let cells: IDataObject;
+						let cells: IDataObject = {};
+						
 						if (typeof cellsParam === 'string') {
-							try { cells = JSON.parse(cellsParam); } catch { cells = {}; }
-						} else if (typeof cellsParam === 'object' && cellsParam !== null) {
+							const trimmed = cellsParam.trim();
+							if (trimmed === '' || trimmed === '{}') {
+								cells = {};
+							} else {
+								try { 
+									const parsed = JSON.parse(trimmed);
+									if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+										cells = parsed as IDataObject;
+									} else {
+										cells = {};
+									}
+								} catch { 
+									cells = {}; 
+								}
+							}
+						} else if (typeof cellsParam === 'object' && cellsParam !== null && !Array.isArray(cellsParam)) {
 							cells = cellsParam as IDataObject;
-						} else {
-							cells = {};
 						}
-						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });
+						
+						// Ensure we always send an object (not array) for values
+						const body: IDataObject = { values: cells };
+						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, body);
 						responseData = responseData.data || responseData;
 					} else if (operation === 'delete') {
 						const rowId = this.getNodeParameter('rowId', i) as string;

@@ -14,9 +14,16 @@ class UpdateRowRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'values' => ['nullable', 'array'],
-            'values.*' => ['nullable'],
+            'values' => ['sometimes', 'array'],
             'position' => ['sometimes', 'integer', 'min:0'],
         ];
+    }
+
+    /**
+     * Get values to update, preserving boolean false.
+     */
+    public function getValues(): array
+    {
+        return $this->input('values', []);
     }
 }
