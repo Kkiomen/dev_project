@@ -260,12 +260,30 @@ export class Aisello implements INodeType {
 						responseData = responseData.data || responseData;
 					} else if (operation === 'create') {
 						const brandId = this.getNodeParameter('brandId', i) as string;
-						const content = this.getNodeParameter('content', i) as string;
-						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
-						const body: IDataObject = { brand_id: brandId, content, ...additionalFields };
-						if (body.platforms && typeof body.platforms === 'string') {
-							try { body.platforms = JSON.parse(body.platforms as string); } catch { /* keep as string */ }
+						const title = this.getNodeParameter('title', i, '') as string;
+						const content = this.getNodeParameter('content', i, '') as string;
+						const platforms = this.getNodeParameter('platforms', i, []) as string[];
+						const status = this.getNodeParameter('status', i, 'draft') as string;
+						const scheduledAt = this.getNodeParameter('scheduled_at', i, '') as string;
+						const language = this.getNodeParameter('language', i, 'pl') as string;
+						const aiOptions = this.getNodeParameter('aiOptions', i, {}) as IDataObject;
+						const additionalFields = this.getNodeParameter('additionalFields', i, {}) as IDataObject;
+
+						const body: IDataObject = {
+							brand_id: brandId,
+							title,
+							content,
+							platforms,
+							status,
+							language,
+							...aiOptions,
+							...additionalFields,
+						};
+
+						if (scheduledAt) {
+							body.scheduled_at = scheduledAt;
 						}
+
 						responseData = await aiselloApiRequest.call(this, 'POST', '/posts', body);
 						responseData = responseData.data || responseData;
 					} else if (operation === 'update') {

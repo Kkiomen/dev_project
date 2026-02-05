@@ -36,6 +36,8 @@ export const platformPostFields: INodeProperties[] = [
 			{ name: 'Facebook', value: 'facebook' },
 			{ name: 'Instagram', value: 'instagram' },
 			{ name: 'LinkedIn', value: 'linkedin' },
+			{ name: 'Pinterest', value: 'pinterest' },
+			{ name: 'Threads', value: 'threads' },
 			{ name: 'TikTok', value: 'tiktok' },
 			{ name: 'X (Twitter)', value: 'twitter' },
 			{ name: 'YouTube', value: 'youtube' },
@@ -54,6 +56,21 @@ export const platformPostFields: INodeProperties[] = [
 		options: [
 			{ displayName: 'Content', name: 'content', type: 'string', typeOptions: { rows: 5 }, default: '', description: 'Platform-specific content' },
 			{ displayName: 'Title', name: 'title', type: 'string', default: '', description: 'Platform-specific title' },
+			{ displayName: 'Hashtags', name: 'hashtags', type: 'string', default: '', description: 'Comma-separated hashtags (without #)' },
+			{ displayName: 'Enabled', name: 'enabled', type: 'boolean', default: true, description: 'Whether this platform is enabled for the post' },
+			{
+				displayName: 'Post Type',
+				name: 'post_type',
+				type: 'options',
+				options: [
+					{ name: 'Feed Post', value: 'feed' },
+					{ name: 'Story', value: 'story' },
+					{ name: 'Reel', value: 'reel' },
+					{ name: 'Carousel', value: 'carousel' },
+				],
+				default: 'feed',
+				description: 'Type of post for this platform',
+			},
 		],
 	},
 ];
