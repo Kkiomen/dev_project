@@ -14,7 +14,7 @@ export class AiselloImageGenerationTrigger implements INodeType {
 		group: ['trigger'],
 		version: 1,
 		subtitle: 'Receives image generation requests',
-		description: 'Starts the workflow when Aisello requests image generation for a post. Use with AI image nodes (DALL-E, Stable Diffusion, etc.) and finish with Aisello Respond node.',
+		description: 'IMPORTANT: Copy the Webhook URL and paste it in Aisello brand settings. Starts when Aisello requests image generation for a post. Use with AI image nodes (DALL-E, Stable Diffusion, etc.) and finish with Aisello Respond node.',
 		defaults: { name: 'Image Generation Trigger' },
 		inputs: [],
 		outputs: ['main'],

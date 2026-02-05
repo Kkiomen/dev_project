@@ -14,7 +14,7 @@ export class AiselloTextGenerationTrigger implements INodeType {
 		group: ['trigger'],
 		version: 1,
 		subtitle: 'Receives text generation requests',
-		description: 'Starts the workflow when Aisello requests text generation for a post. Use with AI nodes (OpenAI, Claude, etc.) and finish with Aisello Respond node.',
+		description: 'Starts the workflow when Aisello requests text generation for a post. IMPORTANT: Copy the Webhook URL below and paste it in Aisello brand webhook settings.',
 		defaults: { name: 'Text Generation Trigger' },
 		inputs: [],
 		outputs: ['main'],
