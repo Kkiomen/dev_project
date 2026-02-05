@@ -53,7 +53,7 @@ class PlatformPost extends Model
     }
 
     // Helper methods
-    public function getEffectiveCaption(): string
+    public function getEffectiveCaption(): ?string
     {
         return $this->platform_caption ?? $this->socialPost->main_caption;
     }
