@@ -49,6 +49,7 @@ class Row extends Model
         $field = $this->resolveField($fieldId);
 
         $cell = $this->cells()->firstOrNew(['field_id' => $field->id]);
+        $cell->row_id = $this->id;
         $cell->field_id = $field->id;
         $cell->setValue($value);
         $cell->save();
