@@ -274,7 +274,7 @@ class AiselloDatabase {
                         catch {
                             cells = {};
                         }
-                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { cells });
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { values: cells });
                         responseData = responseData.data || responseData;
                     }
                     else if (operation === 'update') {
@@ -287,7 +287,7 @@ class AiselloDatabase {
                         catch {
                             cells = {};
                         }
-                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { cells });
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });
                         responseData = responseData.data || responseData;
                     }
                     else if (operation === 'delete') {
@@ -304,6 +304,13 @@ class AiselloDatabase {
                         catch {
                             rows = [];
                         }
+                        // Transform cells to values for backward compatibility
+                        rows = rows.map((row) => {
+                            if (row.cells && !row.values) {
+                                return { ...row, values: row.cells, cells: undefined };
+                            }
+                            return row;
+                        });
                         responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows/bulk`, { rows });
                         responseData = responseData.data || responseData;
                     }
@@ -336,7 +343,7 @@ class AiselloDatabase {
                         catch {
                             cells = {};
                         }
-                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}/cells`, { cells });
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}/cells`, { values: cells });
                         responseData = responseData.data || responseData;
                     }
                 }

@@ -254,14 +254,14 @@ export class AiselloDatabase implements INodeType {
 						const cellsStr = this.getNodeParameter('cells', i) as string;
 						let cells: IDataObject;
 						try { cells = JSON.parse(cellsStr); } catch { cells = {}; }
-						responseData = await aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { cells });
+						responseData = await aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { values: cells });
 						responseData = responseData.data || responseData;
 					} else if (operation === 'update') {
 						const rowId = this.getNodeParameter('rowId', i) as string;
 						const cellsStr = this.getNodeParameter('cells', i) as string;
 						let cells: IDataObject;
 						try { cells = JSON.parse(cellsStr); } catch { cells = {}; }
-						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { cells });
+						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });
 						responseData = responseData.data || responseData;
 					} else if (operation === 'delete') {
 						const rowId = this.getNodeParameter('rowId', i) as string;
@@ -271,6 +271,13 @@ export class AiselloDatabase implements INodeType {
 						const rowsStr = this.getNodeParameter('rows', i) as string;
 						let rows: IDataObject[];
 						try { rows = JSON.parse(rowsStr); } catch { rows = []; }
+						// Transform cells to values for backward compatibility
+						rows = rows.map((row: IDataObject) => {
+							if (row.cells && !row.values) {
+								return { ...row, values: row.cells, cells: undefined };
+							}
+							return row;
+						});
 						responseData = await aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows/bulk`, { rows });
 						responseData = responseData.data || responseData;
 					} else if (operation === 'bulkDelete') {
@@ -296,7 +303,7 @@ export class AiselloDatabase implements INodeType {
 						const cellsStr = this.getNodeParameter('cells', i) as string;
 						let cells: IDataObject;
 						try { cells = JSON.parse(cellsStr); } catch { cells = {}; }
-						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}/cells`, { cells });
+						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}/cells`, { values: cells });
 						responseData = responseData.data || responseData;
 					}
 				}

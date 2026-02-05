@@ -93,7 +93,7 @@ exports.rowFields = [
         type: 'json',
         required: true,
         default: '[]',
-        description: 'JSON array of row objects, each containing cells',
+        description: 'JSON array of row objects, each containing values (e.g. [{"values": {"field_id": "value"}}])',
         displayOptions: { show: { resource: ['row'], operation: ['bulkCreate'] } },
     },
     {
