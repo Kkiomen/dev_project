@@ -273,14 +273,26 @@ class Aisello {
                     }
                     else if (operation === 'create') {
                         const brandId = this.getNodeParameter('brandId', i);
-                        const content = this.getNodeParameter('content', i);
-                        const additionalFields = this.getNodeParameter('additionalFields', i);
-                        const body = { brand_id: brandId, content, ...additionalFields };
-                        if (body.platforms && typeof body.platforms === 'string') {
-                            try {
-                                body.platforms = JSON.parse(body.platforms);
-                            }
-                            catch { /* keep as string */ }
+                        const title = this.getNodeParameter('title', i, '');
+                        const content = this.getNodeParameter('content', i, '');
+                        const platforms = this.getNodeParameter('platforms', i, []);
+                        const status = this.getNodeParameter('status', i, 'draft');
+                        const scheduledAt = this.getNodeParameter('scheduled_at', i, '');
+                        const language = this.getNodeParameter('language', i, 'pl');
+                        const aiOptions = this.getNodeParameter('aiOptions', i, {});
+                        const additionalFields = this.getNodeParameter('additionalFields', i, {});
+                        const body = {
+                            brand_id: brandId,
+                            title,
+                            content,
+                            platforms,
+                            status,
+                            language,
+                            ...aiOptions,
+                            ...additionalFields,
+                        };
+                        if (scheduledAt) {
+                            body.scheduled_at = scheduledAt;
                         }
                         responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', '/posts', body);
                         responseData = responseData.data || responseData;
