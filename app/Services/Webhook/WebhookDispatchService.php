@@ -20,6 +20,8 @@ class WebhookDispatchService
 
         $payload = $this->buildPayload($post, [
             'prompt' => $promptOverride ?? $brand->getWebhookPrompt('text_generation'),
+            'text_prompt' => $post->text_prompt,
+            'system_prompt' => $this->getResolvedSystemPrompt($brand, 'text'),
         ]);
 
         return $this->sendWebhook($brand->getWebhookUrl('text_generation'), $payload);
@@ -36,6 +38,7 @@ class WebhookDispatchService
 
         $payload = $this->buildPayload($post, [
             'prompt' => $brand->getWebhookPrompt('image_generation'),
+            'system_prompt' => $this->getResolvedSystemPrompt($brand, 'image'),
         ]);
 
         return $this->sendWebhook($brand->getWebhookUrl('image_generation'), $payload);
@@ -93,6 +96,43 @@ class WebhookDispatchService
         ];
 
         return array_merge($payload, $extra);
+    }
+
+    /**
+     * Get resolved system prompt with variables replaced.
+     */
+    protected function getResolvedSystemPrompt($brand, string $type): string
+    {
+        $settings = $brand->automation_settings ?? [];
+        $prompt = $settings[$type . '_system_prompt'] ?? '';
+
+        if (empty($prompt)) {
+            return '';
+        }
+
+        $targetAudience = $brand->target_audience ?? [];
+        $voice = $brand->voice ?? [];
+
+        $variables = [
+            'brand_name' => $brand->name ?? '',
+            'brand_description' => $brand->description ?? '',
+            'industry' => $brand->industry ?? '',
+            'tone' => $voice['tone'] ?? '',
+            'language' => $voice['language'] ?? 'pl',
+            'emoji_usage' => $voice['emoji_usage'] ?? 'sometimes',
+            'personality' => implode(', ', $voice['personality'] ?? []),
+            'target_age_range' => $targetAudience['age_range'] ?? '',
+            'target_gender' => $targetAudience['gender'] ?? 'all',
+            'interests' => implode(', ', $targetAudience['interests'] ?? []),
+            'pain_points' => implode(', ', $targetAudience['pain_points'] ?? []),
+            'content_pillars' => implode(', ', array_column($brand->content_pillars ?? [], 'name')),
+        ];
+
+        foreach ($variables as $key => $value) {
+            $prompt = str_replace('{{' . $key . '}}', $value, $prompt);
+        }
+
+        return $prompt;
     }
 
     protected function sendWebhook(string $url, array $payload): array
