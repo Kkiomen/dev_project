@@ -514,6 +514,25 @@ export const usePostsStore = defineStore('posts', {
             }
         },
 
+        // Silent fetch for auto-refresh (no loading spinner)
+        async fetchAutomationPostsSilent(params = {}) {
+            try {
+                const response = await axios.get('/api/v1/posts/automation', { params });
+                this.automationPosts = response.data.data;
+                if (response.data.meta) {
+                    this.automationPagination = {
+                        currentPage: response.data.meta.current_page,
+                        lastPage: response.data.meta.last_page,
+                        total: response.data.meta.total,
+                    };
+                }
+                return response.data;
+            } catch (error) {
+                // Silent fail - don't set error state
+                throw error;
+            }
+        },
+
         async generatePostText(postId, prompt = null) {
             this.generatingText = { ...this.generatingText, [postId]: true };
             try {

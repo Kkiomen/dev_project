@@ -2441,7 +2441,18 @@
             "title": "Post Preview",
             "openEditor": "Open in Editor",
             "noContent": "No content yet",
-            "noImagePrompt": "No image description yet"
+            "noImagePrompt": "No image description yet",
+            "noImage": "No image",
+            "noVideo": "No video thumbnail",
+            "justNow": "Just now",
+            "today": "Today",
+            "tomorrow": "Tomorrow",
+            "comments": "comments",
+            "views": "views",
+            "like": "Like",
+            "comment": "Comment",
+            "share": "Share",
+            "untitledVideo": "Untitled video"
         },
         "empty": "No posts found. Create posts in the Calendar to see them here.",
         "errors": {

@@ -39,6 +39,7 @@ const bulkGeneratingImage = ref(false);
 const bulkDeleting = ref(false);
 const stats = ref({});
 const statsLoading = ref(false);
+const autoRefreshInterval = ref(null);
 
 const platformColors = {
     facebook: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
@@ -77,6 +78,35 @@ async function fetchStats() {
 function refresh() {
     fetchPosts(pagination.value.currentPage);
     fetchStats();
+}
+
+// Silent refresh (without loading spinner) for auto-refresh
+async function silentRefresh() {
+    const params = { page: pagination.value.currentPage || 1, per_page: 20 };
+    if (search.value) params.search = search.value;
+    if (statusFilter.value) params.status = statusFilter.value;
+    if (brandsStore.currentBrand?.id) params.brand_id = brandsStore.currentBrand.id;
+
+    try {
+        await postsStore.fetchAutomationPostsSilent(params);
+        if (brandsStore.currentBrand?.id) {
+            stats.value = await brandsStore.fetchAutomationStats(brandsStore.currentBrand.id);
+        }
+    } catch {
+        // Silent fail - don't show errors for auto-refresh
+    }
+}
+
+function startAutoRefresh() {
+    stopAutoRefresh();
+    autoRefreshInterval.value = setInterval(silentRefresh, 15000); // 15 seconds
+}
+
+function stopAutoRefresh() {
+    if (autoRefreshInterval.value) {
+        clearInterval(autoRefreshInterval.value);
+        autoRefreshInterval.value = null;
+    }
 }
 
 // Selection
@@ -352,10 +382,12 @@ watch(() => brandsStore.currentBrand?.id, () => {
 onMounted(() => {
     fetchPosts();
     fetchStats();
+    startAutoRefresh();
 });
 
 onUnmounted(() => {
     postsStore.stopAllPolling();
+    stopAutoRefresh();
 });
 </script>
 

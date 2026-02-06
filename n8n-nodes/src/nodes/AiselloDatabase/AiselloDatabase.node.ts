@@ -246,44 +246,64 @@ export class AiselloDatabase implements INodeType {
 							responseData = responseData.data || responseData;
 						}
 					} else if (operation === 'get') {
-						const rowId = this.getNodeParameter('rowId', i) as string;
-						responseData = await aiselloApiRequest.call(this, 'GET', `/rows/${rowId}`);
-						responseData = responseData.data || responseData;
+						const tableId = this.getNodeParameter('tableId', i) as string;
+						const searchFieldId = this.getNodeParameter('searchFieldId', i) as string;
+						const searchValue = this.getNodeParameter('searchValue', i) as string;
+
+						const allRows = await aiselloApiRequestAllItems.call(this, 'GET', `/tables/${tableId}/rows`);
+						const matchedRow = (allRows as IDataObject[]).find((row: IDataObject) => {
+							const values = (row.values || row.cells || {}) as IDataObject;
+							return String(values[searchFieldId] ?? '') === String(searchValue);
+						});
+
+						if (matchedRow) {
+							responseData = matchedRow;
+						} else {
+							throw new Error(`No row found where field "${searchFieldId}" equals "${searchValue}"`);
+						}
 					} else if (operation === 'create') {
 						const tableId = this.getNodeParameter('tableId', i) as string;
-						const cellsStr = this.getNodeParameter('cells', i) as string;
-						let cells: IDataObject;
-						try { cells = JSON.parse(cellsStr); } catch { cells = {}; }
+						const fieldValues = this.getNodeParameter('fieldValues', i) as IDataObject;
+						const fields = (fieldValues.field as IDataObject[]) || [];
+						const cells: IDataObject = {};
+						for (const entry of fields) {
+							cells[entry.fieldId as string] = entry.fieldValue;
+						}
 						responseData = await aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { values: cells });
 						responseData = responseData.data || responseData;
 					} else if (operation === 'update') {
 						const rowId = this.getNodeParameter('rowId', i) as string;
-						const cellsParam = this.getNodeParameter('cells', i);
-						let cells: IDataObject = {};
-						
-						if (typeof cellsParam === 'string') {
-							const trimmed = cellsParam.trim();
-							if (trimmed === '' || trimmed === '{}') {
-								cells = {};
-							} else {
-								try { 
-									const parsed = JSON.parse(trimmed);
-									if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-										cells = parsed as IDataObject;
-									} else {
-										cells = {};
-									}
-								} catch { 
-									cells = {}; 
-								}
-							}
-						} else if (typeof cellsParam === 'object' && cellsParam !== null && !Array.isArray(cellsParam)) {
-							cells = cellsParam as IDataObject;
+						const fieldValues = this.getNodeParameter('fieldValues', i) as IDataObject;
+						const fields = (fieldValues.field as IDataObject[]) || [];
+						const cells: IDataObject = {};
+						for (const entry of fields) {
+							cells[entry.fieldId as string] = entry.fieldValue;
 						}
-						
-						// Ensure we always send an object (not array) for values
-						const body: IDataObject = { values: cells };
-						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, body);
+						responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });
+						responseData = responseData.data || responseData;
+					} else if (operation === 'upsert') {
+						const tableId = this.getNodeParameter('tableId', i) as string;
+						const matchFieldId = this.getNodeParameter('matchFieldId', i) as string;
+						const matchValue = this.getNodeParameter('matchValue', i) as string;
+						const fieldValues = this.getNodeParameter('fieldValues', i) as IDataObject;
+						const fields = (fieldValues.field as IDataObject[]) || [];
+						const cells: IDataObject = {};
+						for (const entry of fields) {
+							cells[entry.fieldId as string] = entry.fieldValue;
+						}
+
+						// Fetch all rows and find a match
+						const allRows = await aiselloApiRequestAllItems.call(this, 'GET', `/tables/${tableId}/rows`);
+						const existingRow = (allRows as IDataObject[]).find((row: IDataObject) => {
+							const values = (row.values || row.cells || {}) as IDataObject;
+							return String(values[matchFieldId] ?? '') === String(matchValue);
+						});
+
+						if (existingRow) {
+							responseData = await aiselloApiRequest.call(this, 'PUT', `/rows/${existingRow.id}`, { values: cells });
+						} else {
+							responseData = await aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { values: cells });
+						}
 						responseData = responseData.data || responseData;
 					} else if (operation === 'delete') {
 						const rowId = this.getNodeParameter('rowId', i) as string;

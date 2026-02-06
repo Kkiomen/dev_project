@@ -2444,7 +2444,18 @@
             "title": "Podgląd Posta",
             "openEditor": "Otwórz w Edytorze",
             "noContent": "Brak treści",
-            "noImagePrompt": "Brak opisu obrazka"
+            "noImagePrompt": "Brak opisu obrazka",
+            "noImage": "Brak obrazu",
+            "noVideo": "Brak miniatury wideo",
+            "justNow": "Przed chwilą",
+            "today": "Dzisiaj",
+            "tomorrow": "Jutro",
+            "comments": "komentarzy",
+            "views": "wyświetleń",
+            "like": "Lubię to",
+            "comment": "Komentarz",
+            "share": "Udostępnij",
+            "untitledVideo": "Film bez tytułu"
         },
         "empty": "Nie znaleziono postów. Utwórz posty w Kalendarzu, aby je tutaj zobaczyć.",
         "errors": {

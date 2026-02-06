@@ -260,53 +260,65 @@ class AiselloDatabase {
                         }
                     }
                     else if (operation === 'get') {
-                        const rowId = this.getNodeParameter('rowId', i);
-                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/rows/${rowId}`);
-                        responseData = responseData.data || responseData;
+                        const tableId = this.getNodeParameter('tableId', i);
+                        const searchFieldId = this.getNodeParameter('searchFieldId', i);
+                        const searchValue = this.getNodeParameter('searchValue', i);
+                        const allRows = await GenericFunctions_1.aiselloApiRequestAllItems.call(this, 'GET', `/tables/${tableId}/rows`);
+                        const matchedRow = allRows.find((row) => {
+                            const values = (row.values || row.cells || {});
+                            return String(values[searchFieldId] ?? '') === String(searchValue);
+                        });
+                        if (matchedRow) {
+                            responseData = matchedRow;
+                        }
+                        else {
+                            throw new Error(`No row found where field "${searchFieldId}" equals "${searchValue}"`);
+                        }
                     }
                     else if (operation === 'create') {
                         const tableId = this.getNodeParameter('tableId', i);
-                        const cellsStr = this.getNodeParameter('cells', i);
-                        let cells;
-                        try {
-                            cells = JSON.parse(cellsStr);
-                        }
-                        catch {
-                            cells = {};
+                        const fieldValues = this.getNodeParameter('fieldValues', i);
+                        const fields = fieldValues.field || [];
+                        const cells = {};
+                        for (const entry of fields) {
+                            cells[entry.fieldId] = entry.fieldValue;
                         }
                         responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { values: cells });
                         responseData = responseData.data || responseData;
                     }
                     else if (operation === 'update') {
                         const rowId = this.getNodeParameter('rowId', i);
-                        const cellsParam = this.getNodeParameter('cells', i);
-                        let cells = {};
-                        if (typeof cellsParam === 'string') {
-                            const trimmed = cellsParam.trim();
-                            if (trimmed === '' || trimmed === '{}') {
-                                cells = {};
-                            }
-                            else {
-                                try {
-                                    const parsed = JSON.parse(trimmed);
-                                    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
-                                        cells = parsed;
-                                    }
-                                    else {
-                                        cells = {};
-                                    }
-                                }
-                                catch {
-                                    cells = {};
-                                }
-                            }
+                        const fieldValues = this.getNodeParameter('fieldValues', i);
+                        const fields = fieldValues.field || [];
+                        const cells = {};
+                        for (const entry of fields) {
+                            cells[entry.fieldId] = entry.fieldValue;
                         }
-                        else if (typeof cellsParam === 'object' && cellsParam !== null && !Array.isArray(cellsParam)) {
-                            cells = cellsParam;
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, { values: cells });
+                        responseData = responseData.data || responseData;
+                    }
+                    else if (operation === 'upsert') {
+                        const tableId = this.getNodeParameter('tableId', i);
+                        const matchFieldId = this.getNodeParameter('matchFieldId', i);
+                        const matchValue = this.getNodeParameter('matchValue', i);
+                        const fieldValues = this.getNodeParameter('fieldValues', i);
+                        const fields = fieldValues.field || [];
+                        const cells = {};
+                        for (const entry of fields) {
+                            cells[entry.fieldId] = entry.fieldValue;
                         }
-                        // Ensure we always send an object (not array) for values
-                        const body = { values: cells };
-                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${rowId}`, body);
+                        // Fetch all rows and find a match
+                        const allRows = await GenericFunctions_1.aiselloApiRequestAllItems.call(this, 'GET', `/tables/${tableId}/rows`);
+                        const existingRow = allRows.find((row) => {
+                            const values = (row.values || row.cells || {});
+                            return String(values[matchFieldId] ?? '') === String(matchValue);
+                        });
+                        if (existingRow) {
+                            responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rows/${existingRow.id}`, { values: cells });
+                        }
+                        else {
+                            responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', `/tables/${tableId}/rows`, { values: cells });
+                        }
                         responseData = responseData.data || responseData;
                     }
                     else if (operation === 'delete') {
