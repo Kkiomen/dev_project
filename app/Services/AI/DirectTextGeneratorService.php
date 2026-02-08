@@ -144,16 +144,28 @@ class DirectTextGeneratorService
                 'response_format' => ['type' => 'json_object'],
             ]);
 
-            $content = $response->choices[0]->message->content;
-            $parsed = $this->parseResponse($content);
+            $content = trim($response->choices[0]->message->content);
+
+            // Strip markdown code blocks if present
+            if (preg_match('/```(?:json)?\s*([\s\S]*?)\s*```/', $content, $matches)) {
+                $content = $matches[1];
+            }
+
+            $decoded = json_decode($content, true);
+            $imagePrompt = '';
+
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $imagePrompt = $decoded['image_prompt'] ?? '';
+            } else {
+                // Fallback: use raw response as the image prompt
+                $imagePrompt = $content;
+            }
 
             $durationMs = (int) ((microtime(true) - $startTime) * 1000);
             $promptTokens = $response->usage->promptTokens ?? 0;
             $completionTokens = $response->usage->completionTokens ?? 0;
 
-            $this->completeAiLog($log, $parsed, $promptTokens, $completionTokens, $durationMs);
-
-            $imagePrompt = $parsed['image_prompt'] ?? '';
+            $this->completeAiLog($log, ['image_prompt' => $imagePrompt], $promptTokens, $completionTokens, $durationMs);
 
             return [
                 'success' => true,
