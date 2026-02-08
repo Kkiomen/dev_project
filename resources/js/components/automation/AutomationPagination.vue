@@ -7,6 +7,7 @@ const props = defineProps({
     lastPage: { type: Number, required: true },
     total: { type: Number, required: true },
     perPage: { type: Number, default: 20 },
+    showingKey: { type: String, default: 'postAutomation.pagination.showing' },
 });
 
 const emit = defineEmits(['update:currentPage']);
@@ -51,7 +52,7 @@ function goToPage(page) {
 <template>
     <div v-if="lastPage > 1" class="flex flex-col sm:flex-row items-center justify-between gap-3 mt-6">
         <p class="text-sm text-gray-500">
-            {{ t('postAutomation.pagination.showing', { from, to, total }) }}
+            {{ t(showingKey, { from, to, total }) }}
         </p>
         <div class="flex items-center gap-1">
             <button

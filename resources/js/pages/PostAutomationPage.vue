@@ -6,6 +6,7 @@ import { usePostsStore } from '@/stores/posts';
 import { useBrandsStore } from '@/stores/brands';
 import { useToast } from '@/composables/useToast';
 
+import ProposalsTab from '@/components/proposals/ProposalsTab.vue';
 import AutomationStatsBar from '@/components/automation/AutomationStatsBar.vue';
 import AutomationStatusTabs from '@/components/automation/AutomationStatusTabs.vue';
 import AutomationToolbar from '@/components/automation/AutomationToolbar.vue';
@@ -26,6 +27,7 @@ const brandsStore = useBrandsStore();
 const toast = useToast();
 
 // State
+const activeMainTab = ref('automation');
 const search = ref('');
 const statusFilter = ref('');
 const selectedIds = ref([]);
@@ -379,6 +381,14 @@ watch(() => brandsStore.currentBrand?.id, () => {
     fetchStats();
 });
 
+watch(activeMainTab, (tab) => {
+    if (tab === 'automation') {
+        startAutoRefresh();
+    } else {
+        stopAutoRefresh();
+    }
+});
+
 onMounted(() => {
     fetchPosts();
     fetchStats();
@@ -402,6 +412,38 @@ onUnmounted(() => {
                 {{ t('postAutomation.subtitle') }}
             </p>
         </div>
+
+        <!-- Main Tab Switcher -->
+        <div class="flex gap-1 mb-6 bg-gray-100 p-1 rounded-lg w-fit">
+            <button
+                @click="activeMainTab = 'automation'"
+                :class="[
+                    'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+                    activeMainTab === 'automation'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                ]"
+            >
+                {{ t('postAutomation.tabs.automation') }}
+            </button>
+            <button
+                @click="activeMainTab = 'proposals'"
+                :class="[
+                    'px-4 py-2 text-sm font-medium rounded-md transition-colors',
+                    activeMainTab === 'proposals'
+                        ? 'bg-white text-gray-900 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-900'
+                ]"
+            >
+                {{ t('postAutomation.tabs.proposals') }}
+            </button>
+        </div>
+
+        <!-- Proposals Tab -->
+        <ProposalsTab v-if="activeMainTab === 'proposals'" />
+
+        <!-- Automation Tab -->
+        <template v-if="activeMainTab === 'automation'">
 
         <!-- Stats Bar -->
         <AutomationStatsBar
@@ -531,5 +573,7 @@ onUnmounted(() => {
             :post="previewPost"
             @close="showPreview = false"
         />
+
+        </template><!-- /automation tab -->
     </div>
 </template>

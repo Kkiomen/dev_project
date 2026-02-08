@@ -317,7 +317,8 @@
             "profile": "Profile",
             "ai": "AI Settings",
             "notifications": "Notifications",
-            "tokens": "Tokens"
+            "tokens": "Tokens",
+            "aiKeys": "AI Keys"
         },
         "tokens": {
             "title": "API Tokens",
@@ -2126,6 +2127,37 @@
         "directApiDescription": "Posts are published directly to the platform",
         "webhookDescription": "Posts are sent to an external automation system"
     },
+    "aiKeys": {
+        "title": "AI API Keys",
+        "subtitle": "Manage API keys for external AI services used in automation",
+        "providers": {
+            "openai": "OpenAI",
+            "gemini": "Gemini",
+            "wavespeed": "WaveSpeed AI"
+        },
+        "form": {
+            "apiKey": "API Key",
+            "apiKeyPlaceholder": "Enter your API key...",
+            "save": "Save Key",
+            "delete": "Delete Key",
+            "confirmDelete": "Are you sure you want to delete this API key?"
+        },
+        "status": {
+            "active": "Active",
+            "inactive": "Inactive",
+            "noKey": "No key configured",
+            "hasKey": "Key configured"
+        },
+        "success": {
+            "saved": "API key saved successfully",
+            "deleted": "API key deleted successfully"
+        },
+        "errors": {
+            "saveFailed": "Failed to save API key",
+            "deleteFailed": "Failed to delete API key",
+            "loadFailed": "Failed to load API keys"
+        }
+    },
     "youtube": {
         "videoTitle": "Video Title",
         "videoTitlePlaceholder": "Enter video title...",
@@ -2219,7 +2251,8 @@
                 "pillars": "Content",
                 "platforms": "Platforms",
                 "connectedPlatforms": "Connections",
-                "automation": "Automation"
+                "automation": "Automation",
+                "aiKeys": "AI Keys"
             },
             "step1": {
                 "title": "Basic Information",
@@ -2490,7 +2523,9 @@
             "days": "days"
         },
         "tabs": {
-            "all": "All"
+            "all": "All",
+            "automation": "Automation",
+            "proposals": "Proposals"
         },
         "toolbar": {
             "settings": "Settings",
@@ -2559,6 +2594,111 @@
             "title": "No posts to automate",
             "description": "Create posts in the Calendar to start automating your publishing.",
             "goToCalendar": "Go to Calendar"
+        },
+        "proposals": {
+            "title": "Post Proposals",
+            "subtitle": "Plan your content by creating proposals with dates, topics and keywords",
+            "table": {
+                "date": "Date",
+                "title": "Title",
+                "keywords": "Keywords",
+                "notes": "Notes",
+                "status": "Status",
+                "actions": "Actions"
+            },
+            "toolbar": {
+                "addProposal": "Add Proposal",
+                "generate": "Generate",
+                "searchPlaceholder": "Search proposals...",
+                "viewTable": "Table",
+                "viewCalendar": "Calendar",
+                "refresh": "Refresh"
+            },
+            "generate": {
+                "title": "Generate Proposals",
+                "description": "AI will generate content proposals for the upcoming days based on your brand's posting frequency, best times, and content pillars.",
+                "daysLabel": "Number of days",
+                "daysHint": "Proposals will be generated for the next {days} days",
+                "languageLabel": "Proposal language",
+                "languagePanel": "panel",
+                "languageBrand": "brand",
+                "generateButton": "Generate Proposals",
+                "generating": "Generating proposals...",
+                "success": "{count} proposals generated",
+                "failed": "Failed to generate proposals"
+            },
+            "form": {
+                "createTitle": "New Proposal",
+                "editTitle": "Edit Proposal",
+                "scheduledDate": "Scheduled Date",
+                "title": "Title",
+                "titlePlaceholder": "Enter post topic...",
+                "keywords": "Keywords",
+                "keywordPlaceholder": "Add keyword...",
+                "notes": "Notes",
+                "notesPlaceholder": "Additional notes...",
+                "save": "Save",
+                "cancel": "Cancel",
+                "scheduledTime": "Time",
+                "nextFreeDate": "Nearest free date: {date}",
+                "useThisDate": "Use",
+                "loadingNextFree": "Searching...",
+                "noFreeDate": "No free dates in next 90 days"
+            },
+            "status": {
+                "pending": "Pending",
+                "used": "Used",
+                "all": "All"
+            },
+            "calendar": {
+                "today": "Today",
+                "legend": "Legend",
+                "proposals": "Proposals",
+                "posts": "Posts",
+                "mon": "Mon",
+                "tue": "Tue",
+                "wed": "Wed",
+                "thu": "Thu",
+                "fri": "Fri",
+                "sat": "Sat",
+                "sun": "Sun"
+            },
+            "actions": {
+                "edit": "Edit",
+                "delete": "Delete",
+                "generatePost": "Generate Post",
+                "generating": "Generating..."
+            },
+            "empty": {
+                "title": "No proposals yet",
+                "description": "Create your first proposal to start planning your content.",
+                "calendarEmpty": "No proposals or posts for this month"
+            },
+            "errors": {
+                "fetchFailed": "Failed to load proposals",
+                "saveFailed": "Failed to save proposal",
+                "deleteFailed": "Failed to delete proposal",
+                "generateFailed": "Failed to generate post from proposal",
+                "no_api_key": "No OpenAI API key configured. Go to brand settings to add your API key.",
+                "no_brand": "Proposal must be assigned to a brand first.",
+                "already_used": "This proposal has already been used to generate a post.",
+                "no_frequency": "No posting frequency configured. Go to brand settings to set your posting schedule."
+            },
+            "success": {
+                "created": "Proposal created",
+                "updated": "Proposal updated",
+                "deleted": "Proposal deleted",
+                "postGenerated": "Post generated successfully from proposal"
+            },
+            "confirm": {
+                "delete": "Are you sure you want to delete this proposal?"
+            },
+            "pagination": {
+                "showing": "Showing {from}-{to} of {total} proposals"
+            },
+            "noKeywords": "No keywords",
+            "noNotes": "No notes",
+            "clickToEdit": "Click to edit"
         }
     },
     "notifications": {

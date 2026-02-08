@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AiProvider;
 use App\Enums\BrandTone;
 use App\Enums\EmojiUsage;
 use App\Enums\Industry;
@@ -73,6 +74,11 @@ class Brand extends Model
         return $this->hasMany(SocialPost::class);
     }
 
+    public function postProposals(): HasMany
+    {
+        return $this->hasMany(PostProposal::class);
+    }
+
     public function templates(): HasMany
     {
         return $this->hasMany(Template::class);
@@ -113,6 +119,11 @@ class Brand extends Model
     public function boards(): HasMany
     {
         return $this->hasMany(Board::class);
+    }
+
+    public function aiKeys(): HasMany
+    {
+        return $this->hasMany(BrandAiKey::class);
     }
 
     // Member helpers
@@ -392,5 +403,11 @@ class Brand extends Model
         return $this->platformCredentials()
             ->pluck('platform')
             ->toArray();
+    }
+
+    // AI Key Helpers
+    public function getAiKey(AiProvider $provider): ?string
+    {
+        return BrandAiKey::getKeyForProvider($this, $provider);
     }
 }

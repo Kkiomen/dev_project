@@ -33,7 +33,7 @@ return new class extends Migration
 
         // cells: text value lookups (Get Row by field value, Upsert matching)
         Schema::table('cells', function (Blueprint $table) {
-            $table->index(['field_id', 'value_text'], 'cells_field_id_value_text_index');
+            $table->rawIndex('`field_id`, `value_text`(255)', 'cells_field_id_value_text_index');
         });
 
         // attachments: quick lookup by mime type within a cell

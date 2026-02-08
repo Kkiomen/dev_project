@@ -89,6 +89,11 @@ class User extends Authenticatable
         return $this->hasMany(SocialPost::class);
     }
 
+    public function postProposals(): HasMany
+    {
+        return $this->hasMany(PostProposal::class);
+    }
+
     public function approvalTokens(): HasMany
     {
         return $this->hasMany(ApprovalToken::class);

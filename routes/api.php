@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\CalendarEventController;
 use App\Http\Controllers\Api\V1\DebugRenderController;
 use App\Http\Controllers\Api\V1\ApprovalTokenController;
 use App\Http\Controllers\Api\V1\BaseController;
+use App\Http\Controllers\Api\V1\BrandAiKeyController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\ClientApprovalController;
 use App\Http\Controllers\Api\V1\ContentPlanController;
@@ -31,6 +32,7 @@ use App\Http\Controllers\Api\V1\AttachmentController;
 use App\Http\Controllers\Api\V1\PlatformPostController;
 use App\Http\Controllers\Api\V1\PostMediaController;
 use App\Http\Controllers\Api\V1\PostAutomationController;
+use App\Http\Controllers\Api\V1\PostProposalController;
 use App\Http\Controllers\Api\V1\SocialPostController;
 use App\Http\Controllers\Api\V1\TemplateController;
 use App\Http\Controllers\Api\V1\TemplateLibraryController;
@@ -289,6 +291,13 @@ $v1Routes = function () {
         Route::get('resolved-prompt', [BrandController::class, 'getResolvedPrompt']);
     });
 
+    // === BRAND AI KEYS ===
+    Route::prefix('brands/{brand}/ai-keys')->group(function () {
+        Route::get('/', [BrandAiKeyController::class, 'index']);
+        Route::post('/', [BrandAiKeyController::class, 'store']);
+        Route::delete('{provider}', [BrandAiKeyController::class, 'destroy']);
+    });
+
     // === PLATFORM CREDENTIALS (Facebook/Instagram OAuth) ===
     Route::prefix('brands/{brand}/platforms')->group(function () {
         Route::get('/', [PlatformCredentialController::class, 'index']);
@@ -432,6 +441,17 @@ $v1Routes = function () {
     Route::post('posts/{post}/webhook-publish', [PostAutomationController::class, 'webhookPublish']);
     Route::post('posts/bulk-generate-text', [PostAutomationController::class, 'bulkGenerateText']);
     Route::post('posts/bulk-generate-image-prompt', [PostAutomationController::class, 'bulkGenerateImagePrompt']);
+
+    // === POST PROPOSALS ===
+    Route::get('proposals', [PostProposalController::class, 'index']);
+    Route::get('proposals/calendar', [PostProposalController::class, 'calendar']);
+    Route::get('proposals/next-free-date', [PostProposalController::class, 'nextFreeDate']);
+    Route::post('proposals/generate-batch', [PostProposalController::class, 'generateBatch']);
+    Route::post('proposals', [PostProposalController::class, 'store']);
+    Route::get('proposals/{proposal}', [PostProposalController::class, 'show']);
+    Route::put('proposals/{proposal}', [PostProposalController::class, 'update']);
+    Route::delete('proposals/{proposal}', [PostProposalController::class, 'destroy']);
+    Route::post('proposals/{proposal}/generate-post', [PostProposalController::class, 'generatePost']);
 
     // === SOCIAL POSTS ===
     Route::get('posts', [SocialPostController::class, 'index']);

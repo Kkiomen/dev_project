@@ -13,6 +13,7 @@ import OnboardingStep4 from '@/components/brand/OnboardingStep4.vue';
 import OnboardingStep5 from '@/components/brand/OnboardingStep5.vue';
 import AutomationPanel from '@/components/brand/AutomationPanel.vue';
 import ConnectedPlatformsPanel from '@/components/brand/ConnectedPlatformsPanel.vue';
+import AiKeysPanel from '@/components/brand/AiKeysPanel.vue';
 
 const props = defineProps({
     brandId: {
@@ -40,6 +41,7 @@ const tabs = [
     { key: 'platforms', icon: 'share', component: OnboardingStep5 },
     { key: 'connectedPlatforms', icon: 'link', component: ConnectedPlatformsPanel, passBrandId: true },
     { key: 'automation', icon: 'automation', component: AutomationPanel, passBrandId: true },
+    { key: 'aiKeys', icon: 'key', component: AiKeysPanel, passBrandId: true },
 ];
 
 const currentTabComponent = computed(() => {
@@ -54,6 +56,7 @@ const tabIcons = {
     share: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z" /></svg>`,
     link: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>`,
     automation: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
+    key: `<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>`,
 };
 
 const currentTab = computed(() => {

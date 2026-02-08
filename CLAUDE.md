@@ -9,6 +9,12 @@ Jest to panel / api do automatyzacji.
 Projekt słuzy do tego aby zbudować rozwiązania, które pozwolą zautomatyzować w 100% proces tworzenia marki osobistej.
 Chcemy stworzy narzedzie gdzie bedzie wszystko zautomatyzowane. Posiadać funkcjonalności, które posiada konkurencja ale w jednym miejscu.
 
+## Code - SOLID, KISS, DRY
+
+Kod ma być pisany zgodnie z najlepszymi praktykami.
+Ma być zgodny z SOLID, KISS, DRY, YAGNI.
+Ma korzystać ze wzorców projektowych.
+
 
 ## Text
 
@@ -158,6 +164,10 @@ curl -X POST "http://localhost/api/v1/debug/compare" \
 - Text wrapping wrong → Check `fixedWidth` (should be `false` for point text)
 - Image not clipped → Check `clip_layers` detection in logs
 - Colors as #CCCCCC → Shape color extraction fallback
+
+## AI API Keys
+
+Klucze API do serwisow AI (OpenAI, Gemini, WaveSpeed) sa przechowywane per-brand w tabeli `brand_ai_keys`. Nie uzywamy globalnych kluczy z `.env` ani `config()`. Klucz pobieramy zawsze przez `BrandAiKey::getKeyForProvider($brand, AiProvider::OpenAi)`. Jesli brak klucza — zwracamy blad z `error_code: 'no_api_key'`.
 
 ## Custom Commands
 

@@ -318,7 +318,8 @@
             "profile": "Profil",
             "ai": "Ustawienia AI",
             "notifications": "Powiadomienia",
-            "tokens": "Tokeny"
+            "tokens": "Tokeny",
+            "aiKeys": "Klucze AI"
         },
         "tokens": {
             "title": "Tokeny API",
@@ -2129,6 +2130,37 @@
         "directApiDescription": "Posty są publikowane bezpośrednio na platformie",
         "webhookDescription": "Posty są wysyłane do zewnętrznego systemu automatyzacji"
     },
+    "aiKeys": {
+        "title": "Klucze API AI",
+        "subtitle": "Zarządzaj kluczami API do zewnętrznych usług AI używanych w automatyzacji",
+        "providers": {
+            "openai": "OpenAI",
+            "gemini": "Gemini",
+            "wavespeed": "WaveSpeed AI"
+        },
+        "form": {
+            "apiKey": "Klucz API",
+            "apiKeyPlaceholder": "Wpisz swój klucz API...",
+            "save": "Zapisz klucz",
+            "delete": "Usuń klucz",
+            "confirmDelete": "Czy na pewno chcesz usunąć ten klucz API?"
+        },
+        "status": {
+            "active": "Aktywny",
+            "inactive": "Nieaktywny",
+            "noKey": "Brak klucza",
+            "hasKey": "Klucz skonfigurowany"
+        },
+        "success": {
+            "saved": "Klucz API zapisany pomyślnie",
+            "deleted": "Klucz API usunięty pomyślnie"
+        },
+        "errors": {
+            "saveFailed": "Nie udało się zapisać klucza API",
+            "deleteFailed": "Nie udało się usunąć klucza API",
+            "loadFailed": "Nie udało się załadować kluczy API"
+        }
+    },
     "youtube": {
         "videoTitle": "Tytuł filmu",
         "videoTitlePlaceholder": "Wpisz tytuł filmu...",
@@ -2222,7 +2254,8 @@
                 "pillars": "Treści",
                 "platforms": "Platformy",
                 "connectedPlatforms": "Połączenia",
-                "automation": "Automatyzacja"
+                "automation": "Automatyzacja",
+                "aiKeys": "Klucze AI"
             },
             "step1": {
                 "title": "Podstawowe informacje",
@@ -2493,7 +2526,9 @@
             "days": "dni"
         },
         "tabs": {
-            "all": "Wszystkie"
+            "all": "Wszystkie",
+            "automation": "Automatyzacja",
+            "proposals": "Propozycje"
         },
         "toolbar": {
             "settings": "Ustawienia",
@@ -2562,6 +2597,111 @@
             "title": "Brak postów do automatyzacji",
             "description": "Utwórz posty w Kalendarzu, aby rozpocząć automatyzację publikacji.",
             "goToCalendar": "Przejdź do Kalendarza"
+        },
+        "proposals": {
+            "title": "Propozycje Postów",
+            "subtitle": "Planuj treści tworząc propozycje z datami, tematami i słowami kluczowymi",
+            "table": {
+                "date": "Data",
+                "title": "Tytuł",
+                "keywords": "Słowa kluczowe",
+                "notes": "Notatki",
+                "status": "Status",
+                "actions": "Akcje"
+            },
+            "toolbar": {
+                "addProposal": "Dodaj propozycję",
+                "generate": "Generuj",
+                "searchPlaceholder": "Szukaj propozycji...",
+                "viewTable": "Tabela",
+                "viewCalendar": "Kalendarz",
+                "refresh": "Odśwież"
+            },
+            "generate": {
+                "title": "Generuj propozycje",
+                "description": "AI wygeneruje propozycje treści na nadchodzące dni na podstawie częstotliwości publikacji, najlepszych godzin i filarów treści Twojej marki.",
+                "daysLabel": "Liczba dni",
+                "daysHint": "Propozycje zostaną wygenerowane na kolejne {days} dni",
+                "languageLabel": "Język propozycji",
+                "languagePanel": "panelu",
+                "languageBrand": "marki",
+                "generateButton": "Generuj propozycje",
+                "generating": "Generowanie propozycji...",
+                "success": "Wygenerowano {count} propozycji",
+                "failed": "Nie udało się wygenerować propozycji"
+            },
+            "form": {
+                "createTitle": "Nowa propozycja",
+                "editTitle": "Edytuj propozycję",
+                "scheduledDate": "Planowana data",
+                "title": "Tytuł",
+                "titlePlaceholder": "Wpisz temat posta...",
+                "keywords": "Słowa kluczowe",
+                "keywordPlaceholder": "Dodaj słowo kluczowe...",
+                "notes": "Notatki",
+                "notesPlaceholder": "Dodatkowe notatki...",
+                "save": "Zapisz",
+                "cancel": "Anuluj",
+                "scheduledTime": "Godzina",
+                "nextFreeDate": "Najbliższa wolna data: {date}",
+                "useThisDate": "Użyj",
+                "loadingNextFree": "Szukam...",
+                "noFreeDate": "Brak wolnych dat w ciągu 90 dni"
+            },
+            "status": {
+                "pending": "Oczekująca",
+                "used": "Wykorzystana",
+                "all": "Wszystkie"
+            },
+            "calendar": {
+                "today": "Dzisiaj",
+                "legend": "Legenda",
+                "proposals": "Propozycje",
+                "posts": "Posty",
+                "mon": "Pon",
+                "tue": "Wt",
+                "wed": "Śr",
+                "thu": "Czw",
+                "fri": "Pt",
+                "sat": "Sob",
+                "sun": "Ndz"
+            },
+            "actions": {
+                "edit": "Edytuj",
+                "delete": "Usuń",
+                "generatePost": "Generuj post",
+                "generating": "Generowanie..."
+            },
+            "empty": {
+                "title": "Brak propozycji",
+                "description": "Utwórz swoją pierwszą propozycję, aby zacząć planowanie treści.",
+                "calendarEmpty": "Brak propozycji i postów w tym miesiącu"
+            },
+            "errors": {
+                "fetchFailed": "Nie udało się załadować propozycji",
+                "saveFailed": "Nie udało się zapisać propozycji",
+                "deleteFailed": "Nie udało się usunąć propozycji",
+                "generateFailed": "Nie udało się wygenerować posta z propozycji",
+                "no_api_key": "Brak klucza API OpenAI. Przejdź do ustawień marki, aby dodać klucz API.",
+                "no_brand": "Propozycja musi być najpierw przypisana do marki.",
+                "already_used": "Ta propozycja została już użyta do wygenerowania posta.",
+                "no_frequency": "Brak skonfigurowanej częstotliwości publikacji. Przejdź do ustawień marki, aby ustawić harmonogram."
+            },
+            "success": {
+                "created": "Propozycja utworzona",
+                "updated": "Propozycja zaktualizowana",
+                "deleted": "Propozycja usunięta",
+                "postGenerated": "Post wygenerowany z propozycji"
+            },
+            "confirm": {
+                "delete": "Czy na pewno chcesz usunąć tę propozycję?"
+            },
+            "pagination": {
+                "showing": "Wyświetlanie {from}-{to} z {total} propozycji"
+            },
+            "noKeywords": "Brak słów kluczowych",
+            "noNotes": "Brak notatek",
+            "clickToEdit": "Kliknij aby edytować"
         }
     },
     "notifications": {
