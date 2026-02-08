@@ -111,19 +111,33 @@ class DirectTextGeneratorService
 
         $language = $this->getLanguageName($brand->getLanguage());
 
-        $systemPrompt = "You are an expert visual content strategist for the brand \"{$brand->name}\".";
+        $systemPrompt = "You are an expert visual content designer for the brand \"{$brand->name}\".";
         if ($brand->description) {
             $systemPrompt .= "\nBrand description: {$brand->description}";
         }
         if ($brand->industry) {
             $systemPrompt .= "\nIndustry: {$brand->industry}";
         }
-        $systemPrompt .= "\n\nBased on a social media post caption, create a short, vivid image description that an AI image generator can use to produce a matching visual for the post.";
-        $systemPrompt .= "\nThe description should be specific, visual, and suitable for social media.";
-        $systemPrompt .= "\nWrite the image description in {$language}.";
+        $systemPrompt .= <<<'PROMPT'
+
+Your task: based on a social media post caption, create a detailed image prompt for an AI image generator to produce a professional, designed social media post image.
+
+STYLE REQUIREMENTS — the generated image MUST look like a polished, Instagram-ready social media post design:
+- Clean, modern, minimalist layout
+- Professional photography as the main visual element, integrated into geometric or organic fluid/blob shapes
+- Muted, cohesive color palette (soft pastels, earth tones, neutrals — beige, cream, dusty blue, sage, warm grey)
+- Elegant, clean typography with short text overlay (headline or key phrase from the caption)
+- Decorative design elements: organic blob shapes, subtle gradients, thin lines, soft shadows
+- Square format (1080x1080) or portrait (1080x1350), suitable for Instagram/Facebook
+- Professional and branded feel, like a Canva or Adobe template
+
+DO NOT describe a raw photograph. Describe a DESIGNED social media post with layout, shapes, colors, and typography.
+
+PROMPT;
+        $systemPrompt .= "\nWrite the image prompt in English (image generators work best in English).";
         $systemPrompt .= "\nRespond with valid JSON only.";
 
-        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nRespond with JSON: {\"image_prompt\": \"...\"}";
+        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nCreate an image prompt describing a designed social media post visual for this content. Respond with JSON: {\"image_prompt\": \"...\"}";
 
         $startTime = microtime(true);
         $log = $this->logAiStart($brand, 'direct_image_description', [
