@@ -87,6 +87,92 @@ class DirectTextGeneratorService
     }
 
     /**
+     * Generate an image description (image_prompt) from post content via OpenAI.
+     */
+    public function generateImageDescription(SocialPost $post): array
+    {
+        $brand = $post->brand;
+
+        if (!$brand) {
+            return ['success' => false, 'error' => 'No brand associated with post'];
+        }
+
+        $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::OpenAi);
+
+        if (!$apiKey) {
+            return ['success' => false, 'error_code' => 'no_api_key', 'error' => 'No OpenAI API key configured for this brand'];
+        }
+
+        $caption = $post->main_caption ?: $post->text_prompt;
+
+        if (empty($caption)) {
+            return ['success' => false, 'error' => 'No caption or text prompt available for this post'];
+        }
+
+        $language = $this->getLanguageName($brand->getLanguage());
+
+        $systemPrompt = "You are an expert visual content strategist for the brand \"{$brand->name}\".";
+        if ($brand->description) {
+            $systemPrompt .= "\nBrand description: {$brand->description}";
+        }
+        if ($brand->industry) {
+            $systemPrompt .= "\nIndustry: {$brand->industry}";
+        }
+        $systemPrompt .= "\n\nBased on a social media post caption, create a short, vivid image description that an AI image generator can use to produce a matching visual for the post.";
+        $systemPrompt .= "\nThe description should be specific, visual, and suitable for social media.";
+        $systemPrompt .= "\nWrite the image description in {$language}.";
+        $systemPrompt .= "\nRespond with valid JSON only.";
+
+        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nRespond with JSON: {\"image_prompt\": \"...\"}";
+
+        $startTime = microtime(true);
+        $log = $this->logAiStart($brand, 'direct_image_description', [
+            'post_id' => $post->public_id,
+            'caption' => mb_substr($caption, 0, 200),
+        ], 'gpt-4o');
+
+        try {
+            $client = OpenAI::client($apiKey);
+
+            $response = $client->chat()->create([
+                'model' => 'gpt-4o',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $fullUserPrompt],
+                ],
+                'max_tokens' => 1024,
+                'response_format' => ['type' => 'json_object'],
+            ]);
+
+            $content = $response->choices[0]->message->content;
+            $parsed = $this->parseResponse($content);
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $promptTokens = $response->usage->promptTokens ?? 0;
+            $completionTokens = $response->usage->completionTokens ?? 0;
+
+            $this->completeAiLog($log, $parsed, $promptTokens, $completionTokens, $durationMs);
+
+            $imagePrompt = $parsed['image_prompt'] ?? '';
+
+            return [
+                'success' => true,
+                'image_prompt' => $imagePrompt,
+            ];
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            Log::error('Direct image description generation failed', [
+                'post_id' => $post->public_id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Resolve the system prompt: use brand's configured prompt or build a default.
      */
     protected function resolveSystemPrompt(Brand $brand): string

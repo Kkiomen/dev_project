@@ -8,6 +8,7 @@ const props = defineProps({
     post: { type: Object, required: true },
     selected: { type: Boolean, default: false },
     generatingText: { type: Boolean, default: false },
+    generatingImageDescription: { type: Boolean, default: false },
     generatingImage: { type: Boolean, default: false },
     publishing: { type: Boolean, default: false },
     platformColors: { type: Object, required: true },
@@ -16,6 +17,7 @@ const props = defineProps({
 const emit = defineEmits([
     'toggle-select',
     'generate-text',
+    'generate-image-description',
     'generate-image',
     'approve',
     'publish',
@@ -434,6 +436,13 @@ function submitTag(platform) {
                     class="px-2.5 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 disabled:opacity-50"
                 >
                     {{ generatingText ? t('postAutomation.actions.generatingText') : t('postAutomation.actions.generateText') }}
+                </button>
+                <button
+                    @click.stop="emit('generate-image-description')"
+                    :disabled="generatingImageDescription"
+                    class="px-2.5 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 disabled:opacity-50"
+                >
+                    {{ generatingImageDescription ? t('postAutomation.actions.generatingImageDescription') : t('postAutomation.actions.generateImageDescription') }}
                 </button>
                 <button
                     @click.stop="emit('generate-image')"

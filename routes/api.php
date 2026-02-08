@@ -437,9 +437,11 @@ $v1Routes = function () {
     // === POST AUTOMATION ===
     Route::get('posts/automation', [PostAutomationController::class, 'index']);
     Route::post('posts/{post}/generate-text', [PostAutomationController::class, 'generateText']);
+    Route::post('posts/{post}/generate-image-description', [PostAutomationController::class, 'generateImageDescription']);
     Route::post('posts/{post}/generate-image-prompt', [PostAutomationController::class, 'generateImagePrompt']);
     Route::post('posts/{post}/webhook-publish', [PostAutomationController::class, 'webhookPublish']);
     Route::post('posts/bulk-generate-text', [PostAutomationController::class, 'bulkGenerateText']);
+    Route::post('posts/bulk-generate-image-description', [PostAutomationController::class, 'bulkGenerateImageDescription']);
     Route::post('posts/bulk-generate-image-prompt', [PostAutomationController::class, 'bulkGenerateImagePrompt']);
 
     // === POST PROPOSALS ===

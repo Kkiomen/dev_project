@@ -5,12 +5,14 @@ import Dropdown from '@/components/common/Dropdown.vue';
 const props = defineProps({
     post: { type: Object, required: true },
     generatingText: { type: Boolean, default: false },
+    generatingImageDescription: { type: Boolean, default: false },
     generatingImage: { type: Boolean, default: false },
     publishing: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
     'generate-text',
+    'generate-image-description',
     'generate-image',
     'approve',
     'publish',
@@ -43,6 +45,16 @@ const canPublish = ['approved', 'scheduled'].includes(props.post.status);
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
                 {{ generatingText ? t('postAutomation.actions.generatingText') : t('postAutomation.actions.generateText') }}
+            </button>
+            <button
+                @click="emit('generate-image-description')"
+                :disabled="generatingImageDescription"
+                class="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+                <svg class="w-4 h-4 text-teal-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                {{ generatingImageDescription ? t('postAutomation.actions.generatingImageDescription') : t('postAutomation.actions.generateImageDescription') }}
             </button>
             <button
                 @click="emit('generate-image')"

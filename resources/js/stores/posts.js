@@ -13,6 +13,7 @@ export const usePostsStore = defineStore('posts', {
         automationPagination: { currentPage: 1, lastPage: 1, total: 0 },
         generatingText: {},
         generatingImage: {},
+        generatingImageDescription: {},
         webhookPublishing: {},
         pollingIntervals: {},
         error: null,
@@ -567,17 +568,47 @@ export const usePostsStore = defineStore('posts', {
                     if (index !== -1) {
                         this.automationPosts[index] = response.data.data;
                     }
-                    // Sync response — data already available, no polling needed
-                    this.generatingImage = { ...this.generatingImage, [postId]: false };
                 } else if (response.data.async) {
                     // Async mode (webhook) — poll until callback updates the post
                     this.startPolling(postId, 'image');
-                } else {
-                    this.generatingImage = { ...this.generatingImage, [postId]: false };
+                    return response.data;
                 }
                 return response.data;
             } catch (error) {
-                this.generatingImage = { ...this.generatingImage, [postId]: false };
+                throw error;
+            } finally {
+                // Always reset unless polling was started (returned early above)
+                if (!this.pollingIntervals[`${postId}-image`]) {
+                    this.generatingImage = { ...this.generatingImage, [postId]: false };
+                }
+            }
+        },
+
+        async generatePostImageDescription(postId) {
+            this.generatingImageDescription = { ...this.generatingImageDescription, [postId]: true };
+            try {
+                const response = await axios.post(`/api/v1/posts/${postId}/generate-image-description`);
+                if (response.data.success && response.data.data) {
+                    const index = this.automationPosts.findIndex(p => p.id === postId);
+                    if (index !== -1) {
+                        this.automationPosts[index] = response.data.data;
+                    }
+                }
+                return response.data;
+            } catch (error) {
+                throw error;
+            } finally {
+                this.generatingImageDescription = { ...this.generatingImageDescription, [postId]: false };
+            }
+        },
+
+        async bulkGenerateImageDescription(postIds) {
+            try {
+                const response = await axios.post('/api/v1/posts/bulk-generate-image-description', {
+                    post_ids: postIds,
+                });
+                return response.data;
+            } catch (error) {
                 throw error;
             }
         },
@@ -738,6 +769,7 @@ export const usePostsStore = defineStore('posts', {
             this.automationPagination = { currentPage: 1, lastPage: 1, total: 0 };
             this.generatingText = {};
             this.generatingImage = {};
+            this.generatingImageDescription = {};
             this.webhookPublishing = {};
             this.pollingIntervals = {};
             this.error = null;

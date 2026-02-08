@@ -10,6 +10,7 @@ const props = defineProps({
     selected: { type: Boolean, default: false },
     expanded: { type: Boolean, default: false },
     generatingText: { type: Boolean, default: false },
+    generatingImageDescription: { type: Boolean, default: false },
     generatingImage: { type: Boolean, default: false },
     publishing: { type: Boolean, default: false },
     platformColors: { type: Object, required: true },
@@ -19,6 +20,7 @@ const emit = defineEmits([
     'toggle-select',
     'toggle-expand',
     'generate-text',
+    'generate-image-description',
     'generate-image',
     'approve',
     'publish',
@@ -218,9 +220,11 @@ function submitTag(platform) {
             <AutomationRowActions
                 :post="post"
                 :generating-text="generatingText"
+                :generating-image-description="generatingImageDescription"
                 :generating-image="generatingImage"
                 :publishing="publishing"
                 @generate-text="emit('generate-text')"
+                @generate-image-description="emit('generate-image-description')"
                 @generate-image="emit('generate-image')"
                 @approve="emit('approve')"
                 @publish="emit('publish')"
@@ -500,6 +504,13 @@ function submitTag(platform) {
                         class="px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-lg hover:bg-blue-100 disabled:opacity-50 transition-colors"
                     >
                         {{ generatingText ? t('postAutomation.actions.generatingText') : t('postAutomation.actions.generateText') }}
+                    </button>
+                    <button
+                        @click.stop="emit('generate-image-description')"
+                        :disabled="generatingImageDescription"
+                        class="px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-lg hover:bg-teal-100 disabled:opacity-50 transition-colors"
+                    >
+                        {{ generatingImageDescription ? t('postAutomation.actions.generatingImageDescription') : t('postAutomation.actions.generateImageDescription') }}
                     </button>
                     <button
                         @click.stop="emit('generate-image')"

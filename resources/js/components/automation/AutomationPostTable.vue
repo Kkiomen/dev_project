@@ -7,6 +7,7 @@ const props = defineProps({
     posts: { type: Array, required: true },
     selectedIds: { type: Array, required: true },
     generatingText: { type: Object, default: () => ({}) },
+    generatingImageDescription: { type: Object, default: () => ({}) },
     generatingImage: { type: Object, default: () => ({}) },
     webhookPublishing: { type: Object, default: () => ({}) },
     platformColors: { type: Object, required: true },
@@ -16,6 +17,7 @@ const emit = defineEmits([
     'toggle-select',
     'toggle-select-all',
     'generate-text',
+    'generate-image-description',
     'generate-image',
     'approve',
     'publish',
@@ -81,12 +83,14 @@ function toggleExpand(postId) {
                     :selected="selectedIds.includes(post.id)"
                     :expanded="expandedId === post.id"
                     :generating-text="!!generatingText[post.id]"
+                    :generating-image-description="!!generatingImageDescription[post.id]"
                     :generating-image="!!generatingImage[post.id]"
                     :publishing="!!webhookPublishing[post.id]"
                     :platform-colors="platformColors"
                     @toggle-select="emit('toggle-select', post.id)"
                     @toggle-expand="toggleExpand(post.id)"
                     @generate-text="emit('generate-text', post.id)"
+                    @generate-image-description="emit('generate-image-description', post.id)"
                     @generate-image="emit('generate-image', post.id)"
                     @approve="emit('approve', post.id)"
                     @publish="emit('publish', post.id)"

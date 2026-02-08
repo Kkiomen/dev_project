@@ -111,6 +111,73 @@ class PostAutomationController extends Controller
         return response()->json($response, 422);
     }
 
+    public function generateImageDescription(Request $request, SocialPost $post): JsonResponse
+    {
+        $this->authorize('update', $post);
+
+        $result = $this->webhookService->generateImageDescription($post);
+
+        if ($result['success']) {
+            if (!empty($result['image_prompt'])) {
+                $post->update(['image_prompt' => $result['image_prompt']]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => new SocialPostResource($post->fresh()->load(['platformPosts', 'media', 'brand'])),
+            ]);
+        }
+
+        $response = [
+            'success' => false,
+            'error' => $result['error'] ?? 'Image description generation failed',
+        ];
+
+        if (!empty($result['error_code'])) {
+            $response['error_code'] = $result['error_code'];
+        }
+
+        return response()->json($response, 422);
+    }
+
+    public function bulkGenerateImageDescription(Request $request): JsonResponse
+    {
+        $request->validate([
+            'post_ids' => ['required', 'array', 'min:1', 'max:20'],
+            'post_ids.*' => ['string'],
+        ]);
+
+        $posts = SocialPost::forUser($request->user())
+            ->whereIn('public_id', $request->post_ids)
+            ->with('brand')
+            ->get();
+
+        $results = ['success' => 0, 'failed' => 0, 'errors' => []];
+
+        foreach ($posts as $post) {
+            $result = $this->webhookService->generateImageDescription($post);
+
+            if ($result['success']) {
+                if (!empty($result['image_prompt'])) {
+                    $post->update(['image_prompt' => $result['image_prompt']]);
+                }
+                $results['success']++;
+            } else {
+                $results['failed']++;
+                $errorEntry = [
+                    'post_id' => $post->public_id,
+                    'error' => $result['error'] ?? 'Unknown error',
+                ];
+                if (!empty($result['error_code'])) {
+                    $errorEntry['error_code'] = $result['error_code'];
+                }
+                $results['errors'][] = $errorEntry;
+            }
+        }
+
+        return response()->json($results);
+    }
+
     public function generateImagePrompt(Request $request, SocialPost $post): JsonResponse
     {
         $this->authorize('update', $post);

@@ -37,6 +37,7 @@ const showImagePrompt = ref(false);
 const showPreview = ref(false);
 const previewPost = ref(null);
 const bulkGeneratingText = ref(false);
+const bulkGeneratingImageDescription = ref(false);
 const bulkGeneratingImage = ref(false);
 const bulkDeleting = ref(false);
 const stats = ref({});
@@ -155,6 +156,16 @@ async function generateText(postId) {
         fetchStats();
     } catch (err) {
         toast.error(extractError(err, 'postAutomation.errors.generateFailed'), 5000);
+    }
+}
+
+async function generateImageDescription(postId) {
+    try {
+        await postsStore.generatePostImageDescription(postId);
+        toast.success(t('postAutomation.success.imageDescriptionGenerated'));
+        fetchStats();
+    } catch (err) {
+        toast.error(extractError(err, 'postAutomation.errors.imageDescriptionFailed'), 5000);
     }
 }
 
@@ -306,6 +317,25 @@ async function bulkGenerateText() {
         toast.error(t('postAutomation.errors.generateFailed'));
     } finally {
         bulkGeneratingText.value = false;
+    }
+}
+
+async function bulkGenerateImageDescription() {
+    if (!selectedIds.value.length) return;
+    bulkGeneratingImageDescription.value = true;
+    try {
+        const result = await postsStore.bulkGenerateImageDescription(selectedIds.value);
+        toast.success(t('postAutomation.success.bulkImageDescriptionGenerated', {
+            success: result.success,
+            total: selectedIds.value.length,
+        }));
+        selectedIds.value = [];
+        fetchPosts(pagination.value.currentPage);
+        fetchStats();
+    } catch {
+        toast.error(t('postAutomation.errors.imageDescriptionFailed'));
+    } finally {
+        bulkGeneratingImageDescription.value = false;
     }
 }
 
@@ -483,12 +513,14 @@ onUnmounted(() => {
                 :posts="posts"
                 :selected-ids="selectedIds"
                 :generating-text="postsStore.generatingText"
+                :generating-image-description="postsStore.generatingImageDescription"
                 :generating-image="postsStore.generatingImage"
                 :webhook-publishing="postsStore.webhookPublishing"
                 :platform-colors="platformColors"
                 @toggle-select="toggleSelect"
                 @toggle-select-all="toggleSelectAll"
                 @generate-text="generateText"
+                @generate-image-description="generateImageDescription"
                 @generate-image="generateImagePrompt"
                 @approve="approvePost"
                 @publish="publishPost"
@@ -511,11 +543,13 @@ onUnmounted(() => {
                     :post="post"
                     :selected="selectedIds.includes(post.id)"
                     :generating-text="!!postsStore.generatingText[post.id]"
+                    :generating-image-description="!!postsStore.generatingImageDescription[post.id]"
                     :generating-image="!!postsStore.generatingImage[post.id]"
                     :publishing="!!postsStore.webhookPublishing[post.id]"
                     :platform-colors="platformColors"
                     @toggle-select="toggleSelect(post.id)"
                     @generate-text="generateText(post.id)"
+                    @generate-image-description="generateImageDescription(post.id)"
                     @generate-image="generateImagePrompt(post.id)"
                     @approve="approvePost(post.id)"
                     @publish="publishPost(post.id)"
@@ -544,9 +578,11 @@ onUnmounted(() => {
         <AutomationBulkBar
             :count="selectedIds.length"
             :bulk-generating-text="bulkGeneratingText"
+            :bulk-generating-image-description="bulkGeneratingImageDescription"
             :bulk-generating-image="bulkGeneratingImage"
             :bulk-deleting="bulkDeleting"
             @bulk-generate-text="bulkGenerateText"
+            @bulk-generate-image-description="bulkGenerateImageDescription"
             @bulk-generate-image="bulkGenerateImage"
             @bulk-approve="bulkApprove"
             @bulk-delete="bulkDelete"

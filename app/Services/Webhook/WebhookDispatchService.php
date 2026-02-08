@@ -32,6 +32,11 @@ class WebhookDispatchService
         return $this->sendWebhook($brand->getWebhookUrl('text_generation'), $payload);
     }
 
+    public function generateImageDescription(SocialPost $post): array
+    {
+        return $this->directTextGenerator->generateImageDescription($post);
+    }
+
     public function generateImagePrompt(SocialPost $post): array
     {
         $brand = $post->brand;

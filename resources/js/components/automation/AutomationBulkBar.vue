@@ -4,12 +4,14 @@ import { useI18n } from 'vue-i18n';
 defineProps({
     count: { type: Number, required: true },
     bulkGeneratingText: { type: Boolean, default: false },
+    bulkGeneratingImageDescription: { type: Boolean, default: false },
     bulkGeneratingImage: { type: Boolean, default: false },
     bulkDeleting: { type: Boolean, default: false },
 });
 
 const emit = defineEmits([
     'bulk-generate-text',
+    'bulk-generate-image-description',
     'bulk-generate-image',
     'bulk-approve',
     'bulk-delete',
@@ -46,6 +48,13 @@ const { t } = useI18n();
                         class="px-3 py-1.5 text-xs font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-500 disabled:opacity-50 whitespace-nowrap transition-colors"
                     >
                         {{ bulkGeneratingText ? t('postAutomation.actions.generatingText') : t('postAutomation.actions.bulkGenerateText') }}
+                    </button>
+                    <button
+                        @click="emit('bulk-generate-image-description')"
+                        :disabled="bulkGeneratingImageDescription"
+                        class="px-3 py-1.5 text-xs font-medium bg-teal-600 text-white rounded-lg hover:bg-teal-500 disabled:opacity-50 whitespace-nowrap transition-colors"
+                    >
+                        {{ bulkGeneratingImageDescription ? t('postAutomation.actions.generatingImageDescription') : t('postAutomation.actions.bulkGenerateImageDescription') }}
                     </button>
                     <button
                         @click="emit('bulk-generate-image')"

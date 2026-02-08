@@ -2443,6 +2443,8 @@
         "actions": {
             "generateText": "Generate Text",
             "generatingText": "Generating...",
+            "generateImageDescription": "Generate Image Description",
+            "generatingImageDescription": "Generating...",
             "generateImage": "Generate Image",
             "generatingImage": "Generating...",
             "publish": "Publish",
@@ -2452,6 +2454,7 @@
             "preview": "Preview",
             "edit": "Edit",
             "bulkGenerateText": "Generate Text",
+            "bulkGenerateImageDescription": "Generate Descriptions",
             "bulkGenerateImage": "Generate Image",
             "bulkApprove": "Approve Selected",
             "bulkDelete": "Delete",
@@ -2490,6 +2493,7 @@
         "empty": "No posts found. Create posts in the Calendar to see them here.",
         "errors": {
             "generateFailed": "Text generation failed",
+            "imageDescriptionFailed": "Image description generation failed",
             "imageFailed": "Image generation failed",
             "publishFailed": "Publishing failed",
             "fetchFailed": "Failed to load posts",
@@ -2497,6 +2501,8 @@
         },
         "success": {
             "textGenerated": "Text generated successfully",
+            "imageDescriptionGenerated": "Image description generated",
+            "bulkImageDescriptionGenerated": "{success} of {total} descriptions generated",
             "imageGenerated": "Image generated and saved",
             "published": "Post sent for publishing",
             "approved": "Post approved",

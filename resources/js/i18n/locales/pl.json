@@ -2446,6 +2446,8 @@
         "actions": {
             "generateText": "Generuj Tekst",
             "generatingText": "Generowanie...",
+            "generateImageDescription": "Generuj Opis Obrazka",
+            "generatingImageDescription": "Generowanie...",
             "generateImage": "Generuj Obraz",
             "generatingImage": "Generowanie...",
             "publish": "Publikuj",
@@ -2455,6 +2457,7 @@
             "preview": "Podgląd",
             "edit": "Edytuj",
             "bulkGenerateText": "Generuj Tekst",
+            "bulkGenerateImageDescription": "Generuj Opisy",
             "bulkGenerateImage": "Generuj Obraz",
             "bulkApprove": "Zatwierdź Zaznaczone",
             "bulkDelete": "Usuń",
@@ -2493,6 +2496,7 @@
         "empty": "Nie znaleziono postów. Utwórz posty w Kalendarzu, aby je tutaj zobaczyć.",
         "errors": {
             "generateFailed": "Generowanie tekstu nie powiodło się",
+            "imageDescriptionFailed": "Nie udało się wygenerować opisu obrazka",
             "imageFailed": "Generowanie obrazu nie powiodło się",
             "publishFailed": "Publikacja nie powiodła się",
             "fetchFailed": "Nie udało się załadować postów",
@@ -2500,6 +2504,8 @@
         },
         "success": {
             "textGenerated": "Tekst wygenerowany pomyślnie",
+            "imageDescriptionGenerated": "Opis obrazka wygenerowany",
+            "bulkImageDescriptionGenerated": "{success} z {total} opisów wygenerowanych",
             "imageGenerated": "Obraz wygenerowany i zapisany",
             "published": "Post wysłany do publikacji",
             "approved": "Post zatwierdzony",
