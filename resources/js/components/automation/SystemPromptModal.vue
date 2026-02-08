@@ -36,7 +36,7 @@ const description = computed(() => {
 });
 
 const variablesList = computed(() => {
-    return [
+    const list = [
         { key: 'brand_name', label: t('postAutomation.systemPrompt.vars.brandName'), value: variables.value.brand_name },
         { key: 'brand_description', label: t('postAutomation.systemPrompt.vars.brandDescription'), value: variables.value.brand_description },
         { key: 'industry', label: t('postAutomation.systemPrompt.vars.industry'), value: variables.value.industry },
@@ -49,6 +49,12 @@ const variablesList = computed(() => {
         { key: 'pain_points', label: t('postAutomation.systemPrompt.vars.painPoints'), value: variables.value.pain_points },
         { key: 'content_pillars', label: t('postAutomation.systemPrompt.vars.contentPillars'), value: variables.value.content_pillars },
     ];
+
+    if (props.type === 'image') {
+        list.push({ key: 'image_prompt', label: t('postAutomation.systemPrompt.vars.imagePrompt'), value: variables.value.image_prompt });
+    }
+
+    return list;
 });
 
 watch(() => props.show, async (value) => {

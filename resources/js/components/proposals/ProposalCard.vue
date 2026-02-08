@@ -7,9 +7,10 @@ import ProposalKeywordBadge from './ProposalKeywordBadge.vue';
 const props = defineProps({
     proposal: { type: Object, required: true },
     generatingId: { type: String, default: null },
+    selected: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['update-field', 'edit', 'delete', 'generate-post']);
+const emit = defineEmits(['update-field', 'edit', 'delete', 'generate-post', 'toggle-select']);
 
 const isGenerating = computed(() => props.generatingId === props.proposal.id);
 const { t } = useI18n();
@@ -98,12 +99,19 @@ function saveTimeEdit(e) {
 </script>
 
 <template>
-    <div class="lg:hidden bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="lg:hidden bg-white rounded-xl border overflow-hidden" :class="selected ? 'border-blue-400 bg-blue-50' : 'border-gray-200'">
         <!-- Header (always visible) -->
         <div
             class="flex items-center gap-3 px-4 py-3 cursor-pointer"
             @click="expanded = !expanded"
         >
+            <input
+                type="checkbox"
+                :checked="selected"
+                @change.stop="emit('toggle-select', proposal.id)"
+                @click.stop
+                class="rounded border-gray-300 text-blue-600 focus:ring-blue-500 flex-shrink-0"
+            />
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
                     <span class="text-xs text-gray-500">{{ formatDate(proposal.scheduled_date, proposal.scheduled_time) }}</span>

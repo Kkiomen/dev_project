@@ -543,15 +543,19 @@ export const usePostsStore = defineStore('posts', {
                     if (index !== -1) {
                         this.automationPosts[index] = response.data.data;
                     }
+                    // Sync response — data already available, no polling needed
+                    this.generatingText = { ...this.generatingText, [postId]: false };
+                } else if (response.data.async) {
+                    // Async mode (webhook) — poll until callback updates the post
+                    this.startPolling(postId, 'text');
+                } else {
+                    this.generatingText = { ...this.generatingText, [postId]: false };
                 }
-                // Start polling to check for async result (webhook callback)
-                this.startPolling(postId, 'text');
                 return response.data;
             } catch (error) {
                 this.generatingText = { ...this.generatingText, [postId]: false };
                 throw error;
             }
-            // Note: generatingText stays true until polling detects the change
         },
 
         async generatePostImagePrompt(postId) {
@@ -563,15 +567,19 @@ export const usePostsStore = defineStore('posts', {
                     if (index !== -1) {
                         this.automationPosts[index] = response.data.data;
                     }
+                    // Sync response — data already available, no polling needed
+                    this.generatingImage = { ...this.generatingImage, [postId]: false };
+                } else if (response.data.async) {
+                    // Async mode (webhook) — poll until callback updates the post
+                    this.startPolling(postId, 'image');
+                } else {
+                    this.generatingImage = { ...this.generatingImage, [postId]: false };
                 }
-                // Start polling to check for async result (webhook callback)
-                this.startPolling(postId, 'image');
                 return response.data;
             } catch (error) {
                 this.generatingImage = { ...this.generatingImage, [postId]: false };
                 throw error;
             }
-            // Note: generatingImage stays true until polling detects the change
         },
 
         async webhookPublishPost(postId) {

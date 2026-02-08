@@ -128,6 +128,17 @@ export const useProposalsStore = defineStore('proposals', {
             }
         },
 
+        async bulkGeneratePosts(proposalIds) {
+            try {
+                const response = await axios.post('/api/v1/proposals/bulk-generate-posts', {
+                    proposal_ids: proposalIds,
+                });
+                return response.data;
+            } catch (error) {
+                throw error;
+            }
+        },
+
         async generatePost(proposalId) {
             try {
                 const response = await axios.post(`/api/v1/proposals/${proposalId}/generate-post`);

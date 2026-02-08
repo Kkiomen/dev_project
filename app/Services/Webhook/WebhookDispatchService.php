@@ -3,19 +3,24 @@
 namespace App\Services\Webhook;
 
 use App\Models\SocialPost;
+use App\Services\AI\DirectImageGeneratorService;
+use App\Services\AI\DirectTextGeneratorService;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class WebhookDispatchService
 {
+    public function __construct(
+        protected DirectTextGeneratorService $directTextGenerator,
+        protected DirectImageGeneratorService $directImageGenerator,
+    ) {}
 
     public function generateText(SocialPost $post, ?string $promptOverride = null): array
     {
         $brand = $post->brand;
 
         if (!$brand || !$brand->hasWebhook('text_generation')) {
-            // No webhook configured - this is not an error, just skip
-            return ['success' => true, 'skipped' => true, 'message' => 'No text generation webhook configured'];
+            return $this->directTextGenerator->generate($post, $promptOverride);
         }
 
         $payload = $this->buildPayload($post, [
@@ -32,13 +37,12 @@ class WebhookDispatchService
         $brand = $post->brand;
 
         if (!$brand || !$brand->hasWebhook('image_generation')) {
-            // No webhook configured - this is not an error, just skip
-            return ['success' => true, 'skipped' => true, 'message' => 'No image generation webhook configured'];
+            return $this->directImageGenerator->generate($post);
         }
 
         $payload = $this->buildPayload($post, [
             'prompt' => $brand->getWebhookPrompt('image_generation'),
-            'system_prompt' => $this->getResolvedSystemPrompt($brand, 'image'),
+            'system_prompt' => $this->getResolvedSystemPrompt($brand, 'image', $post),
         ]);
 
         return $this->sendWebhook($brand->getWebhookUrl('image_generation'), $payload);
@@ -101,7 +105,7 @@ class WebhookDispatchService
     /**
      * Get resolved system prompt with variables replaced.
      */
-    protected function getResolvedSystemPrompt($brand, string $type): string
+    protected function getResolvedSystemPrompt($brand, string $type, ?SocialPost $post = null): string
     {
         $settings = $brand->automation_settings ?? [];
         $prompt = $settings[$type . '_system_prompt'] ?? '';
@@ -126,6 +130,7 @@ class WebhookDispatchService
             'interests' => implode(', ', $targetAudience['interests'] ?? []),
             'pain_points' => implode(', ', $targetAudience['pain_points'] ?? []),
             'content_pillars' => implode(', ', array_column($brand->content_pillars ?? [], 'name')),
+            'image_prompt' => $post->image_prompt ?? '',
         ];
 
         foreach ($variables as $key => $value) {

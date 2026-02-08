@@ -12,6 +12,7 @@ import ProposalTable from './ProposalTable.vue';
 import ProposalCard from './ProposalCard.vue';
 import ProposalCalendarView from './ProposalCalendarView.vue';
 import ProposalFormModal from './ProposalFormModal.vue';
+import ProposalBulkBar from './ProposalBulkBar.vue';
 import AutomationPagination from '@/components/automation/AutomationPagination.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 
@@ -29,6 +30,8 @@ const editingProposal = ref(null);
 const prefillDate = ref('');
 const generatingId = ref(null);
 const showGenerateModal = ref(false);
+const selectedIds = ref([]);
+const bulkGenerating = ref(false);
 
 // Computed
 const proposals = computed(() => proposalsStore.proposals);
@@ -150,8 +153,45 @@ async function handleGenerateBatch({ days, language }) {
     }
 }
 
+// Selection
+function toggleSelect(id) {
+    const idx = selectedIds.value.indexOf(id);
+    if (idx === -1) {
+        selectedIds.value.push(id);
+    } else {
+        selectedIds.value.splice(idx, 1);
+    }
+}
+
+function toggleSelectAll() {
+    if (selectedIds.value.length === proposals.value.length) {
+        selectedIds.value = [];
+    } else {
+        selectedIds.value = proposals.value.map(p => p.id);
+    }
+}
+
+function clearSelection() {
+    selectedIds.value = [];
+}
+
+async function bulkGeneratePosts() {
+    bulkGenerating.value = true;
+    try {
+        const result = await proposalsStore.bulkGeneratePosts(selectedIds.value);
+        toast.success(t('postAutomation.proposals.success.bulkGenerated', { success: result.success, total: result.total }));
+        clearSelection();
+        fetchProposals(pagination.value.currentPage);
+    } catch {
+        toast.error(t('postAutomation.proposals.errors.bulkGenerateFailed'));
+    } finally {
+        bulkGenerating.value = false;
+    }
+}
+
 // Page change
 function onPageChange(page) {
+    clearSelection();
     fetchProposals(page);
 }
 
@@ -159,10 +199,12 @@ function onPageChange(page) {
 let searchTimeout = null;
 watch(search, () => {
     clearTimeout(searchTimeout);
+    clearSelection();
     searchTimeout = setTimeout(() => fetchProposals(1), 300);
 });
 
 watch(() => brandsStore.currentBrand?.id, () => {
+    clearSelection();
     fetchProposals(1);
 });
 
@@ -237,10 +279,13 @@ onMounted(() => {
                 <ProposalTable
                     :proposals="proposals"
                     :generating-id="generatingId"
+                    :selected-ids="selectedIds"
                     @update-field="updateField"
                     @edit="openEditModal"
                     @delete="deleteProposal"
                     @generate-post="handleGeneratePost"
+                    @toggle-select="toggleSelect"
+                    @toggle-select-all="toggleSelectAll"
                 />
 
                 <!-- Mobile Cards -->
@@ -250,12 +295,22 @@ onMounted(() => {
                         :key="proposal.id"
                         :proposal="proposal"
                         :generating-id="generatingId"
+                        :selected="selectedIds.includes(proposal.id)"
                         @update-field="updateField"
                         @edit="openEditModal"
                         @delete="deleteProposal"
                         @generate-post="handleGeneratePost"
+                        @toggle-select="toggleSelect"
                     />
                 </div>
+
+                <!-- Bulk Action Bar -->
+                <ProposalBulkBar
+                    :count="selectedIds.length"
+                    :generating="bulkGenerating"
+                    @generate="bulkGeneratePosts"
+                    @clear="clearSelection"
+                />
 
                 <!-- Pagination -->
                 <AutomationPagination

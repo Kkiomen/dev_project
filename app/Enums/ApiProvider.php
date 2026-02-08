@@ -8,6 +8,7 @@ enum ApiProvider: string
     case PEXELS = 'pexels';
     case FACEBOOK = 'facebook';
     case UNSPLASH = 'unsplash';
+    case WAVESPEED = 'wavespeed';
 
     public function label(): string
     {
@@ -16,13 +17,14 @@ enum ApiProvider: string
             self::PEXELS => 'Pexels',
             self::FACEBOOK => 'Facebook/Instagram',
             self::UNSPLASH => 'Unsplash',
+            self::WAVESPEED => 'WaveSpeed AI',
         };
     }
 
     public function isAiProvider(): bool
     {
         return match ($this) {
-            self::OPENAI => true,
+            self::OPENAI, self::WAVESPEED => true,
             default => false,
         };
     }

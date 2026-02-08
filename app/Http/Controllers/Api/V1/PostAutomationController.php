@@ -99,10 +99,16 @@ class PostAutomationController extends Controller
             ]);
         }
 
-        return response()->json([
+        $response = [
             'success' => false,
             'error' => $result['error'] ?? 'Text generation failed',
-        ], 422);
+        ];
+
+        if (!empty($result['error_code'])) {
+            $response['error_code'] = $result['error_code'];
+        }
+
+        return response()->json($response, 422);
     }
 
     public function generateImagePrompt(Request $request, SocialPost $post): JsonResponse
@@ -131,6 +137,11 @@ class PostAutomationController extends Controller
             }
 
             // Synchronous mode: result is immediately available
+            // Handle raw image data (from WaveSpeed direct generation)
+            if (!empty($result['image_data'])) {
+                $this->saveImageFromData($post, $result['image_data'], $result['mime_type'] ?? 'image/jpeg', $result['filename'] ?? null);
+            }
+
             // Handle base64 image from webhook
             if (!empty($result['image_base64'])) {
                 $this->saveBase64Image($post, $result['image_base64'], $result['filename'] ?? null);
@@ -147,10 +158,16 @@ class PostAutomationController extends Controller
             ]);
         }
 
-        return response()->json([
+        $response = [
             'success' => false,
             'error' => $result['error'] ?? 'Image generation failed',
-        ], 422);
+        ];
+
+        if (!empty($result['error_code'])) {
+            $response['error_code'] = $result['error_code'];
+        }
+
+        return response()->json($response, 422);
     }
 
     public function webhookPublish(Request $request, SocialPost $post): JsonResponse
@@ -229,10 +246,14 @@ class PostAutomationController extends Controller
                 $results['success']++;
             } else {
                 $results['failed']++;
-                $results['errors'][] = [
+                $errorEntry = [
                     'post_id' => $post->public_id,
                     'error' => $result['error'] ?? 'Unknown error',
                 ];
+                if (!empty($result['error_code'])) {
+                    $errorEntry['error_code'] = $result['error_code'];
+                }
+                $results['errors'][] = $errorEntry;
             }
         }
 
@@ -257,6 +278,9 @@ class PostAutomationController extends Controller
             $result = $this->webhookService->generateImagePrompt($post);
 
             if ($result['success']) {
+                if (!empty($result['image_data'])) {
+                    $this->saveImageFromData($post, $result['image_data'], $result['mime_type'] ?? 'image/jpeg', $result['filename'] ?? null);
+                }
                 if (!empty($result['image_base64'])) {
                     $this->saveBase64Image($post, $result['image_base64'], $result['filename'] ?? null);
                 }
@@ -266,10 +290,14 @@ class PostAutomationController extends Controller
                 $results['success']++;
             } else {
                 $results['failed']++;
-                $results['errors'][] = [
+                $errorEntry = [
                     'post_id' => $post->public_id,
                     'error' => $result['error'] ?? 'Unknown error',
                 ];
+                if (!empty($result['error_code'])) {
+                    $errorEntry['error_code'] = $result['error_code'];
+                }
+                $results['errors'][] = $errorEntry;
             }
         }
 
@@ -301,6 +329,37 @@ class PostAutomationController extends Controller
         Storage::disk('public')->put($path, $imageData);
 
         // Get image dimensions
+        $imageSize = @getimagesizefromstring($imageData);
+        $width = $imageSize[0] ?? null;
+        $height = $imageSize[1] ?? null;
+
+        return $post->media()->create([
+            'type' => 'image',
+            'filename' => $filename,
+            'path' => $path,
+            'disk' => 'public',
+            'mime_type' => $mimeType,
+            'size' => strlen($imageData),
+            'width' => $width,
+            'height' => $height,
+        ]);
+    }
+
+    protected function saveImageFromData(SocialPost $post, string $imageData, string $mimeType = 'image/jpeg', ?string $filename = null): PostMedia
+    {
+        $extension = match ($mimeType) {
+            'image/png' => 'png',
+            'image/jpeg', 'image/jpg' => 'jpg',
+            'image/webp' => 'webp',
+            'image/gif' => 'gif',
+            default => 'jpg',
+        };
+
+        $filename = $filename ?: ('generated-' . Str::random(12) . '.' . $extension);
+        $path = 'post-media/' . $post->id . '/' . Str::random(16) . '.' . $extension;
+
+        Storage::disk('public')->put($path, $imageData);
+
         $imageSize = @getimagesizefromstring($imageData);
         $width = $imageSize[0] ?? null;
         $height = $imageSize[1] ?? null;

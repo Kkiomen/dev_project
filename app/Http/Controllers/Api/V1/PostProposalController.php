@@ -238,6 +238,47 @@ class PostProposalController extends Controller
         }
     }
 
+    public function bulkGeneratePost(Request $request, ProposalToPostService $service): JsonResponse
+    {
+        $request->validate([
+            'proposal_ids' => 'required|array|min:1',
+            'proposal_ids.*' => 'required|string',
+        ]);
+
+        $success = 0;
+        $failed = 0;
+
+        foreach ($request->proposal_ids as $publicId) {
+            try {
+                $proposal = PostProposal::findByPublicIdOrFail($publicId);
+                $this->authorize('update', $proposal);
+
+                if (! $proposal->isPending() || ! $proposal->brand_id) {
+                    $failed++;
+                    continue;
+                }
+
+                $apiKey = BrandAiKey::getKeyForProvider($proposal->brand, \App\Enums\AiProvider::OpenAi);
+                if (! $apiKey) {
+                    $failed++;
+                    continue;
+                }
+
+                $service->generate($proposal);
+                $success++;
+            } catch (\Exception $e) {
+                $failed++;
+            }
+        }
+
+        return response()->json([
+            'message' => "{$success} of " . count($request->proposal_ids) . " posts generated.",
+            'success' => $success,
+            'failed' => $failed,
+            'total' => count($request->proposal_ids),
+        ]);
+    }
+
     public function destroy(Request $request, PostProposal $proposal): JsonResponse
     {
         $this->authorize('delete', $proposal);

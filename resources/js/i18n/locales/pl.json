@@ -2561,7 +2561,8 @@
                 "gender": "Płeć docelowa",
                 "interests": "Zainteresowania",
                 "painPoints": "Problemy/Wyzwania",
-                "contentPillars": "Filary treści"
+                "contentPillars": "Filary treści",
+                "imagePrompt": "Opis do wygenerowania obrazka"
             }
         },
         "bulk": {
@@ -2685,13 +2686,15 @@
                 "no_api_key": "Brak klucza API OpenAI. Przejdź do ustawień marki, aby dodać klucz API.",
                 "no_brand": "Propozycja musi być najpierw przypisana do marki.",
                 "already_used": "Ta propozycja została już użyta do wygenerowania posta.",
-                "no_frequency": "Brak skonfigurowanej częstotliwości publikacji. Przejdź do ustawień marki, aby ustawić harmonogram."
+                "no_frequency": "Brak skonfigurowanej częstotliwości publikacji. Przejdź do ustawień marki, aby ustawić harmonogram.",
+                "bulkGenerateFailed": "Nie udało się wygenerować postów"
             },
             "success": {
                 "created": "Propozycja utworzona",
                 "updated": "Propozycja zaktualizowana",
                 "deleted": "Propozycja usunięta",
-                "postGenerated": "Post wygenerowany z propozycji"
+                "postGenerated": "Post wygenerowany z propozycji",
+                "bulkGenerated": "Wygenerowano {success} z {total} postów"
             },
             "confirm": {
                 "delete": "Czy na pewno chcesz usunąć tę propozycję?"
@@ -2701,7 +2704,13 @@
             },
             "noKeywords": "Brak słów kluczowych",
             "noNotes": "Brak notatek",
-            "clickToEdit": "Kliknij aby edytować"
+            "clickToEdit": "Kliknij aby edytować",
+            "bulk": {
+                "selected": "{count} zaznaczonych",
+                "generatePosts": "Generuj posty",
+                "close": "Wyczyść zaznaczenie",
+                "generating": "Generowanie..."
+            }
         }
     },
     "notifications": {

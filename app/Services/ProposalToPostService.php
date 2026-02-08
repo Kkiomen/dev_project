@@ -72,8 +72,9 @@ class ProposalToPostService
             default => $language,
         };
 
-        $prompt = "You are a social media content strategist. Based on the given proposal data, generate a social media post.\n";
+        $prompt = "You are a social media content strategist. Based on the given proposal data, create a detailed brief/description of what a social media post should contain.\n";
         $prompt .= "IMPORTANT: Write ALL content in {$languageLabel}.\n";
+        $prompt .= "DO NOT write the final post text. Instead, describe what the post should cover, what key points to include, what angle to take, and what call-to-action to use.\n";
 
         if ($tone) {
             $prompt .= "Tone of voice: {$tone}.\n";
@@ -91,7 +92,7 @@ class ProposalToPostService
 
 Return ONLY valid JSON with exactly two fields:
 - "title": A short, catchy title for the post (max 100 characters)
-- "text_prompt": The full post text/caption ready to publish on social media. Include relevant hashtags at the end.
+- "text_prompt": A detailed description/brief of what the post should contain — key points, angle, structure, and call-to-action. This will be used as instructions for generating the final post text. Do NOT write the actual post caption here.
 
 Do not wrap the JSON in markdown code blocks. Return raw JSON only.
 PROMPT;

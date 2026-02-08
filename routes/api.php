@@ -447,6 +447,7 @@ $v1Routes = function () {
     Route::get('proposals/calendar', [PostProposalController::class, 'calendar']);
     Route::get('proposals/next-free-date', [PostProposalController::class, 'nextFreeDate']);
     Route::post('proposals/generate-batch', [PostProposalController::class, 'generateBatch']);
+    Route::post('proposals/bulk-generate-posts', [PostProposalController::class, 'bulkGeneratePost']);
     Route::post('proposals', [PostProposalController::class, 'store']);
     Route::get('proposals/{proposal}', [PostProposalController::class, 'show']);
     Route::put('proposals/{proposal}', [PostProposalController::class, 'update']);

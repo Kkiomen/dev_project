@@ -2558,7 +2558,8 @@
                 "gender": "Target gender",
                 "interests": "Interests",
                 "painPoints": "Pain points",
-                "contentPillars": "Content pillars"
+                "contentPillars": "Content pillars",
+                "imagePrompt": "Image generation description"
             }
         },
         "bulk": {
@@ -2682,13 +2683,15 @@
                 "no_api_key": "No OpenAI API key configured. Go to brand settings to add your API key.",
                 "no_brand": "Proposal must be assigned to a brand first.",
                 "already_used": "This proposal has already been used to generate a post.",
-                "no_frequency": "No posting frequency configured. Go to brand settings to set your posting schedule."
+                "no_frequency": "No posting frequency configured. Go to brand settings to set your posting schedule.",
+                "bulkGenerateFailed": "Failed to generate posts"
             },
             "success": {
                 "created": "Proposal created",
                 "updated": "Proposal updated",
                 "deleted": "Proposal deleted",
-                "postGenerated": "Post generated successfully from proposal"
+                "postGenerated": "Post generated successfully from proposal",
+                "bulkGenerated": "Generated {success} of {total} posts"
             },
             "confirm": {
                 "delete": "Are you sure you want to delete this proposal?"
@@ -2698,7 +2701,13 @@
             },
             "noKeywords": "No keywords",
             "noNotes": "No notes",
-            "clickToEdit": "Click to edit"
+            "clickToEdit": "Click to edit",
+            "bulk": {
+                "selected": "{count} selected",
+                "generatePosts": "Generate Posts",
+                "close": "Clear selection",
+                "generating": "Generating..."
+            }
         }
     },
     "notifications": {

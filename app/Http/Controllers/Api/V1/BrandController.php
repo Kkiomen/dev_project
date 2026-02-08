@@ -406,6 +406,7 @@ class BrandController extends Controller
             'interests' => implode(', ', $targetAudience['interests'] ?? []),
             'pain_points' => implode(', ', $targetAudience['pain_points'] ?? []),
             'content_pillars' => implode(', ', array_column($brand->content_pillars ?? [], 'name')),
+            'image_prompt' => '(opis z posta)',
         ];
     }
 
