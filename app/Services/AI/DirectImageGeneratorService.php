@@ -86,7 +86,7 @@ class DirectImageGeneratorService
         $systemPrompt = $settings['image_system_prompt'] ?? '';
 
         if (empty($systemPrompt)) {
-            return "High quality, professional social media image. " . $imagePrompt;
+            return $imagePrompt . " Professional editorial photograph, soft natural lighting, shallow depth of field. No text, no words, no letters, no typography, no logos, no watermarks, no graphic design elements, no collage, no frames, no borders, no mockups.";
         }
 
         return $this->replaceVariables($brand, $systemPrompt, $imagePrompt);

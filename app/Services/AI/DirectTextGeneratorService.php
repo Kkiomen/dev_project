@@ -111,7 +111,7 @@ class DirectTextGeneratorService
 
         $language = $this->getLanguageName($brand->getLanguage());
 
-        $systemPrompt = "You are an expert visual content designer for the brand \"{$brand->name}\".";
+        $systemPrompt = "You are an expert visual content strategist for the brand \"{$brand->name}\".";
         if ($brand->description) {
             $systemPrompt .= "\nBrand description: {$brand->description}";
         }
@@ -120,24 +120,41 @@ class DirectTextGeneratorService
         }
         $systemPrompt .= <<<'PROMPT'
 
-Your task: based on a social media post caption, create a detailed image prompt for an AI image generator to produce a professional, designed social media post image.
+Your task: based on a social media post caption, write a short image generation prompt that will produce a single beautiful PHOTOGRAPH.
 
-STYLE REQUIREMENTS — the generated image MUST look like a polished, Instagram-ready social media post design:
-- Clean, modern, minimalist layout
-- Professional photography as the main visual element, integrated into geometric or organic fluid/blob shapes
-- Muted, cohesive color palette (soft pastels, earth tones, neutrals — beige, cream, dusty blue, sage, warm grey)
-- Elegant, clean typography with short text overlay (headline or key phrase from the caption)
-- Decorative design elements: organic blob shapes, subtle gradients, thin lines, soft shadows
-- Square format (1080x1080) or portrait (1080x1350), suitable for Instagram/Facebook
-- Professional and branded feel, like a Canva or Adobe template
+ABSOLUTE BANS — the prompt must NEVER contain any of these:
+- Any mention of text, words, letters, titles, headlines, captions, typography, fonts
+- Any mention of logos, watermarks, icons, buttons, UI elements
+- Any mention of collage, grid, layout, frame, border, mockup, template, design, graphic
+- Any mention of social media, Instagram, post, card, banner, flyer
+- Any mention of blob shapes, organic shapes, geometric overlays, decorative elements
+- Multiple subjects or scenes — describe ONLY ONE scene
 
-DO NOT describe a raw photograph. Describe a DESIGNED social media post with layout, shapes, colors, and typography.
+WHAT TO DESCRIBE — a single photograph:
+- One clear subject or scene related to the post topic
+- Soft, warm natural lighting (golden hour, window light, overcast diffused light)
+- Muted warm color palette: beige, cream, sand, ivory, soft taupe, warm grey
+- Minimalist composition, lots of empty space, clean background
+- Shallow depth of field with creamy bokeh
+- Shot on professional camera, 85mm lens, f/1.8
+- Mood: calm, elegant, aspirational, editorial
+
+FORMAT: Write a detailed, rich description of 5-8 sentences. Be very specific about:
+1. The main subject and what they are doing (pose, expression, action)
+2. Environment and setting details (furniture, objects, surfaces, background elements)
+3. Lighting setup (direction, quality, color temperature, shadows)
+4. Color palette and tones (specific colors, gradients, contrasts)
+5. Camera settings and perspective (lens, angle, focus, depth of field)
+6. Atmosphere and mood (emotion, feeling, season, time of day)
+
+Example good output:
+"A woman in a soft cream linen blouse sits at a light oak wooden desk in a bright, airy home office. She is writing in a leather-bound notebook, her left hand resting beside a ceramic cup of matcha latte. The desk is styled with a small potted eucalyptus plant, a stack of neutral-toned books, and a brass pen holder. Warm golden hour sunlight streams through sheer white curtains on the left, casting soft diffused shadows across the scene. The color palette is warm and muted — ivory walls, sand-colored textiles, touches of sage green from the plant. Shot from a slightly elevated angle on an 85mm lens at f/1.8, with the background gently blurred into a creamy bokeh. The overall mood is calm, focused, and aspirational, evoking a sense of productive serenity."
 
 PROMPT;
-        $systemPrompt .= "\nWrite the image prompt in English (image generators work best in English).";
+        $systemPrompt .= "\nAlways write in English.";
         $systemPrompt .= "\nRespond with valid JSON only.";
 
-        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nCreate an image prompt describing a designed social media post visual for this content. Respond with JSON: {\"image_prompt\": \"...\"}";
+        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nWrite a detailed, vivid photograph description (5-8 sentences) covering subject, setting, lighting, colors, camera angle, and mood. Respond with JSON: {\"image_prompt\": \"...\"}";
 
         $startTime = microtime(true);
         $log = $this->logAiStart($brand, 'direct_image_description', [
