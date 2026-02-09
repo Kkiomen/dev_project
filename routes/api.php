@@ -40,6 +40,7 @@ use App\Http\Controllers\Api\V1\TemplatePreviewController;
 use App\Http\Controllers\Api\V1\LayerController;
 use App\Http\Controllers\Api\V1\GeneratedImageController;
 use App\Http\Controllers\Api\V1\TemplateFontController;
+use App\Http\Controllers\Api\V1\UploadedImageController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PlatformCredentialController;
@@ -525,6 +526,14 @@ $v1Routes = function () {
     Route::delete('cards/{card}', [BoardCardController::class, 'destroy']);
     Route::put('cards/{card}/move', [BoardCardController::class, 'move']);
     Route::post('cards/{card}/reorder', [BoardCardController::class, 'reorder']);
+
+    // === UPLOADED IMAGES ===
+    Route::prefix('images')->group(function () {
+        Route::get('/', [UploadedImageController::class, 'index']);
+        Route::post('/', [UploadedImageController::class, 'store']);
+        Route::get('/{image}', [UploadedImageController::class, 'show']);
+        Route::delete('/{image}', [UploadedImageController::class, 'destroy']);
+    });
 
     // === CALENDAR EVENTS ===
     Route::prefix('events')->group(function () {
