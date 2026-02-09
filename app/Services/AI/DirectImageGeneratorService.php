@@ -86,7 +86,7 @@ class DirectImageGeneratorService
         $systemPrompt = $settings['image_system_prompt'] ?? '';
 
         if (empty($systemPrompt)) {
-            return $imagePrompt . " Professional editorial photograph, soft natural lighting, shallow depth of field. No text, no words, no letters, no typography, no logos, no watermarks, no graphic design elements, no collage, no frames, no borders, no mockups.";
+            return $imagePrompt . " Clean minimalist graphic design, premium Canva template style, soft muted warm tones, lots of white space, elegant and sophisticated. Only one photo, only one shape, maximum 1-2 words of text.";
         }
 
         return $this->replaceVariables($brand, $systemPrompt, $imagePrompt);

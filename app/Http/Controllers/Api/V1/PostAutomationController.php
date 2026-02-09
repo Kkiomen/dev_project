@@ -84,10 +84,10 @@ class PostAutomationController extends Controller
             // Synchronous mode: result is immediately available
             $updateData = [];
             if (!empty($result['caption'])) {
-                $updateData['main_caption'] = $result['caption'];
+                $updateData['main_caption'] = str_replace('—', '-', $result['caption']);
             }
             if (!empty($result['title'])) {
-                $updateData['title'] = $result['title'];
+                $updateData['title'] = str_replace('—', '-', $result['title']);
             }
             if (!empty($updateData)) {
                 $post->update($updateData);

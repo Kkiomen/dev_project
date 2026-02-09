@@ -120,41 +120,44 @@ class DirectTextGeneratorService
         }
         $systemPrompt .= <<<'PROMPT'
 
-Your task: based on a social media post caption, write a short image generation prompt that will produce a single beautiful PHOTOGRAPH.
+Your task: based on a social media post caption, write an image generation prompt that produces a DESIGNED SOCIAL MEDIA POST GRAPHIC — like a premium Canva or Adobe template.
 
-ABSOLUTE BANS — the prompt must NEVER contain any of these:
-- Any mention of text, words, letters, titles, headlines, captions, typography, fonts
-- Any mention of logos, watermarks, icons, buttons, UI elements
-- Any mention of collage, grid, layout, frame, border, mockup, template, design, graphic
-- Any mention of social media, Instagram, post, card, banner, flyer
-- Any mention of blob shapes, organic shapes, geometric overlays, decorative elements
-- Multiple subjects or scenes — describe ONLY ONE scene
+THE IMAGE MUST BE A DESIGNED GRAPHIC LAYOUT, NOT a raw photograph. Think of it as a finished Instagram post ready to publish.
+THIS RULES IS FOR Nano banana model to generate image.
 
-WHAT TO DESCRIBE — a single photograph:
-- One clear subject or scene related to the post topic
-- Soft, warm natural lighting (golden hour, window light, overcast diffused light)
-- Muted warm color palette: beige, cream, sand, ivory, soft taupe, warm grey
-- Minimalist composition, lots of empty space, clean background
-- Shallow depth of field with creamy bokeh
-- Shot on professional camera, 85mm lens, f/1.8
-- Mood: calm, elegant, aspirational, editorial
+LAYOUT STRUCTURE (describe exactly):
+- Square format (1:1 ratio), clean light background (any soft neutral or pastel tone)
+- ONE large hero photograph taking up about 50-60% of the image, clipped inside a soft organic/fluid blob shape or a rounded rectangle
+- Large areas of clean negative space around the photo
+- Optional: one or two subtle accent shapes (small circles, thin curved lines) in muted tones as decoration
+- Overall feel: airy, spacious, premium, minimal
 
-FORMAT: Write a detailed, rich description of 5-8 sentences. Be very specific about:
-1. The main subject and what they are doing (pose, expression, action)
-2. Environment and setting details (furniture, objects, surfaces, background elements)
-3. Lighting setup (direction, quality, color temperature, shadows)
-4. Color palette and tones (specific colors, gradients, contrasts)
-5. Camera settings and perspective (lens, angle, focus, depth of field)
-6. Atmosphere and mood (emotion, feeling, season, time of day)
+STYLE DETAILS:
+- Color palette: soft muted tones that complement the post topic — choose any harmonious combination of desaturated, gentle colors (e.g. muted blue, soft pink, dusty red, warm beige, lavender, sage green, peach, soft coral, muted teal, powder blue). Maximum 3 colors total. Vary the palette per post — do NOT always use the same colors
+- The hero photo inside the shape should be high-quality lifestyle/editorial photography with soft natural lighting
+- Typography: thin, elegant, modern sans-serif. Very small, not dominant
+- NO heavy borders, NO dark backgrounds, NO neon colors, NO busy patterns
+- NO multiple photos — only ONE photo in ONE shape
+- NO long sentences — at most 1-2 words of text as a decorative label
+
+DESCRIBE in 10-12 sentences: the layout composition (where the photo shape is placed, where the label goes), the photo content inside the shape, the accent elements, the color palette, and the overall mood.
+
+
+Pro-tipy dla Nano Banana:
+Używaj "Bokeh": To słowo klucz, które rozmywa tło i sprawia, że zdjęcie wygląda na profesjonalne, a nie zrobione kalkulatorem.
+
+Określ aparat: Nano Banana świetnie reaguje na nazwy sprzętu. Dodanie shot on Sony A7R IV lub Leica M11 natychmiast zmienia tekstury na bardziej "fotograficzne".
+
+Unikaj "AI buzzwords": Zamiast pisać "high quality" (co jest dla AI puste), napisz 4k RAW photo, highly detailed skin pores lub intricate fabric texture.
 
 Example good output:
-"A woman in a soft cream linen blouse sits at a light oak wooden desk in a bright, airy home office. She is writing in a leather-bound notebook, her left hand resting beside a ceramic cup of matcha latte. The desk is styled with a small potted eucalyptus plant, a stack of neutral-toned books, and a brass pen holder. Warm golden hour sunlight streams through sheer white curtains on the left, casting soft diffused shadows across the scene. The color palette is warm and muted — ivory walls, sand-colored textiles, touches of sage green from the plant. Shot from a slightly elevated angle on an 85mm lens at f/1.8, with the background gently blurred into a creamy bokeh. The overall mood is calm, focused, and aspirational, evoking a sense of productive serenity."
+"A square social media post design with a clean light background. In the center-right area, a large organic fluid blob shape contains a lifestyle photograph of a woman working on a laptop in a bright cafe. The blob shape has soft rounded edges with a muted accent fill visible at the border. In the upper left corner, the word 'Business' is set in thin elegant sans-serif typography. A small decorative circle accent sits in the bottom left, and a thin curved line arcs subtly in the top right. The overall composition is airy and spacious with 40% negative space. The color palette uses 3 soft muted tones: a light neutral base, a warm dusty rose accent, and a touch of muted teal. The mood is calm, professional, and sophisticated — like a premium brand template."
 
 PROMPT;
         $systemPrompt .= "\nAlways write in English.";
         $systemPrompt .= "\nRespond with valid JSON only.";
 
-        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nWrite a detailed, vivid photograph description (5-8 sentences) covering subject, setting, lighting, colors, camera angle, and mood. Respond with JSON: {\"image_prompt\": \"...\"}";
+        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nDescribe a designed social media post graphic with one hero photo in an organic shape, minimal text label, and lots of clean negative space. 5-8 sentences. Respond with JSON: {\"image_prompt\": \"...\"}";
 
         $startTime = microtime(true);
         $log = $this->logAiStart($brand, 'direct_image_description', [

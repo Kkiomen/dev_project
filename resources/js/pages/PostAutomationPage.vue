@@ -413,6 +413,8 @@ watch(() => brandsStore.currentBrand?.id, () => {
 
 watch(activeMainTab, (tab) => {
     if (tab === 'automation') {
+        fetchPosts(1);
+        fetchStats();
         startAutoRefresh();
     } else {
         stopAutoRefresh();
