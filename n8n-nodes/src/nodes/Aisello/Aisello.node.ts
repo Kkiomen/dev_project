@@ -25,6 +25,8 @@ import { boardCardOperations, boardCardFields } from './descriptions/BoardCardDe
 import { notificationOperations, notificationFields } from './descriptions/NotificationDescription';
 import { approvalTokenOperations, approvalTokenFields } from './descriptions/ApprovalTokenDescription';
 import { stockPhotoOperations, stockPhotoFields } from './descriptions/StockPhotoDescription';
+import { rssFeedOperations, rssFeedFields } from './descriptions/RssFeedDescription';
+import { rssArticleOperations, rssArticleFields } from './descriptions/RssArticleDescription';
 
 export class Aisello implements INodeType {
 	description: INodeTypeDescription = {
@@ -64,6 +66,8 @@ export class Aisello implements INodeType {
 					{ name: 'Post', value: 'post' },
 					{ name: 'Post Automation', value: 'postAutomation' },
 					{ name: 'Post Media', value: 'postMedia' },
+					{ name: 'RSS Article', value: 'rssArticle' },
+					{ name: 'RSS Feed', value: 'rssFeed' },
 					{ name: 'Stock Photo', value: 'stockPhoto' },
 				],
 				default: 'post',
@@ -82,6 +86,8 @@ export class Aisello implements INodeType {
 			...boardCardOperations,
 			...notificationOperations,
 			...approvalTokenOperations,
+			...rssFeedOperations,
+			...rssArticleOperations,
 			...stockPhotoOperations,
 			// Fields
 			...brandFields,
@@ -97,6 +103,8 @@ export class Aisello implements INodeType {
 			...boardCardFields,
 			...notificationFields,
 			...approvalTokenFields,
+			...rssFeedFields,
+			...rssArticleFields,
 			...stockPhotoFields,
 		],
 	};
@@ -134,6 +142,17 @@ export class Aisello implements INodeType {
 					const boards = responseData.data || responseData;
 					return Array.isArray(boards)
 						? boards.map((b: any) => ({ name: b.name, value: b.id }))
+						: [];
+				} catch {
+					return [];
+				}
+			},
+			async getRssFeeds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]> {
+				try {
+					const responseData = await aiselloApiRequest.call(this, 'GET', '/rss-feeds', {}, { per_page: 100 });
+					const feeds = responseData.data || responseData;
+					return Array.isArray(feeds)
+						? feeds.map((f: any) => ({ name: f.name || f.url, value: f.id }))
 						: [];
 				} catch {
 					return [];
@@ -639,6 +658,68 @@ export class Aisello implements INodeType {
 						const approvalTokenId = this.getNodeParameter('approvalTokenId', i) as string;
 						responseData = await aiselloApiRequest.call(this, 'GET', `/approval-tokens/${approvalTokenId}/stats`);
 						responseData = responseData.data || responseData;
+					}
+				}
+
+				// ==================== RSS FEED ====================
+				else if (resource === 'rssFeed') {
+					if (operation === 'getAll') {
+						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+						if (returnAll) {
+							responseData = await aiselloApiRequestAllItems.call(this, 'GET', '/rss-feeds');
+						} else {
+							const limit = this.getNodeParameter('limit', i) as number;
+							responseData = await aiselloApiRequest.call(this, 'GET', '/rss-feeds', {}, { per_page: limit });
+							responseData = responseData.data || responseData;
+						}
+					} else if (operation === 'get') {
+						const feedId = this.getNodeParameter('feedId', i) as string;
+						responseData = await aiselloApiRequest.call(this, 'GET', `/rss-feeds/${feedId}`);
+						responseData = responseData.data || responseData;
+					} else if (operation === 'create') {
+						const url = this.getNodeParameter('url', i) as string;
+						const additionalFields = this.getNodeParameter('additionalFields', i) as IDataObject;
+						const body: IDataObject = { url, ...additionalFields };
+						responseData = await aiselloApiRequest.call(this, 'POST', '/rss-feeds', body);
+						responseData = responseData.data || responseData;
+					} else if (operation === 'update') {
+						const feedId = this.getNodeParameter('feedId', i) as string;
+						const updateFields = this.getNodeParameter('updateFields', i) as IDataObject;
+						responseData = await aiselloApiRequest.call(this, 'PUT', `/rss-feeds/${feedId}`, updateFields);
+						responseData = responseData.data || responseData;
+					} else if (operation === 'delete') {
+						const feedId = this.getNodeParameter('feedId', i) as string;
+						responseData = await aiselloApiRequest.call(this, 'DELETE', `/rss-feeds/${feedId}`);
+					} else if (operation === 'refresh') {
+						const feedId = this.getNodeParameter('feedId', i) as string;
+						responseData = await aiselloApiRequest.call(this, 'POST', `/rss-feeds/${feedId}/refresh`);
+					}
+				}
+
+				// ==================== RSS ARTICLE ====================
+				else if (resource === 'rssArticle') {
+					if (operation === 'getAll') {
+						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+						const filters = this.getNodeParameter('filters', i) as IDataObject;
+						const qs: IDataObject = { ...filters };
+						if (returnAll) {
+							responseData = await aiselloApiRequestAllItems.call(this, 'GET', '/rss-articles', {}, qs);
+						} else {
+							const limit = this.getNodeParameter('limit', i) as number;
+							qs.per_page = limit;
+							responseData = await aiselloApiRequest.call(this, 'GET', '/rss-articles', {}, qs);
+							responseData = responseData.data || responseData;
+						}
+					} else if (operation === 'getFeedArticles') {
+						const feedId = this.getNodeParameter('feedId', i) as string;
+						const returnAll = this.getNodeParameter('returnAll', i) as boolean;
+						if (returnAll) {
+							responseData = await aiselloApiRequestAllItems.call(this, 'GET', `/rss-feeds/${feedId}/articles`);
+						} else {
+							const limit = this.getNodeParameter('limit', i) as number;
+							responseData = await aiselloApiRequest.call(this, 'GET', `/rss-feeds/${feedId}/articles`, {}, { per_page: limit });
+							responseData = responseData.data || responseData;
+						}
 					}
 				}
 

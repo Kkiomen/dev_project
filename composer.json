@@ -11,6 +11,8 @@
     "require": {
         "php": "^8.2",
         "intervention/image-laravel": "^1.5",
+        "laminas/laminas-feed": "^2.26",
+        "laminas/laminas-http": "^2.23",
         "laravel/framework": "^12.0",
         "laravel/reverb": "^1.7",
         "laravel/sanctum": "^4.2",

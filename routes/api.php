@@ -44,6 +44,7 @@ use App\Http\Controllers\Api\V1\UploadedImageController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PlatformCredentialController;
+use App\Http\Controllers\Api\V1\RssFeedController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -545,6 +546,16 @@ $v1Routes = function () {
         Route::delete('/{event}', [CalendarEventController::class, 'destroy']);
         Route::post('/{event}/reschedule', [CalendarEventController::class, 'reschedule']);
     });
+
+    // === RSS FEEDS ===
+    Route::get('rss-feeds', [RssFeedController::class, 'index']);
+    Route::post('rss-feeds', [RssFeedController::class, 'store']);
+    Route::get('rss-feeds/{feed}', [RssFeedController::class, 'show']);
+    Route::put('rss-feeds/{feed}', [RssFeedController::class, 'update']);
+    Route::delete('rss-feeds/{feed}', [RssFeedController::class, 'destroy']);
+    Route::get('rss-feeds/{feed}/articles', [RssFeedController::class, 'articles']);
+    Route::post('rss-feeds/{feed}/refresh', [RssFeedController::class, 'refresh']);
+    Route::get('rss-articles', [RssFeedController::class, 'allArticles']);
 };
 
 // V1 routes for external API consumers (Sanctum tokens)

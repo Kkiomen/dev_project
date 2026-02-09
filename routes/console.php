@@ -43,3 +43,9 @@ Schedule::command('psd:scan')
     ->everyTwoMinutes()
     ->withoutOverlapping()
     ->runInBackground();
+
+// Fetch RSS feeds and clean up old articles every 30 minutes
+Schedule::command('rss:fetch --cleanup')
+    ->everyThirtyMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();

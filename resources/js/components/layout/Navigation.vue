@@ -75,6 +75,19 @@ const navLinks = computed(() => [
         isActive: route.path === '/posts/automation',
     },
     {
+        to: '/rss-feeds',
+        label: t('navigation.rssFeeds'),
+        icon: 'rss',
+        isActive: route.path === '/rss-feeds',
+    },
+    {
+        to: '/rss-feeds/today',
+        label: t('rssFeeds.todayFeed'),
+        icon: 'rss-today',
+        isActive: route.path === '/rss-feeds/today',
+        indent: true,
+    },
+    {
         to: '/boards',
         label: t('navigation.boards'),
         icon: 'boards',
@@ -174,11 +187,13 @@ const bottomLinks = computed(() => [
                 :key="link.to"
                 :to="link.to"
                 @click="closeMobileMenu"
-                class="flex items-center px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-150"
-                :class="link.isActive
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                "
+                class="flex items-center rounded-lg text-sm font-medium transition-colors duration-150"
+                :class="[
+                    link.isActive
+                        ? 'bg-blue-50 text-blue-700'
+                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900',
+                    link.indent ? 'pl-8 pr-3 py-2 text-xs' : 'px-3 py-2.5',
+                ]"
             >
                 <!-- Dashboard -->
                 <svg v-if="link.icon === 'dashboard'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
@@ -199,6 +214,14 @@ const bottomLinks = computed(() => [
                 <!-- Automation -->
                 <svg v-else-if="link.icon === 'automation'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                </svg>
+                <!-- RSS -->
+                <svg v-else-if="link.icon === 'rss'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12.75 19.5v-.75a7.5 7.5 0 0 0-7.5-7.5H4.5m0-6.75h.75c7.87 0 14.25 6.38 14.25 14.25v.75M6 18.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
+                </svg>
+                <!-- RSS Today -->
+                <svg v-else-if="link.icon === 'rss-today'" class="w-4 h-4 mr-2.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
                 </svg>
                 <!-- Boards -->
                 <svg v-else-if="link.icon === 'boards'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">

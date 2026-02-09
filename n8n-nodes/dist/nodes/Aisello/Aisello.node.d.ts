@@ -6,6 +6,7 @@ export declare class Aisello implements INodeType {
             getBrands(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
             getPosts(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
             getBoards(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
+            getRssFeeds(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
             getApprovalTokens(this: ILoadOptionsFunctions): Promise<INodePropertyOptions[]>;
         };
     };

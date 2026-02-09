@@ -16,6 +16,8 @@ const BoardCardDescription_1 = require("./descriptions/BoardCardDescription");
 const NotificationDescription_1 = require("./descriptions/NotificationDescription");
 const ApprovalTokenDescription_1 = require("./descriptions/ApprovalTokenDescription");
 const StockPhotoDescription_1 = require("./descriptions/StockPhotoDescription");
+const RssFeedDescription_1 = require("./descriptions/RssFeedDescription");
+const RssArticleDescription_1 = require("./descriptions/RssArticleDescription");
 class Aisello {
     constructor() {
         this.description = {
@@ -55,6 +57,8 @@ class Aisello {
                         { name: 'Post', value: 'post' },
                         { name: 'Post Automation', value: 'postAutomation' },
                         { name: 'Post Media', value: 'postMedia' },
+                        { name: 'RSS Article', value: 'rssArticle' },
+                        { name: 'RSS Feed', value: 'rssFeed' },
                         { name: 'Stock Photo', value: 'stockPhoto' },
                     ],
                     default: 'post',
@@ -73,6 +77,8 @@ class Aisello {
                 ...BoardCardDescription_1.boardCardOperations,
                 ...NotificationDescription_1.notificationOperations,
                 ...ApprovalTokenDescription_1.approvalTokenOperations,
+                ...RssFeedDescription_1.rssFeedOperations,
+                ...RssArticleDescription_1.rssArticleOperations,
                 ...StockPhotoDescription_1.stockPhotoOperations,
                 // Fields
                 ...BrandDescription_1.brandFields,
@@ -88,6 +94,8 @@ class Aisello {
                 ...BoardCardDescription_1.boardCardFields,
                 ...NotificationDescription_1.notificationFields,
                 ...ApprovalTokenDescription_1.approvalTokenFields,
+                ...RssFeedDescription_1.rssFeedFields,
+                ...RssArticleDescription_1.rssArticleFields,
                 ...StockPhotoDescription_1.stockPhotoFields,
             ],
         };
@@ -126,6 +134,18 @@ class Aisello {
                         const boards = responseData.data || responseData;
                         return Array.isArray(boards)
                             ? boards.map((b) => ({ name: b.name, value: b.id }))
+                            : [];
+                    }
+                    catch {
+                        return [];
+                    }
+                },
+                async getRssFeeds() {
+                    try {
+                        const responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', '/rss-feeds', {}, { per_page: 100 });
+                        const feeds = responseData.data || responseData;
+                        return Array.isArray(feeds)
+                            ? feeds.map((f) => ({ name: f.name || f.url, value: f.id }))
                             : [];
                     }
                     catch {
@@ -712,6 +732,75 @@ class Aisello {
                         const approvalTokenId = this.getNodeParameter('approvalTokenId', i);
                         responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/approval-tokens/${approvalTokenId}/stats`);
                         responseData = responseData.data || responseData;
+                    }
+                }
+                // ==================== RSS FEED ====================
+                else if (resource === 'rssFeed') {
+                    if (operation === 'getAll') {
+                        const returnAll = this.getNodeParameter('returnAll', i);
+                        if (returnAll) {
+                            responseData = await GenericFunctions_1.aiselloApiRequestAllItems.call(this, 'GET', '/rss-feeds');
+                        }
+                        else {
+                            const limit = this.getNodeParameter('limit', i);
+                            responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', '/rss-feeds', {}, { per_page: limit });
+                            responseData = responseData.data || responseData;
+                        }
+                    }
+                    else if (operation === 'get') {
+                        const feedId = this.getNodeParameter('feedId', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/rss-feeds/${feedId}`);
+                        responseData = responseData.data || responseData;
+                    }
+                    else if (operation === 'create') {
+                        const url = this.getNodeParameter('url', i);
+                        const additionalFields = this.getNodeParameter('additionalFields', i);
+                        const body = { url, ...additionalFields };
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', '/rss-feeds', body);
+                        responseData = responseData.data || responseData;
+                    }
+                    else if (operation === 'update') {
+                        const feedId = this.getNodeParameter('feedId', i);
+                        const updateFields = this.getNodeParameter('updateFields', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'PUT', `/rss-feeds/${feedId}`, updateFields);
+                        responseData = responseData.data || responseData;
+                    }
+                    else if (operation === 'delete') {
+                        const feedId = this.getNodeParameter('feedId', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'DELETE', `/rss-feeds/${feedId}`);
+                    }
+                    else if (operation === 'refresh') {
+                        const feedId = this.getNodeParameter('feedId', i);
+                        responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'POST', `/rss-feeds/${feedId}/refresh`);
+                    }
+                }
+                // ==================== RSS ARTICLE ====================
+                else if (resource === 'rssArticle') {
+                    if (operation === 'getAll') {
+                        const returnAll = this.getNodeParameter('returnAll', i);
+                        const filters = this.getNodeParameter('filters', i);
+                        const qs = { ...filters };
+                        if (returnAll) {
+                            responseData = await GenericFunctions_1.aiselloApiRequestAllItems.call(this, 'GET', '/rss-articles', {}, qs);
+                        }
+                        else {
+                            const limit = this.getNodeParameter('limit', i);
+                            qs.per_page = limit;
+                            responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', '/rss-articles', {}, qs);
+                            responseData = responseData.data || responseData;
+                        }
+                    }
+                    else if (operation === 'getFeedArticles') {
+                        const feedId = this.getNodeParameter('feedId', i);
+                        const returnAll = this.getNodeParameter('returnAll', i);
+                        if (returnAll) {
+                            responseData = await GenericFunctions_1.aiselloApiRequestAllItems.call(this, 'GET', `/rss-feeds/${feedId}/articles`);
+                        }
+                        else {
+                            const limit = this.getNodeParameter('limit', i);
+                            responseData = await GenericFunctions_1.aiselloApiRequest.call(this, 'GET', `/rss-feeds/${feedId}/articles`, {}, { per_page: limit });
+                            responseData = responseData.data || responseData;
+                        }
                     }
                 }
                 // ==================== STOCK PHOTO ====================

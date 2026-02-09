@@ -126,6 +126,16 @@ class Brand extends Model
         return $this->hasMany(BrandAiKey::class);
     }
 
+    public function rssFeeds(): HasMany
+    {
+        return $this->hasMany(RssFeed::class);
+    }
+
+    public function rssArticles(): HasMany
+    {
+        return $this->hasMany(RssArticle::class);
+    }
+
     // Member helpers
     public function getMemberRole(User $user): ?string
     {

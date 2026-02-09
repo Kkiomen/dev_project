@@ -62,6 +62,17 @@ const routes = [
         component: () => import('@/pages/GraphicsEditorPage.vue'),
         props: true,
     },
+    // RSS Feeds
+    {
+        path: '/rss-feeds/today',
+        name: 'rss-feeds-today',
+        component: () => import('@/pages/TodayArticlesPage.vue'),
+    },
+    {
+        path: '/rss-feeds',
+        name: 'rss-feeds',
+        component: () => import('@/pages/RssFeedsPage.vue'),
+    },
     // Boards (Kanban)
     {
         path: '/boards',
