@@ -12,7 +12,7 @@ const props = defineProps({
 
 const emit = defineEmits(['updated']);
 
-const { t } = useI18n();
+const { t, locale } = useI18n();
 const managerStore = useManagerStore();
 const toast = useToast();
 
@@ -125,7 +125,7 @@ async function handleDelete(slotId) {
 function formatDate(dateStr) {
     if (!dateStr) return '';
     const d = new Date(dateStr + 'T00:00:00');
-    return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+    return d.toLocaleDateString(locale.value, { weekday: 'short', month: 'short', day: 'numeric' });
 }
 
 function formatTime(time) {
