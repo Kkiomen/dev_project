@@ -86,7 +86,7 @@ class SmContentPlanGeneratorService
             $plan = null;
             $slotsCreated = 0;
 
-            DB::transaction(function () use ($brand, $strategy, $month, $year, $slots, &$plan, &$slotsCreated) {
+            DB::transaction(function () use ($brand, $strategy, $month, $year, $slots, $startDate, &$plan, &$slotsCreated) {
                 $plan = SmContentPlan::create([
                     'brand_id' => $brand->id,
                     'sm_strategy_id' => $strategy->id,
@@ -99,7 +99,7 @@ class SmContentPlanGeneratorService
                     'generated_at' => now(),
                 ]);
 
-                $slotsCreated = $this->createSlotsFromPlan($plan, $slots);
+                $slotsCreated = $this->createSlotsFromPlan($plan, $slots, $startDate);
 
                 $plan->update(['total_slots' => $slotsCreated]);
             });
@@ -194,8 +194,8 @@ class SmContentPlanGeneratorService
 
             $slotsCreated = 0;
 
-            DB::transaction(function () use ($plan, $slots, &$slotsCreated, $cacheKey) {
-                $slotsCreated = $this->createSlotsFromPlan($plan, $slots);
+            DB::transaction(function () use ($plan, $slots, $startDate, &$slotsCreated, $cacheKey) {
+                $slotsCreated = $this->createSlotsFromPlan($plan, $slots, $startDate);
 
                 $plan->update([
                     'status' => 'draft',
@@ -403,7 +403,9 @@ OPTIMAL POSTING TIMES (per platform per day):
 
 Generate a complete content calendar with specific, actionable topics for each slot.
 Topics and descriptions must be written in {$languageName}.
-Distribute posts evenly across the month, respecting pillar percentages and content mix.
+Distribute posts evenly across the date range, respecting pillar percentages and content mix.
+
+IMPORTANT: Only generate slots for dates within the DATE RANGE above ({$startDate->format('Y-m-d')} to {$endDate->format('Y-m-d')}). Do NOT generate any slots for dates before {$startDate->format('Y-m-d')}.
 PROMPT;
 
         // Filter to only active platforms
@@ -431,7 +433,7 @@ PROMPT;
     /**
      * Bulk create SmContentPlanSlot records from AI-generated slots.
      */
-    protected function createSlotsFromPlan(SmContentPlan $plan, array $slots): int
+    protected function createSlotsFromPlan(SmContentPlan $plan, array $slots, ?Carbon $startDate = null): int
     {
         $created = 0;
 
@@ -450,6 +452,11 @@ PROMPT;
                     'date' => $date,
                     'index' => $index,
                 ]);
+                continue;
+            }
+
+            // Skip slots before the start date (past days)
+            if ($startDate && $scheduledDate->lt($startDate->copy()->startOfDay())) {
                 continue;
             }
 
