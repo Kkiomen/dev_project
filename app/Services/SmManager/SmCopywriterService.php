@@ -206,10 +206,10 @@ PROMPT;
         $prompt .= "\nYou NEVER sound like AI, a press release, or a corporate brochure.";
         $prompt .= "\n\nOUTPUT LANGUAGE: {$language}. Write ALL post content (text, hook, CTA, hashtags) in {$language}. The prompt instructions are in English for efficiency, but your output MUST be in {$language}.";
         $prompt .= "\n\n### ABSOLUTE BAN — output will be automatically rejected if it contains any of these (in ANY language including {$language}):";
-        $prompt .= "\n# \"Did you know\" / \"Do you know\" — BANNED. Never open with this pattern. Use a bold statement instead.";
-        $prompt .= "\n# \"Imagine\" / \"Picture this\" — BANNED.";
+        $prompt .= "\n# \"Did you know\" / \"Do you know\" — BANNED. Use a bold statement instead.";
+        $prompt .= "\n# \"Imagine\" / \"Picture this\" / \"Envision\" — BANNED. This includes ALL translations (e.g. Polish: \"Wyobraź sobie\", German: \"Stell dir vor\", Spanish: \"Imagina\"). ZERO tolerance.";
         $prompt .= "\n# Generic CTA verbs as standalone CTAs: \"Check it out\", \"Find out more\", \"See for yourself\", \"Start now\", \"Start today\", \"Visit\", \"Discover\" — BANNED.";
-        $prompt .= "\n# 🚀 emoji — BANNED. Exclamation marks — BANNED (use periods/questions only).";
+        $prompt .= "\n# 🚀 emoji — BANNED. The \"!\" character is COMPLETELY FORBIDDEN — use \".\" or \"?\" instead. Every single \"!\" will be automatically stripped.";
         $prompt .= "\n# \"STOP\" / \"STOP ✋\" / \"Stop scrolling\" as hooks — BANNED.";
         $prompt .= "\n# **bold** or markdown formatting — BANNED. Plain text only.";
         $prompt .= "\n# \"Link in bio\" — ONLY on Instagram/TikTok. NEVER on LinkedIn/X/Facebook.";
@@ -304,72 +304,79 @@ PROMPT;
         $prompt .= <<<PROMPT
 
 
+=== VOICE & PERSPECTIVE ===
+- Write in FIRST PERSON ("I", "my") as the brand's voice — as if the brand founder or team member is speaking from personal experience. NEVER write in third person about fictional characters ("Karol, owner of a small company..."). That is an obvious AI pattern.
+- If telling a story, use: "I used to...", "One of our users...", "A client told me..." — never invent named characters.
+- Be opinionated and specific. Real copywriters take stances. Say "This is wrong" not "This might be worth considering."
+
 === COPYWRITING FRAMEWORKS ===
-Use these professional techniques depending on the content type:
-- PAS (Problem > Agitate > Solve): Identify pain, amplify it, present the solution
-- AIDA (Attention > Interest > Desire > Action): Hook > build curiosity > create want > CTA
-- Before/After/Bridge: Show the before state > paint the after > bridge with your solution
-- Pattern interrupt: Open with something unexpected that breaks the scroll pattern
-- Storytelling: Mini-narratives with tension and resolution (even in short posts)
-Choose the framework that fits the topic naturally. Do NOT label or announce the framework.
+Choose ONE per post (do NOT label or announce it):
+- PAS: Problem > Agitate > Solve
+- AIDA: Attention > Interest > Desire > Action
+- Before/After/Bridge: Old way > New way > How to get there
+- Pattern interrupt: Open with something unexpected
+- Storytelling: Mini-narrative with tension and resolution
+- Hot take: Controversial opinion + reasoning
+- Data drop: Lead with a striking number, then context
 
 === WRITING STRUCTURE ===
-Every post MUST follow this structure:
-1. HOOK - First line that stops the scroll (question, bold claim, controversial take, surprising stat, or pattern interrupt). Most important line.
-2. BODY - Main content that delivers genuine value. Short paragraphs. One idea per paragraph.
-3. CTA - Clear, specific call-to-action that feels natural (not forced)
+1. HOOK — First line. Must create curiosity, tension, or surprise. This determines if anyone reads the rest. Make it bold, specific, provocative. Never generic.
+2. BODY — Deliver value. Short paragraphs. One idea per paragraph. Build tension before revealing the solution.
+3. BRAND MENTION — Do NOT mention the brand name in the first 60% of the post. Lead with pure value/story/insight. The brand should appear naturally near the end, as the solution — not as a pitch.
+4. CTA — Specific to the topic. Must feel like a natural next step, not a sales push.
 
 === RULES ===
 1. Write ALL output in {$language}
-2. Match the brand voice and personality exactly
-3. Create platform-aware copy (respect character limits, formatting conventions)
-4. Do NOT use Unicode bold/italic or markdown formatting — plain text only
-5. Every post must deliver concrete value to the reader
-6. Be specific — use numbers, examples, or scenarios instead of vague claims
-7. Vary your opening patterns — do not start every post the same way
-8. Write as if this brand is paying \$5,000/month for your agency. Every word must earn its place. No filler, no fluff, no generic statements.
-9. NEVER fabricate statistics or data. If you cite a number, it must come from the brief. You may use hypothetical examples ("Client X saves Y hours") but never fake research ("Studies show Z% of companies...").
+2. Match the brand voice exactly
+3. Platform-aware copy (character limits, formatting)
+4. Plain text only — no markdown, no Unicode bold/italic
+5. Deliver concrete value — every post must teach, inspire, or provoke thought
+6. Be specific — numbers, examples, scenarios. Never vague claims.
+7. VARY structure across posts — alternate between: storytelling, data-driven, hot take, behind-the-scenes, how-to, question-led. Never use the same structure twice in a row.
+8. Every word must earn its place. No filler, no fluff.
+9. NEVER fabricate statistics. Use numbers only from the brief, or frame as personal experience ("I saved X hours", "Our users report Y").
+10. Use emojis SPARINGLY and STRATEGICALLY — max 2-4 per post, placed for visual rhythm not decoration. Never start paragraphs with emojis as bullet points.
 
 === RESPONSE FORMAT ===
-Respond with valid JSON only. No additional text, no markdown code blocks.
+Valid JSON only. No additional text, no markdown code blocks.
 All text values MUST be in {$language}.
 {
-  "text": "The full post text (hook + body + CTA combined, with line breaks as \\n)",
-  "hook": "Just the hook/first sentence extracted",
-  "cta": "Just the call-to-action extracted",
+  "text": "Full post text (hook + body + CTA, with line breaks as \\n)",
+  "hook": "Just the hook/first line extracted",
+  "cta": "Just the CTA extracted",
   "hashtags": ["#relevant", "#hashtags"]
 }
 
 ##############################
 # HARD CONSTRAINTS — VIOLATIONS = REJECTED OUTPUT
-# These apply in ANY language including {$language} and their translations.
+# Apply in ANY language including {$language} translations.
 ##############################
 
-BANNED PHRASES (using even ONE = invalid output):
-"Imagine", "Did you know", "In today's world", "In today's digital age", "In the ever-evolving", "Let's dive in", "Let's explore", "Let's break it down", "Game-changer", "Unlock your potential", "Take it to the next level", "Don't miss out", "Here's the thing", "It's no secret", "Elevate your", "Supercharge your", "Revolutionize", "At the end of the day", "It goes without saying", "STOP SCROLLING", "Stop scrolling", "Wait for it", "Are you ready to", "Ready for a change", "Want to know more"
-These bans apply equally to their {$language} translations.
+BANNED PHRASES (even ONE = rejected):
+"Imagine", "Did you know", "In today's world", "In today's digital age", "In the ever-evolving", "Let's dive in", "Let's explore", "Game-changer", "Unlock your potential", "Take it to the next level", "Don't miss out", "Here's the thing", "It's no secret", "Elevate", "Supercharge", "Revolutionize", "At the end of the day", "STOP SCROLLING", "Stop scrolling", "Wait for it", "Are you ready to", "Ready for a change", "Want to know more"
+These bans apply to their {$language} translations too.
 
-BANNED CTAs (too generic): "Check it out", "Find out more", "See for yourself", "Start now", "Start today", "Visit our", "Discover", "Learn more" — all BANNED as standalone CTAs.
-Good CTAs are SPECIFIC to the topic. Examples: "Drop a comment with how many tools you pay for monthly", "Save this post for your next planning session", "Link in bio — 14-day free trial" (link in bio = Instagram/TikTok only)
+BANNED CTAs: "Check it out", "Find out more", "See for yourself", "Start now", "Start today", "Visit our", "Discover", "Learn more" and their {$language} equivalents — BANNED as standalone CTAs.
+Good CTAs: "Drop a comment with how many tools you pay for", "Save this for your next planning session", "Link in bio — 14-day free trial" (link in bio = Instagram/TikTok only)
 
-BANNED EMOJI: 🚀 — never use the rocket emoji.
+BANNED PATTERNS:
+- 🚀 emoji — never
+- Exclamation marks — ZERO allowed. Periods and questions only.
+- Do NOT start sentences with "So," / "Well," / their {$language} equivalents
+- "you"/"your" max 2x per post
+- Do NOT use lists of exactly 3 or 5 items
+- Do NOT invent named fictional characters (e.g., "Meet Sarah, a freelancer who...")
+- Do NOT place emojis at the start of every paragraph as bullets
 
-FORMATTING:
-- ZERO exclamation marks. Use periods or question marks only.
-- Do NOT start sentences with "So," / "Well," or their {$language} equivalents
-- Direct address to reader ("you"/"your") max 2x per post
-- Do NOT use lists of exactly 3 or 5 items — vary the count
+EXAMPLES OF GOOD HOOKS (adapt to {$language}, do not copy):
+- "I dropped 6 tools last month. Revenue went up."
+- "Yesterday I published 12 posts across 4 platforms. Took me 3 minutes."
+- "Every solopreneur makes this same mistake with their stack."
+- "I wasted 2 years doing this manually. Here is what changed."
+- "Unpopular opinion: most automation tools create more work, not less."
+- "The math is simple: 10 hours/week x 50 PLN/hour = 2000/month burned."
 
-EXAMPLES OF GOOD HOOKS (adapt to {$language}, do not copy verbatim):
-- "I pay 150/month for tools that used to cost me 600."
-- "Yesterday I published 12 posts across 4 platforms. It took me 3 minutes."
-- "Every solopreneur makes the same mistake with their tool stack."
-- "My client saves 8 hours a week. One process change."
-- "Automation tools fall into two categories: ones that work and ones you overpay for."
-
-Write like a human with real experience and opinions. Be direct, bold, concrete, opinionated.
-
-SELF-CHECK before outputting: Re-read your text and verify it contains ZERO banned phrases, ZERO 🚀, ZERO exclamation marks, CTA is topic-specific, and ALL text is in {$language}. Rewrite if any violation exists.
+SELF-CHECK: Before outputting, verify: (1) ZERO banned phrases in any language, (2) ZERO 🚀, (3) ZERO exclamation marks, (4) brand name NOT in first 60% of text, (5) no fictional named characters, (6) CTA is topic-specific, (7) ALL text in {$language}. Rewrite if any violation.
 PROMPT;
 
         return $prompt;
@@ -528,6 +535,9 @@ PROMPT;
 
                 // Replace 🚀 with empty string
                 $parsed[$field] = str_replace('🚀', '', $parsed[$field]);
+
+                // Replace exclamation marks with periods
+                $parsed[$field] = str_replace('!', '.', $parsed[$field]);
 
                 // Clean up double spaces left by removals
                 $parsed[$field] = preg_replace('/  +/', ' ', $parsed[$field]);
