@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useManagerStore } from '@/stores/manager';
 import { useToast } from '@/composables/useToast';
@@ -59,6 +59,18 @@ function startEditing(slotId, field, currentValue) {
     editingSlotId.value = slotId;
     editingField.value = field;
     editingValue.value = currentValue || '';
+
+    if (field === 'topic' || field === 'description') {
+        nextTick(() => {
+            const el = document.querySelector('.js-autoresize');
+            if (el) autoResize(el);
+        });
+    }
+}
+
+function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = el.scrollHeight + 'px';
 }
 
 function cancelEditing() {
@@ -248,35 +260,37 @@ function formatTime(time) {
                         </td>
 
                         <!-- Topic -->
-                        <td class="px-3 py-2.5" @click.stop="startEditing(slot.id, 'topic', slot.topic)">
-                            <input
+                        <td class="px-3 py-2.5 align-top" @click.stop="startEditing(slot.id, 'topic', slot.topic)">
+                            <textarea
                                 v-if="isEditing(slot.id, 'topic')"
-                                type="text"
                                 v-model="editingValue"
                                 @blur="saveEditing()"
-                                @keydown.enter="saveEditing()"
+                                @keydown.ctrl.enter="saveEditing()"
                                 @keydown.escape="cancelEditing()"
-                                class="w-full rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                @input="autoResize($event.target)"
+                                rows="2"
+                                class="js-autoresize w-full min-w-[180px] rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none overflow-hidden"
                                 autofocus
                             />
-                            <span v-else class="text-xs cursor-pointer hover:text-white transition-colors" :class="slot.topic ? 'text-gray-300' : 'text-gray-600 italic'">
+                            <span v-else class="text-xs cursor-pointer hover:text-white transition-colors line-clamp-2" :class="slot.topic ? 'text-gray-300' : 'text-gray-600 italic'">
                                 {{ slot.topic || t('manager.calendar.listView.noTopic') }}
                             </span>
                         </td>
 
                         <!-- Description -->
-                        <td class="px-3 py-2.5" @click.stop="startEditing(slot.id, 'description', slot.description)">
-                            <input
+                        <td class="px-3 py-2.5 align-top" @click.stop="startEditing(slot.id, 'description', slot.description)">
+                            <textarea
                                 v-if="isEditing(slot.id, 'description')"
-                                type="text"
                                 v-model="editingValue"
                                 @blur="saveEditing()"
-                                @keydown.enter="saveEditing()"
+                                @keydown.ctrl.enter="saveEditing()"
                                 @keydown.escape="cancelEditing()"
-                                class="w-full rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                @input="autoResize($event.target)"
+                                rows="2"
+                                class="js-autoresize w-full min-w-[160px] rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none overflow-hidden"
                                 autofocus
                             />
-                            <span v-else class="text-xs text-gray-500 truncate max-w-[200px] block cursor-pointer hover:text-gray-300 transition-colors">
+                            <span v-else class="text-xs text-gray-500 line-clamp-2 max-w-[200px] block cursor-pointer hover:text-gray-300 transition-colors">
                                 {{ slot.description || '—' }}
                             </span>
                         </td>
@@ -414,14 +428,15 @@ function formatTime(time) {
                     <!-- Topic -->
                     <div class="flex items-start gap-3" @click.stop="startEditing(slot.id, 'topic', slot.topic)">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider w-16 shrink-0 mt-0.5">{{ t('manager.calendar.listView.topic') }}</span>
-                        <input
+                        <textarea
                             v-if="isEditing(slot.id, 'topic')"
-                            type="text"
                             v-model="editingValue"
                             @blur="saveEditing()"
-                            @keydown.enter="saveEditing()"
+                            @keydown.ctrl.enter="saveEditing()"
                             @keydown.escape="cancelEditing()"
-                            class="flex-1 rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            @input="autoResize($event.target)"
+                            rows="2"
+                            class="js-autoresize flex-1 rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none overflow-hidden"
                             autofocus
                         />
                         <span v-else class="text-xs" :class="slot.topic ? 'text-gray-200' : 'text-gray-600 italic'">
@@ -432,14 +447,15 @@ function formatTime(time) {
                     <!-- Description -->
                     <div class="flex items-start gap-3" @click.stop="startEditing(slot.id, 'description', slot.description)">
                         <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider w-16 shrink-0 mt-0.5">{{ t('manager.calendar.listView.description') }}</span>
-                        <input
+                        <textarea
                             v-if="isEditing(slot.id, 'description')"
-                            type="text"
                             v-model="editingValue"
                             @blur="saveEditing()"
-                            @keydown.enter="saveEditing()"
+                            @keydown.ctrl.enter="saveEditing()"
                             @keydown.escape="cancelEditing()"
-                            class="flex-1 rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                            @input="autoResize($event.target)"
+                            rows="2"
+                            class="js-autoresize flex-1 rounded border border-indigo-500 bg-gray-800 px-2 py-1 text-xs text-white focus:outline-none focus:ring-1 focus:ring-indigo-500 resize-none overflow-hidden"
                             autofocus
                         />
                         <span v-else class="text-xs text-gray-500">{{ slot.description || '—' }}</span>
