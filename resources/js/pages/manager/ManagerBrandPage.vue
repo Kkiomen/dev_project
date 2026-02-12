@@ -145,7 +145,13 @@ const removeHashtag = (group, idx) => {
 };
 
 onMounted(() => {
-    managerStore.fetchBrandKit();
+    if (managerStore.currentBrandId) {
+        managerStore.fetchBrandKit();
+    }
+});
+
+watch(() => managerStore.currentBrandId, (brandId) => {
+    if (brandId) managerStore.fetchBrandKit();
 });
 </script>
 

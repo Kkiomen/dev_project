@@ -179,7 +179,13 @@ const handleActivate = async () => {
 };
 
 onMounted(() => {
-    managerStore.fetchStrategy();
+    if (managerStore.currentBrandId) {
+        managerStore.fetchStrategy();
+    }
+});
+
+watch(() => managerStore.currentBrandId, (brandId) => {
+    if (brandId) managerStore.fetchStrategy();
 });
 </script>
 
