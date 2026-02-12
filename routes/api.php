@@ -619,6 +619,7 @@ $v1Routes = function () {
     Route::prefix('brands/{brand}/sm-content-plans')->group(function () {
         Route::get('/', [SmContentPlanController::class, 'index']);
         Route::get('current', [SmContentPlanController::class, 'current']);
+        Route::post('generate', [SmContentPlanController::class, 'generate']);
         Route::get('{smContentPlan}', [SmContentPlanController::class, 'show']);
         Route::post('{smContentPlan}/slots', [SmContentPlanController::class, 'addSlot']);
         Route::put('{smContentPlan}/slots/{slot}', [SmContentPlanController::class, 'updateSlot']);

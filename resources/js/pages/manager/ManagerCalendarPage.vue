@@ -19,6 +19,7 @@ const showSlotModal = ref(false);
 const showAddSlotModal = ref(false);
 const addSlotDate = ref('');
 const bulkGenerating = ref(false);
+const planGenerating = ref(false);
 
 // --- Platform colors ---
 const platformColors = {
@@ -210,6 +211,36 @@ const handleGenerateAll = async () => {
     }
 };
 
+const handleGeneratePlan = async (mode = 'full') => {
+    if (planGenerating.value) return;
+
+    planGenerating.value = true;
+    try {
+        const month = currentDate.value.getMonth() + 1;
+        const year = currentDate.value.getFullYear();
+        const params = { month, year };
+
+        if (mode === 'from_today') {
+            const today = new Date();
+            params.fromDate = today.toISOString().split('T')[0];
+        }
+
+        await managerStore.generateContentPlan(params);
+        toast.success(t('manager.calendar.planGenerated'));
+    } catch (error) {
+        const errorCode = error.response?.data?.error;
+        if (errorCode === 'no_api_key') {
+            toast.error(t('manager.addSlot.noApiKey'));
+        } else if (errorCode === 'no_active_strategy') {
+            toast.error(t('manager.calendar.noActiveStrategy'));
+        } else {
+            toast.error(t('manager.calendar.planGenerateError'));
+        }
+    } finally {
+        planGenerating.value = false;
+    }
+};
+
 // --- Helpers ---
 const getSlotsForDate = (dateStr) => {
     return slotsByDate.value[dateStr] || [];
@@ -227,10 +258,14 @@ const formatTime = (time) => {
 // --- Lifecycle ---
 onMounted(() => {
     managerStore.fetchCurrentPlan();
+    if (!managerStore.strategy) {
+        managerStore.fetchStrategy();
+    }
 });
 
 watch(() => managerStore.currentBrandId, () => {
     managerStore.fetchCurrentPlan();
+    managerStore.fetchStrategy();
 });
 </script>
 
@@ -320,15 +355,72 @@ watch(() => managerStore.currentBrandId, () => {
         <!-- Empty state -->
         <div
             v-else-if="!hasAnySlots"
-            class="rounded-xl bg-gray-900 border border-gray-800 p-12 flex flex-col items-center justify-center text-center"
+            class="rounded-xl bg-gray-900 border border-gray-800 p-8 sm:p-12 flex flex-col items-center justify-center text-center"
         >
-            <div class="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4">
-                <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+            <div class="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
                 </svg>
             </div>
-            <h3 class="text-lg font-semibold text-white mb-2">{{ t('manager.calendar.emptyTitle') }}</h3>
-            <p class="text-sm text-gray-400 max-w-md">{{ t('manager.calendar.emptyDescription') }}</p>
+            <h3 class="text-lg font-semibold text-white mb-2">{{ t('manager.calendar.emptyPlanTitle') }}</h3>
+            <p class="text-sm text-gray-400 max-w-md mb-6">{{ t('manager.calendar.emptyPlanDescription') }}</p>
+
+            <!-- Generate plan options -->
+            <div class="w-full max-w-sm space-y-3 mb-4">
+                <button
+                    @click="handleGeneratePlan('full')"
+                    :disabled="planGenerating || !managerStore.strategyIsActive"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-purple-600/10 border border-purple-500/30 text-left hover:bg-purple-600/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <div class="w-9 h-9 rounded-lg bg-purple-500/20 flex items-center justify-center shrink-0">
+                        <svg v-if="planGenerating" class="w-4 h-4 text-purple-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        <svg v-else class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-white">{{ t('manager.calendar.generateFullMonth') }}</p>
+                        <p class="text-xs text-gray-400">{{ t('manager.calendar.generateFullMonthDesc') }}</p>
+                    </div>
+                </button>
+
+                <button
+                    @click="handleGeneratePlan('from_today')"
+                    :disabled="planGenerating || !managerStore.strategyIsActive"
+                    class="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-indigo-600/10 border border-indigo-500/30 text-left hover:bg-indigo-600/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <div class="w-9 h-9 rounded-lg bg-indigo-500/20 flex items-center justify-center shrink-0">
+                        <svg v-if="planGenerating" class="w-4 h-4 text-indigo-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                        </svg>
+                        <svg v-else class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        </svg>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-sm font-medium text-white">{{ t('manager.calendar.generateFromToday') }}</p>
+                        <p class="text-xs text-gray-400">{{ t('manager.calendar.generateFromTodayDesc') }}</p>
+                    </div>
+                </button>
+            </div>
+
+            <button
+                @click="handleDayClick(new Date().toISOString().split('T')[0])"
+                class="inline-flex items-center justify-center gap-2 px-5 py-2 text-sm font-medium text-gray-400 hover:text-white transition-colors"
+            >
+                {{ t('manager.calendar.addManually') }}
+            </button>
+
+            <p
+                v-if="!managerStore.strategyIsActive"
+                class="text-xs text-amber-400 mt-3"
+            >
+                {{ t('manager.calendar.noActiveStrategy') }}
+            </p>
         </div>
 
         <!-- Calendar -->

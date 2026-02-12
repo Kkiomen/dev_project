@@ -1,9 +1,12 @@
 <script setup>
 import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useManagerStore } from '@/stores/manager';
 import { useToast } from '@/composables/useToast';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+
+const router = useRouter();
 
 const { t } = useI18n();
 const managerStore = useManagerStore();
@@ -235,6 +238,30 @@ watch(() => managerStore.currentBrandId, (brandId) => {
                     {{ saving ? t('common.saving') : t('common.save') }}
                 </button>
             </div>
+        </div>
+
+        <!-- Next Step Banner -->
+        <div
+            v-if="managerStore.strategyIsActive"
+            class="mb-6 rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4"
+        >
+            <div class="flex items-center gap-3 flex-1 min-w-0">
+                <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                    </svg>
+                </div>
+                <div class="min-w-0">
+                    <p class="text-sm font-medium text-emerald-300">{{ t('manager.strategy.nextStepTitle') }}</p>
+                    <p class="text-xs text-gray-400 mt-0.5">{{ t('manager.strategy.nextStepDescription') }}</p>
+                </div>
+            </div>
+            <button
+                @click="router.push('/app/manager/calendar')"
+                class="px-4 py-2 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition-colors whitespace-nowrap shrink-0"
+            >
+                {{ t('manager.strategy.nextStepCta') }}
+            </button>
         </div>
 
         <!-- Loading -->

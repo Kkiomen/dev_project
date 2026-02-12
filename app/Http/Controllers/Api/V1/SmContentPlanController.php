@@ -150,6 +150,39 @@ class SmContentPlanController extends Controller
         ]);
     }
 
+    public function generate(Request $request, Brand $brand, SmContentPlanGeneratorService $generator): JsonResponse
+    {
+        $this->authorize('update', $brand);
+
+        $strategy = $brand->smStrategies()->active()->latest()->first();
+
+        if (!$strategy) {
+            return response()->json(['error' => 'no_active_strategy', 'message' => 'No active strategy found'], 422);
+        }
+
+        $month = $request->input('month', now()->month);
+        $year = $request->input('year', now()->year);
+
+        $fromDate = $request->input('from_date')
+            ? \Carbon\Carbon::parse($request->input('from_date'))
+            : null;
+
+        $result = $generator->generateMonthlyPlan($brand, $strategy, (int) $month, (int) $year, $fromDate);
+
+        if (!$result['success']) {
+            $status = ($result['error_code'] ?? '') === 'no_api_key' ? 422 : 500;
+
+            return response()->json([
+                'error' => $result['error_code'] ?? 'generation_failed',
+                'message' => $result['error'] ?? 'Failed to generate content plan',
+            ], $status);
+        }
+
+        $result['plan']->load(['strategy', 'slots' => fn ($q) => $q->orderBy('scheduled_date')->orderBy('scheduled_time')]);
+
+        return response()->json(['data' => new SmContentPlanResource($result['plan'])]);
+    }
+
     public function generateTopicProposition(Request $request, Brand $brand, SmContentPlan $smContentPlan, SmContentPlanGeneratorService $generator): JsonResponse
     {
         $this->authorize('update', $brand);

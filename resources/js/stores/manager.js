@@ -535,6 +535,21 @@ export const useManagerStore = defineStore('manager', {
             }
         },
 
+        async generateContentPlan({ month, year, fromDate } = {}) {
+            const brandId = this.currentBrandId;
+            if (!brandId) return;
+
+            const response = await axios.post(`/api/v1/brands/${brandId}/sm-content-plans/generate`, {
+                month,
+                year,
+                from_date: fromDate || undefined,
+            });
+            if (response.data?.data) {
+                this.currentPlan = response.data.data;
+            }
+            return response.data;
+        },
+
         async fetchPlanDetails(planId) {
             const brandId = this.currentBrandId;
             if (!brandId) return;

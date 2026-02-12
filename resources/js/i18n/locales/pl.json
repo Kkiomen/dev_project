@@ -3420,7 +3420,18 @@
             "generateAll": "Wygeneruj całą treść ({count})",
             "generateAllSuccess": "Rozpoczęto generowanie treści dla {count} slotów",
             "generateAllError": "Nie udało się rozpocząć generowania treści",
-            "generating": "Generowanie..."
+            "generating": "Generowanie...",
+            "emptyPlanTitle": "Twój plan treści jest pusty",
+            "emptyPlanDescription": "Wygeneruj plan treści z AI na podstawie strategii lub dodaj sloty ręcznie",
+            "generateFullMonth": "Generuj na cały miesiąc",
+            "generateFullMonthDesc": "Stwórz plan z postami na każdy dzień miesiąca",
+            "generateFromToday": "Generuj od dzisiaj",
+            "generateFromTodayDesc": "Stwórz plan tylko na pozostałe dni",
+            "generatingPlan": "Generowanie planu...",
+            "planGenerated": "Plan treści wygenerowany!",
+            "planGenerateError": "Nie udało się wygenerować planu treści",
+            "addManually": "lub dodaj sloty ręcznie",
+            "noActiveStrategy": "Najpierw aktywuj strategię"
         },
         "addSlot": {
             "title": "Dodaj slot",
@@ -3801,7 +3812,10 @@
             "generateWithAi": "Generuj z AI",
             "generating": "Generowanie...",
             "generated": "Strategia wygenerowana przez AI",
-            "generateError": "Nie udało się wygenerować strategii"
+            "generateError": "Nie udało się wygenerować strategii",
+            "nextStepTitle": "Strategia aktywna!",
+            "nextStepDescription": "Następny krok: wygeneruj plan treści na bieżący miesiąc",
+            "nextStepCta": "Przejdź do kalendarza"
         },
         "brand": {
             "title": "Brand Kit",

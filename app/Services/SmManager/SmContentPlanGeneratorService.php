@@ -25,9 +25,10 @@ class SmContentPlanGeneratorService
      * @param SmStrategy $strategy
      * @param int $month 1-12
      * @param int $year e.g. 2026
+     * @param Carbon|null $fromDate Optional start date override (e.g. today instead of 1st)
      * @return array{success: bool, plan?: SmContentPlan, slots_created?: int, error?: string, error_code?: string}
      */
-    public function generateMonthlyPlan(Brand $brand, SmStrategy $strategy, int $month, int $year): array
+    public function generateMonthlyPlan(Brand $brand, SmStrategy $strategy, int $month, int $year, ?Carbon $fromDate = null): array
     {
         $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::OpenAi);
 
@@ -35,8 +36,8 @@ class SmContentPlanGeneratorService
             return ['success' => false, 'error_code' => 'no_api_key', 'error' => 'No OpenAI API key configured for this brand'];
         }
 
-        $startDate = Carbon::create($year, $month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        $startDate = $fromDate ?? Carbon::create($year, $month, 1)->startOfMonth();
+        $endDate = Carbon::create($year, $month, 1)->endOfMonth();
 
         $systemPrompt = $this->buildSystemPrompt();
         $previousTopics = $this->getPreviousTopics($brand);
