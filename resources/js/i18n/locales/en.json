@@ -1899,7 +1899,10 @@
             "publishTo": "Publish to {platform}",
             "publishing": "Publishing...",
             "publishSuccess": "Post scheduled for publishing to {platform}",
-            "publishError": "Failed to publish post"
+            "publishError": "Failed to publish post",
+            "publishAll": "Publish",
+            "publishAllSuccess": "Post published successfully",
+            "publishAllError": "Failed to publish post"
         },
         "platforms": {
             "title": "Platforms",

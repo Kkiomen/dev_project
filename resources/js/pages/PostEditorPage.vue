@@ -565,6 +565,33 @@ const canSave = computed(() => {
     return sharedData.value.title && platformContent[firstPlatform.value].caption;
 });
 
+// Check if post can be published (approved or scheduled)
+const canPublish = computed(() => {
+    if (!isEditing.value || !postsStore.currentPost) return false;
+    return ['approved', 'scheduled'].includes(postsStore.currentPost.status);
+});
+
+// Publish to all enabled platforms
+const handlePublishAll = async () => {
+    if (!canPublish.value) return;
+
+    publishing.value = true;
+    try {
+        const result = await postsStore.webhookPublishPost(props.postId);
+        if (result.success) {
+            toast.success(t('posts.save.publishAllSuccess'));
+            await postsStore.fetchPost(props.postId);
+        } else {
+            toast.error(result.error || t('posts.save.publishAllError'));
+        }
+    } catch (error) {
+        console.error('Failed to publish post:', error);
+        toast.error(t('posts.save.publishAllError'));
+    } finally {
+        publishing.value = false;
+    }
+};
+
 // Format last saved time
 const lastSavedText = computed(() => {
     if (!draft.lastSaved.value) return null;
@@ -647,6 +674,21 @@ const lastSavedText = computed(() => {
                             <Button variant="secondary" size="sm" @click="handleDuplicate">
                                 {{ t('posts.duplicate') }}
                             </Button>
+
+                            <!-- Publish button for approved/scheduled posts -->
+                            <Button
+                                v-if="canPublish"
+                                size="sm"
+                                :loading="publishing"
+                                :disabled="publishing"
+                                @click="handlePublishAll"
+                                class="bg-green-600 hover:bg-green-700 text-white"
+                            >
+                                <svg class="w-4 h-4 mr-1.5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                                </svg>
+                                {{ publishing ? t('posts.save.publishing') : t('posts.save.publishAll') }}
+                            </Button>
                         </template>
 
                         <!-- Save dropdown -->
@@ -686,24 +728,26 @@ const lastSavedText = computed(() => {
                                         </svg>
                                         {{ t('posts.save.save') }}
                                     </button>
-                                    <div class="border-t border-gray-100 my-1"></div>
-                                    <p class="px-4 py-1 text-xs text-gray-400 uppercase font-medium">
-                                        {{ t('posts.save.saveAndPublish') }}
-                                    </p>
-                                    <button
-                                        v-for="platform in activePlatformTabs"
-                                        :key="platform.id"
-                                        @click="handleSave(platform.id)"
-                                        class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
-                                    >
-                                        <span
-                                            class="w-5 h-5 rounded flex items-center justify-center text-white text-xs font-bold mr-2"
-                                            :class="platform.bgColor"
+                                    <template v-if="canPublish">
+                                        <div class="border-t border-gray-100 my-1"></div>
+                                        <p class="px-4 py-1 text-xs text-gray-400 uppercase font-medium">
+                                            {{ t('posts.save.saveAndPublish') }}
+                                        </p>
+                                        <button
+                                            v-for="platform in activePlatformTabs"
+                                            :key="platform.id"
+                                            @click="handleSave(platform.id)"
+                                            class="w-full px-4 py-2 text-left text-sm text-gray-700 hover:bg-gray-100 flex items-center"
                                         >
-                                            {{ platform.label[0] }}
-                                        </span>
-                                        {{ t('posts.save.publishTo', { platform: platform.label }) }}
-                                    </button>
+                                            <span
+                                                class="w-5 h-5 rounded flex items-center justify-center text-white text-xs font-bold mr-2"
+                                                :class="platform.bgColor"
+                                            >
+                                                {{ platform.label[0] }}
+                                            </span>
+                                            {{ t('posts.save.publishTo', { platform: platform.label }) }}
+                                        </button>
+                                    </template>
                                 </div>
                             </div>
                         </div>

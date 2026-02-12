@@ -1900,7 +1900,10 @@
             "publishTo": "Opublikuj na {platform}",
             "publishing": "Publikowanie...",
             "publishSuccess": "Post zaplanowany do publikacji na {platform}",
-            "publishError": "Nie udało się opublikować posta"
+            "publishError": "Nie udało się opublikować posta",
+            "publishAll": "Opublikuj",
+            "publishAllSuccess": "Post opublikowany pomyślnie",
+            "publishAllError": "Nie udało się opublikować posta"
         },
         "platforms": {
             "title": "Platformy",
