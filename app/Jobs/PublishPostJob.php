@@ -6,8 +6,7 @@ use App\Enums\PostStatus;
 use App\Enums\PublishStatus;
 use App\Models\PlatformPost;
 use App\Models\SocialPost;
-use App\Services\Publishing\FacebookPublishingService;
-use App\Services\Publishing\PublishingService;
+use App\Services\Publishing\PublisherResolver;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -28,10 +27,8 @@ class PublishPostJob implements ShouldQueue
         protected ?string $platform = null
     ) {}
 
-    public function handle(
-        PublishingService $webhookService,
-        FacebookPublishingService $facebookService
-    ): void {
+    public function handle(PublisherResolver $resolver): void
+    {
         // Verify post is still ready for publishing
         if (!in_array($this->post->status, [PostStatus::Approved, PostStatus::Scheduled])) {
             Log::warning('Post not ready for publishing', [
@@ -48,14 +45,13 @@ class PublishPostJob implements ShouldQueue
 
         if ($this->platform) {
             // Publish to specific platform
-            $this->publishToPlatform($this->platform, $facebookService, $webhookService);
+            $this->publishToPlatform($this->platform, $resolver);
         } else {
             // Publish to all enabled platforms
             foreach ($this->post->platformPosts()->where('enabled', true)->get() as $platformPost) {
                 $this->publishToPlatform(
                     $platformPost->platform->value,
-                    $facebookService,
-                    $webhookService
+                    $resolver
                 );
             }
         }
@@ -64,14 +60,8 @@ class PublishPostJob implements ShouldQueue
         $this->updatePostStatusIfComplete();
     }
 
-    /**
-     * Publish to a specific platform, with direct API or fallback to webhook.
-     */
-    private function publishToPlatform(
-        string $platform,
-        FacebookPublishingService $facebookService,
-        PublishingService $webhookService
-    ): void {
+    private function publishToPlatform(string $platform, PublisherResolver $resolver): void
+    {
         $platformPost = $this->post->platformPosts()
             ->where('platform', $platform)
             ->first();
@@ -81,36 +71,26 @@ class PublishPostJob implements ShouldQueue
         }
 
         try {
-            // Check if we have direct API credentials for this platform
-            $credential = $this->post->brand->getPlatformCredential($platform);
+            $brand = $this->post->brand;
+            $adapter = $resolver->resolve($brand, $platformPost);
+            $result = $adapter->publish($platformPost);
 
-            if ($credential && !$credential->isExpired()) {
-                // Direct API publishing
-                $result = $this->publishDirectly($platform, $platformPost, $facebookService);
-
+            if ($result['success']) {
                 $platformPost->update([
                     'publish_status' => PublishStatus::Published,
-                    'external_id' => $result['id'] ?? null,
+                    'external_id' => $result['external_id'] ?? null,
+                    'external_url' => $result['external_url'] ?? null,
                     'published_at' => now(),
                 ]);
 
-                Log::info('Post published directly via API', [
+                Log::info('Post published', [
                     'post_id' => $this->post->public_id,
                     'platform' => $platform,
-                    'external_id' => $result['id'] ?? null,
+                    'method' => $result['method'],
+                    'external_id' => $result['external_id'] ?? null,
                 ]);
             } else {
-                // Fallback to n8n webhook
-                $result = $webhookService->sendToWebhook($this->post, $platform);
-
-                if (!$result['success']) {
-                    throw new \RuntimeException($result['error'] ?? 'Webhook failed');
-                }
-
-                Log::info('Post sent to webhook', [
-                    'post_id' => $this->post->public_id,
-                    'platform' => $platform,
-                ]);
+                throw new \RuntimeException($result['error'] ?? 'Publishing failed');
             }
         } catch (\Exception $e) {
             $platformPost->update([
@@ -126,24 +106,6 @@ class PublishPostJob implements ShouldQueue
         }
     }
 
-    /**
-     * Publish directly via platform API.
-     */
-    private function publishDirectly(
-        string $platform,
-        PlatformPost $platformPost,
-        FacebookPublishingService $facebookService
-    ): array {
-        return match ($platform) {
-            'facebook' => $facebookService->publishToFacebook($platformPost),
-            'instagram' => $facebookService->publishToInstagram($platformPost),
-            default => throw new \RuntimeException("Direct publishing not supported for: {$platform}"),
-        };
-    }
-
-    /**
-     * Update main post status if all platforms are done.
-     */
     private function updatePostStatusIfComplete(): void
     {
         $enabledPlatforms = $this->post->platformPosts()->where('enabled', true)->get();

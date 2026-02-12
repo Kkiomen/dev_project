@@ -2138,7 +2138,8 @@
         "providers": {
             "openai": "OpenAI",
             "gemini": "Gemini",
-            "wavespeed": "WaveSpeed AI"
+            "wavespeed": "WaveSpeed AI",
+            "getlate": "GetLate"
         },
         "form": {
             "apiKey": "Klucz API",
@@ -2162,6 +2163,16 @@
             "deleteFailed": "Nie udało się usunąć klucza API",
             "loadFailed": "Nie udało się załadować kluczy API"
         }
+    },
+    "publishingProvider": {
+        "title": "Dostawca publikacji",
+        "subtitle": "Wybierz sposób publikacji postów w mediach społecznościowych",
+        "auto": "Automatycznie (domyślnie)",
+        "direct": "Bezpośrednie API (Facebook/Instagram)",
+        "webhook": "Webhook n8n",
+        "getlate": "GetLate",
+        "saved": "Dostawca publikacji zaktualizowany",
+        "saveFailed": "Nie udało się zaktualizować dostawcy publikacji"
     },
     "youtube": {
         "videoTitle": "Tytuł filmu",

@@ -6,6 +6,7 @@ use App\Enums\BrandTone;
 use App\Enums\EmojiUsage;
 use App\Enums\Industry;
 use App\Enums\Platform;
+use App\Enums\PublishingProvider;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -61,6 +62,9 @@ class UpdateBrandRequest extends FormRequest
             'platforms.*.page_id' => ['nullable', 'string'],
             'platforms.*.account_id' => ['nullable', 'string'],
             'platforms.*.channel_id' => ['nullable', 'string'],
+
+            // Publishing provider
+            'publishing_provider' => ['sometimes', 'nullable', Rule::in(array_column(PublishingProvider::cases(), 'value'))],
 
             // State
             'onboarding_completed' => ['sometimes', 'boolean'],

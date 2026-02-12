@@ -9,6 +9,7 @@ enum ApiProvider: string
     case FACEBOOK = 'facebook';
     case UNSPLASH = 'unsplash';
     case WAVESPEED = 'wavespeed';
+    case GETLATE = 'getlate';
 
     public function label(): string
     {
@@ -18,6 +19,7 @@ enum ApiProvider: string
             self::FACEBOOK => 'Facebook/Instagram',
             self::UNSPLASH => 'Unsplash',
             self::WAVESPEED => 'WaveSpeed AI',
+            self::GETLATE => 'GetLate',
         };
     }
 

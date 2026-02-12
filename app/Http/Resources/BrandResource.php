@@ -43,6 +43,7 @@ class BrandResource extends JsonResource
             'automation_enabled' => $this->automation_enabled ?? false,
             'content_queue_days' => $this->content_queue_days ?? 7,
             'automation_settings' => $this->automation_settings ?? [],
+            'publishing_provider' => $this->publishing_provider?->value,
             'last_automation_run' => $this->last_automation_run,
             'posts_count' => $this->whenCounted('posts'),
             'templates_count' => $this->whenCounted('templates'),

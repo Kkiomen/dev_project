@@ -7,6 +7,7 @@ use App\Enums\BrandTone;
 use App\Enums\EmojiUsage;
 use App\Enums\Industry;
 use App\Enums\Platform;
+use App\Enums\PublishingProvider;
 use App\Models\Concerns\HasPublicId;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -35,6 +36,7 @@ class Brand extends Model
         'automation_enabled',
         'content_queue_days',
         'automation_settings',
+        'publishing_provider',
         'last_automation_run',
     ];
 
@@ -49,6 +51,7 @@ class Brand extends Model
         'automation_enabled' => 'boolean',
         'content_queue_days' => 'integer',
         'automation_settings' => 'array',
+        'publishing_provider' => PublishingProvider::class,
         'last_automation_run' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

@@ -7,6 +7,7 @@ enum AiProvider: string
     case OpenAi = 'openai';
     case Gemini = 'gemini';
     case WaveSpeed = 'wavespeed';
+    case GetLate = 'getlate';
 
     public function label(): string
     {
@@ -14,6 +15,7 @@ enum AiProvider: string
             self::OpenAi => 'OpenAI',
             self::Gemini => 'Gemini',
             self::WaveSpeed => 'WaveSpeed AI',
+            self::GetLate => 'GetLate',
         };
     }
 
