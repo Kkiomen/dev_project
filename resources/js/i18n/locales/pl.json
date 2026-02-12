@@ -308,7 +308,8 @@
         "admin": "Admin",
         "adminUsers": "Uzytkownicy",
         "devTasks": "Dev Tasks",
-        "rssFeeds": "Kanały RSS"
+        "rssFeeds": "Kanały RSS",
+        "aiManager": "AI Manager"
     },
     "settings": {
         "title": "Ustawienia",
@@ -3285,5 +3286,626 @@
         "backToFeeds": "Powrót do feedów",
         "todayFeed": "Dziś",
         "minuteRead": "{n} min czytania"
+    },
+    "manager": {
+        "nav": {
+            "dashboard": "Centrum Dowodzenia",
+            "approval": "Kolejka Akceptacji",
+            "calendar": "Kalendarz",
+            "content": "Treści",
+            "strategy": "Strategia",
+            "analytics": "Analityka",
+            "reports": "Raporty",
+            "competitors": "Konkurencja",
+            "listening": "Social Listening",
+            "inbox": "Skrzynka",
+            "brandKit": "Brand Kit",
+            "accounts": "Konta",
+            "aiChat": "Czat AI",
+            "backToApp": "Powrót do aplikacji",
+            "sectionMain": "Główne",
+            "sectionAnalytics": "Analityka i badania",
+            "sectionEngagement": "Zaangażowanie",
+            "sectionSettings": "Konfiguracja",
+            "tutorial": "Tutorial"
+        },
+        "dashboard": {
+            "title": "Centrum Dowodzenia",
+            "subtitle": "Przegląd Twojego AI managera social media dla {brand}",
+            "quickActions": "Szybkie akcje",
+            "upcomingPosts": "Nadchodzące posty",
+            "noUpcomingPosts": "Brak zaplanowanych postów",
+            "scheduledFor": "Zaplanowany",
+            "performanceSnapshot": "Podsumowanie wyników",
+            "connectAccountsFirst": "Połącz konta social media, aby zobaczyć dane o wynikach",
+            "platformOverview": "Przegląd platform",
+            "noPlatformData": "Brak danych o platformach",
+            "recentActivity": "Ostatnia aktywność",
+            "activityComingSoon": "Kanał aktywności wkrótce",
+            "crisisAlert": "Alert kryzysowy",
+            "crisisAlertCount": "{count} nierozwiązanych alertów wymaga Twojej uwagi",
+            "viewAlerts": "Zobacz alerty",
+            "pastDue": "po terminie",
+            "inMinutes": "za {n} min",
+            "inHours": "za {n} godz.",
+            "inDays": "za {n} dzień | za {n} dni",
+            "stats": {
+                "pendingApproval": "Oczekujące na akceptację",
+                "scheduledToday": "Zaplanowane na dziś",
+                "publishedThisWeek": "Opublikowane w tym tygodniu",
+                "engagementRate": "Wskaźnik zaangażowania"
+            },
+            "actions": {
+                "reviewPosts": "Przejrzyj posty",
+                "reviewPostsDesc": "Zatwierdź lub odrzuć posty wygenerowane przez AI",
+                "viewCalendar": "Pokaż kalendarz",
+                "viewCalendarDesc": "Zobacz harmonogram treści",
+                "viewAnalytics": "Pokaż analitykę",
+                "viewAnalyticsDesc": "Śledź metryki wydajności",
+                "manageAccounts": "Zarządzaj kontami",
+                "manageAccountsDesc": "Połącz platformy social media"
+            },
+            "workflowGuide": {
+                "title": "Gotowy do wygenerowania treści?",
+                "description": "Twój plan treści ma {count} slotów czekających na treść wygenerowaną przez AI. Oto co się stanie:",
+                "step1Title": "Generowanie treści",
+                "step1Desc": "AI tworzy angażujące posty na podstawie Twojej strategii i planu treści",
+                "step2Title": "Przegląd i zatwierdzenie",
+                "step2Desc": "Przejrzyj wygenerowane posty w Kolejce Akceptacji przed publikacją",
+                "step3Title": "Automatyczna publikacja",
+                "step3Desc": "Zatwierdzone posty są automatycznie publikowane w optymalnych godzinach",
+                "cta": "Przejdź do kalendarza",
+                "dismiss": "Zamknij"
+            }
+        },
+        "approval": {
+            "title": "Kolejka Akceptacji",
+            "subtitle": "Przejrzyj i zatwierdź posty wygenerowane przez AI przed publikacją",
+            "emptyTitle": "Wszystko zatwierdzone!",
+            "emptyDescription": "Nie ma postów oczekujących na akceptację. AI wygeneruje nowe treści zgodnie z Twoją strategią.",
+            "filters": {
+                "all": "Wszystkie",
+                "pending": "Oczekujące",
+                "approved": "Zatwierdzone",
+                "rejected": "Odrzucone"
+            },
+            "stats": {
+                "pending": "Oczekujące",
+                "approvedToday": "Zatwierdzone dziś",
+                "rejected": "Odrzucone"
+            },
+            "scheduledFor": "Zaplanowane na",
+            "approveBtn": "Zatwierdź",
+            "rejectBtn": "Odrzuć",
+            "notesPlaceholder": "Dodaj notatkę (opcjonalna przy zatwierdzeniu, wymagana przy odrzuceniu)...",
+            "submit": "Wyślij",
+            "cancel": "Anuluj",
+            "approved": "Post zatwierdzony",
+            "rejected": "Post odrzucony",
+            "approveError": "Nie udało się zatwierdzić posta",
+            "rejectError": "Nie udało się odrzucić posta",
+            "notesRequired": "Notatka jest wymagana przy odrzucaniu"
+        },
+        "calendar": {
+            "title": "Kalendarz Treści",
+            "subtitle": "Przeglądaj i zarządzaj zaplanowanymi treściami",
+            "emptyTitle": "Kalendarz jest pusty",
+            "emptyDescription": "Posty pojawią się tutaj po wygenerowaniu planu treści przez AI.",
+            "today": "Dziś",
+            "noSlots": "Brak zaplanowanych treści",
+            "emptyDay": "Brak postów",
+            "view": {
+                "month": "Miesiąc",
+                "week": "Tydzień"
+            },
+            "weekdays": {
+                "mon": "Pon",
+                "tue": "Wt",
+                "wed": "Śr",
+                "thu": "Czw",
+                "fri": "Pt",
+                "sat": "Sob",
+                "sun": "Nd"
+            },
+            "generateAll": "Wygeneruj całą treść ({count})",
+            "generateAllSuccess": "Rozpoczęto generowanie treści dla {count} slotów",
+            "generateAllError": "Nie udało się rozpocząć generowania treści",
+            "generating": "Generowanie..."
+        },
+        "slotModal": {
+            "title": "Szczegóły slotu",
+            "status": "Status",
+            "platform": "Platforma",
+            "contentType": "Typ treści",
+            "pillar": "Filar",
+            "topic": "Temat",
+            "description": "Opis",
+            "scheduledAt": "Zaplanowane na",
+            "statusLabels": {
+                "planned": "Zaplanowany",
+                "content_ready": "Treść gotowa",
+                "media_ready": "Media gotowe",
+                "approved": "Zatwierdzony",
+                "published": "Opublikowany",
+                "skipped": "Pominięty"
+            },
+            "generateContent": "Wygeneruj treść",
+            "viewContent": "Zobacz treść",
+            "generateSuccess": "Rozpoczęto generowanie treści",
+            "generateError": "Nie udało się rozpocząć generowania treści",
+            "generating": "Generowanie...",
+            "alreadyGenerated": "Treść została już wygenerowana dla tego slotu"
+        },
+        "content": {
+            "title": "Biblioteka treści",
+            "subtitle": "Zarządzaj całą treścią social media",
+            "createPost": "Utwórz post",
+            "noContent": "Brak treści",
+            "noContentDescription": "Utwórz pierwszy post lub pozwól AI wygenerować treść na podstawie strategii.",
+            "filters": {
+                "all": "Wszystkie",
+                "draft": "Szkice",
+                "pending": "Oczekujące",
+                "approved": "Zatwierdzone",
+                "scheduled": "Zaplanowane",
+                "published": "Opublikowane"
+            },
+            "search": "Szukaj treści...",
+            "sortBy": "Sortuj",
+            "sortOptions": {
+                "newest": "Najnowsze",
+                "oldest": "Najstarsze",
+                "scheduled": "Wg daty publikacji"
+            },
+            "postCard": {
+                "platforms": "Platformy",
+                "scheduledFor": "Zaplanowane na",
+                "createdAt": "Utworzono",
+                "edit": "Edytuj",
+                "delete": "Usuń",
+                "approve": "Zatwierdź",
+                "reject": "Odrzuć"
+            },
+            "deleted": "Post usunięty",
+            "deleteError": "Nie udało się usunąć posta"
+        },
+        "postEditor": {
+            "title": "Edytor Postów",
+            "subtitle": "Edytuj treść posta i podgląd na platformach",
+            "backToContent": "Powrót do Treści",
+            "titleField": "Tytuł posta",
+            "titlePlaceholder": "Wpisz tytuł posta...",
+            "captionField": "Podpis",
+            "captionPlaceholder": "Napisz podpis do posta tutaj...",
+            "characters": "znaków",
+            "hashtags": "Hashtagi",
+            "addHashtag": "Dodaj",
+            "hashtagPlaceholder": "Wpisz hashtag i naciśnij Enter...",
+            "platformTabs": "Podpisy dla platform",
+            "platformCaptionHint": "Pozostaw puste, aby użyć głównego podpisu dla tej platformy.",
+            "schedule": "Harmonogram",
+            "scheduledDate": "Data",
+            "scheduledTime": "Godzina",
+            "preview": "Podgląd",
+            "previewTitle": "Nazwa marki",
+            "previewPlaceholder": "Podgląd posta pojawi się tutaj podczas pisania...",
+            "postInfo": "Informacje o poście",
+            "status": "Status",
+            "created": "Utworzono",
+            "platforms": "Platformy",
+            "saveDraft": "Zapisz szkic",
+            "submitForApproval": "Wyślij do zatwierdzenia",
+            "delete": "Usuń",
+            "deleteConfirm": "Czy na pewno chcesz usunąć ten post? Tej operacji nie można cofnąć.",
+            "cancelAction": "Anuluj",
+            "saved": "Szkic zapisany pomyślnie",
+            "saveError": "Nie udało się zapisać szkicu",
+            "submitted": "Post wysłany do zatwierdzenia",
+            "submitError": "Nie udało się wysłać posta",
+            "aiActionsTitle": "Akcje AI",
+            "aiActions": {
+                "generateCaption": "Generuj podpis",
+                "generateHashtags": "Generuj hashtagi",
+                "adaptPlatforms": "Dostosuj do platform",
+                "generateVariants": "Generuj warianty",
+                "generating": "AI przetwarza Twoje żądanie..."
+            }
+        },
+        "analytics": {
+            "title": "Analityka",
+            "subtitle": "Analiza wydajności social media wspierana przez AI",
+            "emptyTitle": "Brak danych analitycznych",
+            "emptyDescription": "Połącz konta social media i opublikuj posty, aby zobaczyć analitykę.",
+            "noDataYet": "Brak danych",
+            "period": {
+                "7d": "7 dni",
+                "30d": "30 dni",
+                "90d": "90 dni"
+            },
+            "metrics": {
+                "followers": "Obserwujący",
+                "reach": "Zasięg",
+                "engagement": "Zaangażowanie",
+                "engagementRate": "Wskaźnik zaangażowania",
+                "posts": "Posty"
+            },
+            "platformBreakdown": "Podział na platformy",
+            "performanceScores": "Wyniki wydajności",
+            "chartsComingSoon": "Wykresy wkrótce",
+            "chartsComingSoonDescription": "Interaktywne wykresy i wizualizacje trendów będą dostępne w nadchodzących aktualizacjach.",
+            "crisisAlert": "Alert kryzysowy",
+            "crisisAlertDescription": "Istnieją nierozwiązane alerty kryzysowe wymagające Twojej uwagi.",
+            "score": "Wynik",
+            "scoreLabels": {
+                "excellent": "Doskonały",
+                "good": "Dobry",
+                "average": "Średni",
+                "below_average": "Poniżej średniej",
+                "poor": "Słaby"
+            },
+            "noScores": "Brak wyników wydajności",
+            "noScoresDescription": "Wyniki pojawią się po przeanalizowaniu postów przez AI."
+        },
+        "reports": {
+            "title": "Raporty",
+            "subtitle": "Tygodniowe i miesięczne raporty wydajności generowane przez AI",
+            "emptyTitle": "Brak raportów",
+            "emptyDescription": "Raporty będą automatycznie generowane, gdy będziesz mieć wystarczająco dużo opublikowanych treści i danych o zaangażowaniu.",
+            "tabs": {
+                "weekly": "Raporty tygodniowe",
+                "listening": "Raporty słuchania"
+            },
+            "periodLabel": "Okres",
+            "status": "Status",
+            "statusReady": "Gotowy",
+            "statusGenerating": "Generowanie",
+            "summary": "Podsumowanie",
+            "topPosts": "Najlepsze posty",
+            "recommendations": "Rekomendacje",
+            "growthMetrics": "Metryki wzrostu",
+            "platformBreakdown": "Podział na platformy",
+            "shareOfVoice": "Udział w rozmowach",
+            "sentimentBreakdown": "Analiza sentymentu",
+            "trendingKeywords": "Popularne słowa kluczowe",
+            "aiSummary": "Podsumowanie AI",
+            "topMentions": "Najczęstsze wzmianki",
+            "noWeeklyReports": "Brak raportów tygodniowych",
+            "noWeeklyReportsDescription": "Raporty tygodniowe będą automatycznie generowane, gdy będziesz mieć wystarczająco dużo opublikowanych treści i danych o zaangażowaniu.",
+            "noListeningReports": "Brak raportów słuchania",
+            "noListeningReportsDescription": "Raporty słuchania będą generowane, gdy będziesz mieć aktywne słowa kluczowe i przychodzące wzmianki.",
+            "viewDetails": "Szczegóły",
+            "collapse": "Zwiń"
+        },
+        "listening": {
+            "title": "Social Listening",
+            "subtitle": "Monitoruj wzmianki o marce, słowa kluczowe i trendy branżowe",
+            "emptyTitle": "Jeszcze nie skonfigurowano",
+            "emptyDescription": "Skonfiguruj słowa kluczowe i wzmianki o marce, aby rozpocząć monitorowanie social media.",
+            "tabs": {
+                "keywords": "Słowa kluczowe",
+                "mentions": "Wzmianki",
+                "alertRules": "Reguły alertów"
+            },
+            "addKeyword": "Dodaj słowo kluczowe",
+            "keywordPlaceholder": "Wpisz słowo kluczowe lub frazę...",
+            "platformAll": "Wszystkie platformy",
+            "category": "Kategoria",
+            "mentionCount": "wzmianek",
+            "active": "Aktywne",
+            "inactive": "Nieaktywne",
+            "noKeywords": "Brak monitorowanych słów kluczowych",
+            "noKeywordsDescription": "Dodaj słowa kluczowe, aby rozpocząć śledzenie wzmianek na platformach social media.",
+            "noMentions": "Brak wzmianek",
+            "noMentionsDescription": "Wzmianki pojawią się tutaj, gdy monitorowane słowa kluczowe zostaną wykryte na platformach.",
+            "noAlertRules": "Brak reguł alertów",
+            "noAlertRulesDescription": "Skonfiguruj reguły alertów, aby otrzymywać powiadomienia o wzrostach aktywności lub zmianach sentymentu.",
+            "alertType": "Typ alertu",
+            "alertTypes": {
+                "mention_spike": "Wzrost wzmianek",
+                "negative_sentiment": "Negatywny sentyment",
+                "competitor_mention": "Wzmianka o konkurencji"
+            },
+            "threshold": "Próg",
+            "timeframe": "Okres czasu",
+            "notifyVia": "Powiadamiaj przez",
+            "addRule": "Dodaj regułę",
+            "deleteConfirm": "Czy na pewno chcesz usunąć ten element?",
+            "reach": "Zasięg",
+            "engagement": "Zaangażowanie",
+            "sourceLink": "Zobacz źródło",
+            "sentimentLabel": "Sentyment",
+            "sentimentAll": "Wszystkie sentyments",
+            "sentiment": {
+                "positive": "Pozytywny",
+                "neutral": "Neutralny",
+                "negative": "Negatywny"
+            },
+            "keywordAdded": "Słowo kluczowe dodane",
+            "keywordAddError": "Nie udało się dodać słowa kluczowego",
+            "keywordDeleted": "Słowo kluczowe usunięte",
+            "deleteError": "Nie udało się usunąć",
+            "updateError": "Nie udało się zaktualizować",
+            "ruleAdded": "Reguła alertu dodana",
+            "ruleAddError": "Nie udało się dodać reguły alertu",
+            "ruleDeleted": "Reguła alertu usunięta"
+        },
+        "inbox": {
+            "title": "Skrzynka",
+            "subtitle": "Komentarze, wiadomości i zaangażowanie ze wszystkich platform",
+            "emptyTitle": "Skrzynka jest pusta",
+            "emptyDescription": "Komentarze i wiadomości z połączonych platform pojawią się tutaj.",
+            "tabs": {
+                "comments": "Komentarze",
+                "messages": "Wiadomości"
+            },
+            "filterPlatform": "Platforma",
+            "filterSentiment": "Sentyment",
+            "filterRead": "Status odczytu",
+            "allPlatforms": "Wszystkie platformy",
+            "allSentiments": "Wszystkie sentyment",
+            "allMessages": "Wszystkie",
+            "unreadOnly": "Nieprzeczytane",
+            "readOnly": "Przeczytane",
+            "reply": "Odpowiedz",
+            "hide": "Ukryj",
+            "flag": "Zgłoś",
+            "markRead": "Oznacz jako przeczytane",
+            "send": "Wyślij",
+            "cancel": "Anuluj",
+            "replyPlaceholder": "Napisz odpowiedź...",
+            "loadMore": "Załaduj więcej",
+            "sentiment": {
+                "positive": "Pozytywny",
+                "neutral": "Neutralny",
+                "negative": "Negatywny"
+            },
+            "direction": {
+                "inbound": "Przychodzące",
+                "outbound": "Wychodzące"
+            },
+            "replied": "Odpowiedź wysłana",
+            "replyError": "Nie udało się wysłać odpowiedzi",
+            "hidden": "Komentarz ukryty",
+            "hideError": "Nie udało się ukryć komentarza",
+            "flagged": "Komentarz zgłoszony",
+            "flagError": "Nie udało się zgłosić komentarza",
+            "markedRead": "Oznaczono jako przeczytane",
+            "noComments": "Brak komentarzy",
+            "noCommentsDescription": "Komentarze z Twoich postów social media pojawią się tutaj.",
+            "noMessages": "Brak wiadomości",
+            "noMessagesDescription": "Wiadomości prywatne z połączonych platform pojawią się tutaj."
+        },
+        "competitors": {
+            "title": "Konkurencja",
+            "subtitle": "Śledź i analizuj aktywność konkurencji w social media",
+            "emptyTitle": "Brak śledzonych konkurentów",
+            "emptyDescription": "Dodaj konkurentów, aby monitorować ich strategię treści, częstotliwość publikacji i zaangażowanie.",
+            "addCompetitor": "Dodaj konkurenta",
+            "handlePlaceholder": "nazwa użytkownika",
+            "platform": "Platforma",
+            "remove": "Usuń",
+            "removeConfirm": "Czy na pewno chcesz usunąć tego konkurenta?",
+            "noCompetitors": "Brak śledzonych konkurentów",
+            "noCompetitorsDescription": "Dodaj konta konkurentów, aby monitorować ich aktywność w social media i porównywać z Twoją marką.",
+            "analyticsComingSoon": "Analityka konkurencji wkrótce",
+            "analyticsComingSoonDescription": "W przyszłych fazach ta sekcja będzie wyświetlać zebrane dane konkurencji, w tym posty, wskaźniki zaangażowania i analizę strategii treści.",
+            "added": "Konkurent dodany",
+            "addError": "Nie udało się dodać konkurenta",
+            "removed": "Konkurent usunięty",
+            "removeError": "Nie udało się usunąć konkurenta",
+            "alreadyTracked": "Ten konkurent jest już śledzony"
+        },
+        "strategy": {
+            "title": "Strategia AI",
+            "subtitle": "Strategia treści i planowanie wspierane przez AI",
+            "emptyTitle": "Brak skonfigurowanej strategii",
+            "emptyDescription": "Skonfiguruj głos marki, filary treści i grupę docelową, aby AI mogło wygenerować strategię treści.",
+            "saved": "Strategia zapisana",
+            "saveError": "Nie udało się zapisać strategii",
+            "activated": "Strategia aktywowana",
+            "activateError": "Nie udało się aktywować strategii",
+            "activate": "Aktywuj",
+            "statusActive": "Aktywna",
+            "statusDraft": "Szkic",
+            "tabs": {
+                "pillars": "Filary treści",
+                "frequency": "Częstotliwość",
+                "audience": "Grupa docelowa",
+                "goals": "Cele",
+                "competitors": "Konkurencja",
+                "contentMix": "Mix treści"
+            },
+            "contentPillars": "Filary treści",
+            "noPillars": "Brak zdefiniowanych filarów treści",
+            "pillarName": "Nazwa filaru",
+            "pillarDescription": "Krótki opis",
+            "postingFrequency": "Częstotliwość publikacji",
+            "totalWeekly": "{count} postów tygodniowo",
+            "perWeek": "tydz.",
+            "demographics": "Demografia",
+            "ageRange": "Przedział wiekowy",
+            "gender": "Płeć",
+            "genders": {
+                "all": "Wszyscy",
+                "male": "Mężczyźni",
+                "female": "Kobiety"
+            },
+            "interests": "Zainteresowania",
+            "addInterest": "Dodaj zainteresowanie",
+            "painPoints": "Problemy",
+            "addPainPoint": "Dodaj problem",
+            "goals": "Cele",
+            "noGoals": "Brak zdefiniowanych celów",
+            "goalName": "Opis celu",
+            "metric": "Metryka (np. obserwujący)",
+            "targetValue": "Wartość docelowa",
+            "timeframes": {
+                "weekly": "Tygodniowo",
+                "monthly": "Miesięcznie",
+                "quarterly": "Kwartalnie"
+            },
+            "competitors": "Konkurencja",
+            "noCompetitors": "Brak śledzonych konkurentów",
+            "contentMix": "Mix treści",
+            "mixCategories": {
+                "educational": "Edukacyjne",
+                "entertaining": "Rozrywkowe",
+                "promotional": "Promocyjne",
+                "engaging": "Angażujące"
+            }
+        },
+        "brand": {
+            "title": "Brand Kit",
+            "subtitle": "Zdefiniuj tożsamość marki dla spójnych treści generowanych przez AI",
+            "colors": "Kolory marki",
+            "fonts": "Typografia",
+            "logo": "Logo",
+            "toneOfVoice": "Ton komunikacji",
+            "noColorsSet": "Brak skonfigurowanych kolorów marki",
+            "noFontsSet": "Brak skonfigurowanych fontów",
+            "uploadLogo": "Prześlij logo swojej marki",
+            "changeLogo": "Zmień logo",
+            "noToneSet": "Zdefiniuj głos swojej marki",
+            "saved": "Brand kit zapisany",
+            "saveError": "Nie udało się zapisać brand kitu",
+            "logoUploaded": "Logo przesłane",
+            "logoUploadError": "Nie udało się przesłać logo",
+            "logoDeleted": "Logo usunięte",
+            "logoDeleteError": "Nie udało się usunąć logo",
+            "fontPlaceholder": "np. Inter, Roboto, Playfair Display",
+            "stylePreset": "Styl wizualny",
+            "styles": {
+                "modern": "Nowoczesny",
+                "classic": "Klasyczny",
+                "bold": "Wyrazisty",
+                "minimal": "Minimalistyczny",
+                "playful": "Zabawny"
+            },
+            "tones": {
+                "professional": "Profesjonalny",
+                "casual": "Swobodny",
+                "friendly": "Przyjazny",
+                "authoritative": "Autorytatywny",
+                "humorous": "Humorystyczny",
+                "inspirational": "Inspirujący"
+            },
+            "voiceAttributes": "Atrybuty głosu",
+            "addAttribute": "Dodaj atrybut (np. inspirujący, edukacyjny)",
+            "contentPillars": "Filary treści",
+            "noPillars": "Brak zdefiniowanych filarów treści",
+            "pillarName": "Nazwa filaru",
+            "pillarDescription": "Krótki opis",
+            "hashtags": {
+                "branded": "Hashtagi marki",
+                "industry": "Hashtagi branżowe"
+            },
+            "addHashtag": "Dodaj hashtag",
+            "guidelinesNotes": "Notatki wytycznych marki",
+            "guidelinesPlaceholder": "Dodatkowe uwagi dotyczące wytycznych marki, co robić a czego unikać itp."
+        },
+        "accounts": {
+            "title": "Połączone Konta",
+            "subtitle": "Połącz konta social media do automatycznej publikacji",
+            "notConnected": "Niepołączone",
+            "connect": "Połącz",
+            "connected": "Połączone",
+            "disconnect": "Rozłącz",
+            "disconnected": "Konto rozłączone",
+            "connectError": "Nie udało się połączyć konta",
+            "disconnectError": "Nie udało się rozłączyć konta",
+            "oauthPending": "Integracja OAuth wkrótce dostępna",
+            "connectedSummary": "{count} z {total} platform połączonych",
+            "connectHint": "Połącz wszystkie platformy dla pełnej automatyzacji",
+            "followers": "Obserwujący",
+            "lastSynced": "Ostatnia synchronizacja"
+        },
+        "aiChat": {
+            "title": "Asystent AI",
+            "subtitle": "Czatuj ze swoim AI managerem social media",
+            "welcomeTitle": "Jak mogę pomóc?",
+            "welcomeDescription": "Zapytaj mnie o strategię social media, pomysły na treści lub analizę wyników.",
+            "inputPlaceholder": "Zapytaj swojego AI managera...",
+            "send": "Wyślij",
+            "suggestions": {
+                "strategy": "Jaka powinna być moja strategia treści w tym miesiącu?",
+                "content": "Wygeneruj 5 pomysłów na posty na ten tydzień",
+                "performance": "Jak wypadły moje posty w zeszłym tygodniu?",
+                "ideas": "Jakie są popularne tematy w mojej niszy?"
+            }
+        },
+        "tutorial": {
+            "title": "Jak korzystać z AI Managera",
+            "subtitle": "Wykonaj poniższe kroki, aby skonfigurować autonomiczne zarządzanie mediami społecznościowymi",
+            "startButton": "Rozpocznij konfigurację",
+            "completed": "Ukończone",
+            "notCompleted": "Nieukończone",
+            "goTo": "Przejdź do {section}",
+            "progress": "Postęp konfiguracji",
+            "progressHint": "Ukończ wszystkie kroki, aby odblokować pełną moc AI managera",
+            "steps": {
+                "connectAccounts": {
+                    "title": "Podłącz swoje konta",
+                    "description": "Podłącz platformy społecznościowe (Instagram, Facebook, TikTok, LinkedIn, X, YouTube), aby zarządzać nimi z jednego miejsca.",
+                    "button": "Przejdź do kont"
+                },
+                "brandKit": {
+                    "title": "Skonfiguruj Brand Kit",
+                    "description": "Zdefiniuj tożsamość marki — kolory, czcionki, ton komunikacji i filary treści. AI wykorzysta to do tworzenia spójnych treści.",
+                    "button": "Skonfiguruj markę"
+                },
+                "strategy": {
+                    "title": "Stwórz swoją strategię",
+                    "description": "Zdefiniuj strategię treści — częstotliwość publikacji, grupę docelową, cele i mix treści. AI zaplanuje content na tej podstawie.",
+                    "button": "Stwórz strategię"
+                },
+                "contentPlan": {
+                    "title": "Wygeneruj plan treści",
+                    "description": "AI generuje miesięczny plan treści ze szczegółowymi tematami, formatami i optymalnymi godzinami publikacji.",
+                    "button": "Zobacz plany treści"
+                },
+                "reviewApprove": {
+                    "title": "Przeglądaj i zatwierdzaj posty",
+                    "description": "AI tworzy gotowe posty z opisami, hashtagami i grafikami. Przeglądaj kolejkę, zatwierdzaj dobre, odrzucaj lub edytuj resztę.",
+                    "button": "Kolejka zatwierdzeń"
+                },
+                "monitorEngage": {
+                    "title": "Monitoruj i angażuj",
+                    "description": "Śledź komentarze, wiadomości i wzmianki. AI może automatycznie odpowiadać na proste pytania i flagować negatywne opinie do Twojej recenzji.",
+                    "button": "Otwórz skrzynkę"
+                },
+                "analyzePerformance": {
+                    "title": "Analizuj wyniki",
+                    "description": "AI ocenia każdy post, śledzi trendy zaangażowania i generuje tygodniowe raporty z rekomendacjami do działania.",
+                    "button": "Zobacz analitykę"
+                }
+            },
+            "howItWorks": {
+                "title": "Jak działa autonomiczny cykl",
+                "steps": {
+                    "strategy": "Strategia",
+                    "contentPlan": "Plan treści",
+                    "aiCreates": "AI tworzy posty",
+                    "youApprove": "Ty zatwierdzasz",
+                    "autoPublish": "Auto-publikacja",
+                    "aiAnalyzes": "AI analizuje",
+                    "repeat": "Powtórz"
+                }
+            },
+            "tips": {
+                "title": "Porady",
+                "fiveMinutes": {
+                    "title": "5 minut dziennie",
+                    "description": "Wystarczy codziennie sprawdzić kolejkę zatwierdzeń. AI zajmie się tworzeniem treści, planowaniem i publikacją."
+                },
+                "aiLearns": {
+                    "title": "AI uczy się od Ciebie",
+                    "description": "Im więcej postów zatwierdzisz lub odrzucisz, tym lepiej AI rozumie Twoje preferencje i styl komunikacji."
+                },
+                "crisisAlerts": {
+                    "title": "Alerty kryzysowe",
+                    "description": "System monitoruje nagłe wzrosty negatywnych opinii i natychmiast Cię alarmuje, abyś mógł szybko zareagować."
+                }
+            }
+        }
     }
 }

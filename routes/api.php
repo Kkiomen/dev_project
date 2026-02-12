@@ -45,6 +45,21 @@ use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PlatformCredentialController;
 use App\Http\Controllers\Api\V1\RssFeedController;
+use App\Http\Controllers\Api\V1\SmAccountController;
+use App\Http\Controllers\Api\V1\SmBrandKitController;
+use App\Http\Controllers\Api\V1\SmContentPlanController;
+use App\Http\Controllers\Api\V1\SmContentTemplateController;
+use App\Http\Controllers\Api\V1\SmDesignTemplateController;
+use App\Http\Controllers\Api\V1\SmGeneratedAssetController;
+use App\Http\Controllers\Api\V1\SmStrategyController;
+use App\Http\Controllers\Api\V1\SmScheduledPostController;
+use App\Http\Controllers\Api\V1\SmAnalyticsController;
+use App\Http\Controllers\Api\V1\SmCommentController;
+use App\Http\Controllers\Api\V1\SmMessageController;
+use App\Http\Controllers\Api\V1\SmAutoReplyRuleController;
+use App\Http\Controllers\Api\V1\SmCrisisAlertController;
+use App\Http\Controllers\Api\V1\SmMonitoredKeywordController;
+use App\Http\Controllers\Api\V1\SmListeningController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -545,6 +560,140 @@ $v1Routes = function () {
         Route::put('/{event}', [CalendarEventController::class, 'update']);
         Route::delete('/{event}', [CalendarEventController::class, 'destroy']);
         Route::post('/{event}/reschedule', [CalendarEventController::class, 'reschedule']);
+    });
+
+    // === SM ACCOUNTS (Social Media Manager) ===
+    Route::prefix('brands/{brand}/sm-accounts')->group(function () {
+        Route::get('/', [SmAccountController::class, 'index']);
+        Route::post('/', [SmAccountController::class, 'store']);
+        Route::get('{smAccount}', [SmAccountController::class, 'show']);
+        Route::delete('{platform}', [SmAccountController::class, 'disconnect']);
+        Route::get('{platform}/auth-url', [SmAccountController::class, 'authUrl']);
+    });
+
+    // === SM BRAND KIT (Social Media Manager) ===
+    Route::prefix('brands/{brand}/sm-brand-kit')->group(function () {
+        Route::get('/', [SmBrandKitController::class, 'show']);
+        Route::put('/', [SmBrandKitController::class, 'update']);
+        Route::post('logo', [SmBrandKitController::class, 'uploadLogo']);
+        Route::delete('logo', [SmBrandKitController::class, 'deleteLogo']);
+    });
+
+    // === SM DESIGN TEMPLATES (Social Media Manager) ===
+    Route::prefix('brands/{brand}/sm-design-templates')->group(function () {
+        Route::get('/', [SmDesignTemplateController::class, 'index']);
+        Route::post('/', [SmDesignTemplateController::class, 'store']);
+        Route::get('{smDesignTemplate}', [SmDesignTemplateController::class, 'show']);
+        Route::put('{smDesignTemplate}', [SmDesignTemplateController::class, 'update']);
+        Route::delete('{smDesignTemplate}', [SmDesignTemplateController::class, 'destroy']);
+    });
+
+    // === SM GENERATED ASSETS (Social Media Manager) ===
+    Route::prefix('brands/{brand}/sm-generated-assets')->group(function () {
+        Route::get('/', [SmGeneratedAssetController::class, 'index']);
+        Route::post('/', [SmGeneratedAssetController::class, 'store']);
+        Route::get('{smGeneratedAsset}', [SmGeneratedAssetController::class, 'show']);
+        Route::delete('{smGeneratedAsset}', [SmGeneratedAssetController::class, 'destroy']);
+    });
+
+    // === SM CONTENT TEMPLATES (Social Media Manager) ===
+    Route::prefix('brands/{brand}/sm-content-templates')->group(function () {
+        Route::get('/', [SmContentTemplateController::class, 'index']);
+        Route::post('/', [SmContentTemplateController::class, 'store']);
+        Route::get('{smContentTemplate}', [SmContentTemplateController::class, 'show']);
+        Route::put('{smContentTemplate}', [SmContentTemplateController::class, 'update']);
+        Route::delete('{smContentTemplate}', [SmContentTemplateController::class, 'destroy']);
+    });
+
+    // === SM STRATEGY (Social Media Manager) ===
+    Route::prefix('brands/{brand}/sm-strategy')->group(function () {
+        Route::get('/', [SmStrategyController::class, 'show']);
+        Route::put('/', [SmStrategyController::class, 'update']);
+        Route::get('all', [SmStrategyController::class, 'index']);
+        Route::post('activate', [SmStrategyController::class, 'activate']);
+    });
+
+    // === SM CONTENT PLANS (Social Media Manager) ===
+    Route::prefix('brands/{brand}/sm-content-plans')->group(function () {
+        Route::get('/', [SmContentPlanController::class, 'index']);
+        Route::get('current', [SmContentPlanController::class, 'current']);
+        Route::get('{smContentPlan}', [SmContentPlanController::class, 'show']);
+        Route::post('{smContentPlan}/slots', [SmContentPlanController::class, 'addSlot']);
+        Route::put('{smContentPlan}/slots/{slot}', [SmContentPlanController::class, 'updateSlot']);
+        Route::delete('{smContentPlan}/slots/{slot}', [SmContentPlanController::class, 'removeSlot']);
+        Route::post('{smContentPlan}/slots/{slot}/generate-content', [SmContentPlanController::class, 'generateSlotContent']);
+        Route::post('{smContentPlan}/generate-all-content', [SmContentPlanController::class, 'generateAllContent']);
+    });
+
+    // === SM SCHEDULED POSTS (Publishing Pipeline) ===
+    Route::prefix('brands/{brand}/sm-scheduled-posts')->group(function () {
+        Route::get('/', [SmScheduledPostController::class, 'index']);
+        Route::get('{smScheduledPost}', [SmScheduledPostController::class, 'show']);
+        Route::post('{smScheduledPost}/approve', [SmScheduledPostController::class, 'approve']);
+        Route::post('{smScheduledPost}/reject', [SmScheduledPostController::class, 'reject']);
+        Route::delete('{smScheduledPost}', [SmScheduledPostController::class, 'destroy']);
+    });
+
+    // === SM ANALYTICS (Dashboard, Snapshots, Scores, Reports) ===
+    Route::prefix('brands/{brand}/sm-analytics')->group(function () {
+        Route::get('dashboard', [SmAnalyticsController::class, 'dashboard']);
+        Route::get('snapshots', [SmAnalyticsController::class, 'snapshots']);
+        Route::get('post-analytics', [SmAnalyticsController::class, 'postAnalytics']);
+        Route::get('performance-scores', [SmAnalyticsController::class, 'performanceScores']);
+        Route::get('weekly-reports', [SmAnalyticsController::class, 'weeklyReports']);
+        Route::get('weekly-reports/{smWeeklyReport}', [SmAnalyticsController::class, 'weeklyReport']);
+    });
+
+    // === SM COMMENTS (Engagement) ===
+    Route::prefix('brands/{brand}/sm-comments')->group(function () {
+        Route::get('/', [SmCommentController::class, 'index']);
+        Route::get('{smComment}', [SmCommentController::class, 'show']);
+        Route::post('{smComment}/reply', [SmCommentController::class, 'reply']);
+        Route::post('{smComment}/hide', [SmCommentController::class, 'hide']);
+        Route::post('{smComment}/flag', [SmCommentController::class, 'flag']);
+    });
+
+    // === SM MESSAGES (Engagement) ===
+    Route::prefix('brands/{brand}/sm-messages')->group(function () {
+        Route::get('/', [SmMessageController::class, 'index']);
+        Route::get('{smMessage}', [SmMessageController::class, 'show']);
+        Route::post('{smMessage}/read', [SmMessageController::class, 'markAsRead']);
+    });
+
+    // === SM AUTO REPLY RULES (Engagement) ===
+    Route::prefix('brands/{brand}/sm-auto-reply-rules')->group(function () {
+        Route::get('/', [SmAutoReplyRuleController::class, 'index']);
+        Route::post('/', [SmAutoReplyRuleController::class, 'store']);
+        Route::get('{smAutoReplyRule}', [SmAutoReplyRuleController::class, 'show']);
+        Route::put('{smAutoReplyRule}', [SmAutoReplyRuleController::class, 'update']);
+        Route::delete('{smAutoReplyRule}', [SmAutoReplyRuleController::class, 'destroy']);
+    });
+
+    // === SM CRISIS ALERTS (Engagement) ===
+    Route::prefix('brands/{brand}/sm-crisis-alerts')->group(function () {
+        Route::get('/', [SmCrisisAlertController::class, 'index']);
+        Route::get('{smCrisisAlert}', [SmCrisisAlertController::class, 'show']);
+        Route::post('{smCrisisAlert}/resolve', [SmCrisisAlertController::class, 'resolve']);
+    });
+
+    // === SM MONITORED KEYWORDS (Social Listening) ===
+    Route::prefix('brands/{brand}/sm-keywords')->group(function () {
+        Route::get('/', [SmMonitoredKeywordController::class, 'index']);
+        Route::post('/', [SmMonitoredKeywordController::class, 'store']);
+        Route::get('{smMonitoredKeyword}', [SmMonitoredKeywordController::class, 'show']);
+        Route::put('{smMonitoredKeyword}', [SmMonitoredKeywordController::class, 'update']);
+        Route::delete('{smMonitoredKeyword}', [SmMonitoredKeywordController::class, 'destroy']);
+    });
+
+    // === SM LISTENING (Mentions, Alert Rules, Reports) ===
+    Route::prefix('brands/{brand}/sm-listening')->group(function () {
+        Route::get('mentions', [SmListeningController::class, 'mentions']);
+        Route::get('alert-rules', [SmListeningController::class, 'alertRules']);
+        Route::post('alert-rules', [SmListeningController::class, 'storeAlertRule']);
+        Route::put('alert-rules/{smAlertRule}', [SmListeningController::class, 'updateAlertRule']);
+        Route::delete('alert-rules/{smAlertRule}', [SmListeningController::class, 'destroyAlertRule']);
+        Route::get('reports', [SmListeningController::class, 'reports']);
+        Route::get('reports/{smListeningReport}', [SmListeningController::class, 'report']);
     });
 
     // === RSS FEEDS ===

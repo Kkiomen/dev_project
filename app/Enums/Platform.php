@@ -7,6 +7,9 @@ enum Platform: string
     case Facebook = 'facebook';
     case Instagram = 'instagram';
     case YouTube = 'youtube';
+    case TikTok = 'tiktok';
+    case LinkedIn = 'linkedin';
+    case X = 'x';
 
     public function label(): string
     {
@@ -14,6 +17,9 @@ enum Platform: string
             self::Facebook => 'Facebook',
             self::Instagram => 'Instagram',
             self::YouTube => 'YouTube',
+            self::TikTok => 'TikTok',
+            self::LinkedIn => 'LinkedIn',
+            self::X => 'X (Twitter)',
         };
     }
 
@@ -23,6 +29,9 @@ enum Platform: string
             self::Facebook => 'facebook',
             self::Instagram => 'instagram',
             self::YouTube => 'youtube',
+            self::TikTok => 'tiktok',
+            self::LinkedIn => 'linkedin',
+            self::X => 'x',
         };
     }
 
@@ -32,6 +41,9 @@ enum Platform: string
             self::Facebook => '#1877F2',
             self::Instagram => '#E4405F',
             self::YouTube => '#FF0000',
+            self::TikTok => '#000000',
+            self::LinkedIn => '#0A66C2',
+            self::X => '#000000',
         };
     }
 

@@ -136,6 +136,97 @@ class Brand extends Model
         return $this->hasMany(RssArticle::class);
     }
 
+    // Social Media Manager
+    public function smAccounts(): HasMany
+    {
+        return $this->hasMany(SmAccount::class);
+    }
+
+    public function smBrandKit(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(SmBrandKit::class);
+    }
+
+    public function smDesignTemplates(): HasMany
+    {
+        return $this->hasMany(SmDesignTemplate::class);
+    }
+
+    public function smGeneratedAssets(): HasMany
+    {
+        return $this->hasMany(SmGeneratedAsset::class);
+    }
+
+    public function smContentTemplates(): HasMany
+    {
+        return $this->hasMany(SmContentTemplate::class);
+    }
+
+    public function smStrategies(): HasMany
+    {
+        return $this->hasMany(SmStrategy::class);
+    }
+
+    public function smContentPlans(): HasMany
+    {
+        return $this->hasMany(SmContentPlan::class);
+    }
+
+    public function smScheduledPosts(): HasMany
+    {
+        return $this->hasMany(SmScheduledPost::class);
+    }
+
+    public function smAnalyticsSnapshots(): HasMany
+    {
+        return $this->hasMany(SmAnalyticsSnapshot::class);
+    }
+
+public function smWeeklyReports(): HasMany
+    {
+        return $this->hasMany(SmWeeklyReport::class);
+    }
+
+    public function smComments(): HasMany
+    {
+        return $this->hasMany(SmComment::class);
+    }
+
+    public function smMessages(): HasMany
+    {
+        return $this->hasMany(SmMessage::class);
+    }
+
+    public function smAutoReplyRules(): HasMany
+    {
+        return $this->hasMany(SmAutoReplyRule::class);
+    }
+
+    public function smCrisisAlerts(): HasMany
+    {
+        return $this->hasMany(SmCrisisAlert::class);
+    }
+
+    public function smMonitoredKeywords(): HasMany
+    {
+        return $this->hasMany(SmMonitoredKeyword::class);
+    }
+
+    public function smMentions(): HasMany
+    {
+        return $this->hasMany(SmMention::class);
+    }
+
+    public function smAlertRules(): HasMany
+    {
+        return $this->hasMany(SmAlertRule::class);
+    }
+
+    public function smListeningReports(): HasMany
+    {
+        return $this->hasMany(SmListeningReport::class);
+    }
+
     // Member helpers
     public function getMemberRole(User $user): ?string
     {

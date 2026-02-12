@@ -307,7 +307,8 @@
         "admin": "Admin",
         "adminUsers": "Users",
         "devTasks": "Dev Tasks",
-        "rssFeeds": "RSS Feeds"
+        "rssFeeds": "RSS Feeds",
+        "aiManager": "AI Manager"
     },
     "settings": {
         "title": "Settings",
@@ -3282,5 +3283,626 @@
         "backToFeeds": "Back to feeds",
         "todayFeed": "Today",
         "minuteRead": "{n} min read"
+    },
+    "manager": {
+        "nav": {
+            "dashboard": "Command Center",
+            "approval": "Approval Queue",
+            "calendar": "Calendar",
+            "content": "Content",
+            "strategy": "Strategy",
+            "analytics": "Analytics",
+            "reports": "Reports",
+            "competitors": "Competitors",
+            "listening": "Social Listening",
+            "inbox": "Inbox",
+            "brandKit": "Brand Kit",
+            "accounts": "Accounts",
+            "aiChat": "AI Chat",
+            "backToApp": "Back to App",
+            "sectionMain": "Main",
+            "sectionAnalytics": "Analytics & Research",
+            "sectionEngagement": "Engagement",
+            "sectionSettings": "Configuration",
+            "tutorial": "Tutorial"
+        },
+        "dashboard": {
+            "title": "Command Center",
+            "subtitle": "Overview of your AI-managed social media for {brand}",
+            "quickActions": "Quick Actions",
+            "upcomingPosts": "Upcoming Posts",
+            "noUpcomingPosts": "No scheduled posts yet",
+            "scheduledFor": "Scheduled",
+            "performanceSnapshot": "Performance Snapshot",
+            "connectAccountsFirst": "Connect social accounts to see performance data",
+            "platformOverview": "Platform Overview",
+            "noPlatformData": "No platform data available",
+            "recentActivity": "Recent Activity",
+            "activityComingSoon": "Activity feed coming soon",
+            "crisisAlert": "Crisis Alert",
+            "crisisAlertCount": "{count} unresolved alert(s) require your attention",
+            "viewAlerts": "View Alerts",
+            "pastDue": "past due",
+            "inMinutes": "in {n} min",
+            "inHours": "in {n} hr | in {n} hrs",
+            "inDays": "in {n} day | in {n} days",
+            "stats": {
+                "pendingApproval": "Pending Approval",
+                "scheduledToday": "Scheduled Today",
+                "publishedThisWeek": "Published This Week",
+                "engagementRate": "Engagement Rate"
+            },
+            "actions": {
+                "reviewPosts": "Review Posts",
+                "reviewPostsDesc": "Approve or reject AI-generated posts",
+                "viewCalendar": "View Calendar",
+                "viewCalendarDesc": "See your content schedule",
+                "viewAnalytics": "View Analytics",
+                "viewAnalyticsDesc": "Track performance metrics",
+                "manageAccounts": "Manage Accounts",
+                "manageAccountsDesc": "Connect social media platforms"
+            },
+            "workflowGuide": {
+                "title": "Ready to generate content?",
+                "description": "Your content plan has {count} slots waiting for AI-generated content. Here's what happens next:",
+                "step1Title": "Generate Content",
+                "step1Desc": "AI creates engaging posts based on your strategy and content plan",
+                "step2Title": "Review & Approve",
+                "step2Desc": "Review generated posts in the Approval Queue before publishing",
+                "step3Title": "Auto-Publish",
+                "step3Desc": "Approved posts are automatically published at optimal times",
+                "cta": "Go to Calendar",
+                "dismiss": "Dismiss"
+            }
+        },
+        "approval": {
+            "title": "Approval Queue",
+            "subtitle": "Review and approve AI-generated posts before publishing",
+            "emptyTitle": "All caught up!",
+            "emptyDescription": "There are no posts waiting for approval. AI will generate new content based on your strategy.",
+            "filters": {
+                "all": "All",
+                "pending": "Pending",
+                "approved": "Approved",
+                "rejected": "Rejected"
+            },
+            "stats": {
+                "pending": "Pending Review",
+                "approvedToday": "Approved Today",
+                "rejected": "Rejected"
+            },
+            "scheduledFor": "Scheduled for",
+            "approveBtn": "Approve",
+            "rejectBtn": "Reject",
+            "notesPlaceholder": "Add notes (optional for approve, required for reject)...",
+            "submit": "Submit",
+            "cancel": "Cancel",
+            "approved": "Post approved",
+            "rejected": "Post rejected",
+            "approveError": "Failed to approve post",
+            "rejectError": "Failed to reject post",
+            "notesRequired": "Notes are required when rejecting"
+        },
+        "calendar": {
+            "title": "Content Calendar",
+            "subtitle": "View and manage your scheduled content",
+            "emptyTitle": "Calendar is empty",
+            "emptyDescription": "Posts will appear here once AI generates your content plan.",
+            "today": "Today",
+            "noSlots": "No content scheduled",
+            "emptyDay": "No posts",
+            "view": {
+                "month": "Month",
+                "week": "Week"
+            },
+            "weekdays": {
+                "mon": "Mon",
+                "tue": "Tue",
+                "wed": "Wed",
+                "thu": "Thu",
+                "fri": "Fri",
+                "sat": "Sat",
+                "sun": "Sun"
+            },
+            "generateAll": "Generate All Content ({count})",
+            "generateAllSuccess": "Content generation started for {count} slots",
+            "generateAllError": "Failed to start content generation",
+            "generating": "Generating..."
+        },
+        "slotModal": {
+            "title": "Slot Details",
+            "status": "Status",
+            "platform": "Platform",
+            "contentType": "Content Type",
+            "pillar": "Pillar",
+            "topic": "Topic",
+            "description": "Description",
+            "scheduledAt": "Scheduled At",
+            "statusLabels": {
+                "planned": "Planned",
+                "content_ready": "Content Ready",
+                "media_ready": "Media Ready",
+                "approved": "Approved",
+                "published": "Published",
+                "skipped": "Skipped"
+            },
+            "generateContent": "Generate Content",
+            "viewContent": "View Content",
+            "generateSuccess": "Content generation started",
+            "generateError": "Failed to start content generation",
+            "generating": "Generating...",
+            "alreadyGenerated": "Content has already been generated for this slot"
+        },
+        "content": {
+            "title": "Content Library",
+            "subtitle": "Manage all your social media content",
+            "createPost": "Create Post",
+            "noContent": "No content yet",
+            "noContentDescription": "Create your first post or let AI generate content from your strategy.",
+            "filters": {
+                "all": "All",
+                "draft": "Drafts",
+                "pending": "Pending Approval",
+                "approved": "Approved",
+                "scheduled": "Scheduled",
+                "published": "Published"
+            },
+            "search": "Search content...",
+            "sortBy": "Sort by",
+            "sortOptions": {
+                "newest": "Newest first",
+                "oldest": "Oldest first",
+                "scheduled": "Scheduled date"
+            },
+            "postCard": {
+                "platforms": "Platforms",
+                "scheduledFor": "Scheduled for",
+                "createdAt": "Created",
+                "edit": "Edit",
+                "delete": "Delete",
+                "approve": "Approve",
+                "reject": "Reject"
+            },
+            "deleted": "Post deleted",
+            "deleteError": "Failed to delete post"
+        },
+        "postEditor": {
+            "title": "Post Editor",
+            "subtitle": "Edit post content and preview across platforms",
+            "backToContent": "Back to Content",
+            "titleField": "Post Title",
+            "titlePlaceholder": "Enter a title for your post...",
+            "captionField": "Caption",
+            "captionPlaceholder": "Write your post caption here...",
+            "characters": "characters",
+            "hashtags": "Hashtags",
+            "addHashtag": "Add",
+            "hashtagPlaceholder": "Type a hashtag and press Enter...",
+            "platformTabs": "Platform-Specific Captions",
+            "platformCaptionHint": "Leave empty to use the main caption for this platform.",
+            "schedule": "Schedule",
+            "scheduledDate": "Date",
+            "scheduledTime": "Time",
+            "preview": "Preview",
+            "previewTitle": "Brand Name",
+            "previewPlaceholder": "Your post preview will appear here as you type...",
+            "postInfo": "Post Info",
+            "status": "Status",
+            "created": "Created",
+            "platforms": "Platforms",
+            "saveDraft": "Save Draft",
+            "submitForApproval": "Submit for Approval",
+            "delete": "Delete",
+            "deleteConfirm": "Are you sure you want to delete this post? This action cannot be undone.",
+            "cancelAction": "Cancel",
+            "saved": "Draft saved successfully",
+            "saveError": "Failed to save draft",
+            "submitted": "Post submitted for approval",
+            "submitError": "Failed to submit post",
+            "aiActionsTitle": "AI Actions",
+            "aiActions": {
+                "generateCaption": "Generate Caption",
+                "generateHashtags": "Generate Hashtags",
+                "adaptPlatforms": "Adapt to Platforms",
+                "generateVariants": "Generate Variants",
+                "generating": "AI is processing your request..."
+            }
+        },
+        "analytics": {
+            "title": "Analytics",
+            "subtitle": "AI-powered insights into your social media performance",
+            "emptyTitle": "No analytics data yet",
+            "emptyDescription": "Connect your social media accounts and publish some posts to start seeing analytics.",
+            "noDataYet": "No data yet",
+            "period": {
+                "7d": "7 Days",
+                "30d": "30 Days",
+                "90d": "90 Days"
+            },
+            "metrics": {
+                "followers": "Followers",
+                "reach": "Reach",
+                "engagement": "Engagement",
+                "engagementRate": "Engagement Rate",
+                "posts": "Posts"
+            },
+            "platformBreakdown": "Platform Breakdown",
+            "performanceScores": "Performance Scores",
+            "chartsComingSoon": "Charts coming soon",
+            "chartsComingSoonDescription": "Interactive charts and trend visualizations will be available in upcoming updates.",
+            "crisisAlert": "Crisis Alert",
+            "crisisAlertDescription": "There are unresolved crisis alerts that need your attention.",
+            "score": "Score",
+            "scoreLabels": {
+                "excellent": "Excellent",
+                "good": "Good",
+                "average": "Average",
+                "below_average": "Below Average",
+                "poor": "Poor"
+            },
+            "noScores": "No performance scores yet",
+            "noScoresDescription": "Scores will appear once your posts have been analyzed by AI."
+        },
+        "reports": {
+            "title": "Reports",
+            "subtitle": "AI-generated weekly and monthly performance reports",
+            "emptyTitle": "No reports yet",
+            "emptyDescription": "Reports will be automatically generated once you have enough published content and engagement data.",
+            "tabs": {
+                "weekly": "Weekly Reports",
+                "listening": "Listening Reports"
+            },
+            "periodLabel": "Period",
+            "status": "Status",
+            "statusReady": "Ready",
+            "statusGenerating": "Generating",
+            "summary": "Summary",
+            "topPosts": "Top Posts",
+            "recommendations": "Recommendations",
+            "growthMetrics": "Growth Metrics",
+            "platformBreakdown": "Platform Breakdown",
+            "shareOfVoice": "Share of Voice",
+            "sentimentBreakdown": "Sentiment Breakdown",
+            "trendingKeywords": "Trending Keywords",
+            "aiSummary": "AI Summary",
+            "topMentions": "Top Mentions",
+            "noWeeklyReports": "No weekly reports yet",
+            "noWeeklyReportsDescription": "Weekly reports will be automatically generated once you have enough published content and engagement data.",
+            "noListeningReports": "No listening reports yet",
+            "noListeningReportsDescription": "Listening reports will be generated once you have active keywords and incoming mentions.",
+            "viewDetails": "View Details",
+            "collapse": "Collapse"
+        },
+        "listening": {
+            "title": "Social Listening",
+            "subtitle": "Monitor brand mentions, keywords, and industry trends",
+            "emptyTitle": "Not configured yet",
+            "emptyDescription": "Set up keywords and brand mentions to start monitoring your social media landscape.",
+            "tabs": {
+                "keywords": "Keywords",
+                "mentions": "Mentions",
+                "alertRules": "Alert Rules"
+            },
+            "addKeyword": "Add Keyword",
+            "keywordPlaceholder": "Enter keyword or phrase...",
+            "platformAll": "All Platforms",
+            "category": "Category",
+            "mentionCount": "mentions",
+            "active": "Active",
+            "inactive": "Inactive",
+            "noKeywords": "No keywords monitored",
+            "noKeywordsDescription": "Add keywords to start tracking mentions across social media platforms.",
+            "noMentions": "No mentions found",
+            "noMentionsDescription": "Mentions will appear here once your monitored keywords are detected across platforms.",
+            "noAlertRules": "No alert rules configured",
+            "noAlertRulesDescription": "Set up alert rules to get notified when mention activity spikes or sentiment changes.",
+            "alertType": "Alert Type",
+            "alertTypes": {
+                "mention_spike": "Mention Spike",
+                "negative_sentiment": "Negative Sentiment",
+                "competitor_mention": "Competitor Mention"
+            },
+            "threshold": "Threshold",
+            "timeframe": "Timeframe",
+            "notifyVia": "Notify Via",
+            "addRule": "Add Rule",
+            "deleteConfirm": "Are you sure you want to delete this item?",
+            "reach": "Reach",
+            "engagement": "Engagement",
+            "sourceLink": "View Source",
+            "sentimentLabel": "Sentiment",
+            "sentimentAll": "All Sentiments",
+            "sentiment": {
+                "positive": "Positive",
+                "neutral": "Neutral",
+                "negative": "Negative"
+            },
+            "keywordAdded": "Keyword added successfully",
+            "keywordAddError": "Failed to add keyword",
+            "keywordDeleted": "Keyword deleted",
+            "deleteError": "Failed to delete",
+            "updateError": "Failed to update",
+            "ruleAdded": "Alert rule added successfully",
+            "ruleAddError": "Failed to add alert rule",
+            "ruleDeleted": "Alert rule deleted"
+        },
+        "inbox": {
+            "title": "Inbox",
+            "subtitle": "Comments, messages, and engagement from all platforms",
+            "emptyTitle": "Inbox is empty",
+            "emptyDescription": "Comments and messages from your connected platforms will appear here.",
+            "tabs": {
+                "comments": "Comments",
+                "messages": "Messages"
+            },
+            "filterPlatform": "Platform",
+            "filterSentiment": "Sentiment",
+            "filterRead": "Read Status",
+            "allPlatforms": "All Platforms",
+            "allSentiments": "All Sentiments",
+            "allMessages": "All",
+            "unreadOnly": "Unread",
+            "readOnly": "Read",
+            "reply": "Reply",
+            "hide": "Hide",
+            "flag": "Flag",
+            "markRead": "Mark as Read",
+            "send": "Send",
+            "cancel": "Cancel",
+            "replyPlaceholder": "Write a reply...",
+            "loadMore": "Load More",
+            "sentiment": {
+                "positive": "Positive",
+                "neutral": "Neutral",
+                "negative": "Negative"
+            },
+            "direction": {
+                "inbound": "Inbound",
+                "outbound": "Outbound"
+            },
+            "replied": "Reply sent",
+            "replyError": "Failed to send reply",
+            "hidden": "Comment hidden",
+            "hideError": "Failed to hide comment",
+            "flagged": "Comment flagged",
+            "flagError": "Failed to flag comment",
+            "markedRead": "Marked as read",
+            "noComments": "No comments yet",
+            "noCommentsDescription": "Comments from your social media posts will appear here.",
+            "noMessages": "No messages yet",
+            "noMessagesDescription": "Direct messages from your connected platforms will appear here."
+        },
+        "competitors": {
+            "title": "Competitors",
+            "subtitle": "Track and analyze your competitors' social media activity",
+            "emptyTitle": "No competitors tracked",
+            "emptyDescription": "Add competitors to monitor their content strategy, posting frequency, and engagement.",
+            "addCompetitor": "Add Competitor",
+            "handlePlaceholder": "username",
+            "platform": "Platform",
+            "remove": "Remove",
+            "removeConfirm": "Are you sure you want to remove this competitor?",
+            "noCompetitors": "No competitors tracked",
+            "noCompetitorsDescription": "Add competitor handles to monitor their social media activity and compare with your brand.",
+            "analyticsComingSoon": "Competitor Analytics Coming Soon",
+            "analyticsComingSoonDescription": "In future phases, this section will display scraped competitor data including posts, engagement rates, and content strategy analysis.",
+            "added": "Competitor added",
+            "addError": "Failed to add competitor",
+            "removed": "Competitor removed",
+            "removeError": "Failed to remove competitor",
+            "alreadyTracked": "This competitor is already being tracked"
+        },
+        "strategy": {
+            "title": "AI Strategy",
+            "subtitle": "AI-powered content strategy and planning",
+            "emptyTitle": "No strategy configured",
+            "emptyDescription": "Set up your brand voice, content pillars, and target audience so AI can generate a content strategy.",
+            "saved": "Strategy saved",
+            "saveError": "Failed to save strategy",
+            "activated": "Strategy activated",
+            "activateError": "Failed to activate strategy",
+            "activate": "Activate",
+            "statusActive": "Active",
+            "statusDraft": "Draft",
+            "tabs": {
+                "pillars": "Content Pillars",
+                "frequency": "Posting Frequency",
+                "audience": "Target Audience",
+                "goals": "Goals",
+                "competitors": "Competitors",
+                "contentMix": "Content Mix"
+            },
+            "contentPillars": "Content Pillars",
+            "noPillars": "No content pillars defined yet",
+            "pillarName": "Pillar name",
+            "pillarDescription": "Short description",
+            "postingFrequency": "Posting Frequency",
+            "totalWeekly": "{count} posts per week",
+            "perWeek": "week",
+            "demographics": "Demographics",
+            "ageRange": "Age Range",
+            "gender": "Gender",
+            "genders": {
+                "all": "All",
+                "male": "Male",
+                "female": "Female"
+            },
+            "interests": "Interests",
+            "addInterest": "Add interest",
+            "painPoints": "Pain Points",
+            "addPainPoint": "Add pain point",
+            "goals": "Goals",
+            "noGoals": "No goals defined yet",
+            "goalName": "Goal description",
+            "metric": "Metric (e.g. followers)",
+            "targetValue": "Target value",
+            "timeframes": {
+                "weekly": "Weekly",
+                "monthly": "Monthly",
+                "quarterly": "Quarterly"
+            },
+            "competitors": "Competitors",
+            "noCompetitors": "No competitors tracked yet",
+            "contentMix": "Content Mix",
+            "mixCategories": {
+                "educational": "Educational",
+                "entertaining": "Entertaining",
+                "promotional": "Promotional",
+                "engaging": "Engaging"
+            }
+        },
+        "brand": {
+            "title": "Brand Kit",
+            "subtitle": "Define your brand identity for consistent AI-generated content",
+            "colors": "Brand Colors",
+            "fonts": "Typography",
+            "logo": "Logo",
+            "toneOfVoice": "Tone of Voice",
+            "noColorsSet": "No brand colors configured",
+            "noFontsSet": "No fonts configured",
+            "uploadLogo": "Upload your brand logo",
+            "changeLogo": "Change logo",
+            "noToneSet": "Define your brand voice",
+            "saved": "Brand kit saved",
+            "saveError": "Failed to save brand kit",
+            "logoUploaded": "Logo uploaded",
+            "logoUploadError": "Failed to upload logo",
+            "logoDeleted": "Logo removed",
+            "logoDeleteError": "Failed to remove logo",
+            "fontPlaceholder": "e.g. Inter, Roboto, Playfair Display",
+            "stylePreset": "Visual Style",
+            "styles": {
+                "modern": "Modern",
+                "classic": "Classic",
+                "bold": "Bold",
+                "minimal": "Minimal",
+                "playful": "Playful"
+            },
+            "tones": {
+                "professional": "Professional",
+                "casual": "Casual",
+                "friendly": "Friendly",
+                "authoritative": "Authoritative",
+                "humorous": "Humorous",
+                "inspirational": "Inspirational"
+            },
+            "voiceAttributes": "Voice Attributes",
+            "addAttribute": "Add attribute (e.g. inspiring, educational)",
+            "contentPillars": "Content Pillars",
+            "noPillars": "No content pillars defined yet",
+            "pillarName": "Pillar name",
+            "pillarDescription": "Short description",
+            "hashtags": {
+                "branded": "Branded Hashtags",
+                "industry": "Industry Hashtags"
+            },
+            "addHashtag": "Add hashtag",
+            "guidelinesNotes": "Brand Guidelines Notes",
+            "guidelinesPlaceholder": "Any additional notes about your brand guidelines, dos and don'ts, etc."
+        },
+        "accounts": {
+            "title": "Connected Accounts",
+            "subtitle": "Link your social media accounts for automated publishing",
+            "notConnected": "Not connected",
+            "connect": "Connect",
+            "connected": "Connected",
+            "disconnect": "Disconnect",
+            "disconnected": "Account disconnected",
+            "connectError": "Failed to connect account",
+            "disconnectError": "Failed to disconnect account",
+            "oauthPending": "OAuth integration coming soon",
+            "connectedSummary": "{count} of {total} platforms connected",
+            "connectHint": "Connect all your platforms for full automation",
+            "followers": "Followers",
+            "lastSynced": "Last synced"
+        },
+        "aiChat": {
+            "title": "AI Assistant",
+            "subtitle": "Chat with your AI social media manager",
+            "welcomeTitle": "How can I help?",
+            "welcomeDescription": "Ask me anything about your social media strategy, content ideas, or performance analysis.",
+            "inputPlaceholder": "Ask your AI manager...",
+            "send": "Send",
+            "suggestions": {
+                "strategy": "What should my content strategy be this month?",
+                "content": "Generate 5 post ideas for this week",
+                "performance": "How did my posts perform last week?",
+                "ideas": "What are trending topics in my niche?"
+            }
+        },
+        "tutorial": {
+            "title": "How to Use AI Manager",
+            "subtitle": "Follow these steps to set up your autonomous social media management",
+            "startButton": "Start Setup",
+            "completed": "Completed",
+            "notCompleted": "Not completed",
+            "goTo": "Go to {section}",
+            "progress": "Setup Progress",
+            "progressHint": "Complete all steps to unlock the full power of your AI manager",
+            "steps": {
+                "connectAccounts": {
+                    "title": "Connect Your Accounts",
+                    "description": "Connect your social media platforms (Instagram, Facebook, TikTok, LinkedIn, X, YouTube) to start managing them from one place.",
+                    "button": "Go to Accounts"
+                },
+                "brandKit": {
+                    "title": "Set Up Brand Kit",
+                    "description": "Define your brand identity — colors, fonts, tone of voice, and content pillars. AI will use this to create on-brand content.",
+                    "button": "Set Up Brand"
+                },
+                "strategy": {
+                    "title": "Create Your Strategy",
+                    "description": "Define your content strategy — posting frequency per platform, target audience, goals, and content mix. AI will plan your content based on this.",
+                    "button": "Create Strategy"
+                },
+                "contentPlan": {
+                    "title": "Generate Content Plan",
+                    "description": "AI generates a monthly content plan with specific topics, formats, and optimal posting times for each platform.",
+                    "button": "View Content Plans"
+                },
+                "reviewApprove": {
+                    "title": "Review & Approve Posts",
+                    "description": "AI creates complete posts with captions, hashtags, and visuals. Review the queue, approve good ones, reject or edit the rest.",
+                    "button": "Approval Queue"
+                },
+                "monitorEngage": {
+                    "title": "Monitor & Engage",
+                    "description": "Track comments, messages, and mentions. AI can auto-reply to simple questions and flag negative sentiment for your review.",
+                    "button": "Open Inbox"
+                },
+                "analyzePerformance": {
+                    "title": "Analyze Performance",
+                    "description": "AI scores every post, tracks engagement trends, and generates weekly reports with actionable recommendations.",
+                    "button": "View Analytics"
+                }
+            },
+            "howItWorks": {
+                "title": "How the Autonomous Cycle Works",
+                "steps": {
+                    "strategy": "Strategy",
+                    "contentPlan": "Content Plan",
+                    "aiCreates": "AI Creates Posts",
+                    "youApprove": "You Approve",
+                    "autoPublish": "Auto-Publish",
+                    "aiAnalyzes": "AI Analyzes",
+                    "repeat": "Repeat"
+                }
+            },
+            "tips": {
+                "title": "Pro Tips",
+                "fiveMinutes": {
+                    "title": "5 Minutes a Day",
+                    "description": "You only need to check the approval queue daily. AI handles content creation, scheduling, and publishing."
+                },
+                "aiLearns": {
+                    "title": "AI Learns From You",
+                    "description": "The more posts you approve or reject, the better AI understands your preferences and content style."
+                },
+                "crisisAlerts": {
+                    "title": "Crisis Alerts",
+                    "description": "The system monitors for negative sentiment spikes and alerts you immediately so you can respond quickly."
+                }
+            }
+        }
     }
 }

@@ -56,6 +56,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Settings
     Route::get('/settings', fn () => view('spa'))->name('settings');
 
+    // AI Social Media Manager
+    Route::get('/app/manager/{any?}', fn () => view('spa'))->where('any', '.*')->name('manager');
+
     // Admin panel
     Route::get('/admin/{any?}', fn () => view('spa'))->where('any', '.*')->name('admin')->middleware('admin');
 

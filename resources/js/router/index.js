@@ -166,6 +166,90 @@ const routes = [
         component: () => import('@/pages/PsdEditorPage.vue'),
         meta: { requiresAdmin: true },
     },
+    // AI Social Media Manager
+    {
+        path: '/app/manager',
+        component: () => import('@/pages/ManagerPage.vue'),
+        meta: { hideLayout: true },
+        children: [
+            {
+                path: '',
+                name: 'manager.dashboard',
+                component: () => import('@/pages/manager/ManagerDashboardPage.vue'),
+            },
+            {
+                path: 'approval',
+                name: 'manager.approval',
+                component: () => import('@/pages/manager/ManagerApprovalPage.vue'),
+            },
+            {
+                path: 'calendar',
+                name: 'manager.calendar',
+                component: () => import('@/pages/manager/ManagerCalendarPage.vue'),
+            },
+            {
+                path: 'content',
+                name: 'manager.content',
+                component: () => import('@/pages/manager/ManagerContentPage.vue'),
+            },
+            {
+                path: 'content/:id',
+                name: 'manager.content.edit',
+                component: () => import('@/pages/manager/ManagerPostEditorPage.vue'),
+                props: true,
+            },
+            {
+                path: 'strategy',
+                name: 'manager.strategy',
+                component: () => import('@/pages/manager/ManagerStrategyPage.vue'),
+            },
+            {
+                path: 'analytics',
+                name: 'manager.analytics',
+                component: () => import('@/pages/manager/ManagerAnalyticsPage.vue'),
+            },
+            {
+                path: 'analytics/reports',
+                name: 'manager.reports',
+                component: () => import('@/pages/manager/ManagerReportsPage.vue'),
+            },
+            {
+                path: 'competitors',
+                name: 'manager.competitors',
+                component: () => import('@/pages/manager/ManagerCompetitorsPage.vue'),
+            },
+            {
+                path: 'listening',
+                name: 'manager.listening',
+                component: () => import('@/pages/manager/ManagerListeningPage.vue'),
+            },
+            {
+                path: 'inbox',
+                name: 'manager.inbox',
+                component: () => import('@/pages/manager/ManagerInboxPage.vue'),
+            },
+            {
+                path: 'brand',
+                name: 'manager.brand',
+                component: () => import('@/pages/manager/ManagerBrandPage.vue'),
+            },
+            {
+                path: 'accounts',
+                name: 'manager.accounts',
+                component: () => import('@/pages/manager/ManagerAccountsPage.vue'),
+            },
+            {
+                path: 'ai-chat',
+                name: 'manager.aiChat',
+                component: () => import('@/pages/manager/ManagerAiChatPage.vue'),
+            },
+            {
+                path: 'tutorial',
+                name: 'manager.tutorial',
+                component: () => import('@/pages/manager/ManagerTutorialPage.vue'),
+            },
+        ],
+    },
     // Public client approval (no auth)
     {
         path: '/approve/:token',

@@ -49,3 +49,47 @@ Schedule::command('rss:fetch --cleanup')
     ->everyThirtyMinutes()
     ->withoutOverlapping()
     ->runInBackground();
+
+/*
+|--------------------------------------------------------------------------
+| SM Manager Automation
+|--------------------------------------------------------------------------
+|
+| Social Media Manager scheduled tasks
+|
+*/
+
+// Publish due SM scheduled posts every minute
+Schedule::command('sm:publish-due')
+    ->everyMinute()
+    ->withoutOverlapping();
+
+// Detect crises every 15 minutes
+Schedule::command('sm:detect-crisis')
+    ->everyFifteenMinutes()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Collect platform metrics every 6 hours
+Schedule::command('sm:collect-metrics')
+    ->everySixHours()
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Score recent posts every 6 hours (offset by 1 hour from metrics)
+Schedule::command('sm:score-posts')
+    ->dailyAt('07:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Generate weekly reports on Monday morning
+Schedule::command('sm:weekly-report')
+    ->weeklyOn(1, '06:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Generate monthly content plans on the 28th
+Schedule::command('sm:generate-plans')
+    ->monthlyOn(28, '03:00')
+    ->withoutOverlapping()
+    ->runInBackground();

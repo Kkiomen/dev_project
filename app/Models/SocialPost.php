@@ -72,6 +72,16 @@ class SocialPost extends Model
         return $this->hasMany(PostApproval::class);
     }
 
+    public function postAnalytics(): HasMany
+    {
+        return $this->hasMany(SmPostAnalytics::class);
+    }
+
+    public function performanceScores(): HasMany
+    {
+        return $this->hasMany(SmPerformanceScore::class);
+    }
+
     // Scopes
     public function scopeForUser(Builder $query, User $user): Builder
     {

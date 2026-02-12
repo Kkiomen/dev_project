@@ -75,6 +75,7 @@ class BrandResource extends JsonResource
             Platform::Facebook => ['page_id' => $config['page_id'] ?? null],
             Platform::Instagram => ['account_id' => $config['account_id'] ?? null],
             Platform::YouTube => ['channel_id' => $config['channel_id'] ?? null],
+            default => [],
         };
     }
 }
