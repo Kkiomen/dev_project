@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\PostStatus;
+use App\Enums\PublishStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\RescheduleSocialPostRequest;
 use App\Http\Requests\Api\StoreSocialPostRequest;
@@ -13,17 +14,20 @@ use App\Models\ApprovalToken;
 use App\Models\SocialPost;
 use App\Services\ApprovalService;
 use App\Services\ContentSyncService;
+use App\Services\Publishing\PublisherResolver;
 use App\Services\Webhook\WebhookDispatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 
 class SocialPostController extends Controller
 {
     public function __construct(
         protected ContentSyncService $contentSyncService,
         protected ApprovalService $approvalService,
-        protected WebhookDispatchService $webhookService
+        protected WebhookDispatchService $webhookService,
+        protected PublisherResolver $publisherResolver
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -187,35 +191,82 @@ class SocialPostController extends Controller
         $this->authorize('update', $post);
 
         $request->validate([
-            'platform' => ['required', 'string', 'in:facebook,instagram,youtube'],
+            'platform' => ['required', 'string', 'in:facebook,instagram,youtube,tiktok,linkedin,x'],
         ]);
 
         $platform = $request->platform;
+        $brand = $post->brand;
 
-        // Find the platform post
         $platformPost = $post->platformPosts()->where('platform', $platform)->first();
 
-        if (! $platformPost) {
+        if (!$platformPost) {
             return response()->json(['message' => 'Platform not found for this post'], 404);
         }
 
-        if (! $platformPost->enabled) {
+        if (!$platformPost->enabled) {
             return response()->json(['message' => 'Platform is not enabled for this post'], 400);
         }
 
-        // Update status to scheduled/publishing
-        $post->update([
-            'status' => PostStatus::Scheduled,
-        ]);
+        $post->update(['status' => PostStatus::Scheduled]);
 
-        // TODO: Dispatch job to actually publish to the platform
-        // For now, we just mark it as scheduled
+        try {
+            $adapter = $this->publisherResolver->resolve($brand, $platformPost);
+            $result = $adapter->publish($platformPost);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Post scheduled for publishing to '.$platform,
-            'data' => new SocialPostResource($post->load(['platformPosts', 'media'])),
-        ]);
+            if ($result['success']) {
+                $platformPost->update([
+                    'publish_status' => PublishStatus::Published,
+                    'external_id' => $result['external_id'] ?? null,
+                    'external_url' => $result['external_url'] ?? null,
+                    'published_at' => now(),
+                ]);
+
+                // Check if all platforms are done
+                $allPublished = $post->platformPosts()
+                    ->where('enabled', true)
+                    ->where('publish_status', '!=', PublishStatus::Published->value)
+                    ->doesntExist();
+
+                if ($allPublished) {
+                    $post->update(['status' => PostStatus::Published]);
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Post published to ' . $platform,
+                    'data' => new SocialPostResource($post->fresh()->load(['platformPosts', 'media'])),
+                ]);
+            }
+
+            $platformPost->update([
+                'publish_status' => PublishStatus::Failed,
+                'error_message' => $result['error'] ?? 'Publishing failed',
+            ]);
+            $post->update(['status' => PostStatus::Failed]);
+
+            return response()->json([
+                'success' => false,
+                'error' => $result['error'] ?? 'Publishing failed',
+                'data' => new SocialPostResource($post->fresh()->load(['platformPosts', 'media'])),
+            ], 422);
+        } catch (\Throwable $e) {
+            Log::error('Publish failed', [
+                'post_id' => $post->public_id,
+                'platform' => $platform,
+                'error' => $e->getMessage(),
+            ]);
+
+            $platformPost->update([
+                'publish_status' => PublishStatus::Failed,
+                'error_message' => $e->getMessage(),
+            ]);
+            $post->update(['status' => PostStatus::Failed]);
+
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function approve(Request $request, SocialPost $post): SocialPostResource

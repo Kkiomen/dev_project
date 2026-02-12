@@ -3,21 +3,25 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\PostStatus;
+use App\Enums\PublishStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SocialPostResource;
 use App\Models\PostMedia;
 use App\Models\SocialPost;
+use App\Services\Publishing\PublisherResolver;
 use App\Services\Webhook\WebhookDispatchService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PostAutomationController extends Controller
 {
     public function __construct(
-        protected WebhookDispatchService $webhookService
+        protected WebhookDispatchService $webhookService,
+        protected PublisherResolver $publisherResolver
     ) {}
 
     public function index(Request $request): AnonymousResourceCollection
@@ -248,37 +252,84 @@ class PostAutomationController extends Controller
             ], 400);
         }
 
-        $result = $this->webhookService->publish($post);
+        $brand = $post->brand;
+        $platformPosts = $post->platformPosts()->where('enabled', true)->get();
 
-        if ($result['success']) {
-            // No webhook configured - just return success (nothing to do)
-            if (!empty($result['skipped'])) {
-                return response()->json([
-                    'success' => true,
-                    'skipped' => true,
-                    'message' => $result['message'] ?? 'No publish webhook configured',
+        if ($platformPosts->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'error' => 'No enabled platforms for this post',
+            ], 400);
+        }
+
+        $post->update(['status' => PostStatus::Scheduled]);
+
+        $results = [];
+        $anySuccess = false;
+        $anyFailed = false;
+
+        foreach ($platformPosts as $platformPost) {
+            try {
+                $adapter = $this->publisherResolver->resolve($brand, $platformPost);
+                $result = $adapter->publish($platformPost);
+
+                if ($result['success']) {
+                    $platformPost->update([
+                        'publish_status' => PublishStatus::Published,
+                        'external_id' => $result['external_id'] ?? null,
+                        'external_url' => $result['external_url'] ?? null,
+                        'published_at' => now(),
+                    ]);
+                    $anySuccess = true;
+                } else {
+                    $platformPost->update([
+                        'publish_status' => PublishStatus::Failed,
+                        'error_message' => $result['error'] ?? 'Publishing failed',
+                    ]);
+                    $anyFailed = true;
+                }
+
+                $results[$platformPost->platform->value] = $result;
+            } catch (\Throwable $e) {
+                Log::error('Manual publish failed', [
+                    'post_id' => $post->public_id,
+                    'platform' => $platformPost->platform->value,
+                    'error' => $e->getMessage(),
                 ]);
-            }
 
-            // Async mode: n8n trigger accepted the request, result will come via callback
-            if (!empty($result['async'])) {
-                return response()->json([
-                    'success' => true,
-                    'async' => true,
-                    'message' => $result['message'] ?? 'Publishing in background',
-                ], 202);
+                $platformPost->update([
+                    'publish_status' => PublishStatus::Failed,
+                    'error_message' => $e->getMessage(),
+                ]);
+                $anyFailed = true;
+                $results[$platformPost->platform->value] = [
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
             }
+        }
 
+        // Update main post status
+        if ($anySuccess && !$anyFailed) {
+            $post->update(['status' => PostStatus::Published]);
+        } elseif ($anyFailed) {
+            $post->update(['status' => PostStatus::Failed]);
+        }
+
+        $fresh = $post->fresh()->load(['platformPosts', 'media', 'brand']);
+
+        if ($anySuccess) {
             return response()->json([
                 'success' => true,
-                'message' => $result['message'] ?? 'Post sent for publishing',
-                'data' => new SocialPostResource($post->fresh()->load(['platformPosts', 'media', 'brand'])),
+                'message' => 'Post published',
+                'data' => new SocialPostResource($fresh),
             ]);
         }
 
         return response()->json([
             'success' => false,
-            'error' => $result['error'] ?? 'Publishing failed',
+            'error' => 'Publishing failed for all platforms',
+            'data' => new SocialPostResource($fresh),
         ], 422);
     }
 
