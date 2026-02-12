@@ -3797,7 +3797,11 @@
                 "entertaining": "Rozrywkowe",
                 "promotional": "Promocyjne",
                 "engaging": "Angażujące"
-            }
+            },
+            "generateWithAi": "Generuj z AI",
+            "generating": "Generowanie...",
+            "generated": "Strategia wygenerowana przez AI",
+            "generateError": "Nie udało się wygenerować strategii"
         },
         "brand": {
             "title": "Brand Kit",
@@ -3846,7 +3850,11 @@
             },
             "addHashtag": "Dodaj hashtag",
             "guidelinesNotes": "Notatki wytycznych marki",
-            "guidelinesPlaceholder": "Dodatkowe uwagi dotyczące wytycznych marki, co robić a czego unikać itp."
+            "guidelinesPlaceholder": "Dodatkowe uwagi dotyczące wytycznych marki, co robić a czego unikać itp.",
+            "generateWithAi": "Generuj z AI",
+            "generating": "Generowanie...",
+            "generated": "Brand kit wygenerowany przez AI",
+            "generateError": "Nie udało się wygenerować brand kitu"
         },
         "accounts": {
             "title": "Połączone Konta",

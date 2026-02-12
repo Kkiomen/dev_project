@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\SmBrandKitResource;
 use App\Models\Brand;
 use App\Models\SmBrandKit;
+use App\Services\SmManager\SmBrandKitGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -67,6 +68,26 @@ class SmBrandKitController extends Controller
         $kit->update($validated);
 
         return new SmBrandKitResource($kit);
+    }
+
+    public function generate(Request $request, Brand $brand, SmBrandKitGeneratorService $generator): JsonResponse
+    {
+        $this->authorize('update', $brand);
+
+        $result = $generator->generateBrandKit($brand);
+
+        if (!$result['success']) {
+            $status = ($result['error_code'] ?? '') === 'no_api_key' ? 422 : 500;
+            return response()->json(['success' => false, 'error' => $result['error']], $status);
+        }
+
+        $kit = $brand->smBrandKit ?? $brand->smBrandKit()->create([]);
+        $kit->update($result['brand_kit']);
+
+        return response()->json([
+            'success' => true,
+            'data' => new SmBrandKitResource($kit->fresh()),
+        ]);
     }
 
     public function uploadLogo(Request $request, Brand $brand): SmBrandKitResource

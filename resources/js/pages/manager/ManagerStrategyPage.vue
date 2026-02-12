@@ -10,6 +10,7 @@ const managerStore = useManagerStore();
 const toast = useToast();
 
 const saving = ref(false);
+const generating = ref(false);
 const activeTab = ref('pillars');
 
 // Local editable state
@@ -156,6 +157,18 @@ const handleSave = async () => {
     }
 };
 
+const handleGenerate = async () => {
+    generating.value = true;
+    try {
+        await managerStore.generateStrategy();
+        toast.success(t('manager.strategy.generated'));
+    } catch (error) {
+        toast.error(t('manager.strategy.generateError'));
+    } finally {
+        generating.value = false;
+    }
+};
+
 const handleActivate = async () => {
     try {
         await managerStore.activateStrategy();
@@ -195,8 +208,22 @@ onMounted(() => {
                     {{ t('manager.strategy.activate') }}
                 </button>
                 <button
+                    @click="handleGenerate"
+                    :disabled="generating || saving"
+                    class="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-purple-600 text-white hover:bg-purple-500 transition-colors disabled:opacity-50"
+                >
+                    <svg v-if="generating" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                    </svg>
+                    <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09ZM18.259 8.715 18 9.75l-.259-1.035a3.375 3.375 0 0 0-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 0 0 2.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 0 0 2.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 0 0-2.455 2.456Z" />
+                    </svg>
+                    {{ generating ? t('manager.strategy.generating') : t('manager.strategy.generateWithAi') }}
+                </button>
+                <button
                     @click="handleSave"
-                    :disabled="saving"
+                    :disabled="saving || generating"
                     class="px-4 py-2 text-sm font-medium rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition-colors disabled:opacity-50"
                 >
                     {{ saving ? t('common.saving') : t('common.save') }}

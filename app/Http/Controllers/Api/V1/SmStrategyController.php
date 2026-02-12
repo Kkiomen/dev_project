@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\SmStrategyResource;
 use App\Models\Brand;
 use App\Models\SmStrategy;
+use App\Services\SmManager\SmStrategyGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -83,6 +84,31 @@ class SmStrategyController extends Controller
         }
 
         return new SmStrategyResource($strategy->fresh());
+    }
+
+    public function generate(Request $request, Brand $brand, SmStrategyGeneratorService $generator): JsonResponse
+    {
+        $this->authorize('update', $brand);
+
+        $result = $generator->generateStrategy($brand);
+
+        if (!$result['success']) {
+            $status = ($result['error_code'] ?? '') === 'no_api_key' ? 422 : 500;
+            return response()->json(['success' => false, 'error' => $result['error']], $status);
+        }
+
+        $strategy = $brand->smStrategies()->latest()->first();
+
+        if ($strategy) {
+            $strategy->update($result['strategy']);
+        } else {
+            $strategy = $brand->smStrategies()->create(array_merge($result['strategy'], ['status' => 'draft']));
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => new SmStrategyResource($strategy->fresh()),
+        ]);
     }
 
     public function activate(Request $request, Brand $brand): SmStrategyResource

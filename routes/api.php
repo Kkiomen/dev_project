@@ -575,6 +575,7 @@ $v1Routes = function () {
     Route::prefix('brands/{brand}/sm-brand-kit')->group(function () {
         Route::get('/', [SmBrandKitController::class, 'show']);
         Route::put('/', [SmBrandKitController::class, 'update']);
+        Route::post('generate', [SmBrandKitController::class, 'generate']);
         Route::post('logo', [SmBrandKitController::class, 'uploadLogo']);
         Route::delete('logo', [SmBrandKitController::class, 'deleteLogo']);
     });
@@ -611,6 +612,7 @@ $v1Routes = function () {
         Route::put('/', [SmStrategyController::class, 'update']);
         Route::get('all', [SmStrategyController::class, 'index']);
         Route::post('activate', [SmStrategyController::class, 'activate']);
+        Route::post('generate', [SmStrategyController::class, 'generate']);
     });
 
     // === SM CONTENT PLANS (Social Media Manager) ===

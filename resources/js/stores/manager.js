@@ -287,6 +287,15 @@ export const useManagerStore = defineStore('manager', {
             }
         },
 
+        async generateBrandKit() {
+            const brandId = this.currentBrandId;
+            if (!brandId) return;
+
+            const response = await axios.post(`/api/v1/brands/${brandId}/sm-brand-kit/generate`);
+            if (response.data?.data) this.brandKit = response.data.data;
+            return response.data;
+        },
+
         // === Design Templates ===
         async fetchDesignTemplates(params = {}) {
             const brandId = this.currentBrandId;
@@ -482,6 +491,15 @@ export const useManagerStore = defineStore('manager', {
             } catch (error) {
                 throw error;
             }
+        },
+
+        async generateStrategy() {
+            const brandId = this.currentBrandId;
+            if (!brandId) return;
+
+            const response = await axios.post(`/api/v1/brands/${brandId}/sm-strategy/generate`);
+            if (response.data?.data) this.strategy = response.data.data;
+            return response.data;
         },
 
         // === Content Plans ===
