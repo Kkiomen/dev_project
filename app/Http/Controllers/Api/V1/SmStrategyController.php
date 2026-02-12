@@ -28,7 +28,8 @@ class SmStrategyController extends Controller
     {
         $this->authorize('view', $brand);
 
-        $strategy = $brand->smStrategies()->active()->latest()->first();
+        $strategy = $brand->smStrategies()->active()->latest()->first()
+            ?? $brand->smStrategies()->latest()->first();
 
         if (!$strategy) {
             $strategy = $brand->smStrategies()->create([
