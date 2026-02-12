@@ -14,9 +14,10 @@ const toast = useToast();
 
 const saving = ref(false);
 const generating = ref(false);
-const activeTab = ref('pillars');
+const activeTab = ref('platforms');
 
 // Local editable state
+const activePlatforms = ref([]);
 const contentPillars = ref([]);
 const postingFrequency = ref({
     instagram: 5,
@@ -56,6 +57,7 @@ const platforms = [
 ];
 
 const tabs = [
+    { id: 'platforms', label: 'manager.strategy.tabs.platforms' },
     { id: 'pillars', label: 'manager.strategy.tabs.pillars' },
     { id: 'frequency', label: 'manager.strategy.tabs.frequency' },
     { id: 'audience', label: 'manager.strategy.tabs.audience' },
@@ -78,9 +80,24 @@ const totalWeeklyPosts = computed(() => {
     return Object.values(postingFrequency.value).reduce((sum, val) => sum + (val || 0), 0);
 });
 
+const filteredPlatforms = computed(() => {
+    if (activePlatforms.value.length === 0) return platforms;
+    return platforms.filter(p => activePlatforms.value.includes(p.id));
+});
+
+const togglePlatform = (platformId) => {
+    const idx = activePlatforms.value.indexOf(platformId);
+    if (idx === -1) {
+        activePlatforms.value.push(platformId);
+    } else {
+        activePlatforms.value.splice(idx, 1);
+    }
+};
+
 // Sync from store
 watch(() => managerStore.strategy, (strategy) => {
     if (!strategy) return;
+    if (Array.isArray(strategy.active_platforms)) activePlatforms.value = [...strategy.active_platforms];
     if (Array.isArray(strategy.content_pillars)) contentPillars.value = [...strategy.content_pillars];
     if (strategy.posting_frequency && typeof strategy.posting_frequency === 'object') postingFrequency.value = { ...postingFrequency.value, ...strategy.posting_frequency };
     if (strategy.target_audience && typeof strategy.target_audience === 'object') targetAudience.value = { ...targetAudience.value, ...strategy.target_audience };
@@ -144,6 +161,7 @@ const handleSave = async () => {
     saving.value = true;
     try {
         await managerStore.updateStrategy({
+            active_platforms: activePlatforms.value,
             content_pillars: contentPillars.value,
             posting_frequency: postingFrequency.value,
             target_audience: targetAudience.value,
@@ -283,6 +301,56 @@ watch(() => managerStore.currentBrandId, (brandId) => {
                 </button>
             </div>
 
+            <!-- Platforms Tab -->
+            <div v-if="activeTab === 'platforms'" class="space-y-4">
+                <div class="rounded-xl bg-gray-900 border border-gray-800 p-6">
+                    <div class="mb-6">
+                        <h3 class="text-base font-semibold text-white">{{ t('manager.strategy.activePlatforms') }}</h3>
+                        <p class="mt-1 text-sm text-gray-400">{{ t('manager.strategy.activePlatformsDesc') }}</p>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <button
+                            v-for="platform in platforms"
+                            :key="platform.id"
+                            @click="togglePlatform(platform.id)"
+                            class="flex items-center gap-4 p-4 rounded-xl border-2 transition-all text-left"
+                            :class="activePlatforms.includes(platform.id)
+                                ? 'border-indigo-500 bg-indigo-500/10'
+                                : 'border-gray-800 opacity-60 hover:opacity-80 hover:border-gray-700'"
+                        >
+                            <div
+                                class="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold shrink-0"
+                                :class="activePlatforms.includes(platform.id)
+                                    ? 'bg-indigo-500/20 text-indigo-300'
+                                    : 'bg-gray-800 text-gray-400'"
+                            >
+                                {{ platform.icon }}
+                            </div>
+                            <span class="text-sm font-medium" :class="activePlatforms.includes(platform.id) ? 'text-white' : 'text-gray-400'">
+                                {{ platform.name }}
+                            </span>
+                            <div class="ml-auto">
+                                <div
+                                    class="w-5 h-5 rounded border-2 flex items-center justify-center transition-colors"
+                                    :class="activePlatforms.includes(platform.id)
+                                        ? 'border-indigo-500 bg-indigo-500'
+                                        : 'border-gray-600'"
+                                >
+                                    <svg v-if="activePlatforms.includes(platform.id)" class="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                                    </svg>
+                                </div>
+                            </div>
+                        </button>
+                    </div>
+
+                    <p v-if="activePlatforms.length === 0" class="mt-4 text-sm text-yellow-400">
+                        {{ t('manager.strategy.noPlatformsSelected') }}
+                    </p>
+                </div>
+            </div>
+
             <!-- Content Pillars Tab -->
             <div v-if="activeTab === 'pillars'" class="space-y-4">
                 <div class="rounded-xl bg-gray-900 border border-gray-800 p-6">
@@ -347,7 +415,7 @@ watch(() => managerStore.currentBrandId, (brandId) => {
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        <div v-for="platform in platforms" :key="platform.id" class="flex items-center justify-between p-4 rounded-lg bg-gray-800/50">
+                        <div v-for="platform in filteredPlatforms" :key="platform.id" class="flex items-center justify-between p-4 rounded-lg bg-gray-800/50">
                             <div class="flex items-center gap-3">
                                 <div class="w-8 h-8 rounded-lg bg-gray-700 flex items-center justify-center text-xs font-bold text-gray-300">
                                     {{ platform.icon }}

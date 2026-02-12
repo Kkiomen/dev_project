@@ -11,6 +11,7 @@ class SmStrategyResource extends JsonResource
     {
         return [
             'id' => $this->public_id,
+            'active_platforms' => $this->active_platforms,
             'content_pillars' => $this->content_pillars,
             'posting_frequency' => $this->posting_frequency,
             'target_audience' => $this->target_audience,

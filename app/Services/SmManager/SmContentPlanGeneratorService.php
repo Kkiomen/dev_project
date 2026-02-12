@@ -406,6 +406,13 @@ Topics and descriptions must be written in {$languageName}.
 Distribute posts evenly across the month, respecting pillar percentages and content mix.
 PROMPT;
 
+        // Filter to only active platforms
+        $activePlatforms = $strategy->active_platforms;
+        if (!empty($activePlatforms)) {
+            $activePlatformsList = implode(', ', $activePlatforms);
+            $prompt .= "\n\nIMPORTANT: Only generate slots for the following platforms: {$activePlatformsList}. Do NOT create slots for any other platforms.";
+        }
+
         if (!empty($previousTopics)) {
             $topicsList = implode("\n", array_map(fn ($t) => "- {$t}", $previousTopics));
             $prompt .= <<<PROMPT

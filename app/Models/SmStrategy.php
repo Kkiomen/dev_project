@@ -16,6 +16,7 @@ class SmStrategy extends Model
 
     protected $fillable = [
         'brand_id',
+        'active_platforms',
         'content_pillars',
         'posting_frequency',
         'target_audience',
@@ -29,6 +30,7 @@ class SmStrategy extends Model
     ];
 
     protected $casts = [
+        'active_platforms' => 'array',
         'content_pillars' => 'array',
         'posting_frequency' => 'array',
         'target_audience' => 'array',

@@ -55,6 +55,8 @@ class SmStrategyController extends Controller
         $this->authorize('update', $brand);
 
         $validated = $request->validate([
+            'active_platforms' => ['nullable', 'array'],
+            'active_platforms.*' => ['string', 'in:instagram,facebook,tiktok,linkedin,x,youtube'],
             'content_pillars' => ['nullable', 'array'],
             'content_pillars.*.name' => ['required_with:content_pillars', 'string', 'max:255'],
             'content_pillars.*.description' => ['nullable', 'string', 'max:500'],

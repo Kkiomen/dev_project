@@ -3403,7 +3403,23 @@
             "emptyDay": "No posts",
             "view": {
                 "month": "Month",
-                "week": "Week"
+                "week": "Week",
+                "list": "List"
+            },
+            "listView": {
+                "date": "Date",
+                "time": "Time",
+                "platform": "Platform",
+                "type": "Type",
+                "pillar": "Pillar",
+                "topic": "Topic",
+                "description": "Description",
+                "actions": "",
+                "clickToEdit": "Click to edit",
+                "noTopic": "No topic",
+                "saved": "Slot updated",
+                "deleted": "Slot removed",
+                "confirmDelete": "Delete this slot?"
             },
             "weekdays": {
                 "mon": "Mon",
@@ -3771,6 +3787,7 @@
             "statusActive": "Active",
             "statusDraft": "Draft",
             "tabs": {
+                "platforms": "Platforms",
                 "pillars": "Content Pillars",
                 "frequency": "Posting Frequency",
                 "audience": "Target Audience",
@@ -3778,6 +3795,9 @@
                 "competitors": "Competitors",
                 "contentMix": "Content Mix"
             },
+            "activePlatforms": "Active Platforms",
+            "activePlatformsDesc": "Select the platforms you want to publish content on",
+            "noPlatformsSelected": "Select at least one platform",
             "contentPillars": "Content Pillars",
             "noPillars": "No content pillars defined yet",
             "pillarName": "Pillar name",

@@ -3406,7 +3406,23 @@
             "emptyDay": "Brak postów",
             "view": {
                 "month": "Miesiąc",
-                "week": "Tydzień"
+                "week": "Tydzień",
+                "list": "Lista"
+            },
+            "listView": {
+                "date": "Data",
+                "time": "Czas",
+                "platform": "Platforma",
+                "type": "Typ",
+                "pillar": "Filar",
+                "topic": "Temat",
+                "description": "Opis",
+                "actions": "",
+                "clickToEdit": "Kliknij aby edytować",
+                "noTopic": "Brak tematu",
+                "saved": "Slot zaktualizowany",
+                "deleted": "Slot usunięty",
+                "confirmDelete": "Usunąć ten slot?"
             },
             "weekdays": {
                 "mon": "Pon",
@@ -3774,6 +3790,7 @@
             "statusActive": "Aktywna",
             "statusDraft": "Szkic",
             "tabs": {
+                "platforms": "Platformy",
                 "pillars": "Filary treści",
                 "frequency": "Częstotliwość",
                 "audience": "Grupa docelowa",
@@ -3781,6 +3798,9 @@
                 "competitors": "Konkurencja",
                 "contentMix": "Mix treści"
             },
+            "activePlatforms": "Aktywne platformy",
+            "activePlatformsDesc": "Wybierz platformy, na których chcesz publikować treści",
+            "noPlatformsSelected": "Wybierz co najmniej jedną platformę",
             "contentPillars": "Filary treści",
             "noPillars": "Brak zdefiniowanych filarów treści",
             "pillarName": "Nazwa filaru",

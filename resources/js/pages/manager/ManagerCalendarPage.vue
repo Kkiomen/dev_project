@@ -6,6 +6,7 @@ import { useToast } from '@/composables/useToast';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import SlotDetailsModal from '@/components/manager/SlotDetailsModal.vue';
 import AddSlotModal from '@/components/manager/AddSlotModal.vue';
+import PlanSlotsTable from '@/components/manager/PlanSlotsTable.vue';
 
 const { t } = useI18n();
 const managerStore = useManagerStore();
@@ -124,7 +125,9 @@ const currentWeekLabel = computed(() => {
 });
 
 const navigationLabel = computed(() => {
-    return currentView.value === 'month' ? currentMonthLabel.value : currentWeekLabel.value;
+    if (currentView.value === 'month') return currentMonthLabel.value;
+    if (currentView.value === 'week') return currentWeekLabel.value;
+    return currentMonthLabel.value;
 });
 
 const slots = computed(() => {
@@ -152,6 +155,12 @@ const hasAnySlots = computed(() => {
 
 const plannedSlotsCount = computed(() => {
     return slots.value.filter(s => s.status === 'planned').length;
+});
+
+const pillars = computed(() => {
+    const cp = managerStore.strategy?.content_pillars;
+    if (!cp || !Array.isArray(cp)) return [];
+    return cp.map(p => typeof p === 'string' ? p : (p.name || p.label || ''));
 });
 
 // --- Navigation ---
@@ -385,7 +394,7 @@ watch(() => managerStore.currentBrandId, () => {
                 <!-- View toggle -->
                 <div class="flex items-center rounded-lg bg-gray-900 border border-gray-800 p-0.5">
                     <button
-                        v-for="view in ['month', 'week']"
+                        v-for="view in ['month', 'week', 'list']"
                         :key="view"
                         @click="currentView = view"
                         class="px-3 py-1.5 text-xs font-medium rounded-md transition-colors"
@@ -666,7 +675,7 @@ watch(() => managerStore.currentBrandId, () => {
             </div>
 
             <!-- ==================== WEEK VIEW ==================== -->
-            <div v-else class="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+            <div v-else-if="currentView === 'week'" class="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
                 <!-- Desktop: 7-column layout -->
                 <div class="hidden sm:grid grid-cols-7">
                     <!-- Day columns -->
@@ -810,6 +819,15 @@ watch(() => managerStore.currentBrandId, () => {
                     </div>
                 </div>
             </div>
+
+            <!-- ==================== LIST VIEW ==================== -->
+            <PlanSlotsTable
+                v-else
+                :slots="slots"
+                :plan-id="managerStore.currentPlan?.id"
+                :pillars="pillars"
+                @updated="handleSlotUpdated"
+            />
         </div>
 
         <!-- Slot Details Modal -->
