@@ -3,12 +3,16 @@
 namespace App\Jobs\SmManager;
 
 use App\Models\Brand;
+use App\Models\SmContentPlan;
+use App\Models\SmStrategy;
 use App\Services\SmManager\SmContentPlanGeneratorService;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 class SmGenerateContentPlanJob implements ShouldQueue
@@ -17,70 +21,52 @@ class SmGenerateContentPlanJob implements ShouldQueue
 
     public int $timeout = 180;
 
-    public int $tries = 3;
+    public int $tries = 2;
 
     public int $backoff = 30;
 
     public function __construct(
+        protected SmContentPlan $plan,
         protected Brand $brand,
-        protected int $month,
-        protected int $year
+        protected SmStrategy $strategy,
+        protected ?string $fromDate = null
     ) {}
 
     public function handle(SmContentPlanGeneratorService $service): void
     {
-        try {
-            $strategy = $this->brand->smStrategies()->active()->latest()->first();
+        $from = $this->fromDate ? Carbon::parse($this->fromDate) : null;
 
-            if (!$strategy) {
-                Log::warning('SmGenerateContentPlanJob: no active strategy found', [
-                    'brand_id' => $this->brand->id,
-                    'month' => $this->month,
-                    'year' => $this->year,
-                ]);
+        $result = $service->generateSlotsForPlan($this->plan, $this->brand, $this->strategy, $from);
 
-                throw new \RuntimeException('No active strategy found for brand');
-            }
-
-            $result = $service->generateMonthlyPlan($this->brand, $strategy, $this->month, $this->year);
-
-            if (!$result['success']) {
-                Log::warning('SmGenerateContentPlanJob: service returned failure', [
-                    'brand_id' => $this->brand->id,
-                    'month' => $this->month,
-                    'year' => $this->year,
-                    'error' => $result['error'] ?? 'Unknown error',
-                    'error_code' => $result['error_code'] ?? null,
-                ]);
-
-                throw new \RuntimeException($result['error'] ?? 'Content plan generation failed');
-            }
-
-            Log::info('SmGenerateContentPlanJob: content plan generated', [
+        if (!$result['success']) {
+            Log::warning('SmGenerateContentPlanJob: service returned failure', [
                 'brand_id' => $this->brand->id,
-                'plan_id' => $result['plan']->id,
-                'month' => $this->month,
-                'year' => $this->year,
-                'slots_created' => $result['slots_created'],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('SmGenerateContentPlanJob: failed', [
-                'brand_id' => $this->brand->id,
-                'month' => $this->month,
-                'year' => $this->year,
-                'error' => $e->getMessage(),
+                'plan_id' => $this->plan->id,
+                'error' => $result['error'] ?? 'Unknown error',
             ]);
 
-            throw $e;
+            $this->plan->update(['status' => 'draft']);
+
+            throw new \RuntimeException($result['error'] ?? 'Content plan generation failed');
         }
+
+        Log::info('SmGenerateContentPlanJob: content plan generated', [
+            'brand_id' => $this->brand->id,
+            'plan_id' => $this->plan->id,
+            'slots_created' => $result['slots_created'],
+        ]);
     }
 
     public function failed(\Throwable $exception): void
     {
+        $cacheKey = "content_plan_gen:{$this->plan->id}";
+        Cache::put($cacheKey, ['step' => 'failed', 'error' => $exception->getMessage()], now()->addMinutes(10));
+
+        $this->plan->update(['status' => 'draft']);
+
         Log::error('SmGenerateContentPlanJob: job failed permanently', [
             'brand_id' => $this->brand->id,
-            'month' => $this->month,
-            'year' => $this->year,
+            'plan_id' => $this->plan->id,
             'error' => $exception->getMessage(),
         ]);
     }

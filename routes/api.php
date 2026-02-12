@@ -621,6 +621,7 @@ $v1Routes = function () {
         Route::get('current', [SmContentPlanController::class, 'current']);
         Route::post('generate', [SmContentPlanController::class, 'generate']);
         Route::get('{smContentPlan}', [SmContentPlanController::class, 'show']);
+        Route::get('{smContentPlan}/generate-status', [SmContentPlanController::class, 'generateStatus']);
         Route::post('{smContentPlan}/slots', [SmContentPlanController::class, 'addSlot']);
         Route::put('{smContentPlan}/slots/{slot}', [SmContentPlanController::class, 'updateSlot']);
         Route::delete('{smContentPlan}/slots/{slot}', [SmContentPlanController::class, 'removeSlot']);

@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue';
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useManagerStore } from '@/stores/manager';
 import { useToast } from '@/composables/useToast';
@@ -20,6 +20,15 @@ const showAddSlotModal = ref(false);
 const addSlotDate = ref('');
 const bulkGenerating = ref(false);
 const planGenerating = ref(false);
+const generatingPlanId = ref(null);
+const generationStep = ref('');
+const generationSlotsCreated = ref(0);
+const generationTotalSlots = ref(0);
+const pollTimer = ref(null);
+const generationFailed = ref(false);
+
+const POLL_INTERVAL = 3000;
+const MAX_POLL_TIME = 200000;
 
 // --- Platform colors ---
 const platformColors = {
@@ -211,23 +220,83 @@ const handleGenerateAll = async () => {
     }
 };
 
+const stopPolling = () => {
+    if (pollTimer.value) {
+        clearInterval(pollTimer.value);
+        pollTimer.value = null;
+    }
+};
+
+const startPolling = (planId) => {
+    stopPolling();
+    const startTime = Date.now();
+
+    pollTimer.value = setInterval(async () => {
+        if (Date.now() - startTime > MAX_POLL_TIME) {
+            stopPolling();
+            planGenerating.value = false;
+            generationFailed.value = true;
+            toast.error(t('manager.calendar.progress.timeout'));
+            return;
+        }
+
+        const data = await managerStore.fetchPlanGenerationStatus(planId);
+        if (!data) return;
+
+        generationStep.value = data.step;
+        generationSlotsCreated.value = data.slots_created || 0;
+        generationTotalSlots.value = data.total_slots || 0;
+
+        if (data.status !== 'generating' && data.step === 'done') {
+            stopPolling();
+            generationStep.value = 'done';
+
+            setTimeout(async () => {
+                await managerStore.fetchCurrentPlan();
+                planGenerating.value = false;
+                generatingPlanId.value = null;
+                toast.success(t('manager.calendar.planGenerated'));
+            }, 1000);
+        } else if (data.step === 'failed') {
+            stopPolling();
+            planGenerating.value = false;
+            generatingPlanId.value = null;
+            generationFailed.value = true;
+            await managerStore.fetchCurrentPlan();
+            toast.error(data.error === 'no_api_key'
+                ? t('manager.addSlot.noApiKey')
+                : t('manager.calendar.planGenerateError'));
+        }
+    }, POLL_INTERVAL);
+};
+
 const handleGeneratePlan = async (mode = 'full') => {
     if (planGenerating.value) return;
 
     planGenerating.value = true;
+    generationFailed.value = false;
+    generationStep.value = 'queued';
+    generationSlotsCreated.value = 0;
+    generationTotalSlots.value = 0;
+
     try {
         const month = currentDate.value.getMonth() + 1;
         const year = currentDate.value.getFullYear();
         const params = { month, year };
 
         if (mode === 'from_today') {
-            const today = new Date();
-            params.fromDate = today.toISOString().split('T')[0];
+            params.fromDate = new Date().toISOString().split('T')[0];
         }
 
-        await managerStore.generateContentPlan(params);
-        toast.success(t('manager.calendar.planGenerated'));
+        const response = await managerStore.generateContentPlan(params);
+        const planId = response?.data?.id || managerStore.currentPlan?.id;
+
+        if (planId) {
+            generatingPlanId.value = planId;
+            startPolling(planId);
+        }
     } catch (error) {
+        planGenerating.value = false;
         const errorCode = error.response?.data?.error;
         if (errorCode === 'no_api_key') {
             toast.error(t('manager.addSlot.noApiKey'));
@@ -236,8 +305,6 @@ const handleGeneratePlan = async (mode = 'full') => {
         } else {
             toast.error(t('manager.calendar.planGenerateError'));
         }
-    } finally {
-        planGenerating.value = false;
     }
 };
 
@@ -263,7 +330,26 @@ onMounted(() => {
     }
 });
 
+onUnmounted(() => {
+    stopPolling();
+});
+
+// Resume polling if plan is already generating
+watch(() => managerStore.currentPlan?.status, (status) => {
+    if (status === 'generating' && !pollTimer.value) {
+        const planId = managerStore.currentPlan?.id;
+        if (planId) {
+            planGenerating.value = true;
+            generatingPlanId.value = planId;
+            generationStep.value = 'calling_ai';
+            startPolling(planId);
+        }
+    }
+});
+
 watch(() => managerStore.currentBrandId, () => {
+    stopPolling();
+    planGenerating.value = false;
     managerStore.fetchCurrentPlan();
     managerStore.fetchStrategy();
 });
@@ -348,8 +434,91 @@ watch(() => managerStore.currentBrandId, () => {
         </div>
 
         <!-- Loading state -->
-        <div v-if="managerStore.contentPlansLoading" class="flex items-center justify-center py-24">
+        <div v-if="managerStore.contentPlansLoading && !planGenerating" class="flex items-center justify-center py-24">
             <LoadingSpinner size="lg" />
+        </div>
+
+        <!-- Plan generation progress -->
+        <div
+            v-else-if="planGenerating"
+            class="rounded-xl bg-gray-900 border border-gray-800 p-8 sm:p-12 flex flex-col items-center justify-center text-center"
+        >
+            <div class="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-6">
+                <svg class="w-8 h-8 text-purple-400 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">{{ t('manager.calendar.progress.title') }}</h3>
+            <p class="text-sm text-gray-400 mb-8">{{ t('manager.calendar.progress.subtitle') }}</p>
+
+            <!-- Steps -->
+            <div class="w-full max-w-xs space-y-4">
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                        :class="generationStep === 'queued'
+                            ? 'bg-purple-500/20 ring-2 ring-purple-500/50'
+                            : 'bg-emerald-500/20'"
+                    >
+                        <svg v-if="generationStep === 'queued'" class="w-3.5 h-3.5 text-purple-400 animate-pulse" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
+                        <svg v-else class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                    </div>
+                    <span class="text-sm" :class="generationStep === 'queued' ? 'text-white' : 'text-gray-500'">
+                        {{ t('manager.calendar.progress.stepQueued') }}
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                        :class="generationStep === 'calling_ai'
+                            ? 'bg-purple-500/20 ring-2 ring-purple-500/50'
+                            : ['creating_slots', 'done'].includes(generationStep)
+                                ? 'bg-emerald-500/20'
+                                : 'bg-gray-800'"
+                    >
+                        <svg v-if="generationStep === 'calling_ai'" class="w-3.5 h-3.5 text-purple-400 animate-pulse" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
+                        <svg v-else-if="['creating_slots', 'done'].includes(generationStep)" class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        <span v-else class="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                    </div>
+                    <span class="text-sm" :class="generationStep === 'calling_ai' ? 'text-white' : ['creating_slots', 'done'].includes(generationStep) ? 'text-gray-500' : 'text-gray-600'">
+                        {{ t('manager.calendar.progress.stepAi') }}
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                        :class="generationStep === 'creating_slots'
+                            ? 'bg-purple-500/20 ring-2 ring-purple-500/50'
+                            : generationStep === 'done'
+                                ? 'bg-emerald-500/20'
+                                : 'bg-gray-800'"
+                    >
+                        <svg v-if="generationStep === 'creating_slots'" class="w-3.5 h-3.5 text-purple-400 animate-pulse" fill="currentColor" viewBox="0 0 8 8"><circle cx="4" cy="4" r="4"/></svg>
+                        <svg v-else-if="generationStep === 'done'" class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        <span v-else class="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                    </div>
+                    <span class="text-sm" :class="generationStep === 'creating_slots' ? 'text-white' : generationStep === 'done' ? 'text-gray-500' : 'text-gray-600'">
+                        {{ t('manager.calendar.progress.stepSlots') }}
+                        <span v-if="generationStep === 'creating_slots' && generationTotalSlots > 0" class="text-gray-500">
+                            ({{ generationSlotsCreated }}/{{ generationTotalSlots }})
+                        </span>
+                    </span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <div class="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                        :class="generationStep === 'done' ? 'bg-emerald-500/20' : 'bg-gray-800'"
+                    >
+                        <svg v-if="generationStep === 'done'" class="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/></svg>
+                        <span v-else class="w-1.5 h-1.5 rounded-full bg-gray-600" />
+                    </div>
+                    <span class="text-sm" :class="generationStep === 'done' ? 'text-emerald-400 font-medium' : 'text-gray-600'">
+                        {{ t('manager.calendar.progress.stepDone') }}
+                    </span>
+                </div>
+            </div>
+
+            <p class="text-xs text-gray-500 mt-8">{{ t('manager.calendar.progress.patience') }}</p>
         </div>
 
         <!-- Empty state -->

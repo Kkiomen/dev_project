@@ -3431,7 +3431,17 @@
             "planGenerated": "Plan treści wygenerowany!",
             "planGenerateError": "Nie udało się wygenerować planu treści",
             "addManually": "lub dodaj sloty ręcznie",
-            "noActiveStrategy": "Najpierw aktywuj strategię"
+            "noActiveStrategy": "Najpierw aktywuj strategię",
+            "progress": {
+                "title": "Generowanie planu treści...",
+                "subtitle": "AI tworzy spersonalizowany kalendarz treści na podstawie Twojej strategii",
+                "stepQueued": "Rozpoczynanie generowania",
+                "stepAi": "AI planuje Twoje treści",
+                "stepSlots": "Tworzenie slotów w kalendarzu",
+                "stepDone": "Plan gotowy!",
+                "timeout": "Generowanie trwa zbyt długo. Spróbuj ponownie.",
+                "patience": "To zwykle zajmuje 30-60 sekund"
+            }
         },
         "addSlot": {
             "title": "Dodaj slot",

@@ -5,14 +5,18 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\SmContentPlanResource;
 use App\Http\Resources\SmContentPlanSlotResource;
+use App\Jobs\SmManager\SmGenerateContentPlanJob;
 use App\Jobs\SmManager\SmGeneratePostContentJob;
 use App\Models\Brand;
+use App\Models\BrandAiKey;
+use App\Enums\AiProvider;
 use App\Models\SmContentPlan;
 use App\Models\SmContentPlanSlot;
 use App\Services\SmManager\SmContentPlanGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Cache;
 
 class SmContentPlanController extends Controller
 {
@@ -150,7 +154,7 @@ class SmContentPlanController extends Controller
         ]);
     }
 
-    public function generate(Request $request, Brand $brand, SmContentPlanGeneratorService $generator): JsonResponse
+    public function generate(Request $request, Brand $brand): JsonResponse
     {
         $this->authorize('update', $brand);
 
@@ -160,27 +164,75 @@ class SmContentPlanController extends Controller
             return response()->json(['error' => 'no_active_strategy', 'message' => 'No active strategy found'], 422);
         }
 
-        $month = $request->input('month', now()->month);
-        $year = $request->input('year', now()->year);
+        $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::OpenAi);
 
-        $fromDate = $request->input('from_date')
-            ? \Carbon\Carbon::parse($request->input('from_date'))
-            : null;
-
-        $result = $generator->generateMonthlyPlan($brand, $strategy, (int) $month, (int) $year, $fromDate);
-
-        if (!$result['success']) {
-            $status = ($result['error_code'] ?? '') === 'no_api_key' ? 422 : 500;
-
-            return response()->json([
-                'error' => $result['error_code'] ?? 'generation_failed',
-                'message' => $result['error'] ?? 'Failed to generate content plan',
-            ], $status);
+        if (!$apiKey) {
+            return response()->json(['error' => 'no_api_key', 'message' => 'No OpenAI API key configured for this brand'], 422);
         }
 
-        $result['plan']->load(['strategy', 'slots' => fn ($q) => $q->orderBy('scheduled_date')->orderBy('scheduled_time')]);
+        $month = (int) $request->input('month', now()->month);
+        $year = (int) $request->input('year', now()->year);
+        $fromDate = $request->input('from_date');
 
-        return response()->json(['data' => new SmContentPlanResource($result['plan'])]);
+        $plan = $brand->smContentPlans()
+            ->where('month', $month)
+            ->where('year', $year)
+            ->first();
+
+        if ($plan) {
+            $plan->slots()->delete();
+            $plan->update([
+                'sm_strategy_id' => $strategy->id,
+                'status' => 'generating',
+                'summary' => null,
+                'total_slots' => 0,
+                'completed_slots' => 0,
+                'generated_at' => null,
+            ]);
+        } else {
+            $plan = $brand->smContentPlans()->create([
+                'sm_strategy_id' => $strategy->id,
+                'month' => $month,
+                'year' => $year,
+                'status' => 'generating',
+            ]);
+        }
+
+        Cache::put("content_plan_gen:{$plan->id}", ['step' => 'queued', 'slots_created' => 0], now()->addMinutes(10));
+
+        SmGenerateContentPlanJob::dispatch($plan, $brand, $strategy, $fromDate);
+
+        $plan->load('strategy');
+
+        return response()->json([
+            'data' => new SmContentPlanResource($plan),
+            'generating' => true,
+        ]);
+    }
+
+    public function generateStatus(Request $request, Brand $brand, SmContentPlan $smContentPlan): JsonResponse
+    {
+        $this->authorize('view', $brand);
+
+        $cacheKey = "content_plan_gen:{$smContentPlan->id}";
+        $progress = Cache::get($cacheKey, ['step' => 'unknown']);
+
+        $smContentPlan->refresh();
+
+        $response = [
+            'status' => $smContentPlan->status,
+            'step' => $progress['step'] ?? 'unknown',
+            'slots_created' => $progress['slots_created'] ?? 0,
+            'total_slots' => $progress['total_slots'] ?? 0,
+            'error' => $progress['error'] ?? null,
+        ];
+
+        if ($smContentPlan->status !== 'generating') {
+            $response['total_slots'] = $smContentPlan->total_slots;
+            $response['slots_created'] = $smContentPlan->total_slots;
+        }
+
+        return response()->json($response);
     }
 
     public function generateTopicProposition(Request $request, Brand $brand, SmContentPlan $smContentPlan, SmContentPlanGeneratorService $generator): JsonResponse

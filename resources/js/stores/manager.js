@@ -550,6 +550,18 @@ export const useManagerStore = defineStore('manager', {
             return response.data;
         },
 
+        async fetchPlanGenerationStatus(planId) {
+            const brandId = this.currentBrandId;
+            if (!brandId) return null;
+
+            try {
+                const response = await axios.get(`/api/v1/brands/${brandId}/sm-content-plans/${planId}/generate-status`);
+                return response.data;
+            } catch {
+                return null;
+            }
+        },
+
         async fetchPlanDetails(planId) {
             const brandId = this.currentBrandId;
             if (!brandId) return;

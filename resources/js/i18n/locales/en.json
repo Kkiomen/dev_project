@@ -3428,7 +3428,17 @@
             "planGenerated": "Content plan generated successfully!",
             "planGenerateError": "Failed to generate content plan",
             "addManually": "or add slots manually",
-            "noActiveStrategy": "Activate your strategy first"
+            "noActiveStrategy": "Activate your strategy first",
+            "progress": {
+                "title": "Generating your content plan...",
+                "subtitle": "AI is creating a personalized content calendar based on your strategy",
+                "stepQueued": "Starting generation",
+                "stepAi": "AI is planning your content",
+                "stepSlots": "Creating calendar slots",
+                "stepDone": "Plan ready!",
+                "timeout": "Generation is taking too long. Please try again.",
+                "patience": "This usually takes 30-60 seconds"
+            }
         },
         "addSlot": {
             "title": "Add Post Slot",

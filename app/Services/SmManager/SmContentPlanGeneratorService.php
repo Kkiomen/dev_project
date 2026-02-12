@@ -10,6 +10,7 @@ use App\Models\SmContentPlanSlot;
 use App\Models\SmStrategy;
 use App\Services\Concerns\LogsApiUsage;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use OpenAI;
@@ -119,6 +120,106 @@ class SmContentPlanGeneratorService
                 'year' => $year,
                 'error' => $e->getMessage(),
             ]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Generate slots for an existing plan (async-friendly, reports progress via cache).
+     *
+     * @return array{success: bool, slots_created?: int, error?: string}
+     */
+    public function generateSlotsForPlan(SmContentPlan $plan, Brand $brand, SmStrategy $strategy, ?Carbon $fromDate = null): array
+    {
+        $cacheKey = "content_plan_gen:{$plan->id}";
+
+        $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::OpenAi);
+
+        if (!$apiKey) {
+            Cache::put($cacheKey, ['step' => 'failed', 'error' => 'no_api_key'], now()->addMinutes(10));
+            return ['success' => false, 'error_code' => 'no_api_key', 'error' => 'No OpenAI API key configured for this brand'];
+        }
+
+        $startDate = $fromDate ?? Carbon::create($plan->year, $plan->month, 1)->startOfMonth();
+        $endDate = Carbon::create($plan->year, $plan->month, 1)->endOfMonth();
+
+        $systemPrompt = $this->buildSystemPrompt();
+        $previousTopics = $this->getPreviousTopics($brand);
+        $userPrompt = $this->buildPlanPrompt($brand, $strategy, $startDate, $endDate, $previousTopics);
+
+        Cache::put($cacheKey, ['step' => 'calling_ai', 'slots_created' => 0], now()->addMinutes(10));
+
+        $startTime = microtime(true);
+        $log = $this->logAiStart($brand, 'sm_content_plan_generate', [
+            'brand_name' => $brand->name,
+            'strategy_id' => $strategy->id,
+            'month' => $plan->month,
+            'year' => $plan->year,
+            'plan_id' => $plan->id,
+        ], 'gpt-4o');
+
+        try {
+            $client = OpenAI::client($apiKey);
+
+            $response = retry(3, fn () => $client->chat()->create([
+                'model' => 'gpt-4o',
+                'messages' => [
+                    ['role' => 'system', 'content' => $systemPrompt],
+                    ['role' => 'user', 'content' => $userPrompt],
+                ],
+                'max_tokens' => 4096,
+                'response_format' => ['type' => 'json_object'],
+            ]), 1000);
+
+            $content = $response->choices[0]->message->content;
+            $parsed = $this->parseResponse($content);
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $promptTokens = $response->usage->promptTokens ?? 0;
+            $completionTokens = $response->usage->completionTokens ?? 0;
+
+            $this->completeAiLog($log, [
+                'slots_count' => count($parsed['slots'] ?? []),
+            ], $promptTokens, $completionTokens, $durationMs);
+
+            $slots = $parsed['slots'] ?? [];
+
+            if (empty($slots)) {
+                Cache::put($cacheKey, ['step' => 'failed', 'error' => 'empty_response'], now()->addMinutes(10));
+                return ['success' => false, 'error' => 'AI returned no content plan slots'];
+            }
+
+            Cache::put($cacheKey, ['step' => 'creating_slots', 'slots_created' => 0, 'total_slots' => count($slots)], now()->addMinutes(10));
+
+            $slotsCreated = 0;
+
+            DB::transaction(function () use ($plan, $slots, &$slotsCreated, $cacheKey) {
+                $slotsCreated = $this->createSlotsFromPlan($plan, $slots);
+
+                $plan->update([
+                    'status' => 'draft',
+                    'summary' => $this->buildPlanSummary($slots),
+                    'total_slots' => $slotsCreated,
+                    'completed_slots' => 0,
+                    'generated_at' => now(),
+                ]);
+            });
+
+            Cache::put($cacheKey, ['step' => 'done', 'slots_created' => $slotsCreated], now()->addMinutes(5));
+
+            return ['success' => true, 'slots_created' => $slotsCreated];
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            Log::error('SmContentPlanGenerator: generateSlotsForPlan failed', [
+                'plan_id' => $plan->id,
+                'brand_id' => $brand->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            Cache::put($cacheKey, ['step' => 'failed', 'error' => $e->getMessage()], now()->addMinutes(10));
 
             return ['success' => false, 'error' => $e->getMessage()];
         }
