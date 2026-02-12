@@ -78,14 +78,14 @@ const totalWeeklyPosts = computed(() => {
 // Sync from store
 watch(() => managerStore.strategy, (strategy) => {
     if (!strategy) return;
-    if (strategy.content_pillars?.length) contentPillars.value = [...strategy.content_pillars];
-    if (strategy.posting_frequency) postingFrequency.value = { ...postingFrequency.value, ...strategy.posting_frequency };
-    if (strategy.target_audience) targetAudience.value = { ...targetAudience.value, ...strategy.target_audience };
-    if (strategy.goals?.length) goals.value = [...strategy.goals];
-    if (strategy.competitor_handles) competitorHandles.value = { ...strategy.competitor_handles };
-    if (strategy.content_mix) contentMix.value = { ...contentMix.value, ...strategy.content_mix };
-    if (strategy.optimal_times) optimalTimes.value = { ...strategy.optimal_times };
-}, { immediate: true });
+    if (Array.isArray(strategy.content_pillars)) contentPillars.value = [...strategy.content_pillars];
+    if (strategy.posting_frequency && typeof strategy.posting_frequency === 'object') postingFrequency.value = { ...postingFrequency.value, ...strategy.posting_frequency };
+    if (strategy.target_audience && typeof strategy.target_audience === 'object') targetAudience.value = { ...targetAudience.value, ...strategy.target_audience };
+    if (Array.isArray(strategy.goals)) goals.value = [...strategy.goals];
+    if (strategy.competitor_handles && typeof strategy.competitor_handles === 'object') competitorHandles.value = { ...strategy.competitor_handles };
+    if (strategy.content_mix && typeof strategy.content_mix === 'object') contentMix.value = { ...contentMix.value, ...strategy.content_mix };
+    if (strategy.optimal_times && typeof strategy.optimal_times === 'object') optimalTimes.value = { ...strategy.optimal_times };
+}, { immediate: true, deep: true });
 
 const addPillar = () => {
     contentPillars.value.push({ name: '', description: '', percentage: 20 });
