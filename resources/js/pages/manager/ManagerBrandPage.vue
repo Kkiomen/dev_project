@@ -43,17 +43,17 @@ const styleOptions = ['modern', 'classic', 'bold', 'minimal', 'playful'];
 // Sync from store
 watch(() => managerStore.brandKit, (kit) => {
     if (!kit) return;
-    if (kit.colors && Object.keys(kit.colors).length) colors.value = { ...colors.value, ...kit.colors };
-    if (kit.fonts && Object.keys(kit.fonts).length) fonts.value = { ...fonts.value, ...kit.fonts };
+    if (kit.colors && typeof kit.colors === 'object') colors.value = { ...colors.value, ...kit.colors };
+    if (kit.fonts && typeof kit.fonts === 'object') fonts.value = { ...fonts.value, ...kit.fonts };
     toneOfVoice.value = kit.tone_of_voice || '';
-    voiceAttributes.value = kit.voice_attributes || [];
+    voiceAttributes.value = Array.isArray(kit.voice_attributes) ? [...kit.voice_attributes] : [];
     stylePreset.value = kit.style_preset || '';
     brandGuidelinesNotes.value = kit.brand_guidelines_notes || '';
-    contentPillars.value = kit.content_pillars?.length ? [...kit.content_pillars] : [];
-    hashtagGroups.value = kit.hashtag_groups && Object.keys(kit.hashtag_groups).length
+    contentPillars.value = Array.isArray(kit.content_pillars) ? [...kit.content_pillars] : [];
+    hashtagGroups.value = kit.hashtag_groups && typeof kit.hashtag_groups === 'object'
         ? { branded: [...(kit.hashtag_groups.branded || [])], industry: [...(kit.hashtag_groups.industry || [])] }
         : { branded: [], industry: [] };
-}, { immediate: true });
+}, { immediate: true, deep: true });
 
 const handleSave = async () => {
     saving.value = true;
