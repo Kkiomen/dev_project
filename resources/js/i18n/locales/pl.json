@@ -3422,6 +3422,27 @@
             "generateAllError": "Nie udało się rozpocząć generowania treści",
             "generating": "Generowanie..."
         },
+        "addSlot": {
+            "title": "Dodaj slot",
+            "platform": "Platforma",
+            "contentType": "Typ treści",
+            "pillar": "Filar treści",
+            "pillarPlaceholder": "Wybierz filar (opcjonalnie)",
+            "time": "Godzina",
+            "topic": "Temat",
+            "topicPlaceholder": "Wpisz temat lub użyj sugestii AI...",
+            "description": "Opis",
+            "descriptionPlaceholder": "Opis posta (opcjonalnie)...",
+            "suggestTopic": "Zaproponuj temat",
+            "suggesting": "Proponowanie...",
+            "addSlot": "Dodaj slot",
+            "addAndGenerate": "Dodaj i wygeneruj treść",
+            "success": "Slot został dodany",
+            "generateStarted": "Generowanie treści rozpoczęte",
+            "error": "Nie udało się dodać slotu",
+            "suggestError": "Nie udało się zaproponować tematu",
+            "noApiKey": "Brak klucza API AI dla tej marki"
+        },
         "slotModal": {
             "title": "Szczegóły slotu",
             "status": "Status",

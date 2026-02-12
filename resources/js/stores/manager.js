@@ -576,6 +576,17 @@ export const useManagerStore = defineStore('manager', {
             }
         },
 
+        async generateTopicProposition(planId, data) {
+            const brandId = this.currentBrandId;
+            if (!brandId) return;
+
+            const response = await axios.post(
+                `/api/v1/brands/${brandId}/sm-content-plans/${planId}/generate-topic-proposition`,
+                data
+            );
+            return response.data;
+        },
+
         async generateSlotContent(planId, slotId) {
             const brandId = this.currentBrandId;
             if (!brandId) return;

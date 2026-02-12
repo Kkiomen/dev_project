@@ -9,6 +9,7 @@ use App\Jobs\SmManager\SmGeneratePostContentJob;
 use App\Models\Brand;
 use App\Models\SmContentPlan;
 use App\Models\SmContentPlanSlot;
+use App\Services\SmManager\SmContentPlanGeneratorService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -147,6 +148,22 @@ class SmContentPlanController extends Controller
             'has_content' => $slot->hasContent(),
             'social_post_id' => $slot->socialPost?->public_id,
         ]);
+    }
+
+    public function generateTopicProposition(Request $request, Brand $brand, SmContentPlan $smContentPlan, SmContentPlanGeneratorService $generator): JsonResponse
+    {
+        $this->authorize('update', $brand);
+
+        $validated = $request->validate([
+            'platform' => ['required', 'string'],
+            'content_type' => ['required', 'string'],
+            'date' => ['required', 'date'],
+            'pillar' => ['nullable', 'string'],
+        ]);
+
+        $result = $generator->generateTopicProposition($brand, $validated);
+
+        return response()->json($result);
     }
 
     public function generateAllContent(Request $request, Brand $brand, SmContentPlan $smContentPlan): JsonResponse

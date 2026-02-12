@@ -5,6 +5,7 @@ import { useManagerStore } from '@/stores/manager';
 import { useToast } from '@/composables/useToast';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import SlotDetailsModal from '@/components/manager/SlotDetailsModal.vue';
+import AddSlotModal from '@/components/manager/AddSlotModal.vue';
 
 const { t } = useI18n();
 const managerStore = useManagerStore();
@@ -15,6 +16,8 @@ const currentDate = ref(new Date());
 const currentView = ref('month');
 const selectedSlot = ref(null);
 const showSlotModal = ref(false);
+const showAddSlotModal = ref(false);
+const addSlotDate = ref('');
 const bulkGenerating = ref(false);
 
 // --- Platform colors ---
@@ -173,6 +176,15 @@ const handleSlotClick = (slot) => {
 };
 
 const handleSlotUpdated = () => {
+    managerStore.fetchCurrentPlan();
+};
+
+const handleDayClick = (dateStr) => {
+    addSlotDate.value = dateStr;
+    showAddSlotModal.value = true;
+};
+
+const handleSlotCreated = () => {
     managerStore.fetchCurrentPlan();
 };
 
@@ -339,7 +351,8 @@ watch(() => managerStore.currentBrandId, () => {
                     <div
                         v-for="(day, index) in calendarDays"
                         :key="day.dateStr"
-                        class="min-h-[90px] sm:min-h-[110px] lg:min-h-[130px] border-b border-r border-gray-800 p-1.5 sm:p-2 transition-colors hover:bg-gray-800/30"
+                        @click="handleDayClick(day.dateStr)"
+                        class="min-h-[90px] sm:min-h-[110px] lg:min-h-[130px] border-b border-r border-gray-800 p-1.5 sm:p-2 transition-colors hover:bg-gray-800/30 cursor-pointer"
                         :class="{
                             'border-r-0': (index + 1) % 7 === 0,
                             'border-b-0': index >= 35,
@@ -399,7 +412,8 @@ watch(() => managerStore.currentBrandId, () => {
                     <div
                         v-for="(day, index) in weekDays"
                         :key="day.dateStr"
-                        class="border-r border-gray-800 last:border-r-0 min-h-[400px] flex flex-col"
+                        @click="handleDayClick(day.dateStr)"
+                        class="border-r border-gray-800 last:border-r-0 min-h-[400px] flex flex-col cursor-pointer"
                         :class="{
                             'bg-indigo-500/5': day.isToday,
                         }"
@@ -476,7 +490,8 @@ watch(() => managerStore.currentBrandId, () => {
                     <div
                         v-for="(day, index) in weekDays"
                         :key="day.dateStr"
-                        class="p-3"
+                        @click="handleDayClick(day.dateStr)"
+                        class="p-3 cursor-pointer"
                         :class="{ 'bg-indigo-500/5': day.isToday }"
                     >
                         <!-- Day header -->
@@ -543,6 +558,15 @@ watch(() => managerStore.currentBrandId, () => {
             :plan-id="managerStore.currentPlan?.id"
             @close="showSlotModal = false"
             @updated="handleSlotUpdated"
+        />
+
+        <!-- Add Slot Modal -->
+        <AddSlotModal
+            :show="showAddSlotModal"
+            :date-str="addSlotDate"
+            :plan-id="managerStore.currentPlan?.id"
+            @close="showAddSlotModal = false"
+            @created="handleSlotCreated"
         />
     </div>
 </template>

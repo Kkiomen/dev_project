@@ -623,6 +623,7 @@ $v1Routes = function () {
         Route::delete('{smContentPlan}/slots/{slot}', [SmContentPlanController::class, 'removeSlot']);
         Route::get('{smContentPlan}/slots/{slot}/status', [SmContentPlanController::class, 'slotStatus']);
         Route::post('{smContentPlan}/slots/{slot}/generate-content', [SmContentPlanController::class, 'generateSlotContent']);
+        Route::post('{smContentPlan}/generate-topic-proposition', [SmContentPlanController::class, 'generateTopicProposition']);
         Route::post('{smContentPlan}/generate-all-content', [SmContentPlanController::class, 'generateAllContent']);
     });
 

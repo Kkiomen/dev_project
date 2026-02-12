@@ -39,7 +39,8 @@ class SmContentPlanGeneratorService
         $endDate = $startDate->copy()->endOfMonth();
 
         $systemPrompt = $this->buildSystemPrompt();
-        $userPrompt = $this->buildPlanPrompt($brand, $strategy, $startDate, $endDate);
+        $previousTopics = $this->getPreviousTopics($brand);
+        $userPrompt = $this->buildPlanPrompt($brand, $strategy, $startDate, $endDate, $previousTopics);
 
         $startTime = microtime(true);
         $log = $this->logAiStart($brand, 'sm_content_plan_generate', [
@@ -123,6 +124,101 @@ class SmContentPlanGeneratorService
     }
 
     /**
+     * Generate a single topic proposition for a new slot.
+     *
+     * @param Brand $brand
+     * @param array{platform: string, content_type: string, date: string, pillar?: string} $context
+     * @return array{success: bool, topic?: string, description?: string, error?: string, error_code?: string}
+     */
+    public function generateTopicProposition(Brand $brand, array $context): array
+    {
+        $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::OpenAi);
+
+        if (!$apiKey) {
+            return ['success' => false, 'error_code' => 'no_api_key', 'error' => 'No OpenAI API key configured for this brand'];
+        }
+
+        $strategy = $brand->smStrategies()->active()->latest()->first();
+        $previousTopics = $this->getPreviousTopics($brand);
+        $language = $brand->getLanguage();
+        $languageName = $this->getLanguageName($language);
+
+        $pillarInfo = !empty($context['pillar']) ? "Content pillar: {$context['pillar']}" : '';
+        $avoidBlock = '';
+        if (!empty($previousTopics)) {
+            $topicsList = implode("\n", array_map(fn ($t) => "- {$t}", $previousTopics));
+            $avoidBlock = "\n\nPREVIOUSLY USED TOPICS (DO NOT REPEAT THESE):\n{$topicsList}\n\nYou MUST avoid repeating or closely paraphrasing any of the above topics.";
+        }
+
+        $strategyContext = '';
+        if ($strategy) {
+            $pillars = json_encode($strategy->content_pillars ?? [], JSON_UNESCAPED_UNICODE);
+            $strategyContext = "\nBrand strategy pillars: {$pillars}";
+        }
+
+        $userPrompt = <<<PROMPT
+Suggest 1 unique and specific topic for a {$context['platform']} {$context['content_type']} post.
+
+Brand: {$brand->name}
+Industry: {$brand->industry}
+Date: {$context['date']}
+{$pillarInfo}{$strategyContext}{$avoidBlock}
+
+Respond in {$languageName}.
+Respond ONLY with valid JSON: {"topic": "...", "description": "..."}
+The topic should be concise (max 100 chars). The description should explain what the post should cover (1-2 sentences).
+PROMPT;
+
+        $startTime = microtime(true);
+        $log = $this->logAiStart($brand, 'sm_topic_proposition', [
+            'platform' => $context['platform'],
+            'content_type' => $context['content_type'],
+            'date' => $context['date'],
+        ], 'gpt-4o');
+
+        try {
+            $client = OpenAI::client($apiKey);
+
+            $response = $client->chat()->create([
+                'model' => 'gpt-4o',
+                'messages' => [
+                    ['role' => 'system', 'content' => 'You are a creative social media strategist. Respond only with valid JSON.'],
+                    ['role' => 'user', 'content' => $userPrompt],
+                ],
+                'max_tokens' => 256,
+                'response_format' => ['type' => 'json_object'],
+            ]);
+
+            $content = $response->choices[0]->message->content;
+            $parsed = $this->parseResponse($content);
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $promptTokens = $response->usage->promptTokens ?? 0;
+            $completionTokens = $response->usage->completionTokens ?? 0;
+
+            $this->completeAiLog($log, [
+                'topic' => $parsed['topic'] ?? '',
+            ], $promptTokens, $completionTokens, $durationMs);
+
+            return [
+                'success' => true,
+                'topic' => $parsed['topic'] ?? '',
+                'description' => $parsed['description'] ?? '',
+            ];
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            Log::error('SmContentPlanGenerator: generateTopicProposition failed', [
+                'brand_id' => $brand->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Build the system prompt for content plan generation.
      */
     protected function buildSystemPrompt(): string
@@ -139,6 +235,7 @@ RULES:
 6. Ensure variety - avoid posting the same content type or pillar on consecutive days
 7. Consider weekdays vs. weekends (usually lower frequency on weekends)
 8. Each slot must have a specific, actionable topic idea (not generic)
+9. NEVER repeat or closely paraphrase topics from the "PREVIOUSLY USED TOPICS" list. Each topic must be fresh and unique.
 
 RESPONSE FORMAT:
 You MUST respond with valid JSON only.
@@ -168,7 +265,7 @@ PROMPT;
     /**
      * Build the user prompt with strategy details and date range.
      */
-    protected function buildPlanPrompt(Brand $brand, SmStrategy $strategy, Carbon $startDate, Carbon $endDate): string
+    protected function buildPlanPrompt(Brand $brand, SmStrategy $strategy, Carbon $startDate, Carbon $endDate, array $previousTopics = []): string
     {
         $weeksInMonth = $startDate->diffInWeeks($endDate) + 1;
 
@@ -180,7 +277,7 @@ PROMPT;
         $language = $brand->getLanguage();
         $languageName = $this->getLanguageName($language);
 
-        return <<<PROMPT
+        $prompt = <<<PROMPT
 Generate a content calendar for {$startDate->format('F Y')}.
 
 BRAND: {$brand->name}
@@ -206,6 +303,20 @@ Generate a complete content calendar with specific, actionable topics for each s
 Topics and descriptions must be written in {$languageName}.
 Distribute posts evenly across the month, respecting pillar percentages and content mix.
 PROMPT;
+
+        if (!empty($previousTopics)) {
+            $topicsList = implode("\n", array_map(fn ($t) => "- {$t}", $previousTopics));
+            $prompt .= <<<PROMPT
+
+
+PREVIOUSLY USED TOPICS (DO NOT REPEAT THESE):
+{$topicsList}
+
+You MUST avoid repeating or closely paraphrasing any of the above topics. Each new topic must be distinctly different.
+PROMPT;
+        }
+
+        return $prompt;
     }
 
     /**
@@ -250,6 +361,20 @@ PROMPT;
         }
 
         return $created;
+    }
+
+    /**
+     * Get previous topics for this brand to avoid repetition.
+     */
+    protected function getPreviousTopics(Brand $brand, int $limit = 100): array
+    {
+        return SmContentPlanSlot::whereHas('contentPlan', fn ($q) => $q->where('brand_id', $brand->id))
+            ->whereNotNull('topic')
+            ->where('topic', '!=', '')
+            ->orderByDesc('scheduled_date')
+            ->limit($limit)
+            ->pluck('topic')
+            ->toArray();
     }
 
     /**

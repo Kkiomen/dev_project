@@ -3419,6 +3419,27 @@
             "generateAllError": "Failed to start content generation",
             "generating": "Generating..."
         },
+        "addSlot": {
+            "title": "Add Post Slot",
+            "platform": "Platform",
+            "contentType": "Content Type",
+            "pillar": "Content Pillar",
+            "pillarPlaceholder": "Select pillar (optional)",
+            "time": "Time",
+            "topic": "Topic",
+            "topicPlaceholder": "Enter topic or use AI suggestion...",
+            "description": "Description",
+            "descriptionPlaceholder": "Post description (optional)...",
+            "suggestTopic": "Suggest Topic",
+            "suggesting": "Suggesting...",
+            "addSlot": "Add Slot",
+            "addAndGenerate": "Add & Generate Content",
+            "success": "Slot added successfully",
+            "generateStarted": "Content generation started",
+            "error": "Failed to add slot",
+            "suggestError": "Failed to suggest topic",
+            "noApiKey": "No AI API key configured for this brand"
+        },
         "slotModal": {
             "title": "Slot Details",
             "status": "Status",
