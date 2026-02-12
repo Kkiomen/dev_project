@@ -203,27 +203,17 @@ You MUST respond with valid JSON only. No additional text, no markdown code bloc
     "youtube": 1
   },
   "target_audience": {
-    "primary": {
-      "age_range": "25-35",
-      "gender": "all",
-      "interests": ["interest1", "interest2"],
-      "pain_points": ["pain1", "pain2"],
-      "platforms_preferred": ["instagram", "linkedin"]
-    },
-    "secondary": {
-      "age_range": "35-45",
-      "gender": "all",
-      "interests": ["interest1"],
-      "pain_points": ["pain1"],
-      "platforms_preferred": ["facebook"]
-    }
+    "age_range": "25-35",
+    "gender": "all",
+    "interests": ["interest1", "interest2", "interest3"],
+    "pain_points": ["pain point 1", "pain point 2", "pain point 3"]
   },
   "goals": [
     {
-      "name": "Goal Name",
-      "description": "Detailed goal description",
-      "kpi": "Metric to track",
-      "timeframe": "3 months"
+      "goal": "Goal Name",
+      "metric": "KPI metric to track",
+      "target_value": "Target value",
+      "timeframe": "monthly"
     }
   ],
   "content_mix": {
