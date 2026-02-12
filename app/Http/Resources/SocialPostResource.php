@@ -32,6 +32,7 @@ class SocialPostResource extends JsonResource
             'media' => PostMediaResource::collection($this->whenLoaded('media')),
             'media_count' => $this->whenCounted('media'),
             'approvals' => PostApprovalResource::collection($this->whenLoaded('approvals')),
+            'generated_assets' => SmGeneratedAssetResource::collection($this->whenLoaded('generatedAssets')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

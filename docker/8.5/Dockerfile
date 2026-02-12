@@ -84,6 +84,7 @@ RUN git config --global --add safe.directory /var/www/html
 
 COPY start-container /usr/local/bin/start-container
 COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+COPY supervisord-queue.conf /etc/supervisor/conf.d/supervisord-queue.conf
 COPY php.ini /etc/php/8.5/cli/conf.d/99-sail.ini
 RUN chmod +x /usr/local/bin/start-container
 

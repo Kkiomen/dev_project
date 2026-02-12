@@ -110,7 +110,7 @@ class SocialPostController extends Controller
         $this->authorize('view', $post);
 
         return new SocialPostResource(
-            $post->load(['platformPosts', 'media', 'approvals.approvalToken'])
+            $post->load(['platformPosts', 'media', 'approvals.approvalToken', 'generatedAssets'])
         );
     }
 

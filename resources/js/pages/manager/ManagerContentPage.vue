@@ -36,16 +36,18 @@ const platformIcons = {
 };
 
 const posts = computed(() => {
-    return managerStore.scheduledPosts.map(sp => ({
-        id: sp.id,
-        title: sp.social_post?.title || sp.content?.substring(0, 50) || '',
-        main_caption: sp.social_post?.main_caption || sp.content || '',
-        status: sp.approval_status === 'pending' ? 'pending_approval' : sp.approval_status,
-        scheduled_at: sp.scheduled_at,
-        created_at: sp.created_at,
-        platforms: [sp.platform],
-        thumbnail_url: sp.social_post?.thumbnail_url || null,
-    }));
+    return managerStore.scheduledPosts
+        .filter(sp => sp.social_post?.id)
+        .map(sp => ({
+            id: sp.social_post.id,
+            title: sp.social_post?.title || sp.content?.substring(0, 50) || '',
+            main_caption: sp.social_post?.main_caption || sp.content || '',
+            status: sp.approval_status === 'pending' ? 'pending_approval' : sp.approval_status,
+            scheduled_at: sp.scheduled_at,
+            created_at: sp.created_at,
+            platforms: [sp.platform],
+            thumbnail_url: sp.social_post?.thumbnail_url || null,
+        }));
 });
 
 const filteredPosts = computed(() => {
@@ -100,11 +102,11 @@ const truncate = (text, max = 120) => {
 };
 
 const handleCreatePost = () => {
-    router.push({ name: 'manager.postEditor' });
+    router.push({ name: 'manager.content.edit', params: { id: 'new' } });
 };
 
 const handleEditPost = (post) => {
-    router.push({ name: 'manager.postEditor', params: { id: post.id } });
+    router.push({ name: 'manager.content.edit', params: { id: post.id } });
 };
 
 const handleDeletePost = async (post) => {

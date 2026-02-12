@@ -3304,7 +3304,8 @@
             "sectionAnalytics": "Analytics & Research",
             "sectionEngagement": "Engagement",
             "sectionSettings": "Configuration",
-            "tutorial": "Tutorial"
+            "tutorial": "Tutorial",
+            "rss": "RSS Feeds"
         },
         "dashboard": {
             "title": "Command Center",
@@ -3379,9 +3380,18 @@
             "cancel": "Cancel",
             "approved": "Post approved",
             "rejected": "Post rejected",
+            "approvedSuccess": "Post has been approved",
+            "rejectedSuccess": "Post has been rejected",
             "approveError": "Failed to approve post",
             "rejectError": "Failed to reject post",
-            "notesRequired": "Notes are required when rejecting"
+            "notesRequired": "Notes are required when rejecting",
+            "notes": "Notes",
+            "noContent": "No content",
+            "loadError": "Failed to load posts",
+            "deleteBtn": "Delete",
+            "deleteConfirm": "Are you sure you want to delete this scheduled post?",
+            "deleteSuccess": "Post has been deleted",
+            "deleteError": "Failed to delete post"
         },
         "calendar": {
             "title": "Content Calendar",
@@ -3420,6 +3430,7 @@
             "scheduledAt": "Scheduled At",
             "statusLabels": {
                 "planned": "Planned",
+                "generating": "Generating...",
                 "content_ready": "Content Ready",
                 "media_ready": "Media Ready",
                 "approved": "Approved",
@@ -3431,7 +3442,17 @@
             "generateSuccess": "Content generation started",
             "generateError": "Failed to start content generation",
             "generating": "Generating...",
-            "alreadyGenerated": "Content has already been generated for this slot"
+            "alreadyGenerated": "Content has already been generated for this slot",
+            "progress": {
+                "title": "Generating content...",
+                "step1": "Creating post text",
+                "step2": "Generating hashtags",
+                "step3": "Creating image",
+                "done": "Content generated!",
+                "failed": "Generation failed. Please try again.",
+                "timeout": "Generation is taking too long. Please try again.",
+                "patience": "Image generation may take a bit longer..."
+            }
         },
         "content": {
             "title": "Content Library",
@@ -3500,6 +3521,9 @@
             "submitted": "Post submitted for approval",
             "submitError": "Failed to submit post",
             "aiActionsTitle": "AI Actions",
+            "loadError": "Failed to load post",
+            "deleted": "Post deleted",
+            "deleteError": "Failed to delete post",
             "aiActions": {
                 "generateCaption": "Generate Caption",
                 "generateHashtags": "Generate Hashtags",

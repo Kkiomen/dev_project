@@ -588,6 +588,27 @@ export const useManagerStore = defineStore('manager', {
             }
         },
 
+        async fetchPost(postId) {
+            try {
+                const response = await axios.get(`/api/v1/posts/${postId}`);
+                return response.data.data;
+            } catch (error) {
+                throw error;
+            }
+        },
+
+        async fetchSlotStatus(planId, slotId) {
+            const brandId = this.currentBrandId;
+            if (!brandId) return null;
+
+            try {
+                const response = await axios.get(`/api/v1/brands/${brandId}/sm-content-plans/${planId}/slots/${slotId}/status`);
+                return response.data;
+            } catch (error) {
+                throw error;
+            }
+        },
+
         async generateAllContent(planId) {
             const brandId = this.currentBrandId;
             if (!brandId) return;

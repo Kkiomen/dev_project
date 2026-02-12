@@ -3307,7 +3307,8 @@
             "sectionAnalytics": "Analityka i badania",
             "sectionEngagement": "Zaangażowanie",
             "sectionSettings": "Konfiguracja",
-            "tutorial": "Tutorial"
+            "tutorial": "Tutorial",
+            "rss": "Kanały RSS"
         },
         "dashboard": {
             "title": "Centrum Dowodzenia",
@@ -3382,9 +3383,18 @@
             "cancel": "Anuluj",
             "approved": "Post zatwierdzony",
             "rejected": "Post odrzucony",
+            "approvedSuccess": "Post został zatwierdzony",
+            "rejectedSuccess": "Post został odrzucony",
             "approveError": "Nie udało się zatwierdzić posta",
             "rejectError": "Nie udało się odrzucić posta",
-            "notesRequired": "Notatka jest wymagana przy odrzucaniu"
+            "notesRequired": "Notatka jest wymagana przy odrzucaniu",
+            "notes": "Notatka",
+            "noContent": "Brak treści",
+            "loadError": "Nie udało się załadować postów",
+            "deleteBtn": "Usuń",
+            "deleteConfirm": "Czy na pewno chcesz usunąć ten zaplanowany post?",
+            "deleteSuccess": "Post został usunięty",
+            "deleteError": "Nie udało się usunąć posta"
         },
         "calendar": {
             "title": "Kalendarz Treści",
@@ -3423,6 +3433,7 @@
             "scheduledAt": "Zaplanowane na",
             "statusLabels": {
                 "planned": "Zaplanowany",
+                "generating": "Generowanie...",
                 "content_ready": "Treść gotowa",
                 "media_ready": "Media gotowe",
                 "approved": "Zatwierdzony",
@@ -3434,7 +3445,17 @@
             "generateSuccess": "Rozpoczęto generowanie treści",
             "generateError": "Nie udało się rozpocząć generowania treści",
             "generating": "Generowanie...",
-            "alreadyGenerated": "Treść została już wygenerowana dla tego slotu"
+            "alreadyGenerated": "Treść została już wygenerowana dla tego slotu",
+            "progress": {
+                "title": "Generowanie treści...",
+                "step1": "Tworzenie tekstu posta",
+                "step2": "Generowanie hashtagów",
+                "step3": "Tworzenie grafiki",
+                "done": "Treść wygenerowana!",
+                "failed": "Generowanie nie powiodło się. Spróbuj ponownie.",
+                "timeout": "Generowanie trwa zbyt długo. Spróbuj ponownie.",
+                "patience": "Generowanie grafiki może potrwać dłużej..."
+            }
         },
         "content": {
             "title": "Biblioteka treści",
@@ -3503,6 +3524,9 @@
             "submitted": "Post wysłany do zatwierdzenia",
             "submitError": "Nie udało się wysłać posta",
             "aiActionsTitle": "Akcje AI",
+            "loadError": "Nie udało się wczytać posta",
+            "deleted": "Post został usunięty",
+            "deleteError": "Nie udało się usunąć posta",
             "aiActions": {
                 "generateCaption": "Generuj podpis",
                 "generateHashtags": "Generuj hashtagi",

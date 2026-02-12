@@ -78,7 +78,7 @@ class SmContentPlanController extends Controller
             'topic' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string', 'max:1000'],
             'pillar' => ['nullable', 'string', 'max:255'],
-            'status' => ['sometimes', 'string', 'in:planned,content_ready,media_ready,approved,published,skipped'],
+            'status' => ['sometimes', 'string', 'in:planned,generating,content_ready,media_ready,approved,published,skipped'],
         ]);
 
         $slot->update($validated);
@@ -128,6 +128,8 @@ class SmContentPlanController extends Controller
             return response()->json(['message' => 'Slot is not in planned status'], 422);
         }
 
+        $slot->update(['status' => 'generating']);
+
         SmGeneratePostContentJob::dispatch($slot);
 
         return response()->json([
@@ -136,13 +138,34 @@ class SmContentPlanController extends Controller
         ]);
     }
 
+    public function slotStatus(Request $request, Brand $brand, SmContentPlan $smContentPlan, SmContentPlanSlot $slot): JsonResponse
+    {
+        $this->authorize('view', $brand);
+
+        return response()->json([
+            'status' => $slot->status,
+            'has_content' => $slot->hasContent(),
+            'social_post_id' => $slot->socialPost?->public_id,
+        ]);
+    }
+
     public function generateAllContent(Request $request, Brand $brand, SmContentPlan $smContentPlan): JsonResponse
     {
         $this->authorize('update', $brand);
 
-        $plannedSlots = $smContentPlan->slots()->planned()->get();
+        $plannedSlots = $smContentPlan->slots()
+            ->where('status', 'planned')
+            ->get();
+
+        if ($plannedSlots->isEmpty()) {
+            return response()->json([
+                'message' => 'No planned slots to generate',
+                'count' => 0,
+            ]);
+        }
 
         foreach ($plannedSlots as $slot) {
+            $slot->update(['status' => 'generating']);
             SmGeneratePostContentJob::dispatch($slot);
         }
 

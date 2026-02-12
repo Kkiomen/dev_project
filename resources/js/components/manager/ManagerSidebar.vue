@@ -76,6 +76,12 @@ const analyticsNav = computed(() => [
         icon: 'listening',
         isActive: route.path === '/app/manager/listening',
     },
+    {
+        to: '/app/manager/rss',
+        label: t('manager.nav.rss'),
+        icon: 'rss',
+        isActive: route.path === '/app/manager/rss',
+    },
 ]);
 
 const engagementNav = computed(() => [
@@ -279,6 +285,10 @@ const closeMobileMenu = () => {
                         <!-- Listening -->
                         <svg v-else-if="link.icon === 'listening'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+                        </svg>
+                        <!-- RSS -->
+                        <svg v-else-if="link.icon === 'rss'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12.75 19.5v-.75a7.5 7.5 0 0 0-7.5-7.5H4.5m0-6.75h.75c7.87 0 14.25 6.38 14.25 14.25v.75M6 18.75a.75.75 0 1 1-1.5 0 .75.75 0 0 1 1.5 0Z" />
                         </svg>
 
                         <span v-if="!isCollapsed" class="ml-3 truncate">{{ link.label }}</span>

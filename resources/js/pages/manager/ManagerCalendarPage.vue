@@ -30,6 +30,7 @@ const platformColors = {
 // --- Status colors ---
 const getStatusColor = (status) => {
     switch (status) {
+        case 'generating': return 'bg-amber-400 animate-pulse';
         case 'content_ready': return 'bg-blue-400';
         case 'media_ready': return 'bg-purple-400';
         case 'approved': return 'bg-emerald-400';
@@ -177,13 +178,19 @@ const handleSlotUpdated = () => {
 
 const handleGenerateAll = async () => {
     const planId = managerStore.currentPlan?.id;
-    if (!planId) return;
+    if (!planId || bulkGenerating.value) return;
 
     bulkGenerating.value = true;
     try {
         const result = await managerStore.generateAllContent(planId);
-        toast.success(t('manager.calendar.generateAllSuccess', { count: result?.count || plannedSlotsCount.value }));
-        managerStore.fetchCurrentPlan();
+        if (result?.count > 0) {
+            toast.success(t('manager.calendar.generateAllSuccess', { count: result.count }));
+            // Mark local slots as generating so button hides immediately
+            slots.value.forEach(s => {
+                if (s.status === 'planned') s.status = 'generating';
+            });
+        }
+        await managerStore.fetchCurrentPlan();
     } catch {
         toast.error(t('manager.calendar.generateAllError'));
     } finally {

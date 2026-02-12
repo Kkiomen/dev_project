@@ -106,6 +106,7 @@ class SmBrandKit extends Model
             'voice_attributes' => $this->voice_attributes ?? [],
             'content_pillars' => $this->content_pillars ?? [],
             'colors' => $this->colors ?? [],
+            'fonts' => $this->fonts ?? [],
             'hashtag_groups' => $this->hashtag_groups ?? [],
         ];
     }

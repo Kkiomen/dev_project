@@ -67,6 +67,11 @@ class SocialPost extends Model
         return $this->hasMany(PostMedia::class)->ordered();
     }
 
+    public function generatedAssets(): HasMany
+    {
+        return $this->hasMany(SmGeneratedAsset::class)->orderBy('position');
+    }
+
     public function approvals(): HasMany
     {
         return $this->hasMany(PostApproval::class);

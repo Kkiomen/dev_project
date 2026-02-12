@@ -44,6 +44,10 @@ if [ $# -gt 0 ]; then
     else
         exec gosu $WWWUSER "$@"
     fi
+elif [ "$CONTAINER_ROLE" = "queue" ]; then
+    exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord-queue.conf
+elif [ "$CONTAINER_ROLE" = "scheduler" ]; then
+    exec gosu $WWWUSER php /var/www/html/artisan schedule:work
 else
     exec /usr/bin/supervisord -c /etc/supervisor/conf.d/supervisord.conf
 fi

@@ -32,6 +32,7 @@ services:
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
+            CONTAINER_ROLE: queue
         volumes:
             - '.:/var/www/html'
         networks:
@@ -40,7 +41,6 @@ services:
             - laravel.test
             - mysql
             - redis
-        command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
         restart: unless-stopped
     scheduler:
         image: 'sail-8.5/app'
@@ -49,6 +49,7 @@ services:
         environment:
             WWWUSER: '${WWWUSER}'
             LARAVEL_SAIL: 1
+            CONTAINER_ROLE: scheduler
         volumes:
             - '.:/var/www/html'
         networks:
@@ -57,7 +58,6 @@ services:
             - laravel.test
             - mysql
             - redis
-        command: php artisan schedule:work
         restart: unless-stopped
     reverb:
         image: 'sail-8.5/app'

@@ -30,7 +30,8 @@ class SmScheduledPostController extends Controller
             $query->where('platform', $request->input('platform'));
         }
 
-        $posts = $query->orderByDesc('scheduled_at')
+        $posts = $query->with('socialPost.generatedAssets')
+            ->orderByDesc('scheduled_at')
             ->paginate(20);
 
         return SmScheduledPostResource::collection($posts);

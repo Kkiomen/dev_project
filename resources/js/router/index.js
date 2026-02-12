@@ -248,6 +248,11 @@ const routes = [
                 name: 'manager.tutorial',
                 component: () => import('@/pages/manager/ManagerTutorialPage.vue'),
             },
+            {
+                path: 'rss',
+                name: 'manager.rss',
+                component: () => import('@/pages/manager/ManagerRssPage.vue'),
+            },
         ],
     },
     // Public client approval (no auth)

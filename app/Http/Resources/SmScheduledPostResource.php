@@ -25,7 +25,7 @@ class SmScheduledPostResource extends JsonResource
             'error_message' => $this->error_message,
             'external_post_id' => $this->external_post_id,
             'created_at' => $this->created_at,
-            'social_post' => $this->whenLoaded('socialPost'),
+            'social_post' => $this->whenLoaded('socialPost', fn () => new SocialPostResource($this->socialPost)),
             'approver' => $this->whenLoaded('approver'),
         ];
     }
