@@ -18,6 +18,7 @@ const tabs = computed(() => [
     { id: 'boards', label: t('docs.tabs.boards') },
     { id: 'automation', label: t('docs.tabs.automation') },
     { id: 'n8n', label: t('docs.tabs.n8n') },
+    { id: 'video', label: t('docs.tabs.video') },
 ]);
 
 // Sidebar sections for each tab
@@ -88,6 +89,17 @@ const sidebarSections = computed(() => {
             { id: 'n8n-trigger-node', label: t('docs.n8n.triggerNode.title') },
             { id: 'n8n-generation-triggers', label: t('docs.n8n.generationTriggers.title') },
             { id: 'n8n-examples', label: t('docs.n8n.examples.title') },
+        ];
+    } else if (currentTab.value === 'video') {
+        return [
+            { id: 'video-overview', label: t('docs.video.overview') },
+            { id: 'video-architecture', label: t('docs.video.architecture') },
+            { id: 'video-services', label: t('docs.video.services') },
+            { id: 'video-api', label: t('docs.video.api') },
+            { id: 'video-pipeline', label: t('docs.video.pipeline') },
+            { id: 'video-manager', label: t('docs.video.manager') },
+            { id: 'video-captions', label: t('docs.video.captions') },
+            { id: 'video-store', label: t('docs.video.store') },
         ];
     }
     return [];
@@ -4273,6 +4285,411 @@ npm install n8n-nodes-aisello" />
                     <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-8">
                         <h4 class="font-medium text-blue-800 mb-2">{{ t('docs.n8n.expressionsTip.title') }}</h4>
                         <p class="text-blue-700 text-sm">{{ t('docs.n8n.expressionsTip.description') }}</p>
+                    </div>
+                </template>
+
+                <!-- ===== VIDEO TAB ===== -->
+                <template v-else-if="currentTab === 'video'">
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ t('docs.video.title') }}</h1>
+                    <p class="text-lg text-gray-600 mb-8">{{ t('docs.video.description') }}</p>
+
+                    <!-- ========== OVERVIEW ========== -->
+                    <h2 id="video-overview" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.overview') }}</h2>
+
+                    <p class="text-gray-600 mb-4">{{ t('docs.video.overviewDesc') }}</p>
+
+                    <div class="bg-gradient-to-br from-violet-50 to-purple-50 border border-violet-200 rounded-lg p-6 mb-8">
+                        <h3 class="font-semibold text-violet-900 mb-4">{{ t('docs.video.features.title') }}</h3>
+                        <ul class="space-y-3">
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center text-violet-600 text-sm">1</span>
+                                <span class="text-violet-800">{{ t('docs.video.features.transcription') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center text-violet-600 text-sm">2</span>
+                                <span class="text-violet-800">{{ t('docs.video.features.captionStyles') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center text-violet-600 text-sm">3</span>
+                                <span class="text-violet-800">{{ t('docs.video.features.silenceRemoval') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center text-violet-600 text-sm">4</span>
+                                <span class="text-violet-800">{{ t('docs.video.features.batchUpload') }}</span>
+                            </li>
+                            <li class="flex items-start gap-3">
+                                <span class="flex-shrink-0 w-6 h-6 bg-violet-100 rounded-full flex items-center justify-center text-violet-600 text-sm">5</span>
+                                <span class="text-violet-800">{{ t('docs.video.features.fullManager') }}</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- ========== ARCHITECTURE ========== -->
+                    <h2 id="video-architecture" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.architecture') }}</h2>
+
+                    <p class="text-gray-600 mb-4">{{ t('docs.video.architectureDesc') }}</p>
+
+                    <DocsCodeBlock language="text" :code="`Laravel App (port 80)
+├── VideoProjectController   — REST API (CRUD + stats + bulk ops)
+├── TranscribeVideoJob       — Queue job → calls Transcriber service
+├── RenderCaptionsJob         — Queue job → calls Video Editor service
+├── RemoveSilenceJob          — Queue job → calls Video Editor service
+│
+├── Transcriber Service (port 3340)
+│   └── faster-whisper        — Speech-to-text with word-level timestamps
+│
+└── Video Editor Service (port 3341)
+    └── FFmpeg                — Caption rendering, silence removal, probing`" />
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.dockerServices') }}</h3>
+                    <table class="w-full text-sm mb-6">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.service') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.port') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.technology') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.purpose') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b">
+                                <td class="py-2 font-mono text-blue-600">transcriber</td>
+                                <td class="py-2 text-gray-600">3340</td>
+                                <td class="py-2 text-gray-600">Python, faster-whisper</td>
+                                <td class="py-2 text-gray-600">{{ t('docs.video.transcriberPurpose') }}</td>
+                            </tr>
+                            <tr class="border-b">
+                                <td class="py-2 font-mono text-blue-600">video-editor</td>
+                                <td class="py-2 text-gray-600">3341</td>
+                                <td class="py-2 text-gray-600">Node.js, FFmpeg</td>
+                                <td class="py-2 text-gray-600">{{ t('docs.video.editorPurpose') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.backendFiles') }}</h3>
+                    <DocsCodeBlock language="text" :code="`app/
+├── Enums/VideoProjectStatus.php          — Status enum (8 states)
+├── Models/VideoProject.php               — Eloquent model + scopes
+├── Http/
+│   ├── Controllers/Api/V1/VideoProjectController.php
+│   └── Resources/VideoProjectResource.php
+├── Jobs/
+│   ├── TranscribeVideoJob.php            — Transcription pipeline
+│   ├── RenderCaptionsJob.php             — Caption rendering pipeline
+│   └── RemoveSilenceJob.php              — Silence removal pipeline
+└── Services/
+    ├── TranscriberService.php            — HTTP client for transcriber
+    └── VideoEditorService.php            — HTTP client for video-editor`" />
+
+                    <!-- ========== SERVICES ========== -->
+                    <h2 id="video-services" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.services') }}</h2>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">TranscriberService</h3>
+                    <p class="text-gray-600 mb-3">{{ t('docs.video.transcriberServiceDesc') }}</p>
+                    <ul class="list-disc ml-6 text-gray-600 mb-4 space-y-1">
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">transcribe(videoPath, language?)</code> — {{ t('docs.video.transcriberTranscribe') }}</li>
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">isHealthy()</code> — {{ t('docs.video.healthCheck') }}</li>
+                    </ul>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">VideoEditorService</h3>
+                    <p class="text-gray-600 mb-3">{{ t('docs.video.editorServiceDesc') }}</p>
+                    <ul class="list-disc ml-6 text-gray-600 mb-4 space-y-1">
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">addCaptions(videoPath, captions, outputPath)</code> — {{ t('docs.video.editorAddCaptions') }}</li>
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">removeSilence(videoPath, segments, outputPath, padding)</code> — {{ t('docs.video.editorRemoveSilence') }}</li>
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">probe(videoPath)</code> — {{ t('docs.video.editorProbe') }}</li>
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">getCaptionStyles()</code> — {{ t('docs.video.editorGetStyles') }}</li>
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">extractAudio(videoPath, outputPath, format)</code> — {{ t('docs.video.editorExtractAudio') }}</li>
+                        <li><code class="text-sm bg-gray-100 px-1 rounded">isHealthy()</code> — {{ t('docs.video.healthCheck') }}</li>
+                    </ul>
+
+                    <!-- ========== API ========== -->
+                    <h2 id="video-api" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.api') }}</h2>
+
+                    <p class="text-gray-600 mb-4">{{ t('docs.video.apiDesc') }}</p>
+
+                    <table class="w-full text-sm mb-6">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.method') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.endpoint') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.endpointDesc') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">GET</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects</td><td class="py-2 text-gray-600">{{ t('docs.video.apiList') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">POST</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects</td><td class="py-2 text-gray-600">{{ t('docs.video.apiCreate') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">GET</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/stats</td><td class="py-2 text-gray-600">{{ t('docs.video.apiStats') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">GET</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/caption-styles</td><td class="py-2 text-gray-600">{{ t('docs.video.apiCaptionStyles') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">GET</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/health</td><td class="py-2 text-gray-600">{{ t('docs.video.apiHealth') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">GET</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/{id}</td><td class="py-2 text-gray-600">{{ t('docs.video.apiShow') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded text-xs font-semibold">PUT</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/{id}</td><td class="py-2 text-gray-600">{{ t('docs.video.apiUpdate') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-red-100 text-red-700 rounded text-xs font-semibold">DELETE</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/{id}</td><td class="py-2 text-gray-600">{{ t('docs.video.apiDelete') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">POST</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/{id}/render</td><td class="py-2 text-gray-600">{{ t('docs.video.apiRender') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">POST</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/{id}/remove-silence</td><td class="py-2 text-gray-600">{{ t('docs.video.apiRemoveSilence') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-green-100 text-green-700 rounded text-xs font-semibold">GET</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/{id}/download</td><td class="py-2 text-gray-600">{{ t('docs.video.apiDownload') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">POST</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/bulk-delete</td><td class="py-2 text-gray-600">{{ t('docs.video.apiBulkDelete') }}</td></tr>
+                            <tr class="border-b"><td class="py-2"><span class="px-2 py-0.5 bg-blue-100 text-blue-700 rounded text-xs font-semibold">POST</span></td><td class="py-2 font-mono text-sm">/api/v1/video-projects/bulk-render</td><td class="py-2 text-gray-600">{{ t('docs.video.apiBulkRender') }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.uploadExample') }}</h3>
+                    <DocsCodeBlock language="bash" :code="`curl -X POST ${baseUrl}/video-projects \\
+  -H 'Authorization: Bearer YOUR_TOKEN' \\
+  -F 'video=@my-video.mp4' \\
+  -F 'title=My Video' \\
+  -F 'language=en' \\
+  -F 'caption_style=hormozi'`" />
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.statsExample') }}</h3>
+                    <DocsCodeBlock language="json" :code='`{
+  \"total\": 42,
+  \"by_status\": {
+    \"pending\": 2,
+    \"uploading\": 0,
+    \"transcribing\": 1,
+    \"transcribed\": 5,
+    \"editing\": 0,
+    \"rendering\": 1,
+    \"completed\": 30,
+    \"failed\": 3
+  },
+  \"processing_count\": 2,
+  \"completed_today\": 5,
+  \"total_duration\": 3842.5
+}`' />
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.projectResource') }}</h3>
+                    <DocsCodeBlock language="json" :code='`{
+  \"id\": \"abc123\",
+  \"title\": \"My Video\",
+  \"status\": \"transcribed\",
+  \"status_label\": \"Transcribed\",
+  \"status_color\": \"purple\",
+  \"original_filename\": \"my-video.mp4\",
+  \"language\": \"en\",
+  \"duration\": 125.4,
+  \"width\": 1920,
+  \"height\": 1080,
+  \"caption_style\": \"hormozi\",
+  \"caption_settings\": {
+    \"highlight_keywords\": false,
+    \"position\": \"bottom\",
+    \"font_size\": 48
+  },
+  \"transcription\": {
+    \"segments\": [
+      {
+        \"start\": 0.0,
+        \"end\": 2.5,
+        \"text\": \"Hello world\",
+        \"words\": [
+          { \"word\": \"Hello\", \"start\": 0.0, \"end\": 0.8 },
+          { \"word\": \"world\", \"start\": 0.9, \"end\": 2.5 }
+        ]
+      }
+    ]
+  },
+  \"is_processing\": false,
+  \"can_edit\": true,
+  \"can_export\": true,
+  \"has_transcription\": true,
+  \"error_message\": null,
+  \"completed_at\": \"2026-02-13T14:30:00Z\",
+  \"created_at\": \"2026-02-13T14:00:00Z\"
+}`' />
+
+                    <!-- ========== PIPELINE ========== -->
+                    <h2 id="video-pipeline" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.pipeline') }}</h2>
+
+                    <p class="text-gray-600 mb-4">{{ t('docs.video.pipelineDesc') }}</p>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ t('docs.video.statusEnum') }}</h3>
+                    <table class="w-full text-sm mb-6">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.status') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.color') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.endpointDesc') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">pending</td><td class="py-2"><span class="px-2 py-0.5 bg-gray-100 text-gray-600 rounded text-xs">gray</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusPending') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">uploading</td><td class="py-2"><span class="px-2 py-0.5 bg-blue-100 text-blue-600 rounded text-xs">blue</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusUploading') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">transcribing</td><td class="py-2"><span class="px-2 py-0.5 bg-indigo-100 text-indigo-600 rounded text-xs">indigo</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusTranscribing') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">transcribed</td><td class="py-2"><span class="px-2 py-0.5 bg-purple-100 text-purple-600 rounded text-xs">purple</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusTranscribed') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">editing</td><td class="py-2"><span class="px-2 py-0.5 bg-yellow-100 text-yellow-600 rounded text-xs">yellow</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusEditing') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">rendering</td><td class="py-2"><span class="px-2 py-0.5 bg-orange-100 text-orange-600 rounded text-xs">orange</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusRendering') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">completed</td><td class="py-2"><span class="px-2 py-0.5 bg-green-100 text-green-600 rounded text-xs">green</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusCompleted') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">failed</td><td class="py-2"><span class="px-2 py-0.5 bg-red-100 text-red-600 rounded text-xs">red</span></td><td class="py-2 text-gray-600">{{ t('docs.video.statusFailed') }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ t('docs.video.pipelineFlow') }}</h3>
+                    <DocsCodeBlock language="text" :code="`1. Upload video (POST /video-projects)
+   → status: pending → uploading
+
+2. TranscribeVideoJob (automatic)
+   → status: transcribing
+   → Calls TranscriberService.transcribe()
+   → Saves word-level segments to transcription JSON
+   → status: transcribed
+
+3. User edits transcript & selects caption style (PUT /video-projects/{id})
+
+4a. Render captions (POST /video-projects/{id}/render)
+    → status: rendering
+    → RenderCaptionsJob calls VideoEditorService.addCaptions()
+    → status: completed (output_path set)
+
+4b. Remove silence (POST /video-projects/{id}/remove-silence)
+    → status: editing
+    → RemoveSilenceJob calls VideoEditorService.removeSilence()
+    → status: transcribed (new video_path, ready for re-render)
+
+5. Download (GET /video-projects/{id}/download)
+   → Returns the rendered output file`" />
+
+                    <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-4 mb-6">
+                        <p class="text-blue-700 text-sm"><strong>{{ t('docs.video.jobQueueNote') }}:</strong> {{ t('docs.video.jobQueueNoteDesc') }}</p>
+                    </div>
+
+                    <!-- ========== VIDEO MANAGER UI ========== -->
+                    <h2 id="video-manager" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.manager') }}</h2>
+
+                    <p class="text-gray-600 mb-4">{{ t('docs.video.managerDesc') }}</p>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ t('docs.video.routeStructure') }}</h3>
+                    <DocsCodeBlock language="text" :code="`/app/video                 → Dashboard (stats, health, queue, recent)
+/app/video/library         → Video Library (grid/list, filters, bulk ops)
+/app/video/upload          → Upload Center (batch upload, drag & drop)
+/app/video/editor/:id      → Editor (4 tabs: transcript, captions, silence, export)
+/app/video/settings        → Defaults & Dictionary`" />
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.frontendFiles') }}</h3>
+                    <DocsCodeBlock language="text" :code="`resources/js/
+├── stores/videoManager.js                    — Pinia store (centralized state)
+├── pages/
+│   ├── VideoManagerPage.vue                  — Parent wrapper (layout + toast)
+│   └── videoManager/
+│       ├── VideoManagerDashboardPage.vue     — Stats grid, health, queue, recent
+│       ├── VideoManagerLibraryPage.vue       — Grid/list view, filters, bulk ops
+│       ├── VideoManagerUploadPage.vue        — Batch upload with drag & drop
+│       ├── VideoManagerEditorPage.vue        — 4-tab editor (split panel)
+│       └── VideoManagerSettingsPage.vue      — Defaults, dictionary, auto-process
+└── components/videoManager/
+    ├── VideoManagerLayout.vue                — Dark layout (gray-950)
+    ├── VideoManagerSidebar.vue               — Collapsible sidebar + brand switcher
+    ├── VideoStatsGrid.vue                    — 4-card stats component
+    ├── ProcessingQueue.vue                   — Live processing list
+    ├── VideoProjectCard.vue                  — Grid view card with hover actions
+    ├── VideoProjectRow.vue                   — List view table row
+    ├── UploadQueue.vue                       — Multi-file upload queue
+    ├── SilenceRemovalPanel.vue               — Silence editor with sliders
+    └── SegmentTimeline.vue                   — Speech/silence visualization`" />
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.managerPages') }}</h3>
+                    <table class="w-full text-sm mb-6">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.page') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.endpointDesc') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b"><td class="py-2 font-semibold text-gray-800">Dashboard</td><td class="py-2 text-gray-600">{{ t('docs.video.pageDashboard') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-semibold text-gray-800">Library</td><td class="py-2 text-gray-600">{{ t('docs.video.pageLibrary') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-semibold text-gray-800">Upload</td><td class="py-2 text-gray-600">{{ t('docs.video.pageUpload') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-semibold text-gray-800">Editor</td><td class="py-2 text-gray-600">{{ t('docs.video.pageEditor') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-semibold text-gray-800">Settings</td><td class="py-2 text-gray-600">{{ t('docs.video.pageSettings') }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <!-- ========== CAPTIONS ========== -->
+                    <h2 id="video-captions" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.captions') }}</h2>
+
+                    <p class="text-gray-600 mb-4">{{ t('docs.video.captionsDesc') }}</p>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ t('docs.video.captionStylesList') }}</h3>
+                    <table class="w-full text-sm mb-6">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.style') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.endpointDesc') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">clean</td><td class="py-2 text-gray-600">{{ t('docs.video.styleClean') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">hormozi</td><td class="py-2 text-gray-600">{{ t('docs.video.styleHormozi') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">mrbeast</td><td class="py-2 text-gray-600">{{ t('docs.video.styleMrbeast') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">bold</td><td class="py-2 text-gray-600">{{ t('docs.video.styleBold') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm">neon</td><td class="py-2 text-gray-600">{{ t('docs.video.styleNeon') }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.captionSettingsFields') }}</h3>
+                    <DocsCodeBlock language="json" :code='`{
+  \"caption_style\": \"hormozi\",
+  \"caption_settings\": {
+    \"highlight_keywords\": true,
+    \"position\": \"bottom\",
+    \"font_size\": 48
+  }
+}`' />
+                    <table class="w-full text-sm mb-6 mt-3">
+                        <tbody>
+                            <tr class="border-b"><td class="py-2 font-mono text-blue-600">highlight_keywords</td><td class="py-2 text-gray-500">boolean</td><td class="py-2 text-gray-600">{{ t('docs.video.settingHighlight') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-blue-600">position</td><td class="py-2 text-gray-500">top|center|bottom</td><td class="py-2 text-gray-600">{{ t('docs.video.settingPosition') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-blue-600">font_size</td><td class="py-2 text-gray-500">16-128</td><td class="py-2 text-gray-600">{{ t('docs.video.settingFontSize') }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <!-- ========== PINIA STORE ========== -->
+                    <h2 id="video-store" class="text-2xl font-bold text-gray-900 mt-10 mb-6 pb-2 border-b scroll-mt-8">{{ t('docs.video.store') }}</h2>
+
+                    <p class="text-gray-600 mb-4">{{ t('docs.video.storeDesc') }}</p>
+
+                    <h3 class="text-lg font-semibold text-gray-900 mb-3">{{ t('docs.video.storeState') }}</h3>
+                    <DocsCodeBlock language="javascript" :code="`// stores/videoManager.js — useVideoManagerStore
+
+state: {
+  sidebarCollapsed, mobileMenuOpen     // UI
+  stats, statsLoading                  // Dashboard stats
+  projects, projectsLoading, pagination // Library list
+  currentProject, projectLoading       // Editor
+  captionStyles                        // Available styles
+  uploadQueue, uploading               // Upload queue
+  selectedIds                          // Bulk selection
+  settings, settingsLoading            // User preferences
+  health                               // Service health status
+}`" />
+
+                    <h3 class="text-lg font-semibold text-gray-900 mt-6 mb-3">{{ t('docs.video.storeActions') }}</h3>
+                    <table class="w-full text-sm mb-6">
+                        <thead>
+                            <tr class="border-b">
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.action') }}</th>
+                                <th class="text-left py-2 text-gray-600 font-medium">{{ t('docs.video.endpointDesc') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">fetchStats(params)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionFetchStats') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">fetchHealth()</td><td class="py-2 text-gray-600">{{ t('docs.video.actionFetchHealth') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">fetchProjects(params)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionFetchProjects') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">fetchProject(publicId)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionFetchProject') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">uploadVideo(formData)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionUpload') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">processUploadQueue(brandId)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionProcessQueue') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">updateProject(publicId, data)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionUpdate') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">renderProject(publicId)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionRender') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">removeSilence(publicId, opts)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionRemoveSilence') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">deleteProject(publicId)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionDelete') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">bulkDelete(ids)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionBulkDelete') }}</td></tr>
+                            <tr class="border-b"><td class="py-2 font-mono text-sm text-blue-600">bulkRender(ids)</td><td class="py-2 text-gray-600">{{ t('docs.video.actionBulkRender') }}</td></tr>
+                        </tbody>
+                    </table>
+
+                    <div class="bg-violet-50 border border-violet-200 rounded-lg p-4 mt-4">
+                        <p class="text-violet-700 text-sm"><strong>{{ t('docs.video.translationNote') }}:</strong> {{ t('docs.video.translationNoteDesc') }}</p>
                     </div>
                 </template>
                 </div>

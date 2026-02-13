@@ -1,0 +1,18 @@
+{
+    "id": "mrbeast",
+    "name": "MrBeast",
+    "description": "Large yellow highlighted text with red accents, MrBeast thumbnail style",
+    "font_name": "Liberation Sans",
+    "font_size": 64,
+    "primary_color": "&H0000FFFF",
+    "outline_color": "&H000000AA",
+    "back_color": "&H00000000",
+    "bold": true,
+    "outline": 5,
+    "shadow": 2,
+    "alignment": 2,
+    "margin_v": 80,
+    "highlight_color": "&H000055FF",
+    "uppercase": true,
+    "word_per_line": 2
+}

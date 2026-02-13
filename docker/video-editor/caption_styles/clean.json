@@ -1,0 +1,18 @@
+{
+    "id": "clean",
+    "name": "Clean",
+    "description": "Minimal white text with subtle shadow, professional look",
+    "font_name": "DejaVu Sans",
+    "font_size": 44,
+    "primary_color": "&H00FFFFFF",
+    "outline_color": "&H00000000",
+    "back_color": "&H80000000",
+    "bold": true,
+    "outline": 2,
+    "shadow": 1,
+    "alignment": 2,
+    "margin_v": 60,
+    "highlight_color": "&H0000FFFF",
+    "uppercase": false,
+    "word_per_line": 5
+}

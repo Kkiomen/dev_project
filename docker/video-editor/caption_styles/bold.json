@@ -1,0 +1,18 @@
+{
+    "id": "bold",
+    "name": "Bold",
+    "description": "Extra bold white text with strong black border, high contrast",
+    "font_name": "Liberation Sans",
+    "font_size": 52,
+    "primary_color": "&H00FFFFFF",
+    "outline_color": "&H00000000",
+    "back_color": "&H00000000",
+    "bold": true,
+    "outline": 6,
+    "shadow": 3,
+    "alignment": 2,
+    "margin_v": 70,
+    "highlight_color": "&H0066FF00",
+    "uppercase": false,
+    "word_per_line": 4
+}

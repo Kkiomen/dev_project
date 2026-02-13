@@ -1,0 +1,18 @@
+{
+    "id": "neon",
+    "name": "Neon",
+    "description": "Glowing neon cyan text with purple outline, futuristic style",
+    "font_name": "DejaVu Sans",
+    "font_size": 48,
+    "primary_color": "&H00FFFF00",
+    "outline_color": "&H00FF00AA",
+    "back_color": "&H00000000",
+    "bold": true,
+    "outline": 3,
+    "shadow": 4,
+    "alignment": 2,
+    "margin_v": 70,
+    "highlight_color": "&H00FF88FF",
+    "uppercase": false,
+    "word_per_line": 3
+}

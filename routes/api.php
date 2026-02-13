@@ -41,6 +41,7 @@ use App\Http\Controllers\Api\V1\LayerController;
 use App\Http\Controllers\Api\V1\GeneratedImageController;
 use App\Http\Controllers\Api\V1\TemplateFontController;
 use App\Http\Controllers\Api\V1\UploadedImageController;
+use App\Http\Controllers\Api\V1\VideoProjectController;
 use App\Http\Controllers\Api\V1\WebhookController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\PlatformCredentialController;
@@ -711,6 +712,21 @@ $v1Routes = function () {
     Route::get('rss-feeds/{feed}/articles', [RssFeedController::class, 'articles']);
     Route::post('rss-feeds/{feed}/refresh', [RssFeedController::class, 'refresh']);
     Route::get('rss-articles', [RssFeedController::class, 'allArticles']);
+
+    // === VIDEO PROJECTS ===
+    Route::get('video-projects', [VideoProjectController::class, 'index']);
+    Route::post('video-projects', [VideoProjectController::class, 'store']);
+    Route::get('video-projects/stats', [VideoProjectController::class, 'stats']);
+    Route::get('video-projects/caption-styles', [VideoProjectController::class, 'captionStyles']);
+    Route::get('video-projects/health', [VideoProjectController::class, 'health']);
+    Route::post('video-projects/bulk-delete', [VideoProjectController::class, 'bulkDelete']);
+    Route::post('video-projects/bulk-render', [VideoProjectController::class, 'bulkRender']);
+    Route::get('video-projects/{publicId}', [VideoProjectController::class, 'show']);
+    Route::put('video-projects/{publicId}', [VideoProjectController::class, 'update']);
+    Route::delete('video-projects/{publicId}', [VideoProjectController::class, 'destroy']);
+    Route::post('video-projects/{publicId}/render', [VideoProjectController::class, 'render']);
+    Route::post('video-projects/{publicId}/remove-silence', [VideoProjectController::class, 'removeSilence']);
+    Route::get('video-projects/{publicId}/download', [VideoProjectController::class, 'download']);
 };
 
 // V1 routes for external API consumers (Sanctum tokens)

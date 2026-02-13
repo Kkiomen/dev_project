@@ -7,6 +7,8 @@ Panel do automatyzacji procesów tworzenia marki osobistej.
 - [API Reference](./api/README.md) - Dokumentacja endpointów REST API
 - [Panel Użytkownika](./panel/README.md) - Opis funkcjonalności panelu
 - [Poradnik Developera](./development.md) - Konfiguracja środowiska i konwencje
+- [Architektura Publikacji](./publishing-architecture.md) - Adapter pattern, providery, flow publikacji
+- [Video Manager](./video-manager.md) - Transkrypcja AI, napisy, mikroserwisy Docker
 - [Rayso API](./rayso-api.md) - Generowanie grafik z kodu
 
 ---

@@ -89,4 +89,14 @@ return [
         'timeout' => env('DEV_BOT_TIMEOUT', 30),
     ],
 
+    'transcriber' => [
+        'url' => env('TRANSCRIBER_URL', 'http://transcriber:3340'),
+        'timeout' => env('TRANSCRIBER_TIMEOUT', 300),
+    ],
+
+    'video_editor' => [
+        'url' => env('VIDEO_EDITOR_URL', 'http://video-editor:3341'),
+        'timeout' => env('VIDEO_EDITOR_TIMEOUT', 600),
+    ],
+
 ];

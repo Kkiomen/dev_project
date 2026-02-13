@@ -1,0 +1,18 @@
+{
+    "id": "hormozi",
+    "name": "Hormozi",
+    "description": "Bold white text with thick black outline, inspired by Alex Hormozi style",
+    "font_name": "Liberation Sans",
+    "font_size": 56,
+    "primary_color": "&H00FFFFFF",
+    "outline_color": "&H00000000",
+    "back_color": "&H00000000",
+    "bold": true,
+    "outline": 4,
+    "shadow": 0,
+    "alignment": 2,
+    "margin_v": 80,
+    "highlight_color": "&H0000FFFF",
+    "uppercase": true,
+    "word_per_line": 3
+}

@@ -75,6 +75,12 @@ const navLinks = computed(() => [
         isActive: route.path === '/posts/automation',
     },
     {
+        to: '/app/video',
+        label: t('navigation.video'),
+        icon: 'video',
+        isActive: route.path.startsWith('/app/video'),
+    },
+    {
         to: '/rss-feeds',
         label: t('navigation.rssFeeds'),
         icon: 'rss',
@@ -220,6 +226,10 @@ const bottomLinks = computed(() => [
                 <!-- Automation -->
                 <svg v-else-if="link.icon === 'automation'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m3.75 13.5 10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75Z" />
+                </svg>
+                <!-- Video -->
+                <svg v-else-if="link.icon === 'video'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m15.75 10.5 4.72-4.72a.75.75 0 0 1 1.28.53v11.38a.75.75 0 0 1-1.28.53l-4.72-4.72M4.5 18.75h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25h-9A2.25 2.25 0 0 0 2.25 7.5v9a2.25 2.25 0 0 0 2.25 2.25Z" />
                 </svg>
                 <!-- RSS -->
                 <svg v-else-if="link.icon === 'rss'" class="w-5 h-5 mr-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">

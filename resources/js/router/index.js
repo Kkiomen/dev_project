@@ -107,6 +107,40 @@ const routes = [
         component: () => import('@/pages/PostEditorPage.vue'),
         props: true,
     },
+    // Video Manager
+    {
+        path: '/app/video',
+        component: () => import('@/pages/VideoManagerPage.vue'),
+        meta: { hideLayout: true },
+        children: [
+            {
+                path: '',
+                name: 'videoManager.dashboard',
+                component: () => import('@/pages/videoManager/VideoManagerDashboardPage.vue'),
+            },
+            {
+                path: 'library',
+                name: 'videoManager.library',
+                component: () => import('@/pages/videoManager/VideoManagerLibraryPage.vue'),
+            },
+            {
+                path: 'upload',
+                name: 'videoManager.upload',
+                component: () => import('@/pages/videoManager/VideoManagerUploadPage.vue'),
+            },
+            {
+                path: 'editor/:projectId',
+                name: 'videoManager.editor',
+                component: () => import('@/pages/videoManager/VideoManagerEditorPage.vue'),
+                props: true,
+            },
+            {
+                path: 'settings',
+                name: 'videoManager.settings',
+                component: () => import('@/pages/videoManager/VideoManagerSettingsPage.vue'),
+            },
+        ],
+    },
     {
         path: '/posts/verify',
         name: 'post.verify',

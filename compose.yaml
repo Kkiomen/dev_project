@@ -206,6 +206,50 @@ services:
             retries: 3
             start_period: 40s
         restart: unless-stopped
+    transcriber:
+        build:
+            context: './docker/transcriber'
+            dockerfile: Dockerfile
+        image: 'sail-transcriber/app'
+        ports:
+            - '${FORWARD_TRANSCRIBER_PORT:-3340}:3340'
+        environment:
+            WHISPER_MODEL: '${WHISPER_MODEL:-base}'
+            WHISPER_DEVICE: '${WHISPER_DEVICE:-cpu}'
+            WHISPER_COMPUTE_TYPE: '${WHISPER_COMPUTE_TYPE:-int8}'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - python
+                - '-c'
+                - "import urllib.request; urllib.request.urlopen('http://localhost:3340/health')"
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 30s
+        restart: unless-stopped
+    video-editor:
+        build:
+            context: './docker/video-editor'
+            dockerfile: Dockerfile
+        image: 'sail-video-editor/app'
+        ports:
+            - '${FORWARD_VIDEO_EDITOR_PORT:-3341}:3341'
+        networks:
+            - sail
+        healthcheck:
+            test:
+                - CMD
+                - python
+                - '-c'
+                - "import urllib.request; urllib.request.urlopen('http://localhost:3341/health')"
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 20s
+        restart: unless-stopped
     n8n:
         image: 'n8nio/n8n:latest'
         ports:
