@@ -20,6 +20,7 @@ class SmStrategyResource extends JsonResource
             'content_mix' => $this->content_mix,
             'optimal_times' => $this->optimal_times,
             'ai_recommendations' => $this->ai_recommendations,
+            'content_language' => $this->brand->getLanguage(),
             'status' => $this->status,
             'total_weekly_posts' => $this->getTotalWeeklyPosts(),
             'activated_at' => $this->activated_at,

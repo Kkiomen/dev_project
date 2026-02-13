@@ -270,6 +270,7 @@ PROMPT;
     protected function generateAiSummary(Brand $brand, array $data, string $apiKey): array
     {
         $prompt = $this->buildReportPrompt($brand, $data);
+        $language = $brand->getLanguage();
 
         $startTime = microtime(true);
         $log = $this->logAiStart($brand, 'sm_weekly_report', [
@@ -286,7 +287,7 @@ PROMPT;
                 'messages' => [
                     [
                         'role' => 'system',
-                        'content' => 'You are a social media analytics expert generating weekly performance reports. Always respond with valid JSON only, no markdown formatting.',
+                        'content' => "You are a social media analytics expert generating weekly performance reports. Write ALL text (summary, recommendations, insights) in {$language}. Always respond with valid JSON only, no markdown formatting.",
                     ],
                     [
                         'role' => 'user',

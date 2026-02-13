@@ -279,9 +279,11 @@ PROMPT;
             $prompt .= "\n- Pain points: " . implode(', ', $context['target_audience']['pain_points']);
         }
 
+        $language = $context['voice']['language'] ?? 'en';
+
         $prompt .= "\n\nBRAND VOICE:";
         $prompt .= "\n- Tone: " . ($context['voice']['tone'] ?? 'professional');
-        $prompt .= "\n- Language: " . ($context['voice']['language'] ?? 'en');
+        $prompt .= "\n- Language: " . $language;
 
         if (!empty($context['voice']['personality'])) {
             $prompt .= "\n- Personality: " . implode(', ', $context['voice']['personality']);
@@ -289,6 +291,7 @@ PROMPT;
 
         $prompt .= "\n\nGenerate a strategy that includes content pillars, posting frequency per platform, refined target audience, goals with KPIs, content mix percentages, optimal posting times, and strategic recommendations.";
         $prompt .= "\nOnly include platforms from: {$platformsList}";
+        $prompt .= "\nWrite ALL text content (pillar names, descriptions, recommendations, audience pain points) in {$language}.";
 
         return $prompt;
     }

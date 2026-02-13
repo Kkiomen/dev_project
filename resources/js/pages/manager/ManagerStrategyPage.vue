@@ -17,6 +17,7 @@ const generating = ref(false);
 const activeTab = ref('platforms');
 
 // Local editable state
+const contentLanguage = ref('en');
 const activePlatforms = ref([]);
 const contentPillars = ref([]);
 const postingFrequency = ref({
@@ -54,6 +55,26 @@ const platforms = [
     { id: 'linkedin', name: 'LinkedIn', icon: 'LI' },
     { id: 'x', name: 'X', icon: 'X' },
     { id: 'youtube', name: 'YouTube', icon: 'YT' },
+];
+
+const languages = [
+    { code: 'pl', name: 'Polski' },
+    { code: 'en', name: 'English' },
+    { code: 'de', name: 'Deutsch' },
+    { code: 'es', name: 'Español' },
+    { code: 'fr', name: 'Français' },
+    { code: 'it', name: 'Italiano' },
+    { code: 'pt', name: 'Português' },
+    { code: 'nl', name: 'Nederlands' },
+    { code: 'sv', name: 'Svenska' },
+    { code: 'da', name: 'Dansk' },
+    { code: 'no', name: 'Norsk' },
+    { code: 'fi', name: 'Suomi' },
+    { code: 'cs', name: 'Čeština' },
+    { code: 'ro', name: 'Română' },
+    { code: 'hu', name: 'Magyar' },
+    { code: 'uk', name: 'Українська' },
+    { code: 'ru', name: 'Русский' },
 ];
 
 const tabs = [
@@ -97,6 +118,7 @@ const togglePlatform = (platformId) => {
 // Sync from store
 watch(() => managerStore.strategy, (strategy) => {
     if (!strategy) return;
+    if (strategy.content_language) contentLanguage.value = strategy.content_language;
     if (Array.isArray(strategy.active_platforms)) activePlatforms.value = [...strategy.active_platforms];
     if (Array.isArray(strategy.content_pillars)) contentPillars.value = [...strategy.content_pillars];
     if (strategy.posting_frequency && typeof strategy.posting_frequency === 'object') postingFrequency.value = { ...postingFrequency.value, ...strategy.posting_frequency };
@@ -161,6 +183,7 @@ const handleSave = async () => {
     saving.value = true;
     try {
         await managerStore.updateStrategy({
+            content_language: contentLanguage.value,
             active_platforms: activePlatforms.value,
             content_pillars: contentPillars.value,
             posting_frequency: postingFrequency.value,
@@ -348,6 +371,22 @@ watch(() => managerStore.currentBrandId, (brandId) => {
                     <p v-if="activePlatforms.length === 0" class="mt-4 text-sm text-yellow-400">
                         {{ t('manager.strategy.noPlatformsSelected') }}
                     </p>
+                </div>
+
+                <!-- Content Language -->
+                <div class="rounded-xl bg-gray-900 border border-gray-800 p-6">
+                    <div class="mb-4">
+                        <h3 class="text-base font-semibold text-white">{{ t('manager.strategy.contentLanguage') }}</h3>
+                        <p class="mt-1 text-sm text-gray-400">{{ t('manager.strategy.contentLanguageDesc') }}</p>
+                    </div>
+                    <select
+                        v-model="contentLanguage"
+                        class="w-full sm:w-72 rounded-lg bg-gray-800 border border-gray-700 px-4 py-2.5 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition [color-scheme:dark]"
+                    >
+                        <option v-for="lang in languages" :key="lang.code" :value="lang.code">
+                            {{ lang.name }}
+                        </option>
+                    </select>
                 </div>
             </div>
 

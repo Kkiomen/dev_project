@@ -66,13 +66,22 @@ class SmStrategyController extends Controller
             'goals' => ['nullable', 'array'],
             'goals.*.goal' => ['required_with:goals', 'string', 'max:255'],
             'goals.*.metric' => ['nullable', 'string', 'max:100'],
-            'goals.*.target_value' => ['nullable', 'string', 'max:100'],
+            'goals.*.target_value' => ['nullable', 'max:100'],
             'goals.*.timeframe' => ['nullable', 'string', 'max:100'],
             'competitor_handles' => ['nullable', 'array'],
             'content_mix' => ['nullable', 'array'],
             'optimal_times' => ['nullable', 'array'],
             'status' => ['nullable', 'string', 'in:draft,active,paused,archived'],
+            'content_language' => ['nullable', 'string', 'in:pl,en,de,es,fr,it,pt,nl,sv,da,no,fi,cs,ro,hu,uk,ru'],
         ]);
+
+        // Update brand voice language if provided
+        if (isset($validated['content_language'])) {
+            $voice = $brand->voice ?? [];
+            $voice['language'] = $validated['content_language'];
+            $brand->update(['voice' => $voice]);
+            unset($validated['content_language']);
+        }
 
         $strategy = $brand->smStrategies()->latest()->first();
 

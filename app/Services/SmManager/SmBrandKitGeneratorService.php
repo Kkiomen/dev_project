@@ -177,10 +177,12 @@ PROMPT;
             }
         }
 
+        $language = $context['voice']['language'] ?? 'en';
+
         if (!empty($context['voice'])) {
             $prompt .= "\n\nEXISTING BRAND VOICE:";
             $prompt .= "\n- Tone: " . ($context['voice']['tone'] ?? 'not set');
-            $prompt .= "\n- Language: " . ($context['voice']['language'] ?? 'en');
+            $prompt .= "\n- Language: " . $language;
 
             if (!empty($context['voice']['personality'])) {
                 $prompt .= "\n- Personality: " . implode(', ', $context['voice']['personality']);
@@ -189,6 +191,7 @@ PROMPT;
 
         $prompt .= "\n\nGenerate a complete brand identity kit including color palette, typography, visual style, tone of voice, voice attributes, content pillars with percentages, branded and industry hashtags, and brief brand guidelines notes.";
         $prompt .= "\nMake sure the brand kit reflects the brand's industry and target audience.";
+        $prompt .= "\nWrite ALL text content (pillar names, descriptions, guidelines notes, hashtags) in {$language}.";
 
         return $prompt;
     }

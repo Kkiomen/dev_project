@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import axios from 'axios';
 import { useManagerStore } from '@/stores/manager';
+import { usePostsStore } from '@/stores/posts';
 import { useToast } from '@/composables/useToast';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 
@@ -11,11 +12,14 @@ const { t } = useI18n();
 const route = useRoute();
 const router = useRouter();
 const managerStore = useManagerStore();
+const postsStore = usePostsStore();
 const toast = useToast();
 
 const postId = route.params.id;
 const loading = ref(true);
 const loadError = ref(false);
+const saving = ref(false);
+const publishing = ref(false);
 
 const platforms = [
     { key: 'instagram', label: 'Instagram', abbr: 'IG' },
@@ -203,21 +207,79 @@ async function generateVariants() {
     }
 }
 
-function saveDraft() {
+const canPublish = computed(() => {
+    return ['draft', 'approved', 'scheduled'].includes(localPost.value.status);
+});
+
+function buildFormData() {
+    const data = {
+        title: localPost.value.title,
+        caption: localPost.value.caption,
+        settings: {
+            hashtags: localPost.value.hashtags,
+            platform: activePlatformTab.value,
+        },
+    };
+
+    if (localPost.value.scheduled_at) {
+        const time = localPost.value.scheduled_time || '12:00';
+        data.scheduled_at = `${localPost.value.scheduled_at} ${time}:00`;
+    }
+
+    const platformCaptions = {};
+    for (const [key, value] of Object.entries(localPost.value.platform_captions)) {
+        if (value) platformCaptions[key] = value;
+    }
+    if (Object.keys(platformCaptions).length) {
+        data.platform_captions = platformCaptions;
+    }
+
+    return data;
+}
+
+async function saveDraft() {
+    if (!postId || postId === 'new') return;
+    saving.value = true;
     try {
-        localPost.value.status = 'draft';
+        await postsStore.updatePost(postId, buildFormData());
         toast.success(t('manager.postEditor.saved'));
     } catch {
         toast.error(t('manager.postEditor.saveError'));
+    } finally {
+        saving.value = false;
     }
 }
 
-function submitForApproval() {
+async function submitForApproval() {
+    if (!postId || postId === 'new') return;
+    saving.value = true;
     try {
+        await postsStore.updatePost(postId, buildFormData());
         localPost.value.status = 'pending_approval';
         toast.success(t('manager.postEditor.submitted'));
     } catch {
         toast.error(t('manager.postEditor.submitError'));
+    } finally {
+        saving.value = false;
+    }
+}
+
+async function publishPost() {
+    if (!postId || postId === 'new') return;
+    publishing.value = true;
+    try {
+        await postsStore.updatePost(postId, buildFormData());
+        const result = await postsStore.webhookPublishPost(postId);
+        if (result.success) {
+            localPost.value.status = 'published';
+            toast.success(t('manager.postEditor.publishSuccess'));
+        } else {
+            toast.error(result.error || t('manager.postEditor.publishError'));
+        }
+    } catch {
+        toast.error(t('manager.postEditor.publishError'));
+    } finally {
+        publishing.value = false;
     }
 }
 
@@ -585,21 +647,47 @@ const statusColors = {
 
                     <!-- Action Buttons -->
                     <div class="rounded-xl bg-gray-900 border border-gray-800 p-4 sm:p-6 space-y-3">
+                        <!-- Publish -->
+                        <button
+                            v-if="canPublish"
+                            @click="publishPost"
+                            :disabled="publishing || saving"
+                            class="w-full px-4 py-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                            <svg v-if="publishing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+                            </svg>
+                            {{ publishing ? t('manager.postEditor.publishing') : t('manager.postEditor.publish') }}
+                        </button>
+
+                        <!-- Save Draft -->
                         <button
                             @click="saveDraft"
-                            class="w-full px-4 py-2.5 rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition text-sm font-medium"
+                            :disabled="saving || publishing"
+                            class="w-full px-4 py-2.5 rounded-lg bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
                         >
                             {{ t('manager.postEditor.saveDraft') }}
                         </button>
+
+                        <!-- Submit for Approval -->
                         <button
+                            v-if="localPost.status === 'draft'"
                             @click="submitForApproval"
-                            class="w-full px-4 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 transition text-sm font-medium"
+                            :disabled="saving || publishing"
+                            class="w-full px-4 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
                         >
                             {{ t('manager.postEditor.submitForApproval') }}
                         </button>
+
+                        <!-- Delete -->
                         <button
                             @click="showDeleteConfirm = true"
-                            class="w-full px-4 py-2 text-red-400 hover:text-red-300 transition text-sm font-medium"
+                            :disabled="saving || publishing"
+                            class="w-full px-4 py-2 text-red-400 hover:text-red-300 disabled:opacity-50 transition text-sm font-medium"
                         >
                             {{ t('manager.postEditor.delete') }}
                         </button>

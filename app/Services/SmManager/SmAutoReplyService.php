@@ -199,6 +199,7 @@ class SmAutoReplyService
         $brandName = $brand->name;
         $tone = $brand->getTone() ?? 'professional';
         $personality = implode(', ', $brand->getPersonality());
+        $language = $brand->getLanguage();
 
         $prompt = <<<PROMPT
 You are a social media community manager for the brand "{$brandName}".
@@ -206,6 +207,7 @@ Your task is to generate appropriate replies to social media comments.
 
 BRAND VOICE:
 - Tone: {$tone}
+- Language: {$language}
 PROMPT;
 
         if ($personality) {
@@ -216,7 +218,7 @@ PROMPT;
             $prompt .= "\n- Brand description: {$brand->description}";
         }
 
-        $prompt .= <<<'PROMPT'
+        $prompt .= <<<PROMPT
 
 
 REPLY RULES:
@@ -228,11 +230,12 @@ REPLY RULES:
 6. Keep replies concise and natural (1-3 sentences typically)
 7. Do NOT use Unicode bold/italic formatting - use plain text only
 8. Do NOT include hashtags in replies unless contextually appropriate
+9. Write ALL reply text in {$language}
 
 RESPONSE FORMAT:
 Respond with valid JSON only. No additional text.
 {
-  "reply": "The reply text to post",
+  "reply": "The reply text to post (in {$language})",
   "tone": "friendly|professional|empathetic|grateful|apologetic"
 }
 PROMPT;
