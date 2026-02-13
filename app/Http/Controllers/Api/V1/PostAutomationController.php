@@ -245,10 +245,10 @@ class PostAutomationController extends Controller
     {
         $this->authorize('update', $post);
 
-        if ($post->status !== PostStatus::Approved && $post->status !== PostStatus::Scheduled) {
+        if (!in_array($post->status, [PostStatus::Draft, PostStatus::Approved, PostStatus::Scheduled])) {
             return response()->json([
                 'success' => false,
-                'error' => 'Post must be approved before publishing',
+                'error' => 'Post cannot be published in its current status',
             ], 400);
         }
 

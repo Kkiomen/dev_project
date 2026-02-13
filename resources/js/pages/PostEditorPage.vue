@@ -565,10 +565,10 @@ const canSave = computed(() => {
     return sharedData.value.title && platformContent[firstPlatform.value].caption;
 });
 
-// Check if post can be published (approved or scheduled)
+// Check if post can be published (draft, approved or scheduled)
 const canPublish = computed(() => {
     if (!isEditing.value || !postsStore.currentPost) return false;
-    return ['approved', 'scheduled'].includes(postsStore.currentPost.status);
+    return ['draft', 'approved', 'scheduled'].includes(postsStore.currentPost.status);
 });
 
 // Publish to all enabled platforms
@@ -577,6 +577,9 @@ const handlePublishAll = async () => {
 
     publishing.value = true;
     try {
+        // Save latest changes before publishing
+        await postsStore.updatePost(props.postId, formData.value);
+
         const result = await postsStore.webhookPublishPost(props.postId);
         if (result.success) {
             toast.success(t('posts.save.publishAllSuccess'));
