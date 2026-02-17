@@ -61,6 +61,7 @@ use App\Http\Controllers\Api\V1\SmAutoReplyRuleController;
 use App\Http\Controllers\Api\V1\SmCrisisAlertController;
 use App\Http\Controllers\Api\V1\SmMonitoredKeywordController;
 use App\Http\Controllers\Api\V1\SmListeningController;
+use App\Http\Controllers\Api\V1\SmPipelineController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -701,6 +702,22 @@ $v1Routes = function () {
         Route::delete('alert-rules/{smAlertRule}', [SmListeningController::class, 'destroyAlertRule']);
         Route::get('reports', [SmListeningController::class, 'reports']);
         Route::get('reports/{smListeningReport}', [SmListeningController::class, 'report']);
+    });
+
+    // === SM PIPELINES (Graphics Spaces) ===
+    Route::prefix('brands/{brand}/sm-pipelines')->group(function () {
+        Route::get('/', [SmPipelineController::class, 'index']);
+        Route::post('/', [SmPipelineController::class, 'store']);
+        Route::get('node-types', [SmPipelineController::class, 'nodeTypes']);
+        Route::get('{smPipeline}', [SmPipelineController::class, 'show']);
+        Route::put('{smPipeline}', [SmPipelineController::class, 'update']);
+        Route::delete('{smPipeline}', [SmPipelineController::class, 'destroy']);
+        Route::put('{smPipeline}/canvas', [SmPipelineController::class, 'saveCanvas']);
+        Route::post('{smPipeline}/execute', [SmPipelineController::class, 'execute']);
+        Route::get('{smPipeline}/runs', [SmPipelineController::class, 'runs']);
+        Route::get('{smPipeline}/runs/{run}', [SmPipelineController::class, 'runStatus']);
+        Route::post('{smPipeline}/nodes/{nodeId}/preview', [SmPipelineController::class, 'previewNode']);
+        Route::post('{smPipeline}/upload-image', [SmPipelineController::class, 'uploadNodeImage']);
     });
 
     // === RSS FEEDS ===

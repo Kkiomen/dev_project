@@ -10,9 +10,12 @@ const authStore = useAuthStore();
 const brandsStore = useBrandsStore();
 const managerStore = useManagerStore();
 
-onMounted(() => {
+onMounted(async () => {
     authStore.fetchUser();
-    brandsStore.fetchBrands();
+    await brandsStore.fetchBrands();
+    if (!brandsStore.currentBrand) {
+        await brandsStore.fetchCurrentBrand();
+    }
 });
 </script>
 

@@ -11,6 +11,7 @@ use App\Models\SocialPost;
 use App\Services\Concerns\LogsApiUsage;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class DirectImageGeneratorService
 {
@@ -20,6 +21,13 @@ class DirectImageGeneratorService
     private const MODEL_ENDPOINT = '/google/nano-banana/text-to-image';
     private const POLL_INTERVAL_SECONDS = 2;
     private const MAX_POLL_ATTEMPTS = 30;
+
+    private const ARRAY_IMAGE_MODELS = [
+        '/google/nano-banana/edit',
+        '/google/nano-banana-pro/edit',
+        '/openai/gpt-image-1.5/edit',
+        '/openai/gpt-image-1-mini/edit',
+    ];
 
     public function generate(SocialPost $post): array
     {
@@ -79,6 +87,228 @@ class DirectImageGeneratorService
 
             return ['success' => false, 'error' => $e->getMessage()];
         }
+    }
+
+    /**
+     * Generate image from raw prompt (used by pipeline nodes).
+     * Saves result to public storage and returns image_path.
+     */
+    public function generateFromPrompt(Brand $brand, string $prompt, array $config = []): array
+    {
+        $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::WaveSpeed);
+
+        if (!$apiKey) {
+            return ['success' => false, 'error_code' => 'no_api_key', 'error' => 'No WaveSpeed API key configured for this brand'];
+        }
+
+        if (empty($prompt)) {
+            return ['success' => false, 'error' => 'No prompt provided'];
+        }
+
+        $modelEndpoint = $config['model'] ?? self::MODEL_ENDPOINT;
+        if (!str_starts_with($modelEndpoint, '/')) {
+            $modelEndpoint = '/' . $modelEndpoint;
+        }
+
+        $startTime = microtime(true);
+        $log = $this->logExternalStart(
+            $brand,
+            'pipeline_image_generation',
+            ApiProvider::WAVESPEED,
+            $modelEndpoint,
+            ['prompt' => $prompt, 'config' => $config]
+        );
+
+        try {
+            $jobId = $this->createJobForModel($apiKey, $modelEndpoint, $prompt, $config);
+            $imageUrl = $this->pollForResult($apiKey, $jobId);
+            $imageData = $this->downloadImage($imageUrl);
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->completeExternalLog($log, ['job_id' => $jobId, 'image_url' => $imageUrl], 200, $durationMs);
+
+            $extension = $this->guessExtension($imageUrl);
+            $filename = 'pipeline-' . substr(md5($jobId), 0, 12) . '.' . $extension;
+            $path = "pipelines/{$brand->id}/{$filename}";
+
+            Storage::disk('public')->put($path, $imageData);
+
+            return [
+                'success' => true,
+                'image_path' => $path,
+            ];
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            Log::error('Pipeline image generation failed', [
+                'brand_id' => $brand->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * Generate image from an existing image + prompt (image-to-image).
+     * Accepts a local storage path, uploads to WaveSpeed, then runs the edit model.
+     */
+    public function generateFromImage(Brand $brand, string $prompt, string $storagePath, array $config = []): array
+    {
+        $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::WaveSpeed);
+
+        if (!$apiKey) {
+            return ['success' => false, 'error_code' => 'no_api_key', 'error' => 'No WaveSpeed API key configured for this brand'];
+        }
+
+        if (empty($prompt)) {
+            return ['success' => false, 'error' => 'No prompt provided'];
+        }
+
+        $modelEndpoint = $config['model'] ?? '/google/nano-banana/edit';
+        if (!str_starts_with($modelEndpoint, '/')) {
+            $modelEndpoint = '/' . $modelEndpoint;
+        }
+
+        $startTime = microtime(true);
+        $log = $this->logExternalStart(
+            $brand,
+            'pipeline_image_to_image',
+            ApiProvider::WAVESPEED,
+            $modelEndpoint,
+            ['prompt' => $prompt, 'storage_path' => $storagePath, 'config' => $config]
+        );
+
+        try {
+            $imageUrl = $this->uploadToWaveSpeed($apiKey, $storagePath);
+            $jobId = $this->createJobForImageModel($apiKey, $modelEndpoint, $prompt, $imageUrl, $config);
+            $imageResultUrl = $this->pollForResult($apiKey, $jobId);
+            $imageData = $this->downloadImage($imageResultUrl);
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->completeExternalLog($log, ['job_id' => $jobId, 'image_url' => $imageResultUrl], 200, $durationMs);
+
+            $extension = $this->guessExtension($imageResultUrl);
+            $filename = 'pipeline-i2i-' . substr(md5($jobId), 0, 12) . '.' . $extension;
+            $path = "pipelines/{$brand->id}/{$filename}";
+
+            Storage::disk('public')->put($path, $imageData);
+
+            return [
+                'success' => true,
+                'image_path' => $path,
+            ];
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            Log::error('Pipeline image-to-image generation failed', [
+                'brand_id' => $brand->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    protected function uploadToWaveSpeed(string $apiKey, string $storagePath): string
+    {
+        $fullPath = Storage::disk('public')->path($storagePath);
+
+        if (!file_exists($fullPath)) {
+            throw new \RuntimeException('Source image not found: ' . $storagePath);
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(60)
+            ->attach('file', file_get_contents($fullPath), basename($fullPath))
+            ->post(self::API_BASE . '/media/upload/binary');
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('WaveSpeed upload failed: ' . $response->status() . ' - ' . $response->body());
+        }
+
+        $url = $response->json('data.download_url');
+
+        if (!$url) {
+            throw new \RuntimeException('WaveSpeed upload did not return a URL');
+        }
+
+        return $url;
+    }
+
+    protected function createJobForImageModel(string $apiKey, string $modelEndpoint, string $prompt, string $imageUrl, array $config = []): string
+    {
+        $payload = [
+            'prompt' => $prompt,
+            'enable_base64_output' => false,
+            'enable_sync_mode' => false,
+            'output_format' => 'jpeg',
+        ];
+
+        if (in_array($modelEndpoint, self::ARRAY_IMAGE_MODELS, true)) {
+            $payload['images'] = [$imageUrl];
+        } else {
+            $payload['image'] = $imageUrl;
+            $payload['strength'] = $config['strength'] ?? 0.65;
+        }
+
+        $width = $config['width'] ?? null;
+        $height = $config['height'] ?? null;
+        if ($width && $height) {
+            $payload['size'] = "{$width}x{$height}";
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->post(self::API_BASE . $modelEndpoint, $payload);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('WaveSpeed API error: ' . $response->status() . ' - ' . $response->body());
+        }
+
+        $data = $response->json();
+        $jobId = $data['data']['id'] ?? null;
+
+        if (!$jobId) {
+            throw new \RuntimeException('WaveSpeed API did not return a job ID');
+        }
+
+        return $jobId;
+    }
+
+    protected function createJobForModel(string $apiKey, string $modelEndpoint, string $prompt, array $config = []): string
+    {
+        $payload = [
+            'prompt' => $prompt,
+            'enable_base64_output' => false,
+            'enable_sync_mode' => false,
+            'output_format' => 'jpeg',
+        ];
+
+        $width = $config['width'] ?? null;
+        $height = $config['height'] ?? null;
+        if ($width && $height) {
+            $payload['size'] = "{$width}x{$height}";
+        }
+
+        $response = Http::withToken($apiKey)
+            ->timeout(30)
+            ->post(self::API_BASE . $modelEndpoint, $payload);
+
+        if (!$response->successful()) {
+            throw new \RuntimeException('WaveSpeed API error: ' . $response->status() . ' - ' . $response->body());
+        }
+
+        $data = $response->json();
+        $jobId = $data['data']['id'] ?? null;
+
+        if (!$jobId) {
+            throw new \RuntimeException('WaveSpeed API did not return a job ID');
+        }
+
+        return $jobId;
     }
 
     protected function buildPrompt(Brand $brand, string $imagePrompt): string

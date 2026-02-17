@@ -230,6 +230,11 @@ public function smWeeklyReports(): HasMany
         return $this->hasMany(SmListeningReport::class);
     }
 
+    public function pipelines(): HasMany
+    {
+        return $this->hasMany(SmPipeline::class);
+    }
+
     // Member helpers
     public function getMemberRole(User $user): ?string
     {

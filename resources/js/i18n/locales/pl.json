@@ -3324,7 +3324,8 @@
             "sectionEngagement": "Zaangażowanie",
             "sectionSettings": "Konfiguracja",
             "tutorial": "Tutorial",
-            "rss": "Kanały RSS"
+            "rss": "Kanały RSS",
+            "pipelines": "Pipelines"
         },
         "dashboard": {
             "title": "Centrum Dowodzenia",
@@ -4401,6 +4402,190 @@
             "save": "Zapisz ustawienia",
             "saving": "Zapisywanie...",
             "saved": "Ustawienia zapisane"
+        }
+    },
+    "pipeline": {
+        "title": "Pipelines",
+        "subtitle": "Wizualny kreator pipeline'ów do generowania grafik",
+        "createPipeline": "Utwórz Pipeline",
+        "newPipeline": "Nowy Pipeline",
+        "editPipeline": "Edytuj Pipeline",
+        "deletePipeline": "Usuń Pipeline",
+        "deleteConfirm": "Czy na pewno chcesz usunąć ten pipeline? Tej operacji nie można cofnąć.",
+        "name": "Nazwa",
+        "namePlaceholder": "Wpisz nazwę pipeline'u...",
+        "description": "Opis",
+        "descriptionPlaceholder": "Opisz, co robi ten pipeline...",
+        "status": "Status",
+        "draft": "Szkic",
+        "active": "Aktywny",
+        "archived": "Zarchiwizowany",
+        "nodes": "Węzły",
+        "noNodes": "Brak węzłów",
+        "runs": "Uruchomienia",
+        "lastRun": "Ostatnie uruchomienie",
+        "noRuns": "Brak uruchomień",
+        "noPipelines": "Brak pipeline'ów",
+        "noPipelinesDesc": "Utwórz swój pierwszy pipeline, aby rozpocząć automatyczne generowanie grafik.",
+        "save": "Zapisz",
+        "saving": "Zapisywanie...",
+        "saved": "Zapisano",
+        "execute": "Uruchom",
+        "executing": "Uruchamianie...",
+        "cancel": "Anuluj",
+        "create": "Utwórz",
+        "creating": "Tworzenie...",
+        "back": "Powrót do Pipelines",
+        "toolbar": {
+            "untitled": "Pipeline bez nazwy",
+            "autoSaved": "Automatycznie zapisano",
+            "unsavedChanges": "Niezapisane zmiany",
+            "pipelines": "Pipelines",
+            "zoomLevel": "Zoom",
+            "giveFeedback": "Podziel się opinią"
+        },
+        "tools": {
+            "select": "Zaznacz",
+            "pan": "Przesuń"
+        },
+        "nodeLibrary": {
+            "title": "Biblioteka węzłów",
+            "search": "Szukaj węzłów...",
+            "inputs": "Wejścia",
+            "processing": "Przetwarzanie",
+            "output": "Wyjście",
+            "dragHint": "Przeciągnij na canvas"
+        },
+        "nodeTypes": {
+            "image_input": "Wejście obrazu",
+            "text_input": "Wejście tekstu",
+            "template": "Szablon",
+            "ai_image_generator": "Generator obrazów AI",
+            "image_analysis": "Analiza obrazu",
+            "template_render": "Renderowanie szablonu",
+            "output": "Wyjście"
+        },
+        "nodeDescriptions": {
+            "image_input": "Prześlij lub wybierz obraz",
+            "text_input": "Wpisz tekst lub prompt",
+            "template": "Wybierz szablon graficzny",
+            "ai_image_generator": "Wygeneruj obraz za pomocą AI",
+            "image_analysis": "Analizuj właściwości obrazu",
+            "template_render": "Renderuj szablon do obrazu",
+            "output": "Końcowe wyjście pipeline'u"
+        },
+        "config": {
+            "title": "Konfiguracja",
+            "noSelection": "Wybierz węzeł, aby go skonfigurować",
+            "nodeType": "Typ węzła",
+            "nodeLabel": "Etykieta",
+            "labelPlaceholder": "Wpisz etykietę węzła...",
+            "imageSource": "Źródło obrazu",
+            "upload": "Prześlij",
+            "gallery": "Galeria",
+            "url": "URL",
+            "imageUrl": "URL obrazu",
+            "imageUrlPlaceholder": "https://...",
+            "text": "Tekst",
+            "textPlaceholder": "Wpisz tekst...",
+            "prompt": "Prompt",
+            "promptPlaceholder": "Opisz obraz do wygenerowania...",
+            "selectTemplate": "Wybierz szablon",
+            "noTemplates": "Brak dostępnych szablonów",
+            "templateSelected": "Szablon wybrany",
+            "deleteNode": "Usuń węzeł",
+            "deleteNodeConfirm": "Czy na pewno chcesz usunąć ten węzeł?",
+            "parameters": "Parametry",
+            "addParameter": "Dodaj parametr",
+            "parameterKey": "Klucz",
+            "parameterValue": "Wartość"
+        },
+        "preview": {
+            "title": "Podgląd",
+            "runResult": "Wynik uruchomienia",
+            "noPreview": "Uruchom pipeline, aby zobaczyć wyniki",
+            "download": "Pobierz",
+            "outputImage": "Obraz wyjściowy"
+        },
+        "output": {
+            "copy": "Kopiuj",
+            "openExternal": "Otwórz",
+            "previousResult": "Poprzedni wynik",
+            "nextResult": "Następny wynik",
+            "expand": "Rozwiń",
+            "grid": "Widok siatki",
+            "share": "Udostępnij",
+            "addToGallery": "Dodaj do galerii",
+            "useAsInput": "Użyj jako wejście"
+        },
+        "runHistory": {
+            "title": "Historia uruchomień",
+            "noRuns": "Brak uruchomień",
+            "viewDetails": "Zobacz szczegóły"
+        },
+        "runStatus": {
+            "pending": "Oczekujący",
+            "running": "W trakcie",
+            "completed": "Zakończony",
+            "failed": "Nieudany"
+        },
+        "errors": {
+            "saveFailed": "Nie udało się zapisać pipeline'u",
+            "loadFailed": "Nie udało się wczytać pipeline'u",
+            "executeFailed": "Nie udało się uruchomić pipeline'u",
+            "deleteFailed": "Nie udało się usunąć pipeline'u",
+            "createFailed": "Nie udało się utworzyć pipeline'u",
+            "noOutputNode": "Pipeline musi mieć węzeł wyjściowy",
+            "cycleDetected": "Pipeline zawiera cykl",
+            "invalidConnection": "To połączenie jest nieprawidłowe"
+        },
+        "toast": {
+            "created": "Pipeline utworzony pomyślnie",
+            "saved": "Pipeline zapisany pomyślnie",
+            "deleted": "Pipeline usunięty pomyślnie",
+            "executionStarted": "Uruchomienie pipeline'u rozpoczęte",
+            "executionCompleted": "Pipeline zakończony pomyślnie",
+            "executionFailed": "Uruchomienie pipeline'u nieudane"
+        },
+        "nodeToolbar": {
+            "execute": "Uruchom węzeł",
+            "edit": "Edytuj",
+            "download": "Pobierz obraz",
+            "delete": "Usuń",
+            "more": "Więcej akcji",
+            "regenerate": "Regeneruj"
+        },
+        "handles": {
+            "text": "T",
+            "image": "Img"
+        },
+        "aiGenerator": {
+            "defaultModel": "Model AI",
+            "model": "Model",
+            "modelPlaceholder": "Wybierz model...",
+            "dimensions": "Wymiary",
+            "batchSize": "Liczba obrazów",
+            "aspectRatio": "Proporcje",
+            "generationCount": "Generacje",
+            "instanceLabel": "Generator obrazów #{number}",
+            "clickToEditPrompt": "Kliknij, aby edytować prompt",
+            "generating": "Generowanie...",
+            "generated": "Obraz wygenerowany pomyślnie",
+            "generateError": "Nie udało się wygenerować obrazu",
+            "promptRequired": "Najpierw wpisz prompt",
+            "img2imgMode": "Obraz na obraz",
+            "strength": "Siła",
+            "strengthSubtle": "Subtelne",
+            "strengthBalanced": "Zbalansowane",
+            "strengthDefault": "Domyślne",
+            "strengthStrong": "Mocne",
+            "strengthFull": "Pełne"
+        },
+        "imageInput": {
+            "clickToUpload": "Kliknij, aby wgrać obraz",
+            "uploading": "Wgrywanie...",
+            "uploaded": "Obraz wgrany pomyślnie",
+            "uploadError": "Nie udało się wgrać obrazu"
         }
     }
 }

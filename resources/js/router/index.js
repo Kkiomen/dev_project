@@ -233,6 +233,17 @@ const routes = [
                 props: true,
             },
             {
+                path: 'pipelines',
+                name: 'manager.pipelines',
+                component: () => import('@/pages/manager/ManagerPipelinesPage.vue'),
+            },
+            {
+                path: 'pipelines/:pipelineId',
+                name: 'manager.pipeline.editor',
+                component: () => import('@/pages/manager/ManagerPipelineEditorPage.vue'),
+                props: true,
+            },
+            {
                 path: 'strategy',
                 name: 'manager.strategy',
                 component: () => import('@/pages/manager/ManagerStrategyPage.vue'),

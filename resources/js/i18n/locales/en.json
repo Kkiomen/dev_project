@@ -3321,7 +3321,8 @@
             "sectionEngagement": "Engagement",
             "sectionSettings": "Configuration",
             "tutorial": "Tutorial",
-            "rss": "RSS Feeds"
+            "rss": "RSS Feeds",
+            "pipelines": "Pipelines"
         },
         "dashboard": {
             "title": "Command Center",
@@ -4398,6 +4399,190 @@
             "save": "Save Settings",
             "saving": "Saving...",
             "saved": "Settings saved"
+        }
+    },
+    "pipeline": {
+        "title": "Pipelines",
+        "subtitle": "Visual no-code pipeline builder for generating graphics",
+        "createPipeline": "Create Pipeline",
+        "newPipeline": "New Pipeline",
+        "editPipeline": "Edit Pipeline",
+        "deletePipeline": "Delete Pipeline",
+        "deleteConfirm": "Are you sure you want to delete this pipeline? This action cannot be undone.",
+        "name": "Name",
+        "namePlaceholder": "Enter pipeline name...",
+        "description": "Description",
+        "descriptionPlaceholder": "Describe what this pipeline does...",
+        "status": "Status",
+        "draft": "Draft",
+        "active": "Active",
+        "archived": "Archived",
+        "nodes": "Nodes",
+        "noNodes": "No nodes",
+        "runs": "Runs",
+        "lastRun": "Last run",
+        "noRuns": "No runs yet",
+        "noPipelines": "No pipelines yet",
+        "noPipelinesDesc": "Create your first pipeline to start building automated graphic generation workflows.",
+        "save": "Save",
+        "saving": "Saving...",
+        "saved": "Saved",
+        "execute": "Execute",
+        "executing": "Executing...",
+        "cancel": "Cancel",
+        "create": "Create",
+        "creating": "Creating...",
+        "back": "Back to Pipelines",
+        "toolbar": {
+            "untitled": "Untitled Pipeline",
+            "autoSaved": "Auto-saved",
+            "unsavedChanges": "Unsaved changes",
+            "pipelines": "Pipelines",
+            "zoomLevel": "Zoom",
+            "giveFeedback": "Give Feedback"
+        },
+        "tools": {
+            "select": "Select",
+            "pan": "Pan"
+        },
+        "nodeLibrary": {
+            "title": "Node Library",
+            "search": "Search nodes...",
+            "inputs": "Inputs",
+            "processing": "Processing",
+            "output": "Output",
+            "dragHint": "Drag to canvas"
+        },
+        "nodeTypes": {
+            "image_input": "Image Input",
+            "text_input": "Text Input",
+            "template": "Template",
+            "ai_image_generator": "AI Image Generator",
+            "image_analysis": "Image Analysis",
+            "template_render": "Template Render",
+            "output": "Output"
+        },
+        "nodeDescriptions": {
+            "image_input": "Upload or select an image",
+            "text_input": "Enter text or a prompt",
+            "template": "Select a design template",
+            "ai_image_generator": "Generate image with AI",
+            "image_analysis": "Analyze image properties",
+            "template_render": "Render template to image",
+            "output": "Final pipeline output"
+        },
+        "config": {
+            "title": "Configuration",
+            "noSelection": "Select a node to configure it",
+            "nodeType": "Node Type",
+            "nodeLabel": "Label",
+            "labelPlaceholder": "Enter node label...",
+            "imageSource": "Image Source",
+            "upload": "Upload",
+            "gallery": "Gallery",
+            "url": "URL",
+            "imageUrl": "Image URL",
+            "imageUrlPlaceholder": "https://...",
+            "text": "Text",
+            "textPlaceholder": "Enter text...",
+            "prompt": "Prompt",
+            "promptPlaceholder": "Describe the image to generate...",
+            "selectTemplate": "Select Template",
+            "noTemplates": "No templates available",
+            "templateSelected": "Template selected",
+            "deleteNode": "Delete Node",
+            "deleteNodeConfirm": "Are you sure you want to delete this node?",
+            "parameters": "Parameters",
+            "addParameter": "Add parameter",
+            "parameterKey": "Key",
+            "parameterValue": "Value"
+        },
+        "preview": {
+            "title": "Preview",
+            "runResult": "Run Result",
+            "noPreview": "Execute the pipeline to see results",
+            "download": "Download",
+            "outputImage": "Output Image"
+        },
+        "output": {
+            "copy": "Copy",
+            "openExternal": "Open",
+            "previousResult": "Previous result",
+            "nextResult": "Next result",
+            "expand": "Expand",
+            "grid": "Grid view",
+            "share": "Share",
+            "addToGallery": "Add to gallery",
+            "useAsInput": "Use as input"
+        },
+        "runHistory": {
+            "title": "Run History",
+            "noRuns": "No runs yet",
+            "viewDetails": "View Details"
+        },
+        "runStatus": {
+            "pending": "Pending",
+            "running": "Running",
+            "completed": "Completed",
+            "failed": "Failed"
+        },
+        "errors": {
+            "saveFailed": "Failed to save pipeline",
+            "loadFailed": "Failed to load pipeline",
+            "executeFailed": "Failed to execute pipeline",
+            "deleteFailed": "Failed to delete pipeline",
+            "createFailed": "Failed to create pipeline",
+            "noOutputNode": "Pipeline must have an output node",
+            "cycleDetected": "Pipeline contains a cycle",
+            "invalidConnection": "This connection is not valid"
+        },
+        "toast": {
+            "created": "Pipeline created successfully",
+            "saved": "Pipeline saved successfully",
+            "deleted": "Pipeline deleted successfully",
+            "executionStarted": "Pipeline execution started",
+            "executionCompleted": "Pipeline execution completed",
+            "executionFailed": "Pipeline execution failed"
+        },
+        "nodeToolbar": {
+            "execute": "Execute node",
+            "edit": "Edit",
+            "download": "Download image",
+            "delete": "Delete",
+            "more": "More actions",
+            "regenerate": "Regenerate"
+        },
+        "handles": {
+            "text": "T",
+            "image": "Img"
+        },
+        "aiGenerator": {
+            "defaultModel": "AI Model",
+            "model": "Model",
+            "modelPlaceholder": "Select a model...",
+            "dimensions": "Dimensions",
+            "batchSize": "Batch size",
+            "aspectRatio": "Aspect ratio",
+            "generationCount": "Generations",
+            "instanceLabel": "Image Generator #{number}",
+            "clickToEditPrompt": "Click to edit prompt",
+            "generating": "Generating...",
+            "generated": "Image generated successfully",
+            "generateError": "Failed to generate image",
+            "promptRequired": "Please enter a prompt first",
+            "img2imgMode": "Image to Image",
+            "strength": "Strength",
+            "strengthSubtle": "Subtle",
+            "strengthBalanced": "Balanced",
+            "strengthDefault": "Default",
+            "strengthStrong": "Strong",
+            "strengthFull": "Full"
+        },
+        "imageInput": {
+            "clickToUpload": "Click to upload image",
+            "uploading": "Uploading...",
+            "uploaded": "Image uploaded successfully",
+            "uploadError": "Failed to upload image"
         }
     }
 }
