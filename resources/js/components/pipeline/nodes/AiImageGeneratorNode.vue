@@ -165,6 +165,16 @@ const hasImageConnection = computed(() =>
     store.edges.some(e => e.target === props.id && e.targetHandle === 'image')
 );
 
+// Check if this node has an incoming template connection
+const hasTemplateConnection = computed(() =>
+    store.edges.some(e => e.target === props.id && e.targetHandle === 'template')
+);
+
+// Direct composite mode: image + template both connected → no AI transformation
+const isDirectCompositeMode = computed(() =>
+    hasImageConnection.value && hasTemplateConnection.value
+);
+
 const currentStrength = computed(() => config.value.strength ?? 0.65);
 
 const strengthPresets = [
@@ -279,8 +289,18 @@ const handleToolbarAction = (key) => {
         icon-path="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"
         @toolbar-action="handleToolbarAction"
     >
-        <!-- img2img mode indicator -->
-        <div v-if="hasImageConnection" class="flex items-center gap-1.5 mb-1.5">
+        <!-- Direct composite mode indicator (image + template) -->
+        <div v-if="isDirectCompositeMode" class="flex items-center gap-1.5 mb-1.5">
+            <span class="inline-flex items-center gap-1 bg-green-100 text-green-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
+                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6Z" />
+                </svg>
+                {{ t('pipeline.aiGenerator.directCompositeMode') }}
+            </span>
+        </div>
+
+        <!-- img2img mode indicator (image only, no template) -->
+        <div v-else-if="hasImageConnection" class="flex items-center gap-1.5 mb-1.5">
             <span class="inline-flex items-center gap-1 bg-purple-100 text-purple-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                     <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
@@ -464,8 +484,8 @@ const handleToolbarAction = (key) => {
                 </Transition>
             </div>
 
-            <!-- Strength chip + dropdown (only visible in img2img mode) -->
-            <div v-if="hasImageConnection" class="relative">
+            <!-- Strength chip + dropdown (only visible in img2img mode, hidden in direct composite) -->
+            <div v-if="hasImageConnection && !isDirectCompositeMode" class="relative">
                 <span
                     class="inline-flex items-center gap-0.5 bg-purple-100 text-purple-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-purple-200 transition-colors"
                     @click.stop="toggleDropdown('strength')"

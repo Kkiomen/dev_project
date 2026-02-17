@@ -22,6 +22,7 @@ const loading = ref(true);
 const loadError = ref(false);
 const saving = ref(false);
 const publishing = ref(false);
+const approving = ref(false);
 
 const platforms = [
     { key: 'instagram', label: 'Instagram', abbr: 'IG' },
@@ -310,6 +311,22 @@ async function submitForApproval() {
         toast.error(t('manager.postEditor.submitError'));
     } finally {
         saving.value = false;
+    }
+}
+
+async function approvePost() {
+    if (!postId || postId === 'new') return;
+    approving.value = true;
+    try {
+        await postsStore.approvePost(postId);
+        localPost.value.status = 'approved';
+        initialPostSnapshot = JSON.stringify(localPost.value);
+        hasUnsavedChanges.value = false;
+        toast.success(t('manager.postEditor.approveSuccess'));
+    } catch {
+        toast.error(t('manager.postEditor.approveError'));
+    } finally {
+        approving.value = false;
     }
 }
 
@@ -719,7 +736,7 @@ const statusColors = {
                         <button
                             v-if="canPublish"
                             @click="publishPost"
-                            :disabled="publishing || saving"
+                            :disabled="publishing || saving || approving"
                             class="w-full px-4 py-2.5 rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium flex items-center justify-center gap-2"
                         >
                             <svg v-if="publishing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -735,7 +752,7 @@ const statusColors = {
                         <!-- Save Draft -->
                         <button
                             @click="saveDraft"
-                            :disabled="saving || publishing"
+                            :disabled="saving || publishing || approving"
                             class="w-full px-4 py-2.5 rounded-lg bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
                         >
                             {{ t('manager.postEditor.saveDraft') }}
@@ -745,16 +762,33 @@ const statusColors = {
                         <button
                             v-if="localPost.status === 'draft'"
                             @click="submitForApproval"
-                            :disabled="saving || publishing"
+                            :disabled="saving || publishing || approving"
                             class="w-full px-4 py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium"
                         >
                             {{ t('manager.postEditor.submitForApproval') }}
                         </button>
 
+                        <!-- Approve -->
+                        <button
+                            v-if="localPost.status === 'draft' || localPost.status === 'pending_approval'"
+                            @click="approvePost"
+                            :disabled="saving || publishing || approving"
+                            class="w-full px-4 py-2.5 rounded-lg bg-blue-600 text-white hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition text-sm font-medium flex items-center justify-center gap-2"
+                        >
+                            <svg v-if="approving" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+                            </svg>
+                            <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5" />
+                            </svg>
+                            {{ approving ? t('manager.postEditor.approving') : t('manager.postEditor.approve') }}
+                        </button>
+
                         <!-- Delete -->
                         <button
                             @click="deletePost"
-                            :disabled="saving || publishing"
+                            :disabled="saving || publishing || approving"
                             class="w-full px-4 py-2 text-red-400 hover:text-red-300 disabled:opacity-50 transition text-sm font-medium"
                         >
                             {{ t('manager.postEditor.delete') }}

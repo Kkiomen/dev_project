@@ -33,6 +33,13 @@ class AiImageGeneratorExecutor implements PipelineNodeExecutorInterface
         $config = $node->config ?? [];
         $prompt = $inputs['text'] ?? $config['prompt'] ?? '';
         $inputImage = $inputs['image'] ?? null;
+        $hasTemplate = isset($inputs['template']) && is_array($inputs['template']);
+
+        // Direct composite mode: image + template → skip AI, compose directly
+        if ($inputImage && $hasTemplate) {
+            $composedPath = $this->composeWithTemplate($inputImage, $inputs, $brand);
+            return ['image' => $composedPath];
+        }
 
         if (empty($prompt)) {
             throw new \RuntimeException('AI Image Generator requires a text prompt');

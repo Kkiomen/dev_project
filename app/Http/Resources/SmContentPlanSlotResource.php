@@ -9,6 +9,14 @@ class SmContentPlanSlotResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        $imageUrl = null;
+        if ($this->relationLoaded('socialPost') && $this->socialPost) {
+            $asset = $this->socialPost->relationLoaded('generatedAssets')
+                ? $this->socialPost->generatedAssets->first()
+                : null;
+            $imageUrl = $asset?->getUrl();
+        }
+
         return [
             'id' => $this->public_id,
             'scheduled_date' => $this->scheduled_date?->format('Y-m-d'),
@@ -21,6 +29,7 @@ class SmContentPlanSlotResource extends JsonResource
             'status' => $this->status,
             'has_content' => $this->hasContent(),
             'social_post_id' => $this->socialPost?->public_id,
+            'image_url' => $imageUrl,
             'position' => $this->position,
             'created_at' => $this->created_at,
         ];

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useRouter } from 'vue-router';
 import { useManagerStore } from '@/stores/manager';
 import { useToast } from '@/composables/useToast';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
@@ -9,6 +10,7 @@ import AddSlotModal from '@/components/manager/AddSlotModal.vue';
 import QuickPlanModal from '@/components/manager/QuickPlanModal.vue';
 
 const { t } = useI18n();
+const router = useRouter();
 const managerStore = useManagerStore();
 const toast = useToast();
 
@@ -24,14 +26,17 @@ const generationSlotsCreated = ref(0);
 const generationTotalSlots = ref(0);
 const pollTimer = ref(null);
 const generationFailed = ref(false);
+const contentPollTimer = ref(null);
+const generatingAllContent = ref(false);
 
 const POLL_INTERVAL = 3000;
 const MAX_POLL_TIME = 200000;
+const CONTENT_POLL_INTERVAL = 4000;
 
 // --- Computed ---
-const slots = computed(() => {
-    return managerStore.currentPlan?.slots || [];
-});
+const allSlots = computed(() => managerStore.currentPlan?.slots || []);
+
+const slots = computed(() => allSlots.value.filter(s => s.status === 'planned' || s.status === 'generating' || s.status === 'content_ready'));
 
 const pillars = computed(() => {
     const cp = managerStore.strategy?.content_pillars;
@@ -42,6 +47,17 @@ const pillars = computed(() => {
 const totalCount = computed(() => slots.value.length);
 
 const plannedCount = computed(() => slots.value.filter(s => s.status === 'planned').length);
+
+const generatingCount = computed(() => slots.value.filter(s => s.status === 'generating').length);
+
+const hasPlannedSlots = computed(() => plannedCount.value > 0);
+
+const hasGeneratingSlots = computed(() => generatingCount.value > 0);
+
+const allContentGenerated = computed(() => {
+    if (planGenerating.value || allSlots.value.length === 0) return false;
+    return allSlots.value.every(s => s.status !== 'planned' && s.status !== 'generating');
+});
 
 // --- Polling for plan generation ---
 const stopPolling = () => {
@@ -133,6 +149,81 @@ const handleGeneratePlan = async (mode = 'full') => {
     }
 };
 
+// --- Content generation polling ---
+const stopContentPolling = () => {
+    if (contentPollTimer.value) {
+        clearInterval(contentPollTimer.value);
+        contentPollTimer.value = null;
+    }
+};
+
+const startContentPolling = () => {
+    if (contentPollTimer.value) return;
+
+    contentPollTimer.value = setInterval(async () => {
+        await managerStore.fetchCurrentPlan();
+
+        if (!hasGeneratingSlots.value) {
+            stopContentPolling();
+            generatingAllContent.value = false;
+        }
+    }, CONTENT_POLL_INTERVAL);
+};
+
+// --- Content generation handlers ---
+const handleGenerateAllContent = async () => {
+    const planId = managerStore.currentPlan?.id;
+    if (!planId || generatingAllContent.value) return;
+
+    const count = plannedCount.value;
+    generatingAllContent.value = true;
+
+    // Optimistic update: mark all planned slots as generating
+    allSlots.value.forEach(slot => {
+        if (slot.status === 'planned') {
+            slot.status = 'generating';
+        }
+    });
+
+    try {
+        await managerStore.generateAllContent(planId);
+        toast.success(t('manager.contentList.generateAllContentSuccess', { count }));
+        startContentPolling();
+    } catch {
+        // Revert optimistic update
+        await managerStore.fetchCurrentPlan();
+        generatingAllContent.value = false;
+        toast.error(t('manager.contentList.generateAllContentError'));
+    }
+};
+
+const handleGenerateSlot = async (slotId) => {
+    const planId = managerStore.currentPlan?.id;
+    if (!planId) return;
+
+    // Optimistic update
+    const slot = allSlots.value.find(s => s.id === slotId);
+    if (slot) slot.status = 'generating';
+
+    try {
+        await managerStore.generateSlotContent(planId, slotId);
+        toast.success(t('manager.contentList.generateSingleSuccess'));
+        startContentPolling();
+    } catch {
+        // Revert
+        if (slot) slot.status = 'planned';
+        toast.error(t('manager.contentList.generateSingleError'));
+    }
+};
+
+const handlePreviewSlot = (socialPostId) => {
+    router.push({ name: 'manager.content.edit', params: { id: socialPostId } });
+};
+
+const handleGoToApproval = () => {
+    router.push({ name: 'manager.approval' });
+};
+
 // --- Event handlers ---
 const handleSlotUpdated = () => {
     managerStore.fetchCurrentPlan();
@@ -162,11 +253,14 @@ onMounted(() => {
 
 onUnmounted(() => {
     stopPolling();
+    stopContentPolling();
 });
 
 watch(() => managerStore.currentBrandId, () => {
     stopPolling();
+    stopContentPolling();
     planGenerating.value = false;
+    generatingAllContent.value = false;
     managerStore.fetchCurrentPlan();
     managerStore.fetchStrategy();
 });
@@ -183,6 +277,13 @@ watch(() => managerStore.currentPlan?.status, (status) => {
         }
     }
 });
+
+// Auto-start content polling if there are generating slots
+watch(slots, (currentSlots) => {
+    if (currentSlots.some(s => s.status === 'generating') && !contentPollTimer.value) {
+        startContentPolling();
+    }
+}, { immediate: true });
 </script>
 
 <template>
@@ -196,10 +297,31 @@ watch(() => managerStore.currentPlan?.status, (status) => {
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
                 <!-- Stats pill -->
-                <div v-if="totalCount > 0" class="flex items-center gap-3 text-xs text-gray-400">
+                <div v-if="totalCount > 0 || generatingCount > 0" class="flex items-center gap-3 text-xs text-gray-400">
                     <span>{{ t('manager.contentList.totalItems', { count: totalCount }) }}</span>
                     <span v-if="plannedCount > 0" class="text-amber-400">{{ t('manager.contentList.plannedItems', { count: plannedCount }) }}</span>
+                    <span v-if="generatingCount > 0" class="inline-flex items-center gap-1.5 text-purple-400">
+                        <span class="w-1.5 h-1.5 rounded-full bg-purple-400 animate-pulse"></span>
+                        {{ generatingCount }} generating
+                    </span>
                 </div>
+
+                <!-- Generate All Content button -->
+                <button
+                    v-if="hasPlannedSlots"
+                    @click="handleGenerateAllContent"
+                    :disabled="generatingAllContent"
+                    class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-emerald-600/20 border border-emerald-500/30 text-emerald-300 hover:bg-emerald-600/30 hover:text-emerald-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <svg v-if="generatingAllContent" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904 9 18.75l-.813-2.846a4.5 4.5 0 0 0-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 0 0 3.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 0 0 3.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 0 0-3.09 3.09Z" />
+                    </svg>
+                    {{ generatingAllContent ? t('manager.contentList.generateAllContentLoading') : t('manager.contentList.generateAllContent', { count: plannedCount }) }}
+                </button>
 
                 <!-- Add item button -->
                 <button
@@ -296,6 +418,17 @@ watch(() => managerStore.currentPlan?.status, (status) => {
             <p class="text-sm text-amber-300">{{ t('manager.contentList.noStrategyWarning') }}</p>
         </div>
 
+        <!-- Filter info banner -->
+        <div
+            v-if="allSlots.length > slots.length && slots.length > 0"
+            class="mb-4 rounded-lg bg-blue-500/10 border border-blue-500/20 px-4 py-3 flex items-center gap-3"
+        >
+            <svg class="w-5 h-5 text-blue-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="m11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z" />
+            </svg>
+            <p class="text-sm text-blue-300">{{ t('manager.contentList.filterInfo') }}</p>
+        </div>
+
         <!-- Loading state -->
         <div v-if="managerStore.contentPlansLoading && !planGenerating" class="flex items-center justify-center py-24">
             <LoadingSpinner size="lg" />
@@ -374,9 +507,32 @@ watch(() => managerStore.currentPlan?.status, (status) => {
             <p class="text-xs text-gray-500 mt-8">{{ t('manager.calendar.progress.patience') }}</p>
         </div>
 
-        <!-- Empty state -->
+        <!-- All content generated state -->
         <div
-            v-else-if="slots.length === 0"
+            v-else-if="allContentGenerated"
+            class="rounded-xl bg-gray-900 border border-gray-800 p-8 sm:p-12 flex flex-col items-center justify-center text-center"
+        >
+            <div class="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
+                <svg class="w-8 h-8 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                </svg>
+            </div>
+            <h3 class="text-lg font-semibold text-white mb-2">{{ t('manager.contentList.allGeneratedTitle') }}</h3>
+            <p class="text-sm text-gray-400 max-w-md mb-6">{{ t('manager.contentList.allGeneratedDescription') }}</p>
+            <button
+                @click="handleGoToApproval"
+                class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg bg-emerald-600 text-white hover:bg-emerald-500 transition-colors"
+            >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                </svg>
+                {{ t('manager.contentList.goToApproval') }}
+            </button>
+        </div>
+
+        <!-- Empty state (no plan at all) -->
+        <div
+            v-else-if="allSlots.length === 0 && !managerStore.contentPlansLoading"
             class="rounded-xl bg-gray-900 border border-gray-800 p-8 sm:p-12 flex flex-col items-center justify-center text-center"
         >
             <div class="w-16 h-16 rounded-full bg-purple-500/10 flex items-center justify-center mb-4">
@@ -439,6 +595,8 @@ watch(() => managerStore.currentPlan?.status, (status) => {
             @updated="handleSlotUpdated"
             @add="handleAddNew"
             @add-between="handleAddBetween"
+            @generate-slot="handleGenerateSlot"
+            @preview-slot="handlePreviewSlot"
         />
 
         <!-- Add Slot Modal -->

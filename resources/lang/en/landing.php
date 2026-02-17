@@ -3,7 +3,7 @@
 return [
     // Meta
     'meta_title' => 'Aisello - Automate Your Personal Brand',
-    'meta_description' => 'AI-powered platform for automating personal brand building. Content creation, scheduling, visual editor, and more — all in one place.',
+    'meta_description' => 'AI-powered platform for automating personal brand building. Content creation, scheduling, visual editor, and more - all in one place.',
 
     // Nav
     'nav_features' => 'Features',
@@ -19,7 +19,7 @@ return [
     'hero_title_start' => 'Build Your',
     'hero_title_gradient' => 'Personal Brand',
     'hero_title_end' => 'on Autopilot',
-    'hero_subtitle' => 'Stop juggling multiple tools. Aisello automates content creation, scheduling, visual design, and publishing — so you can focus on what matters.',
+    'hero_subtitle' => 'Stop juggling multiple tools. Aisello automates content creation, scheduling, visual design, and publishing - so you can focus on what matters.',
     'hero_cta_primary' => 'Start for free',
     'hero_cta_secondary' => 'See how it works',
 

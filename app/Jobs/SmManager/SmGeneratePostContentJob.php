@@ -83,6 +83,9 @@ class SmGeneratePostContentJob implements ShouldQueue
                 ? $hashtagResult['hashtags']
                 : ($copyResult['hashtags'] ?? []);
 
+            // Normalize: strip leading '#' — the editor/display adds it back
+            $hashtags = array_map(fn ($h) => ltrim($h, '#'), $hashtags);
+
             // Create the SocialPost record
             $post = SocialPost::create([
                 'user_id' => $brand->user_id,

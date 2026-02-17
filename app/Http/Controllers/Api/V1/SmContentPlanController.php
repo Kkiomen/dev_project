@@ -52,7 +52,11 @@ class SmContentPlanController extends Controller
 
         $plan = $brand->smContentPlans()
             ->forMonth(now()->month, now()->year)
-            ->with(['strategy', 'slots' => fn ($q) => $q->orderBy('scheduled_date')->orderBy('scheduled_time')])
+            ->with([
+                'strategy',
+                'slots' => fn ($q) => $q->orderBy('scheduled_date')->orderBy('scheduled_time'),
+                'slots.socialPost.generatedAssets' => fn ($q) => $q->where('type', 'image')->where('status', 'completed')->orderBy('position')->limit(1),
+            ])
             ->first();
 
         if (!$plan) {

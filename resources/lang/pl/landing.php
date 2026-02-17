@@ -3,7 +3,7 @@
 return [
     // Meta
     'meta_title' => 'Aisello - Zautomatyzuj swoją markę osobistą',
-    'meta_description' => 'Platforma napędzana AI do automatyzacji budowania marki osobistej. Tworzenie treści, planowanie, edytor graficzny i więcej — wszystko w jednym miejscu.',
+    'meta_description' => 'Platforma napędzana AI do automatyzacji budowania marki osobistej. Tworzenie treści, planowanie, edytor graficzny i więcej - wszystko w jednym miejscu.',
 
     // Nav
     'nav_features' => 'Funkcje',
@@ -19,7 +19,7 @@ return [
     'hero_title_start' => 'Buduj swoją',
     'hero_title_gradient' => 'markę osobistą',
     'hero_title_end' => 'na autopilocie',
-    'hero_subtitle' => 'Przestań żonglować wieloma narzędziami. Aisello automatyzuje tworzenie treści, planowanie, projektowanie i publikację — abyś mógł skupić się na tym, co ważne.',
+    'hero_subtitle' => 'Przestań żonglować wieloma narzędziami. Aisello automatyzuje tworzenie treści, planowanie, projektowanie i publikację - abyś mógł skupić się na tym, co ważne.',
     'hero_cta_primary' => 'Zacznij za darmo',
     'hero_cta_secondary' => 'Zobacz jak to działa',
 
