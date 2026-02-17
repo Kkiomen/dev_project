@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { useConfirm } from '@/composables/useConfirm';
 import PostStatusBadge from '@/components/posts/PostStatusBadge.vue';
 import AutomationRowActions from './AutomationRowActions.vue';
 import DateTimeInput from '@/components/common/DateTimeInput.vue';
@@ -36,6 +37,7 @@ const emit = defineEmits([
 ]);
 
 const { t } = useI18n();
+const { confirm } = useConfirm();
 
 // Inline editing
 const editingField = ref(null);
@@ -63,8 +65,14 @@ function handleDrop(event) {
     }
 }
 
-function confirmDeleteMedia(mediaId) {
-    if (confirm(t('postAutomation.row.deleteConfirm'))) {
+async function confirmDeleteMedia(mediaId) {
+    const confirmed = await confirm({
+        title: t('common.deleteConfirmTitle'),
+        message: t('postAutomation.row.deleteConfirm'),
+        confirmText: t('common.delete'),
+        variant: 'danger',
+    });
+    if (confirmed) {
         emit('delete-media', { postId: props.post.id, mediaId });
     }
 }
@@ -332,7 +340,7 @@ function submitTag(platform) {
                             </label>
                             <div class="flex items-start gap-3">
                                 <!-- Existing image -->
-                                <div v-if="post.first_media_url" class="relative group/img shrink-0">
+                                <div v-if="post.first_media_url" class="relative shrink-0">
                                     <img
                                         :src="post.first_media_url"
                                         :alt="post.title"
@@ -344,15 +352,14 @@ function submitTag(platform) {
                                     >
                                         {{ post.media_count }}
                                     </span>
-                                    <!-- Delete overlay -->
                                     <button
                                         @click.stop="confirmDeleteMedia(post.first_media_id)"
                                         v-if="post.first_media_id"
-                                        class="absolute inset-0 bg-black/0 group-hover/img:bg-black/40 flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-all rounded-lg"
+                                        class="absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full bg-red-600 text-white flex items-center justify-center hover:bg-red-500 transition-colors shadow-sm"
                                     >
-                                        <span class="bg-red-600 text-white text-xs px-2 py-1 rounded-md font-medium">
-                                            {{ t('postAutomation.row.deleteMedia') }}
-                                        </span>
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18 18 6M6 6l12 12" />
+                                        </svg>
                                     </button>
                                 </div>
                                 <!-- Upload zone (when no image) -->

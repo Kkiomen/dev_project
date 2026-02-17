@@ -3,18 +3,19 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useManagerStore } from '@/stores/manager';
 import { useToast } from '@/composables/useToast';
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import { useConfirm } from '@/composables/useConfirm';
+import SkeletonLoader from '@/components/common/SkeletonLoader.vue';
 
 const { t } = useI18n();
 const managerStore = useManagerStore();
 const toast = useToast();
+const { confirm: confirmDialog } = useConfirm();
 
 const activeFilter = ref('pending');
 const replyingTo = ref(null);
 const replyAction = ref(null);
 const approvalNotes = ref('');
 const actionLoading = ref(false);
-const deletingPost = ref(null);
 const detailPost = ref(null);
 
 const filters = ['all', 'pending', 'approved', 'rejected'];
@@ -149,24 +150,21 @@ const submitAction = async () => {
     }
 };
 
-const confirmDelete = (postId) => {
-    deletingPost.value = postId;
-};
+const confirmDelete = async (postId) => {
+    const confirmed = await confirmDialog({
+        title: t('common.deleteConfirmTitle'),
+        message: t('manager.approval.deleteConfirm'),
+        confirmText: t('common.delete'),
+        variant: 'danger',
+    });
+    if (!confirmed) return;
 
-const cancelDelete = () => {
-    deletingPost.value = null;
-};
-
-const deletePost = async () => {
-    if (!deletingPost.value) return;
     try {
-        await managerStore.deleteScheduledPost(deletingPost.value);
+        await managerStore.deleteScheduledPost(postId);
         toast.success(t('manager.approval.deleteSuccess'));
         closeDetail();
     } catch {
         toast.error(t('manager.approval.deleteError'));
-    } finally {
-        deletingPost.value = null;
     }
 };
 
@@ -233,9 +231,7 @@ watch(activeFilter, () => {
         </div>
 
         <!-- Loading State -->
-        <div v-if="loading" class="flex items-center justify-center py-16">
-            <LoadingSpinner size="lg" />
-        </div>
+        <SkeletonLoader v-if="loading" variant="card-grid" :count="6" />
 
         <!-- Empty State -->
         <div
@@ -459,31 +455,5 @@ watch(activeFilter, () => {
             </div>
         </Teleport>
 
-        <!-- Delete confirmation overlay -->
-        <Teleport to="body">
-            <div
-                v-if="deletingPost"
-                class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                @click.self="cancelDelete"
-            >
-                <div class="w-full max-w-sm rounded-xl bg-gray-900 border border-gray-800 p-6 shadow-2xl">
-                    <p class="text-white text-sm mb-4">{{ t('manager.approval.deleteConfirm') }}</p>
-                    <div class="flex justify-end gap-3">
-                        <button
-                            @click="cancelDelete"
-                            class="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition text-sm font-medium"
-                        >
-                            {{ t('manager.approval.cancel') }}
-                        </button>
-                        <button
-                            @click="deletePost"
-                            class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition text-sm font-medium"
-                        >
-                            {{ t('manager.approval.deleteBtn') }}
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </Teleport>
     </div>
 </template>

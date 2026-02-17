@@ -4,12 +4,15 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { useManagerStore } from '@/stores/manager';
 import { useToast } from '@/composables/useToast';
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import { useConfirm } from '@/composables/useConfirm';
+import SkeletonLoader from '@/components/common/SkeletonLoader.vue';
+import NoResults from '@/components/common/NoResults.vue';
 
 const { t } = useI18n();
 const router = useRouter();
 const managerStore = useManagerStore();
 const toast = useToast();
+const { confirm } = useConfirm();
 
 const activeFilter = ref('all');
 const searchQuery = ref('');
@@ -110,12 +113,29 @@ const handleEditPost = (post) => {
 };
 
 const handleDeletePost = async (post) => {
+    const confirmed = await confirm({
+        title: t('common.deleteConfirmTitle'),
+        message: t('manager.content.deleteConfirm'),
+        confirmText: t('common.delete'),
+        variant: 'danger',
+    });
+    if (!confirmed) return;
+
     try {
         await managerStore.deleteScheduledPost(post.id);
         toast.success(t('manager.content.deleted'));
     } catch {
         toast.error(t('manager.content.deleteError'));
     }
+};
+
+const hasActiveFilters = computed(() => {
+    return activeFilter.value !== 'all' || searchQuery.value.trim();
+});
+
+const clearFilters = () => {
+    activeFilter.value = 'all';
+    searchQuery.value = '';
 };
 
 onMounted(async () => {
@@ -165,7 +185,7 @@ onMounted(async () => {
             </div>
 
             <!-- Search & Sort -->
-            <div class="flex gap-2">
+            <div class="flex gap-2 items-center">
                 <div class="relative">
                     <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
@@ -185,13 +205,25 @@ onMounted(async () => {
                     <option value="oldest">{{ t('manager.content.sortOptions.oldest') }}</option>
                     <option value="scheduled">{{ t('manager.content.sortOptions.scheduled') }}</option>
                 </select>
+                <button
+                    v-if="hasActiveFilters"
+                    @click="clearFilters"
+                    class="px-3 py-2 text-xs font-medium rounded-lg bg-gray-800 text-gray-400 hover:text-white hover:bg-gray-700 transition-colors whitespace-nowrap"
+                >
+                    {{ t('common.clearFilters') }}
+                </button>
             </div>
         </div>
 
-        <!-- Loading -->
-        <div v-if="managerStore.scheduledPostsLoading" class="flex items-center justify-center py-12">
-            <LoadingSpinner />
+        <!-- Result count -->
+        <div v-if="hasActiveFilters && !managerStore.scheduledPostsLoading" class="mb-4">
+            <span class="text-xs text-gray-500">
+                {{ t('manager.content.resultCount', { count: filteredPosts.length }) }}
+            </span>
         </div>
+
+        <!-- Loading -->
+        <SkeletonLoader v-if="managerStore.scheduledPostsLoading" variant="card-grid" :count="6" />
 
         <!-- Posts grid -->
         <div v-else-if="filteredPosts.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -221,21 +253,6 @@ onMounted(async () => {
                         </span>
                     </div>
 
-                    <!-- Hover overlay -->
-                    <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                        <button
-                            @click="handleEditPost(post)"
-                            class="px-3 py-1.5 text-xs font-medium rounded-lg bg-white text-gray-900 hover:bg-gray-100 transition"
-                        >
-                            {{ t('manager.content.postCard.edit') }}
-                        </button>
-                        <button
-                            @click="handleDeletePost(post)"
-                            class="px-3 py-1.5 text-xs font-medium rounded-lg bg-red-500 text-white hover:bg-red-400 transition"
-                        >
-                            {{ t('manager.content.postCard.delete') }}
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Content -->
@@ -258,11 +275,40 @@ onMounted(async () => {
                             {{ post.scheduled_at ? t('manager.content.postCard.scheduledFor') + ' ' + formatDate(post.scheduled_at) : formatDate(post.created_at) }}
                         </span>
                     </div>
+
+                    <!-- Actions row (always visible) -->
+                    <div class="flex items-center gap-2 mt-3 pt-3 border-t border-gray-800">
+                        <button
+                            @click.stop="handleEditPost(post)"
+                            class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-white transition-colors"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m16.862 4.487 1.687-1.688a1.875 1.875 0 1 1 2.652 2.652L10.582 16.07a4.5 4.5 0 0 1-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 0 1 1.13-1.897l8.932-8.931Z" />
+                            </svg>
+                            {{ t('manager.content.postCard.edit') }}
+                        </button>
+                        <button
+                            @click.stop="handleDeletePost(post)"
+                            class="flex items-center gap-1.5 text-xs text-gray-500 hover:text-red-400 transition-colors ml-auto"
+                        >
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
+                            </svg>
+                            {{ t('manager.content.postCard.delete') }}
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Empty state -->
+        <!-- No results (filters active but no matches) -->
+        <NoResults
+            v-else-if="posts.length > 0 && filteredPosts.length === 0"
+            :message="t('manager.content.noResults')"
+            @clear="clearFilters"
+        />
+
+        <!-- Empty state (no posts at all) -->
         <div v-else class="rounded-xl bg-gray-900 border border-gray-800 p-12 flex flex-col items-center justify-center text-center">
             <div class="w-16 h-16 rounded-full bg-indigo-500/10 flex items-center justify-center mb-4">
                 <svg class="w-8 h-8 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">

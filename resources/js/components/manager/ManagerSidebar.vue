@@ -25,6 +25,21 @@ const mainNav = computed(() => [
         isActive: route.path === '/app/manager',
     },
     {
+        to: '/app/manager/calendar',
+        label: t('manager.nav.calendar'),
+        icon: 'calendar',
+        isActive: route.path === '/app/manager/calendar',
+    },
+]);
+
+const socialMediaNav = computed(() => [
+    {
+        to: '/app/manager/content-list',
+        label: t('manager.nav.contentList'),
+        icon: 'content-list',
+        isActive: route.path === '/app/manager/content-list',
+    },
+    {
         to: '/app/manager/approval',
         label: t('manager.nav.approval'),
         icon: 'approval',
@@ -32,16 +47,10 @@ const mainNav = computed(() => [
         badge: managerStore.pendingApprovalCount,
     },
     {
-        to: '/app/manager/calendar',
-        label: t('manager.nav.calendar'),
-        icon: 'calendar',
-        isActive: route.path === '/app/manager/calendar',
-    },
-    {
         to: '/app/manager/content',
         label: t('manager.nav.content'),
         icon: 'content',
-        isActive: route.path.startsWith('/app/manager/content'),
+        isActive: route.path === '/app/manager/content' || route.path.startsWith('/app/manager/content/'),
     },
     {
         to: '/app/manager/pipelines',
@@ -225,13 +234,47 @@ const closeMobileMenu = () => {
                         <svg v-if="link.icon === 'command-center'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6ZM13.5 15.75a2.25 2.25 0 0 1 2.25-2.25H18a2.25 2.25 0 0 1 2.25 2.25V18A2.25 2.25 0 0 1 18 20.25h-2.25a2.25 2.25 0 0 1-2.25-2.25v-2.25Z" />
                         </svg>
-                        <!-- Approval -->
-                        <svg v-else-if="link.icon === 'approval'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                        <!-- Calendar -->
+                        <svg v-else-if="link.icon === 'calendar'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                        </svg>
+
+                        <span v-if="!isCollapsed" class="ml-3 truncate">{{ link.label }}</span>
+                    </RouterLink>
+                </div>
+            </div>
+
+            <!-- Social Media Management -->
+            <div>
+                <div v-if="!isCollapsed" class="px-3 mb-2 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+                    {{ t('manager.nav.sectionSocialMedia') }}
+                </div>
+                <div class="space-y-0.5">
+                    <RouterLink
+                        v-for="link in socialMediaNav"
+                        :key="link.to"
+                        :to="link.to"
+                        @click="closeMobileMenu"
+                        class="flex items-center rounded-lg text-sm font-medium transition-colors duration-150"
+                        :class="[
+                            link.isActive
+                                ? 'bg-indigo-600/20 text-indigo-400'
+                                : 'text-gray-400 hover:bg-gray-800 hover:text-gray-200',
+                            isCollapsed ? 'justify-center px-2 py-2.5' : 'px-3 py-2',
+                        ]"
+                        :title="isCollapsed ? link.label : undefined"
+                    >
+                        <!-- Content List -->
+                        <svg v-if="link.icon === 'content-list'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0ZM3.75 12h.007v.008H3.75V12Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm-.375 5.25h.007v.008H3.75v-.008Zm.375 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
                         </svg>
                         <!-- Calendar -->
                         <svg v-else-if="link.icon === 'calendar'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                        </svg>
+                        <!-- Approval -->
+                        <svg v-else-if="link.icon === 'approval'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                         </svg>
                         <!-- Content -->
                         <svg v-else-if="link.icon === 'content'" class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">

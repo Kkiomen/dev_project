@@ -45,7 +45,7 @@ class SmGeneratePostContentJob implements ShouldQueue
             $this->slot->refresh();
 
             if ($this->slot->status !== 'generating') {
-                Log::info('SmGeneratePostContentJob: skipping — slot no longer in generating status', [
+                Log::info('SmGeneratePostContentJob: skipping - slot no longer in generating status', [
                     'slot_id' => $this->slot->id,
                     'current_status' => $this->slot->status,
                 ]);

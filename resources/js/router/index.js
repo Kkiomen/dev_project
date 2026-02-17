@@ -222,6 +222,11 @@ const routes = [
                 component: () => import('@/pages/manager/ManagerCalendarPage.vue'),
             },
             {
+                path: 'content-list',
+                name: 'manager.contentList',
+                component: () => import('@/pages/manager/ManagerContentListPage.vue'),
+            },
+            {
                 path: 'content',
                 name: 'manager.content',
                 component: () => import('@/pages/manager/ManagerContentPage.vue'),

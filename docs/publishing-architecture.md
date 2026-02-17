@@ -28,7 +28,7 @@ System publikacji oparty jest na wzorcu **Adapter** z **Resolverem** per-brand. 
 - Wybór sposobu publikacji per brand (Direct API, Webhook n8n, GetLate.dev)
 - Łatwe dodawanie nowych providerów (np. Blotato)
 - Fallback chain gdy wybrany provider nie jest dostępny
-- Unified interface — każdy adapter zwraca ten sam format odpowiedzi
+- Unified interface - każdy adapter zwraca ten sam format odpowiedzi
 
 ```
 ┌─────────────────────────────────────────────────────────┐
@@ -100,8 +100,8 @@ public function resolve(Brand $brand, PlatformPost $platformPost): SocialPublish
    - Jeśli OK → zwróć adapter
    - Jeśli nie → fallthrough do legacy chain
 2. **Legacy fallback chain:**
-   - `DirectPublishingAdapter` — jeśli platforma to facebook/instagram i brand ma ważne `PlatformCredential`
-   - `WebhookPublishingAdapter` — jeśli webhook n8n jest skonfigurowany
+   - `DirectPublishingAdapter` - jeśli platforma to facebook/instagram i brand ma ważne `PlatformCredential`
+   - `WebhookPublishingAdapter` - jeśli webhook n8n jest skonfigurowany
 3. Żaden adapter nie pasuje → `RuntimeException`
 
 ---
@@ -251,7 +251,7 @@ Dla każdego posta:
 
 ## Cykl życia posta
 
-### SocialPost — statusy (`PostStatus` enum)
+### SocialPost - statusy (`PostStatus` enum)
 
 ```
 Draft ──→ PendingApproval ──→ Approved ──→ Scheduled ──→ Published
@@ -270,7 +270,7 @@ Draft ──→ PendingApproval ──→ Approved ──→ Scheduled ──→
 | `published` | Opublikowany na platformach | ❌ | ❌ |
 | `failed` | Publikacja nie powiodła się | ❌ | ❌ |
 
-### PlatformPost — statusy (`PublishStatus` enum)
+### PlatformPost - statusy (`PublishStatus` enum)
 
 Każdy `SocialPost` ma wiele `PlatformPost` (po jednym na platformę).
 
@@ -281,7 +281,7 @@ Każdy `SocialPost` ma wiele `PlatformPost` (po jednym na platformę).
 | `published` | Opublikowany na platformie |
 | `failed` | Błąd publikacji |
 
-### SmScheduledPost — statusy (SM Manager)
+### SmScheduledPost - statusy (SM Manager)
 
 Równoległy model dla Social Media Managera (nie SocialPost).
 
@@ -308,7 +308,7 @@ $table->string('publishing_provider')->nullable();
 
 | Wartość | Opis |
 |---------|------|
-| `null` | Auto — legacy chain (Direct → Webhook) |
+| `null` | Auto - legacy chain (Direct → Webhook) |
 | `direct` | Wymuszony Direct API (Facebook/Instagram) |
 | `webhook` | Wymuszony n8n Webhook |
 | `getlate` | Wymuszony GetLate.dev |
@@ -342,7 +342,7 @@ $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::GetLate);
 
 Klucze są **szyfrowane** w bazie (`encrypt()`/`decrypt()`) automatycznie przez mutator na modelu.
 
-**Frontend:** `AiKeysPanel.vue` — backend dynamicznie listuje `AiProvider::cases()`, więc nowe case'y pojawiają się automatycznie.
+**Frontend:** `AiKeysPanel.vue` - backend dynamicznie listuje `AiProvider::cases()`, więc nowe case'y pojawiają się automatycznie.
 
 ---
 
@@ -528,7 +528,7 @@ private function getAdapter(PublishingProvider $provider): SocialPublisherInterf
 }
 ```
 
-### 6. Frontend — ikona i kolor w `AiKeysPanel.vue`
+### 6. Frontend - ikona i kolor w `AiKeysPanel.vue`
 
 ```js
 providerIcons.blotato = `<svg ...>`;
@@ -542,7 +542,7 @@ providerColors.blotato = { bg: 'bg-orange-100', text: 'text-orange-600' };
 "publishingProvider.blotato": "Blotato"
 ```
 
-Laravel automatycznie rozwiąże nowy adapter przez DI container — nie trzeba nic rejestrować w `AppServiceProvider`.
+Laravel automatycznie rozwiąże nowy adapter przez DI container - nie trzeba nic rejestrować w `AppServiceProvider`.
 
 ---
 

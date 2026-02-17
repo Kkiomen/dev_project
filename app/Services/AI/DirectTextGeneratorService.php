@@ -118,7 +118,7 @@ class DirectTextGeneratorService
         $systemPrompt = "You are a commercial photographer who shoots campaigns for brands like Apple, Aesop, and Nike. You write prompts for AI image generation that produce photographs indistinguishable from real agency photoshoots.";
         $systemPrompt .= "\n\nBrand: \"{$brand->name}\"";
         if ($brand->description) {
-            $systemPrompt .= " — {$brand->description}";
+            $systemPrompt .= " - {$brand->description}";
         }
         if ($brand->industry) {
             $systemPrompt .= "\nIndustry: {$brand->industry}";
@@ -134,13 +134,13 @@ class DirectTextGeneratorService
 You write a prompt for the Nano Banana AI image model. The output is a single photograph used as a social media post image.
 
 WHAT YOU CREATE:
-A real photograph. Not a "graphic design", not a "template", not a "social media layout". A photograph — like one taken by a professional photographer on a real set with real lighting. The kind of image you'd see on Apple.com or in a Kinfolk magazine spread.
+A real photograph. Not a "graphic design", not a "template", not a "social media layout". A photograph - like one taken by a professional photographer on a real set with real lighting. The kind of image you'd see on Apple.com or in a Kinfolk magazine spread.
 
 HOW TO WRITE THE DESCRIPTION (4-6 sentences max):
-Sentence 1 — THE SCENE: Describe what the camera sees. Be specific and cinematic. Not "a workspace" but "a woman's hand resting on an open hardcover book on a sunlit oak table, a single dried eucalyptus sprig beside it".
-Sentence 2 — CAMERA + LIGHT: Always include a real camera model and lens for texture. Describe the light source and its quality. Example: "Shot on Hasselblad X2D, 80mm f/1.9. Soft morning light from a large north-facing window, creating long gentle shadows."
-Sentence 3 — DEPTH + FOCUS: Describe what's sharp and what's blurred. "Shallow depth of field, tack-sharp focus on the hands, background dissolving into warm creamy bokeh."
-Sentence 4 — COLOR + MOOD: Name 2-3 actual colors you see and the emotional feeling. "Muted terracotta, warm ivory, and sage green. The mood is quiet confidence."
+Sentence 1 - THE SCENE: Describe what the camera sees. Be specific and cinematic. Not "a workspace" but "a woman's hand resting on an open hardcover book on a sunlit oak table, a single dried eucalyptus sprig beside it".
+Sentence 2 - CAMERA + LIGHT: Always include a real camera model and lens for texture. Describe the light source and its quality. Example: "Shot on Hasselblad X2D, 80mm f/1.9. Soft morning light from a large north-facing window, creating long gentle shadows."
+Sentence 3 - DEPTH + FOCUS: Describe what's sharp and what's blurred. "Shallow depth of field, tack-sharp focus on the hands, background dissolving into warm creamy bokeh."
+Sentence 4 - COLOR + MOOD: Name 2-3 actual colors you see and the emotional feeling. "Muted terracotta, warm ivory, and sage green. The mood is quiet confidence."
 
 WHAT MAKES A GREAT SUBJECT:
 - Something a real photographer would actually shoot for a brand campaign
@@ -149,19 +149,19 @@ WHAT MAKES A GREAT SUBJECT:
 - Objects that tell a story: a half-finished coffee, a worn leather journal, a key in a lock
 - Environments that breathe: a sunlit corridor, a rainy window, morning mist on a field
 
-HARD BAN — NEVER INCLUDE THESE IN THE SCENE (they always look fake in AI-generated images):
+HARD BAN - NEVER INCLUDE THESE IN THE SCENE (they always look fake in AI-generated images):
 - ANY electronics: laptop, computer, monitor, phone, tablet, smartwatch, keyboard, mouse, headphones, screen of any kind
 - ANY workspace/office elements: desk setup, office chair, standing desk, workspace, home office
 - ANY UI/digital: dashboards, graphs, code, websites, apps, notifications
 - ANY graphic design terms: "social media graphic", "template", "layout", "blob shape", "accent circle"
-If the post is about technology/productivity/business — DO NOT show technology. Show the HUMAN SIDE: the person freed from their desk, the calm morning, the hands doing something creative, the view from the window.
+If the post is about technology/productivity/business - DO NOT show technology. Show the HUMAN SIDE: the person freed from their desk, the calm morning, the hands doing something creative, the view from the window.
 
 ALSO AVOID:
-- Multiple objects arranged "perfectly" — real photos have natural imperfection
-- Abstract nothing (just bokeh, just gradients, just light) — needs a tangible subject
-- Oversaturated colors, neon, HDR look — keep it natural and muted
-- Cold blue/gray corporate tones — use warm, inviting tones instead
-- Literal interpretations of the caption text — capture the FEELING, not the words
+- Multiple objects arranged "perfectly" - real photos have natural imperfection
+- Abstract nothing (just bokeh, just gradients, just light) - needs a tangible subject
+- Oversaturated colors, neon, HDR look - keep it natural and muted
+- Cold blue/gray corporate tones - use warm, inviting tones instead
+- Literal interpretations of the caption text - capture the FEELING, not the words
 
 TRIGGER WORD SAFETY (WaveSpeed rejects these):
 Never use: luxury, opulent, seductive, sensual, provocative, exposed, bare, naked, silk, satin, lingerie
@@ -176,7 +176,7 @@ TECHNICAL CUES THAT IMPROVE NANO BANANA OUTPUT:
 PROMPT;
         $systemPrompt .= "\nWrite the prompt in English. Respond with valid JSON: {\"image_prompt\": \"...\"}";
 
-        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nContent type: {$contentType}\n\nWrite a photograph description (4-6 sentences). CRITICAL RULE: absolutely NO laptops, NO computers, NO phones, NO screens, NO office/desk scenes. Even if the caption is about tech or productivity — show the human emotion instead: a person, nature, hands, light, architecture. Warm tones. JSON only.";
+        $fullUserPrompt = "Post caption:\n\"{$caption}\"\n\nContent type: {$contentType}\n\nWrite a photograph description (4-6 sentences). CRITICAL RULE: absolutely NO laptops, NO computers, NO phones, NO screens, NO office/desk scenes. Even if the caption is about tech or productivity - show the human emotion instead: a person, nature, hands, light, architecture. Warm tones. JSON only.";
 
         $startTime = microtime(true);
         $log = $this->logAiStart($brand, 'direct_image_description', [
@@ -263,11 +263,11 @@ PROMPT;
     public function getVisualLayoutForContentType(string $contentType): string
     {
         return match ($contentType) {
-            'carousel' => 'Multi-panel design with numbered page indicator. Use a structured grid layout with geometric photo crops (rounded rectangles or circles). Each panel should feel like a chapter — consistent visual rhythm with alternating emphasis. Clean dividers between sections.',
+            'carousel' => 'Multi-panel design with numbered page indicator. Use a structured grid layout with geometric photo crops (rounded rectangles or circles). Each panel should feel like a chapter - consistent visual rhythm with alternating emphasis. Clean dividers between sections.',
             'story', 'reel' => 'Full-bleed vertical composition (9:16 feel adapted to square). Typography-dominant with large, impactful text overlay. Cinematic letterboxing or gradient overlays on the photograph. The photo should fill at least 70% of the frame with a dramatic crop.',
-            'quote' => 'Centered symmetrical editorial layout. Large decorative quotation marks as graphic elements. The photograph is secondary — used as a small circular inset or subtle background wash at 15-20% opacity. Magazine-editorial feel with generous margins and a single accent line.',
+            'quote' => 'Centered symmetrical editorial layout. Large decorative quotation marks as graphic elements. The photograph is secondary - used as a small circular inset or subtle background wash at 15-20% opacity. Magazine-editorial feel with generous margins and a single accent line.',
             'educational', 'infographic' => 'Structured information design with clear visual sections. Use numbered markers, icon-style illustrations, or visual metaphors. Grid-based layout with the photograph occupying one quadrant. Clean hierarchy with a bold header area and supporting detail zones.',
-            'behind-the-scenes' => 'Authentic, candid composition — the photograph dominates at 70%+ of the canvas. Documentary-style framing with natural imperfections (slight grain, available light). Minimal design overlays — just a thin brand-colored border or corner accent. Raw, real, unpolished feel.',
+            'behind-the-scenes' => 'Authentic, candid composition - the photograph dominates at 70%+ of the canvas. Documentary-style framing with natural imperfections (slight grain, available light). Minimal design overlays - just a thin brand-colored border or corner accent. Raw, real, unpolished feel.',
             'promotional' => 'Product/service hero shot with studio-quality lighting. The photograph is center-stage with brand-colored frames or geometric accent shapes. Strong visual hierarchy leading the eye to the subject. Premium packaging/unboxing aesthetic with shadow play.',
             default => $this->getRandomPostLayout(),
         };
@@ -279,10 +279,10 @@ PROMPT;
     protected function getRandomPostLayout(): string
     {
         $variants = [
-            'Split layout — photograph occupies the left 55% with a soft rounded edge, right side is clean negative space with a small decorative label and one accent shape. Asymmetric balance with the photo as the anchor.',
+            'Split layout - photograph occupies the left 55% with a soft rounded edge, right side is clean negative space with a small decorative label and one accent shape. Asymmetric balance with the photo as the anchor.',
             'Full-bleed photograph with a translucent gradient overlay (bottom 30%) fading from the brand accent color. The photo stretches edge-to-edge with a subtle vignette. One small text label floats in the lower third.',
             'Gradient background flowing from brand primary to a lighter tint. A floating photograph with soft drop shadow sits slightly off-center. Thin geometric line accents (circles, arcs) in the secondary color frame the composition.',
-            'Mosaic/collage-inspired layout — one large dominant photograph (60%) paired with two color-block rectangles in brand palette tones. The blocks create a balanced L-shaped frame around the photo. One block holds a 1-word label.',
+            'Mosaic/collage-inspired layout - one large dominant photograph (60%) paired with two color-block rectangles in brand palette tones. The blocks create a balanced L-shaped frame around the photo. One block holds a 1-word label.',
         ];
 
         return $variants[array_rand($variants)];
@@ -299,13 +299,13 @@ PROMPT;
         if (!empty($colors)) {
             $colorDirectives = [];
             if (!empty($colors['primary'])) {
-                $colorDirectives[] = "Primary: {$colors['primary']} — use for dominant graphic elements, frames, and key accents";
+                $colorDirectives[] = "Primary: {$colors['primary']} - use for dominant graphic elements, frames, and key accents";
             }
             if (!empty($colors['secondary'])) {
-                $colorDirectives[] = "Secondary: {$colors['secondary']} — use for supporting shapes, backgrounds, and subtle tints";
+                $colorDirectives[] = "Secondary: {$colors['secondary']} - use for supporting shapes, backgrounds, and subtle tints";
             }
             if (!empty($colors['accent'])) {
-                $colorDirectives[] = "Accent: {$colors['accent']} — use sparingly for small decorative details and highlights";
+                $colorDirectives[] = "Accent: {$colors['accent']} - use sparingly for small decorative details and highlights";
             }
             if (!empty($colorDirectives)) {
                 $parts[] = "COLOR PALETTE:\n" . implode("\n", $colorDirectives);

@@ -92,7 +92,7 @@ class ProposalToPostService
 
 Return ONLY valid JSON with exactly two fields:
 - "title": A short, catchy title for the post (max 100 characters)
-- "text_prompt": A detailed description/brief of what the post should contain — key points, angle, structure, and call-to-action. This will be used as instructions for generating the final post text. Do NOT write the actual post caption here.
+- "text_prompt": A detailed description/brief of what the post should contain - key points, angle, structure, and call-to-action. This will be used as instructions for generating the final post text. Do NOT write the actual post caption here.
 
 Do not wrap the JSON in markdown code blocks. Return raw JSON only.
 PROMPT;

@@ -205,14 +205,14 @@ PROMPT;
         $prompt .= "\nYou write like a human creator who has real experience, strong opinions, and something specific to say.";
         $prompt .= "\nYou NEVER sound like AI, a press release, or a corporate brochure.";
         $prompt .= "\n\nOUTPUT LANGUAGE: {$language}. Write ALL post content (text, hook, CTA, hashtags) in {$language}. The prompt instructions are in English for efficiency, but your output MUST be in {$language}.";
-        $prompt .= "\n\n### ABSOLUTE BAN — output will be automatically rejected if it contains any of these (in ANY language including {$language}):";
-        $prompt .= "\n# \"Did you know\" / \"Do you know\" — BANNED. Use a bold statement instead.";
-        $prompt .= "\n# \"Imagine\" / \"Picture this\" / \"Envision\" — BANNED. This includes ALL translations (e.g. Polish: \"Wyobraź sobie\", German: \"Stell dir vor\", Spanish: \"Imagina\"). ZERO tolerance.";
-        $prompt .= "\n# Generic CTA verbs as standalone CTAs: \"Check it out\", \"Find out more\", \"See for yourself\", \"Start now\", \"Start today\", \"Visit\", \"Discover\" — BANNED.";
-        $prompt .= "\n# 🚀 emoji — BANNED. The \"!\" character is COMPLETELY FORBIDDEN — use \".\" or \"?\" instead. Every single \"!\" will be automatically stripped.";
-        $prompt .= "\n# \"STOP\" / \"STOP ✋\" / \"Stop scrolling\" as hooks — BANNED.";
-        $prompt .= "\n# **bold** or markdown formatting — BANNED. Plain text only.";
-        $prompt .= "\n# \"Link in bio\" — ONLY on Instagram/TikTok. NEVER on LinkedIn/X/Facebook.";
+        $prompt .= "\n\n### ABSOLUTE BAN - output will be automatically rejected if it contains any of these (in ANY language including {$language}):";
+        $prompt .= "\n# \"Did you know\" / \"Do you know\" - BANNED. Use a bold statement instead.";
+        $prompt .= "\n# \"Imagine\" / \"Picture this\" / \"Envision\" - BANNED. This includes ALL translations (e.g. Polish: \"Wyobraź sobie\", German: \"Stell dir vor\", Spanish: \"Imagina\"). ZERO tolerance.";
+        $prompt .= "\n# Generic CTA verbs as standalone CTAs: \"Check it out\", \"Find out more\", \"See for yourself\", \"Start now\", \"Start today\", \"Visit\", \"Discover\" - BANNED.";
+        $prompt .= "\n# 🚀 emoji - BANNED. The \"!\" character is COMPLETELY FORBIDDEN - use \".\" or \"?\" instead. Every single \"!\" will be automatically stripped.";
+        $prompt .= "\n# \"STOP\" / \"STOP ✋\" / \"Stop scrolling\" as hooks - BANNED.";
+        $prompt .= "\n# **bold** or markdown formatting - BANNED. Plain text only.";
+        $prompt .= "\n# \"Link in bio\" - ONLY on Instagram/TikTok. NEVER on LinkedIn/X/Facebook.";
 
         // Add high-frequency banned phrases in the target language for non-English outputs
         $localBans = $this->getLocalizedBannedPhrases($brand->getLanguage());
@@ -259,7 +259,7 @@ PROMPT;
             }
         }
 
-        // Target audience — deep version from strategy, fallback to brand
+        // Target audience - deep version from strategy, fallback to brand
         $prompt .= "\n\n=== TARGET AUDIENCE ===";
         if (!empty($strategyContext['target_audience'])) {
             $audience = $strategyContext['target_audience'];
@@ -305,8 +305,8 @@ PROMPT;
 
 
 === VOICE & PERSPECTIVE ===
-- Write in FIRST PERSON ("I", "my") as the brand's voice — as if the brand founder or team member is speaking from personal experience. NEVER write in third person about fictional characters ("Karol, owner of a small company..."). That is an obvious AI pattern.
-- If telling a story, use: "I used to...", "One of our users...", "A client told me..." — never invent named characters.
+- Write in FIRST PERSON ("I", "my") as the brand's voice - as if the brand founder or team member is speaking from personal experience. NEVER write in third person about fictional characters ("Karol, owner of a small company..."). That is an obvious AI pattern.
+- If telling a story, use: "I used to...", "One of our users...", "A client told me..." - never invent named characters.
 - Be opinionated and specific. Real copywriters take stances. Say "This is wrong" not "This might be worth considering."
 
 === COPYWRITING FRAMEWORKS ===
@@ -320,22 +320,22 @@ Choose ONE per post (do NOT label or announce it):
 - Data drop: Lead with a striking number, then context
 
 === WRITING STRUCTURE ===
-1. HOOK — First line. Must create curiosity, tension, or surprise. This determines if anyone reads the rest. Make it bold, specific, provocative. Never generic.
-2. BODY — Deliver value. Short paragraphs. One idea per paragraph. Build tension before revealing the solution.
-3. BRAND MENTION — Do NOT mention the brand name in the first 60% of the post. Lead with pure value/story/insight. The brand should appear naturally near the end, as the solution — not as a pitch.
-4. CTA — Specific to the topic. Must feel like a natural next step, not a sales push.
+1. HOOK - First line. Must create curiosity, tension, or surprise. This determines if anyone reads the rest. Make it bold, specific, provocative. Never generic.
+2. BODY - Deliver value. Short paragraphs. One idea per paragraph. Build tension before revealing the solution.
+3. BRAND MENTION - Do NOT mention the brand name in the first 60% of the post. Lead with pure value/story/insight. The brand should appear naturally near the end, as the solution - not as a pitch.
+4. CTA - Specific to the topic. Must feel like a natural next step, not a sales push.
 
 === RULES ===
 1. Write ALL output in {$language}
 2. Match the brand voice exactly
 3. Platform-aware copy (character limits, formatting)
-4. Plain text only — no markdown, no Unicode bold/italic
-5. Deliver concrete value — every post must teach, inspire, or provoke thought
-6. Be specific — numbers, examples, scenarios. Never vague claims.
-7. VARY structure across posts — alternate between: storytelling, data-driven, hot take, behind-the-scenes, how-to, question-led. Never use the same structure twice in a row.
+4. Plain text only - no markdown, no Unicode bold/italic
+5. Deliver concrete value - every post must teach, inspire, or provoke thought
+6. Be specific - numbers, examples, scenarios. Never vague claims.
+7. VARY structure across posts - alternate between: storytelling, data-driven, hot take, behind-the-scenes, how-to, question-led. Never use the same structure twice in a row.
 8. Every word must earn its place. No filler, no fluff.
 9. NEVER fabricate statistics. Use numbers only from the brief, or frame as personal experience ("I saved X hours", "Our users report Y").
-10. Use emojis SPARINGLY and STRATEGICALLY — max 2-4 per post, placed for visual rhythm not decoration. Never start paragraphs with emojis as bullet points.
+10. Use emojis SPARINGLY and STRATEGICALLY - max 2-4 per post, placed for visual rhythm not decoration. Never start paragraphs with emojis as bullet points.
 
 === RESPONSE FORMAT ===
 Valid JSON only. No additional text, no markdown code blocks.
@@ -348,7 +348,7 @@ All text values MUST be in {$language}.
 }
 
 ##############################
-# HARD CONSTRAINTS — VIOLATIONS = REJECTED OUTPUT
+# HARD CONSTRAINTS - VIOLATIONS = REJECTED OUTPUT
 # Apply in ANY language including {$language} translations.
 ##############################
 
@@ -356,12 +356,12 @@ BANNED PHRASES (even ONE = rejected):
 "Imagine", "Did you know", "In today's world", "In today's digital age", "In the ever-evolving", "Let's dive in", "Let's explore", "Game-changer", "Unlock your potential", "Take it to the next level", "Don't miss out", "Here's the thing", "It's no secret", "Elevate", "Supercharge", "Revolutionize", "At the end of the day", "STOP SCROLLING", "Stop scrolling", "Wait for it", "Are you ready to", "Ready for a change", "Want to know more"
 These bans apply to their {$language} translations too.
 
-BANNED CTAs: "Check it out", "Find out more", "See for yourself", "Start now", "Start today", "Visit our", "Discover", "Learn more" and their {$language} equivalents — BANNED as standalone CTAs.
-Good CTAs: "Drop a comment with how many tools you pay for", "Save this for your next planning session", "Link in bio — 14-day free trial" (link in bio = Instagram/TikTok only)
+BANNED CTAs: "Check it out", "Find out more", "See for yourself", "Start now", "Start today", "Visit our", "Discover", "Learn more" and their {$language} equivalents - BANNED as standalone CTAs.
+Good CTAs: "Drop a comment with how many tools you pay for", "Save this for your next planning session", "Link in bio - 14-day free trial" (link in bio = Instagram/TikTok only)
 
 BANNED PATTERNS:
-- 🚀 emoji — never
-- Exclamation marks — ZERO allowed. Periods and questions only.
+- 🚀 emoji - never
+- Exclamation marks - ZERO allowed. Periods and questions only.
 - Do NOT start sentences with "So," / "Well," / their {$language} equivalents
 - "you"/"your" max 2x per post
 - Do NOT use lists of exactly 3 or 5 items
@@ -584,7 +584,7 @@ PROMPT;
                 'style' => 'Visual storytelling, authentic, emoji-friendly',
                 'structure' => 'Hook (1 compelling line) → empty line → Body (2-5 short paragraphs, use emojis as bullet points if brand allows) → empty line → CTA → empty line → Hashtags block',
                 'formatting' => 'Use line breaks generously. One thought per line. Short paragraphs (1-2 sentences). Empty line between sections.',
-                'best_practices' => 'First line is everything — it shows before "more". Carousel posts: write slide-by-slide with numbered points. Reels: short caption, hook-first. 8-15 hashtags is optimal.',
+                'best_practices' => 'First line is everything - it shows before "more". Carousel posts: write slide-by-slide with numbered points. Reels: short caption, hook-first. 8-15 hashtags is optimal.',
             ],
             'linkedin' => [
                 'max_chars' => 3000,
@@ -606,7 +606,7 @@ PROMPT;
                 'max_chars' => 2200,
                 'max_hashtags' => 10,
                 'style' => 'Casual, trendy, authentic, community-driven. Write like you are talking to a friend, not presenting a pitch.',
-                'structure' => 'Hook in first 3 words → 2-3 short casual sentences → question or challenge as CTA. Keep it SHORT — max 4-6 sentences total.',
+                'structure' => 'Hook in first 3 words → 2-3 short casual sentences → question or challenge as CTA. Keep it SHORT - max 4-6 sentences total.',
                 'formatting' => 'Short sentences. No bullet lists, no numbered lists. Write as flowing casual text. No formal structure.',
                 'best_practices' => 'Write like a creator, not a brand. Use first person ("I") not "we". Sound like spoken language, not written. Use slang/casual grammar if natural. Good TikTok hook patterns: "Nobody talks about this but...", "POV: you automated your entire marketing", "This one change saves me 2h a day".',
             ],
@@ -616,7 +616,7 @@ PROMPT;
                 'style' => 'Conversational, community-building, warm',
                 'structure' => 'Question or relatable statement → Story or value → Community-focused CTA (comment, share, tag)',
                 'formatting' => 'Medium-length paragraphs. Conversational tone. Emojis OK but not overdone.',
-                'best_practices' => 'Questions drive comments. "Tag someone who..." drives shares. Personal stories outperform promotional content. Facebook rewards engagement — write for comments.',
+                'best_practices' => 'Questions drive comments. "Tag someone who..." drives shares. Personal stories outperform promotional content. Facebook rewards engagement - write for comments.',
             ],
             'youtube' => [
                 'max_chars' => 5000,
@@ -624,7 +624,7 @@ PROMPT;
                 'style' => 'SEO-optimized, descriptive, structured',
                 'structure' => 'SEO-rich opening paragraph (include keywords) → Video summary → Timestamps section → Links/resources → Hashtags',
                 'formatting' => 'Use line breaks between sections. Timestamps format: 0:00 - Topic. Clear sections with headers.',
-                'best_practices' => 'First 2-3 lines show in search results — front-load keywords. First 3 hashtags appear above the title. Include clear subscribe CTA.',
+                'best_practices' => 'First 2-3 lines show in search results - front-load keywords. First 3 hashtags appear above the title. Include clear subscribe CTA.',
             ],
             default => [
                 'max_chars' => 2000,

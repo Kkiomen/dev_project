@@ -26,6 +26,10 @@
         "filter": "Filtruj",
         "sort": "Sortuj",
         "noData": "Brak danych",
+        "noResults": "Brak wyników",
+        "noResultsDescription": "Spróbuj zmienić kryteria wyszukiwania lub filtrów",
+        "clearFilters": "Wyczyść filtry",
+        "deleteConfirmTitle": "Potwierdź usunięcie",
         "confirmAction": "Potwierdzenie",
         "select": "wybierz",
         "copy": "Kopiuj",
@@ -3320,12 +3324,14 @@
             "aiChat": "Czat AI",
             "backToApp": "Powrót do aplikacji",
             "sectionMain": "Główne",
+            "sectionSocialMedia": "Social Media",
             "sectionAnalytics": "Analityka i badania",
             "sectionEngagement": "Zaangażowanie",
             "sectionSettings": "Konfiguracja",
             "tutorial": "Tutorial",
             "rss": "Kanały RSS",
-            "pipelines": "Pipelines"
+            "pipelines": "Pipelines",
+            "contentList": "Lista treści"
         },
         "dashboard": {
             "title": "Centrum Dowodzenia",
@@ -3413,6 +3419,62 @@
             "deleteSuccess": "Post został usunięty",
             "deleteError": "Nie udało się usunąć posta"
         },
+        "quickPlan": {
+            "title": "Szybki Plan",
+            "subtitle": "Zarezerwuj puste miejsca w kalendarzu treści. Wybierasz platformy, częstotliwość i zakres dat - tematy i treści uzupełnisz później, ręcznie lub z pomocą AI.",
+            "selectPlatforms": "Wybierz platformy",
+            "dateRange": "Zakres dat",
+            "range": {
+                "next_week": "Następny tydzień",
+                "next_2_weeks": "Następne 2 tygodnie",
+                "next_month": "Następny miesiąc",
+                "custom": "Własny"
+            },
+            "postsPerDay": "Postów dziennie",
+            "perPlatform": "na platformę",
+            "contentType": "Typ treści",
+            "summary": "{items} pustych miejsc zostanie dodanych do planu — {days} dni × {platforms} platform × {perDay}/dzień. Tematy i treści uzupełnisz później.",
+            "daysSelected": "{count} dni wybranych",
+            "creating": "Tworzenie postów...",
+            "createItems": "Utwórz {count} postów",
+            "successMessage": "{count} postów dodano do planu!",
+            "partialError": "{failed} miejsc nie udało się utworzyć"
+        },
+        "contentList": {
+            "title": "Lista Treści",
+            "subtitle": "Planuj, organizuj i zarządzaj wszystkimi treściami w jednym miejscu",
+            "emptyTitle": "Brak zaplanowanych treści",
+            "emptyDescription": "Wygeneruj plan treści za pomocą AI lub dodaj elementy ręcznie, aby rozpocząć planowanie social media.",
+            "addItem": "Dodaj element",
+            "addManually": "Dodaj ręcznie",
+            "generateWithAI": "Generuj z AI",
+            "planGenerated": "Plan treści wygenerowany pomyślnie!",
+            "planGenerateError": "Nie udało się wygenerować planu treści",
+            "noStrategyWarning": "Najpierw utwórz strategię, aby korzystać z generowania AI. Możesz nadal dodawać elementy ręcznie.",
+            "totalItems": "{count} elementów",
+            "plannedItems": "{count} zaplanowanych",
+            "insertHere": "Wstaw tutaj",
+            "noTopic": "Kliknij, aby dodać temat",
+            "saved": "Zapisano",
+            "deleted": "Element usunięty",
+            "deleteConfirm": "Czy na pewno chcesz usunąć ten element?",
+            "colDate": "Data",
+            "colTime": "Godzina",
+            "colPlatform": "Platforma",
+            "colType": "Typ",
+            "colPillar": "Filar",
+            "colTopic": "Temat",
+            "colDescription": "Opis",
+            "status": {
+                "planned": "Zaplanowane",
+                "generating": "Generowanie",
+                "content_ready": "Treść gotowa",
+                "media_ready": "Media gotowe",
+                "approved": "Zaakceptowane",
+                "published": "Opublikowane",
+                "skipped": "Pominięte"
+            }
+        },
         "calendar": {
             "title": "Kalendarz Treści",
             "subtitle": "Przeglądaj i zarządzaj zaplanowanymi treściami",
@@ -3456,6 +3518,7 @@
             "generating": "Generowanie...",
             "emptyPlanTitle": "Twój plan treści jest pusty",
             "emptyPlanDescription": "Wygeneruj plan treści z AI na podstawie strategii lub dodaj sloty ręcznie",
+            "generatePlan": "Generuj plan",
             "generateFullMonth": "Generuj na cały miesiąc",
             "generateFullMonthDesc": "Stwórz plan z postami na każdy dzień miesiąca",
             "generateFromToday": "Generuj od dzisiaj",
@@ -3563,7 +3626,10 @@
                 "reject": "Odrzuć"
             },
             "deleted": "Post usunięty",
-            "deleteError": "Nie udało się usunąć posta"
+            "deleteError": "Nie udało się usunąć posta",
+            "noResults": "Żaden post nie pasuje do filtrów",
+            "resultCount": "{count} wyników",
+            "deleteConfirm": "Czy na pewno chcesz usunąć ten post?"
         },
         "postEditor": {
             "title": "Edytor Postów",
@@ -3606,6 +3672,10 @@
             "publishing": "Publikowanie...",
             "publishSuccess": "Post opublikowany pomyślnie",
             "publishError": "Nie udało się opublikować posta",
+            "unsavedTitle": "Niezapisane zmiany",
+            "unsavedMessage": "Masz niezapisane zmiany. Opuścić bez zapisywania?",
+            "leaveWithoutSaving": "Opuść",
+            "charCount": "{count}/{limit}",
             "aiActions": {
                 "generateCaption": "Generuj podpis",
                 "generateHashtags": "Generuj hashtagi",

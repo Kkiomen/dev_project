@@ -110,7 +110,7 @@ Your job is to create a research-level hashtag strategy that maximizes discovera
 
 You must categorize hashtags into three groups:
 1. TRENDING - High-volume, currently active hashtags relevant to the topic (broad reach, >100K posts)
-2. NICHE - Specific, lower-competition hashtags for targeted discovery (community-focused, <50K posts). These are the most valuable for growth — they put content in front of the right people.
+2. NICHE - Specific, lower-competition hashtags for targeted discovery (community-focused, <50K posts). These are the most valuable for growth - they put content in front of the right people.
 3. BRANDED - Hashtags specific to the brand, its campaigns, or its signature topics
 
 STRATEGY:

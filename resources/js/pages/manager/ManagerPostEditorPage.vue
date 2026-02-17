@@ -1,11 +1,12 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { useRoute, useRouter } from 'vue-router';
+import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router';
 import axios from 'axios';
 import { useManagerStore } from '@/stores/manager';
 import { usePostsStore } from '@/stores/posts';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 
 const { t } = useI18n();
@@ -14,6 +15,7 @@ const router = useRouter();
 const managerStore = useManagerStore();
 const postsStore = usePostsStore();
 const toast = useToast();
+const { confirm } = useConfirm();
 
 const postId = route.params.id;
 const loading = ref(true);
@@ -50,7 +52,6 @@ const localPost = ref({
 
 const activePlatformTab = ref('instagram');
 const hashtagInput = ref('');
-const showDeleteConfirm = ref(false);
 const aiGenerating = ref({
     caption: false,
     hashtags: false,
@@ -58,7 +59,33 @@ const aiGenerating = ref({
     variants: false,
 });
 
+const platformCharLimits = {
+    instagram: 2200,
+    facebook: 63206,
+    tiktok: 2200,
+    linkedin: 3000,
+    x: 280,
+    youtube: 5000,
+};
+
 const captionLength = computed(() => localPost.value.caption.length);
+
+const hasUnsavedChanges = ref(false);
+let initialPostSnapshot = '';
+
+const currentPlatformCaptionLength = computed(() => {
+    const caption = localPost.value.platform_captions[activePlatformTab.value] || '';
+    return caption.length;
+});
+
+const currentPlatformLimit = computed(() => {
+    return platformCharLimits[activePlatformTab.value] || 0;
+});
+
+const isPlatformOverLimit = computed(() => {
+    if (!currentPlatformLimit.value) return false;
+    return currentPlatformCaptionLength.value > currentPlatformLimit.value;
+});
 
 const currentPlatformCaption = computed({
     get() {
@@ -145,7 +172,27 @@ onMounted(async () => {
         toast.error(t('manager.postEditor.loadError'));
     } finally {
         loading.value = false;
+        // Take snapshot after load
+        initialPostSnapshot = JSON.stringify(localPost.value);
     }
+});
+
+// Track unsaved changes
+watch(localPost, () => {
+    if (!initialPostSnapshot) return;
+    hasUnsavedChanges.value = JSON.stringify(localPost.value) !== initialPostSnapshot;
+}, { deep: true });
+
+// Warn before leaving with unsaved changes
+onBeforeRouteLeave(async () => {
+    if (!hasUnsavedChanges.value) return true;
+    const confirmed = await confirm({
+        title: t('manager.postEditor.unsavedTitle'),
+        message: t('manager.postEditor.unsavedMessage'),
+        confirmText: t('manager.postEditor.leaveWithoutSaving'),
+        variant: 'warning',
+    });
+    return confirmed;
 });
 
 function addHashtag() {
@@ -242,6 +289,8 @@ async function saveDraft() {
     saving.value = true;
     try {
         await postsStore.updatePost(postId, buildFormData());
+        initialPostSnapshot = JSON.stringify(localPost.value);
+        hasUnsavedChanges.value = false;
         toast.success(t('manager.postEditor.saved'));
     } catch {
         toast.error(t('manager.postEditor.saveError'));
@@ -284,14 +333,20 @@ async function publishPost() {
 }
 
 async function deletePost() {
+    const confirmed = await confirm({
+        title: t('common.deleteConfirmTitle'),
+        message: t('manager.postEditor.deleteConfirm'),
+        confirmText: t('common.delete'),
+        variant: 'danger',
+    });
+    if (!confirmed) return;
+
     try {
         await axios.delete(`/api/v1/posts/${postId}`);
-        showDeleteConfirm.value = false;
         toast.success(t('manager.postEditor.deleted'));
         router.push({ name: 'manager.content' });
     } catch {
         toast.error(t('manager.postEditor.deleteError'));
-        showDeleteConfirm.value = false;
     }
 }
 
@@ -397,7 +452,7 @@ const statusColors = {
                                 :key="platform.key"
                                 @click="activePlatformTab = platform.key"
                                 :class="[
-                                    'px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition',
+                                    'relative px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium transition',
                                     activePlatformTab === platform.key
                                         ? 'bg-indigo-600 text-white'
                                         : 'bg-gray-800 text-gray-400 hover:text-gray-200 hover:bg-gray-700',
@@ -405,6 +460,10 @@ const statusColors = {
                             >
                                 <span class="sm:hidden">{{ platform.abbr }}</span>
                                 <span class="hidden sm:inline">{{ platform.label }}</span>
+                                <span
+                                    v-if="localPost.platform_captions[platform.key]"
+                                    class="absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-indigo-400"
+                                />
                             </button>
                         </div>
                         <textarea
@@ -413,9 +472,18 @@ const statusColors = {
                             rows="4"
                             class="w-full rounded-lg bg-gray-800 border border-gray-700 px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition resize-y"
                         ></textarea>
-                        <p class="mt-1.5 text-xs text-gray-500">
-                            {{ t('manager.postEditor.platformCaptionHint') }}
-                        </p>
+                        <div class="mt-1.5 flex items-center justify-between">
+                            <p class="text-xs text-gray-500">
+                                {{ t('manager.postEditor.platformCaptionHint') }}
+                            </p>
+                            <span
+                                v-if="currentPlatformCaptionLength > 0"
+                                class="text-xs"
+                                :class="isPlatformOverLimit ? 'text-red-400 font-medium' : 'text-gray-500'"
+                            >
+                                {{ t('manager.postEditor.charCount', { count: currentPlatformCaptionLength, limit: currentPlatformLimit }) }}
+                            </span>
+                        </div>
                     </div>
 
                     <!-- Hashtags -->
@@ -685,7 +753,7 @@ const statusColors = {
 
                         <!-- Delete -->
                         <button
-                            @click="showDeleteConfirm = true"
+                            @click="deletePost"
                             :disabled="saving || publishing"
                             class="w-full px-4 py-2 text-red-400 hover:text-red-300 disabled:opacity-50 transition text-sm font-medium"
                         >
@@ -695,32 +763,6 @@ const statusColors = {
                 </div>
             </div>
 
-            <!-- Delete confirmation overlay -->
-            <Teleport to="body">
-                <div
-                    v-if="showDeleteConfirm"
-                    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-                    @click.self="showDeleteConfirm = false"
-                >
-                    <div class="w-full max-w-sm rounded-xl bg-gray-900 border border-gray-800 p-6 shadow-2xl">
-                        <p class="text-white text-sm mb-4">{{ t('manager.postEditor.deleteConfirm') }}</p>
-                        <div class="flex justify-end gap-3">
-                            <button
-                                @click="showDeleteConfirm = false"
-                                class="px-4 py-2 rounded-lg bg-gray-700 text-gray-300 hover:bg-gray-600 transition text-sm font-medium"
-                            >
-                                {{ t('manager.postEditor.cancelAction') }}
-                            </button>
-                            <button
-                                @click="deletePost"
-                                class="px-4 py-2 rounded-lg bg-red-600 text-white hover:bg-red-500 transition text-sm font-medium"
-                            >
-                                {{ t('manager.postEditor.delete') }}
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </Teleport>
         </template>
     </div>
 </template>

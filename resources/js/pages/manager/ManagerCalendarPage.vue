@@ -20,6 +20,7 @@ const showSlotModal = ref(false);
 const showAddSlotModal = ref(false);
 const addSlotDate = ref('');
 const bulkGenerating = ref(false);
+const showGenerateMenu = ref(false);
 const planGenerating = ref(false);
 const generatingPlanId = ref(null);
 const generationStep = ref('');
@@ -374,7 +375,7 @@ watch(() => managerStore.currentBrandId, () => {
             </div>
 
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <!-- Generate All button -->
+                <!-- Generate All content button -->
                 <button
                     v-if="plannedSlotsCount > 0"
                     @click="handleGenerateAll"
@@ -390,6 +391,64 @@ watch(() => managerStore.currentBrandId, () => {
                     </svg>
                     {{ bulkGenerating ? t('manager.calendar.generating') : t('manager.calendar.generateAll', { count: plannedSlotsCount }) }}
                 </button>
+
+                <!-- Generate Plan dropdown (visible when slots already exist) -->
+                <div v-if="hasAnySlots" class="relative">
+                    <button
+                        @click="showGenerateMenu = !showGenerateMenu"
+                        :disabled="planGenerating"
+                        class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-medium rounded-lg bg-purple-600/20 border border-purple-500/30 text-purple-300 hover:bg-purple-600/30 hover:text-purple-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <svg v-if="planGenerating" class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <svg v-else class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                        </svg>
+                        {{ t('manager.calendar.generatePlan') }}
+                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" />
+                        </svg>
+                    </button>
+                    <div
+                        v-if="showGenerateMenu"
+                        class="absolute right-0 top-full mt-1 w-64 rounded-xl bg-gray-900 border border-gray-700 shadow-xl z-20 overflow-hidden"
+                    >
+                        <button
+                            @click="handleGeneratePlan('full'); showGenerateMenu = false"
+                            :disabled="planGenerating || !managerStore.strategyIsActive"
+                            class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-white">{{ t('manager.calendar.generateFullMonth') }}</p>
+                                <p class="text-[11px] text-gray-400">{{ t('manager.calendar.generateFullMonthDesc') }}</p>
+                            </div>
+                        </button>
+                        <button
+                            @click="handleGeneratePlan('from_today'); showGenerateMenu = false"
+                            :disabled="planGenerating || !managerStore.strategyIsActive"
+                            class="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-800 transition-colors border-t border-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <svg class="w-4 h-4 text-indigo-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            </svg>
+                            <div>
+                                <p class="text-sm font-medium text-white">{{ t('manager.calendar.generateFromToday') }}</p>
+                                <p class="text-[11px] text-gray-400">{{ t('manager.calendar.generateFromTodayDesc') }}</p>
+                            </div>
+                        </button>
+                    </div>
+                    <!-- Backdrop to close menu -->
+                    <div
+                        v-if="showGenerateMenu"
+                        class="fixed inset-0 z-10"
+                        @click="showGenerateMenu = false"
+                    />
+                </div>
 
                 <!-- View toggle -->
                 <div class="flex items-center rounded-lg bg-gray-900 border border-gray-800 p-0.5">
@@ -649,7 +708,7 @@ watch(() => managerStore.currentBrandId, () => {
                                 v-for="slot in getSlotsForDate(day.dateStr).slice(0, 3)"
                                 :key="slot.id"
                                 @click.stop="handleSlotClick(slot)"
-                                class="flex items-center gap-1 px-1 py-0.5 rounded text-[10px] sm:text-xs leading-tight cursor-pointer hover:bg-gray-700/50 transition-colors group/slot"
+                                class="flex items-center gap-1 px-1.5 py-1 rounded text-xs leading-tight cursor-pointer hover:bg-gray-700/50 transition-colors group/slot"
                             >
                                 <span
                                     class="w-1.5 h-1.5 rounded-full shrink-0"

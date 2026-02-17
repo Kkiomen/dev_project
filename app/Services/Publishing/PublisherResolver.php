@@ -30,7 +30,7 @@ class PublisherResolver
                 return $adapter;
             }
 
-            // Explicit provider not available — fall through to legacy chain
+            // Explicit provider not available - fall through to legacy chain
         }
 
         // Legacy fallback chain: direct → webhook

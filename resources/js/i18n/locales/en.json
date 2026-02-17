@@ -26,6 +26,10 @@
         "filter": "Filter",
         "sort": "Sort",
         "noData": "No data",
+        "noResults": "No results found",
+        "noResultsDescription": "Try adjusting your search or filter criteria",
+        "clearFilters": "Clear filters",
+        "deleteConfirmTitle": "Confirm deletion",
         "confirmAction": "Confirmation",
         "copy": "Copy",
         "copyLink": "Copy Link",
@@ -3317,12 +3321,14 @@
             "aiChat": "AI Chat",
             "backToApp": "Back to App",
             "sectionMain": "Main",
+            "sectionSocialMedia": "Social Media",
             "sectionAnalytics": "Analytics & Research",
             "sectionEngagement": "Engagement",
             "sectionSettings": "Configuration",
             "tutorial": "Tutorial",
             "rss": "RSS Feeds",
-            "pipelines": "Pipelines"
+            "pipelines": "Pipelines",
+            "contentList": "Content List"
         },
         "dashboard": {
             "title": "Command Center",
@@ -3410,6 +3416,62 @@
             "deleteSuccess": "Post has been deleted",
             "deleteError": "Failed to delete post"
         },
+        "quickPlan": {
+            "title": "Quick Plan",
+            "subtitle": "Reserve empty slots in your content calendar. You decide the platforms, frequency, and time range — topics and content will be filled in later, manually or with AI.",
+            "selectPlatforms": "Select platforms",
+            "dateRange": "Date range",
+            "range": {
+                "next_week": "Next week",
+                "next_2_weeks": "Next 2 weeks",
+                "next_month": "Next month",
+                "custom": "Custom"
+            },
+            "postsPerDay": "Slots per day",
+            "perPlatform": "per platform",
+            "contentType": "Content type",
+            "summary": "{items} empty slots will be added to your plan — {days} days × {platforms} platforms × {perDay}/day. You'll fill in topics and content afterwards.",
+            "daysSelected": "{count} days selected",
+            "creating": "Creating slots...",
+            "createItems": "Create {count} slots",
+            "successMessage": "{count} slots added to your plan!",
+            "partialError": "{failed} slots failed to create"
+        },
+        "contentList": {
+            "title": "Content List",
+            "subtitle": "Plan, organize, and manage all your content in one place",
+            "emptyTitle": "No content planned yet",
+            "emptyDescription": "Generate a content plan with AI or add items manually to start planning your social media content.",
+            "addItem": "Add item",
+            "addManually": "Add manually",
+            "generateWithAI": "Generate with AI",
+            "planGenerated": "Content plan generated successfully!",
+            "planGenerateError": "Failed to generate content plan",
+            "noStrategyWarning": "Create a strategy first to use AI generation. You can still add items manually.",
+            "totalItems": "{count} items",
+            "plannedItems": "{count} planned",
+            "insertHere": "Insert here",
+            "noTopic": "Click to add topic",
+            "saved": "Saved",
+            "deleted": "Item deleted",
+            "deleteConfirm": "Are you sure you want to delete this content item?",
+            "colDate": "Date",
+            "colTime": "Time",
+            "colPlatform": "Platform",
+            "colType": "Type",
+            "colPillar": "Pillar",
+            "colTopic": "Topic",
+            "colDescription": "Description",
+            "status": {
+                "planned": "Planned",
+                "generating": "Generating",
+                "content_ready": "Content ready",
+                "media_ready": "Media ready",
+                "approved": "Approved",
+                "published": "Published",
+                "skipped": "Skipped"
+            }
+        },
         "calendar": {
             "title": "Content Calendar",
             "subtitle": "View and manage your scheduled content",
@@ -3453,6 +3515,7 @@
             "generating": "Generating...",
             "emptyPlanTitle": "Your content plan is empty",
             "emptyPlanDescription": "Generate a content plan with AI based on your strategy, or add slots manually",
+            "generatePlan": "Generate Plan",
             "generateFullMonth": "Generate for full month",
             "generateFullMonthDesc": "Create a plan with posts for every day of the month",
             "generateFromToday": "Generate from today",
@@ -3560,7 +3623,10 @@
                 "reject": "Reject"
             },
             "deleted": "Post deleted",
-            "deleteError": "Failed to delete post"
+            "deleteError": "Failed to delete post",
+            "noResults": "No posts match your filters",
+            "resultCount": "{count} results",
+            "deleteConfirm": "Are you sure you want to delete this post?"
         },
         "postEditor": {
             "title": "Post Editor",
@@ -3603,6 +3669,10 @@
             "publishing": "Publishing...",
             "publishSuccess": "Post published successfully",
             "publishError": "Failed to publish post",
+            "unsavedTitle": "Unsaved changes",
+            "unsavedMessage": "You have unsaved changes. Leave without saving?",
+            "leaveWithoutSaving": "Leave",
+            "charCount": "{count}/{limit}",
             "aiActions": {
                 "generateCaption": "Generate Caption",
                 "generateHashtags": "Generate Hashtags",

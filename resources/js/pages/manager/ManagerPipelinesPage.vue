@@ -5,19 +5,20 @@ import { useI18n } from 'vue-i18n';
 import { usePipelinesStore } from '@/stores/pipelines';
 import { useBrandsStore } from '@/stores/brands';
 import { useToast } from '@/composables/useToast';
+import { useConfirm } from '@/composables/useConfirm';
 import Modal from '@/components/common/Modal.vue';
-import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
+import SkeletonLoader from '@/components/common/SkeletonLoader.vue';
 
 const { t } = useI18n();
 const router = useRouter();
 const store = usePipelinesStore();
 const brandsStore = useBrandsStore();
 const toast = useToast();
+const { confirm } = useConfirm();
 
 const showCreateModal = ref(false);
 const createForm = ref({ name: '', description: '' });
 const creating = ref(false);
-const deleteTarget = ref(null);
 
 onMounted(() => {
     if (store.currentBrandId) {
@@ -52,19 +53,20 @@ const createPipeline = async () => {
     }
 };
 
-const confirmDelete = (pipeline) => {
-    deleteTarget.value = pipeline;
-};
+const confirmDelete = async (pipeline) => {
+    const confirmed = await confirm({
+        title: t('pipeline.deletePipeline'),
+        message: t('pipeline.deleteConfirm'),
+        confirmText: t('common.delete'),
+        variant: 'danger',
+    });
+    if (!confirmed) return;
 
-const deletePipeline = async () => {
-    if (!deleteTarget.value) return;
     try {
-        await store.deletePipeline(deleteTarget.value.id);
+        await store.deletePipeline(pipeline.id);
         toast.success(t('pipeline.toast.deleted'));
     } catch (error) {
         toast.error(t('pipeline.errors.deleteFailed'));
-    } finally {
-        deleteTarget.value = null;
     }
 };
 
@@ -102,9 +104,7 @@ const getStatusColor = (status) => {
         </div>
 
         <!-- Loading -->
-        <div v-if="store.pipelinesLoading" class="flex justify-center py-20">
-            <LoadingSpinner />
-        </div>
+        <SkeletonLoader v-if="store.pipelinesLoading" variant="card-grid" :count="6" />
 
         <!-- Empty State -->
         <div v-else-if="store.pipelines.length === 0" class="text-center py-20">
@@ -173,7 +173,7 @@ const getStatusColor = (status) => {
                 </div>
 
                 <!-- Actions -->
-                <div class="mt-3 pt-3 border-t border-gray-700/50 flex items-center justify-between opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="mt-3 pt-3 border-t border-gray-700/50 flex items-center justify-between">
                     <span class="text-xs text-gray-500">
                         {{ pipeline.last_run ? t('pipeline.lastRun') + ': ' + new Date(pipeline.last_run.created_at).toLocaleDateString() : t('pipeline.noRuns') }}
                     </span>
@@ -235,26 +235,5 @@ const getStatusColor = (status) => {
             </div>
         </Modal>
 
-        <!-- Delete Confirmation Modal -->
-        <Modal :show="!!deleteTarget" @close="deleteTarget = null">
-            <div class="p-6">
-                <h2 class="text-lg font-semibold text-white mb-2">{{ t('pipeline.deletePipeline') }}</h2>
-                <p class="text-sm text-gray-400 mb-6">{{ t('pipeline.deleteConfirm') }}</p>
-                <div class="flex justify-end gap-3">
-                    <button
-                        @click="deleteTarget = null"
-                        class="px-4 py-2 text-sm font-medium text-gray-400 hover:text-gray-200 transition"
-                    >
-                        {{ t('pipeline.cancel') }}
-                    </button>
-                    <button
-                        @click="deletePipeline"
-                        class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-500 transition"
-                    >
-                        {{ t('pipeline.deletePipeline') }}
-                    </button>
-                </div>
-            </div>
-        </Modal>
     </div>
 </template>

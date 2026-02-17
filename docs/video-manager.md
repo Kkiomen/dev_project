@@ -1,6 +1,6 @@
-# Video Manager — Architektura i dokumentacja
+# Video Manager - Architektura i dokumentacja
 
-System do automatycznego tworzenia filmów z napisami (captionami) — upload, transkrypcja AI, edycja, renderowanie napisów, usuwanie ciszy, eksport.
+System do automatycznego tworzenia filmów z napisami (captionami) - upload, transkrypcja AI, edycja, renderowanie napisów, usuwanie ciszy, eksport.
 
 ---
 
@@ -22,13 +22,13 @@ System do automatycznego tworzenia filmów z napisami (captionami) — upload, t
 
 ## Inspiracja i cel
 
-Funkcja inspirowana jest narzędziami takimi jak **CapCut**, **Opus Clip**, **Submagic** i **Vizard** — automatyczne dodawanie napisów do krótkich filmów (reels, shorts, TikTok). Kluczowe cechy:
+Funkcja inspirowana jest narzędziami takimi jak **CapCut**, **Opus Clip**, **Submagic** i **Vizard** - automatyczne dodawanie napisów do krótkich filmów (reels, shorts, TikTok). Kluczowe cechy:
 
-- **Styl Hormozi** — gruby biały tekst z czarnym outline, wielkie litery, 3 słowa na linię (popularny na YouTube Shorts)
-- **Styl MrBeast** — duży żółty tekst z czerwonym akcentem, 2 słowa na linię, styl miniaturek MrBeast
-- **Styl Clean** — minimalistyczny biały tekst z cieniem, profesjonalny wygląd
-- **Styl Bold** — ekstra gruby outline, wysoki kontrast
-- **Styl Neon** — neonowy cyan z fioletowym outline, futurystyczny
+- **Styl Hormozi** - gruby biały tekst z czarnym outline, wielkie litery, 3 słowa na linię (popularny na YouTube Shorts)
+- **Styl MrBeast** - duży żółty tekst z czerwonym akcentem, 2 słowa na linię, styl miniaturek MrBeast
+- **Styl Clean** - minimalistyczny biały tekst z cieniem, profesjonalny wygląd
+- **Styl Bold** - ekstra gruby outline, wysoki kontrast
+- **Styl Neon** - neonowy cyan z fioletowym outline, futurystyczny
 
 Celem jest **zero-effort workflow**: upload → automatyczna transkrypcja → wybór stylu → render → download. Wszystko w jednym narzędziu, bez wychodzenia z panelu.
 
@@ -85,7 +85,7 @@ Celem jest **zero-effort workflow**: upload → automatyczna transkrypcja → wy
 
 **Lokalizacja:** `docker/transcriber/`
 
-Mikroserwis Python/Flask oparty na **faster-whisper** — zoptymalizowana wersja OpenAI Whisper do transkrypcji mowy.
+Mikroserwis Python/Flask oparty na **faster-whisper** - zoptymalizowana wersja OpenAI Whisper do transkrypcji mowy.
 
 **Endpointy:**
 
@@ -125,11 +125,11 @@ Mikroserwis Python/Flask oparty na **faster-whisper** — zoptymalizowana wersja
 }
 ```
 
-Timestampy per-słowo (`words`) są kluczowe — dzięki nim napisy synchronizują się z mową na poziomie pojedynczych słów, a nie całych zdań. To pozwala na efekt **karaoke** (podświetlanie aktualnie wypowiadanego słowa).
+Timestampy per-słowo (`words`) są kluczowe - dzięki nim napisy synchronizują się z mową na poziomie pojedynczych słów, a nie całych zdań. To pozwala na efekt **karaoke** (podświetlanie aktualnie wypowiadanego słowa).
 
 **Cechy:**
-- VAD (Voice Activity Detection) — lepsza obsługa ciszy
-- Lazy loading modelu — oszczędność pamięci
+- VAD (Voice Activity Detection) - lepsza obsługa ciszy
+- Lazy loading modelu - oszczędność pamięci
 - Gunicorn z 2 workerami, timeout 300s
 
 ---
@@ -212,7 +212,7 @@ Font: DejaVu Sans 48px | Outline: 3 | Shadow: 4
 Kolor główny: cyan | Outline: fioletowy | Highlight: magenta
 ```
 
-**Format kolorów ASS:** `&HAABBGGRR` (alfa, niebieski, zielony, czerwony) — odwrotna kolejność niż standardowy hex.
+**Format kolorów ASS:** `&HAABBGGRR` (alfa, niebieski, zielony, czerwony) - odwrotna kolejność niż standardowy hex.
 
 **Dodawanie nowego stylu:** Wystarczy dodać nowy plik `.json` do `docker/video-editor/caption_styles/` i przebudować kontener. Endpoint `/caption-styles` automatycznie go wykryje.
 
@@ -388,8 +388,8 @@ Wszystkie joby dispatchowane na kolejkę Laravel. Każdy broadcastuje eventy Web
 7. `TaskCompleted` event
 
 **Parametry:**
-- `minSilence` — minimalna długość ciszy do usunięcia (domyślnie 0.5s)
-- `padding` — margines wokół segmentów mowy (domyślnie 0.1s)
+- `minSilence` - minimalna długość ciszy do usunięcia (domyślnie 0.5s)
+- `padding` - margines wokół segmentów mowy (domyślnie 0.1s)
 
 ---
 
@@ -435,7 +435,7 @@ Pinia store zarządzający całym stanem Video Managera.
 #### Dashboard (`VideoManagerDashboardPage.vue`)
 - Siatka statystyk (łączna liczba, przetwarzane, ukończone dziś, łączny czas)
 - Wskaźniki zdrowia serwisów (transcriber, video-editor)
-- Kolejka przetwarzania — aktualnie przetwarzane wideo
+- Kolejka przetwarzania - aktualnie przetwarzane wideo
 - Ostatnie projekty
 - Auto-refresh co 15 sekund
 
@@ -457,10 +457,10 @@ Pinia store zarządzający całym stanem Video Managera.
 #### Edytor (`VideoManagerEditorPage.vue`)
 - Podgląd wideo
 - Zakładki:
-  - **Transkrypcja** — edycja segmentów, łączenie, usuwanie
-  - **Napisy** — wybór stylu, pozycja, rozmiar, podświetlanie słów
-  - **Cisza** — timeline segmentów, próg ciszy, padding, przycisk usuwania
-  - **Eksport** — renderowanie i pobieranie
+  - **Transkrypcja** - edycja segmentów, łączenie, usuwanie
+  - **Napisy** - wybór stylu, pozycja, rozmiar, podświetlanie słów
+  - **Cisza** - timeline segmentów, próg ciszy, padding, przycisk usuwania
+  - **Eksport** - renderowanie i pobieranie
 - Auto-refresh co 5s podczas przetwarzania
 
 ### Komponenty
