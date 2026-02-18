@@ -155,13 +155,15 @@ defineExpose({ vueFlowRef, zoomIn, zoomOut, fitView });
     stroke-dasharray: 5;
 }
 
-/* Input handles (left) — invisible, node labels serve as visual indicator */
+/* Handles — visible dots above card */
 .pipeline-flow .vue-flow__handle {
     width: 8px;
     height: 8px;
-    border: none;
-    background-color: transparent;
+    border: 1.5px solid #d1d5db;
+    background-color: #ffffff;
+    border-radius: 50%;
     transition: all 0.15s ease;
+    z-index: 20;
 }
 
 .pipeline-flow .vue-flow__handle:hover {
@@ -178,18 +180,18 @@ defineExpose({ vueFlowRef, zoomIn, zoomOut, fitView });
 
 /* Output handles (right) — subtle gray dot */
 .pipeline-flow .vue-flow__handle.vue-flow__handle-right {
-    width: 6px;
-    height: 6px;
+    width: 8px;
+    height: 8px;
     background-color: #d1d5db;
-    border: none;
+    border: 1.5px solid #d1d5db;
     border-radius: 50%;
 }
 
 .pipeline-flow .vue-flow__handle.vue-flow__handle-right:hover {
     background-color: #3b82f6;
-    border: none;
-    width: 8px;
-    height: 8px;
+    border: 1.5px solid #3b82f6;
+    width: 10px;
+    height: 10px;
 }
 
 /* Selection box */

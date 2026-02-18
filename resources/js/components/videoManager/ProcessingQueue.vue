@@ -18,7 +18,7 @@ const statusColors = {
 };
 
 const openProject = (project) => {
-    router.push({ name: 'videoManager.editor', params: { projectId: project.id } });
+    router.push({ name: 'videoManager.nle', params: { projectId: project.id } });
 };
 </script>
 

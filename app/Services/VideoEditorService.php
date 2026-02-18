@@ -99,6 +99,43 @@ class VideoEditorService
     }
 
     /**
+     * Detect silence regions in a video using audio level analysis (FFmpeg silencedetect).
+     *
+     * @param string $videoPath Path in storage
+     * @param float $minSilence Minimum silence duration in seconds
+     * @param int $noiseDb Silence threshold in dB (negative value)
+     * @return array{silence_regions: array, speech_regions: array, total_duration: float}
+     */
+    public function detectSilence(string $videoPath, float $minSilence = 0.5, int $noiseDb = -30): array
+    {
+        $fullPath = Storage::path($videoPath);
+
+        if (!file_exists($fullPath)) {
+            throw new Exception("Video file not found: {$videoPath}");
+        }
+
+        Log::info('[VideoEditorService] Detecting silence', [
+            'video' => $videoPath,
+            'min_silence' => $minSilence,
+            'noise_db' => $noiseDb,
+        ]);
+
+        $response = Http::timeout(120)
+            ->attach('file', fopen($fullPath, 'r'), basename($videoPath))
+            ->post("{$this->baseUrl}/detect-silence", [
+                'noise' => (string) $noiseDb,
+                'duration' => (string) $minSilence,
+            ]);
+
+        if ($response->failed()) {
+            $error = $response->json('error') ?? 'Silence detection failed';
+            throw new Exception("Silence detection failed: {$error}");
+        }
+
+        return $response->json();
+    }
+
+    /**
      * Get video metadata (duration, dimensions, codecs, etc.).
      */
     public function probe(string $videoPath): array
@@ -143,6 +180,96 @@ class VideoEditorService
 
         if ($response->failed()) {
             throw new Exception("Audio extraction failed: " . $response->body());
+        }
+
+        Storage::put($outputPath, $response->body());
+
+        return $outputPath;
+    }
+
+    /**
+     * Extract waveform peak values from a video file.
+     *
+     * @param string $videoPath Path in storage
+     * @param int $samples Number of peak samples
+     * @return array{peaks: float[]}
+     */
+    public function getWaveformPeaks(string $videoPath, int $samples = 800): array
+    {
+        $fullPath = Storage::path($videoPath);
+
+        if (!file_exists($fullPath)) {
+            throw new Exception("Video file not found: {$videoPath}");
+        }
+
+        $response = Http::timeout(120)
+            ->attach('file', fopen($fullPath, 'r'), basename($videoPath))
+            ->post("{$this->baseUrl}/waveform-peaks?samples={$samples}");
+
+        if ($response->failed()) {
+            throw new Exception("Waveform extraction failed: " . $response->body());
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Generate filmstrip thumbnails from a video file.
+     *
+     * @param string $videoPath Path in storage
+     * @param int $count Number of thumbnails
+     * @param int $height Thumbnail height in pixels
+     * @return array{thumbnails: string[]}
+     */
+    public function getThumbnails(string $videoPath, int $count = 10, int $height = 60): array
+    {
+        $fullPath = Storage::path($videoPath);
+
+        if (!file_exists($fullPath)) {
+            throw new Exception("Video file not found: {$videoPath}");
+        }
+
+        $response = Http::timeout(120)
+            ->attach('file', fopen($fullPath, 'r'), basename($videoPath))
+            ->post("{$this->baseUrl}/thumbnails?count={$count}&height={$height}");
+
+        if ($response->failed()) {
+            throw new Exception("Thumbnail generation failed: " . $response->body());
+        }
+
+        return $response->json();
+    }
+
+    /**
+     * Export a timeline using an Edit Decision List.
+     *
+     * @param string $videoPath Path in storage
+     * @param array $edl Edit Decision List data
+     * @param string $outputPath Where to store the result
+     * @return string The output path in storage
+     */
+    public function exportTimeline(string $videoPath, array $edl, string $outputPath): string
+    {
+        $fullPath = Storage::path($videoPath);
+
+        if (!file_exists($fullPath)) {
+            throw new Exception("Video file not found: {$videoPath}");
+        }
+
+        Log::info('[VideoEditorService] Exporting timeline', [
+            'video' => $videoPath,
+            'tracks' => count($edl['tracks'] ?? []),
+        ]);
+
+        $response = Http::timeout($this->timeout)
+            ->attach('file', fopen($fullPath, 'r'), basename($videoPath))
+            ->post("{$this->baseUrl}/export-timeline", [
+                'edl' => json_encode($edl),
+            ]);
+
+        if ($response->failed()) {
+            $error = $response->json('error') ?? 'Timeline export failed';
+            throw new Exception("Timeline export failed: {$error}");
         }
 
         Storage::put($outputPath, $response->body());

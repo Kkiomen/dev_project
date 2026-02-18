@@ -151,6 +151,76 @@ class DirectImageGeneratorService
     }
 
     /**
+     * Generate image from multiple images + prompt.
+     * Uploads all images to WaveSpeed and sends them as array to an edit model.
+     */
+    public function generateFromMultipleImages(Brand $brand, string $prompt, array $storagePaths, array $config = []): array
+    {
+        $apiKey = BrandAiKey::getKeyForProvider($brand, AiProvider::WaveSpeed);
+
+        if (!$apiKey) {
+            return ['success' => false, 'error_code' => 'no_api_key', 'error' => 'No WaveSpeed API key configured for this brand'];
+        }
+
+        if (empty($prompt)) {
+            return ['success' => false, 'error' => 'No prompt provided'];
+        }
+
+        // Force an array-image model that supports multiple images
+        $modelEndpoint = $config['model'] ?? '/openai/gpt-image-1.5/edit';
+        if (!in_array('/' . ltrim($modelEndpoint, '/'), self::ARRAY_IMAGE_MODELS, true)) {
+            $modelEndpoint = '/openai/gpt-image-1.5/edit';
+        }
+        if (!str_starts_with($modelEndpoint, '/')) {
+            $modelEndpoint = '/' . $modelEndpoint;
+        }
+
+        $startTime = microtime(true);
+        $log = $this->logExternalStart(
+            $brand,
+            'pipeline_multi_image_generation',
+            ApiProvider::WAVESPEED,
+            $modelEndpoint,
+            ['prompt' => $prompt, 'image_count' => count($storagePaths), 'config' => $config]
+        );
+
+        try {
+            $imageUrls = [];
+            foreach ($storagePaths as $path) {
+                $imageUrls[] = $this->uploadToWaveSpeed($apiKey, $path);
+            }
+
+            $jobId = $this->createJobForImageModel($apiKey, $modelEndpoint, $prompt, $imageUrls[0], $config, $imageUrls);
+            $imageResultUrl = $this->pollForResult($apiKey, $jobId);
+            $imageData = $this->downloadImage($imageResultUrl);
+
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->completeExternalLog($log, ['job_id' => $jobId, 'image_url' => $imageResultUrl], 200, $durationMs);
+
+            $extension = $this->guessExtension($imageResultUrl);
+            $filename = 'pipeline-multi-' . substr(md5($jobId), 0, 12) . '.' . $extension;
+            $path = "pipelines/{$brand->id}/{$filename}";
+
+            Storage::disk('public')->put($path, $imageData);
+
+            return [
+                'success' => true,
+                'image_path' => $path,
+            ];
+        } catch (\Throwable $e) {
+            $durationMs = (int) ((microtime(true) - $startTime) * 1000);
+            $this->failLog($log, $e->getMessage(), $durationMs);
+
+            Log::error('Pipeline multi-image generation failed', [
+                'brand_id' => $brand->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return ['success' => false, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
      * Generate image from an existing image + prompt (image-to-image).
      * Accepts a local storage path, uploads to WaveSpeed, then runs the edit model.
      */
@@ -238,7 +308,7 @@ class DirectImageGeneratorService
         return $url;
     }
 
-    protected function createJobForImageModel(string $apiKey, string $modelEndpoint, string $prompt, string $imageUrl, array $config = []): string
+    protected function createJobForImageModel(string $apiKey, string $modelEndpoint, string $prompt, string $imageUrl, array $config = [], ?array $allImageUrls = null): string
     {
         $payload = [
             'prompt' => $prompt,
@@ -248,7 +318,7 @@ class DirectImageGeneratorService
         ];
 
         if (in_array($modelEndpoint, self::ARRAY_IMAGE_MODELS, true)) {
-            $payload['images'] = [$imageUrl];
+            $payload['images'] = $allImageUrls ?? [$imageUrl];
         } else {
             $payload['image'] = $imageUrl;
             $payload['strength'] = $config['strength'] ?? 0.65;

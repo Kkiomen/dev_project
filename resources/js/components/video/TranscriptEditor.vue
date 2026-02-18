@@ -55,34 +55,34 @@ function formatTime(seconds) {
 </script>
 
 <template>
-    <div class="p-4">
+    <div>
         <!-- Transcribing State -->
         <div v-if="isTranscribing" class="text-center py-12">
-            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <h3 class="text-lg font-medium text-gray-700 mb-1">{{ t('videoEditor.transcript.transcribing') }}</h3>
-            <p class="text-sm text-gray-500">{{ t('videoEditor.transcript.transcribingDescription') }}</p>
+            <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-violet-500 mx-auto mb-4"></div>
+            <h3 class="text-lg font-medium text-gray-200 mb-1">{{ t('videoEditor.transcript.transcribing') }}</h3>
+            <p class="text-sm text-gray-400">{{ t('videoEditor.transcript.transcribingDescription') }}</p>
         </div>
 
         <!-- No Segments -->
         <div v-else-if="editableSegments.length === 0" class="text-center py-12">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-300 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 mx-auto text-gray-600 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <p class="text-sm text-gray-500">{{ t('videoEditor.transcript.noSegments') }}</p>
+            <p class="text-sm text-gray-400">{{ t('videoEditor.transcript.noSegments') }}</p>
         </div>
 
         <!-- Segments Editor -->
         <div v-else>
             <!-- Toolbar -->
             <div class="flex items-center justify-between mb-4">
-                <span class="text-sm text-gray-500">
+                <span class="text-sm text-gray-400">
                     {{ t('videoEditor.transcript.segmentCount', { count: editableSegments.length }) }}
                 </span>
                 <button
                     v-if="hasChanges"
                     @click="saveChanges"
                     :disabled="saving"
-                    class="px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-1"
+                    class="px-3 py-1.5 bg-violet-600 text-white text-sm rounded-lg hover:bg-violet-700 transition-colors disabled:opacity-50 flex items-center gap-1"
                 >
                     <div v-if="saving" class="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                     {{ saving ? t('videoEditor.transcript.saving') : t('videoEditor.transcript.saveChanges') }}
@@ -94,10 +94,10 @@ function formatTime(seconds) {
                 <div
                     v-for="(segment, index) in editableSegments"
                     :key="index"
-                    class="group flex gap-3 p-3 rounded-lg border border-gray-100 hover:border-gray-200 transition-colors"
+                    class="group flex gap-3 p-3 rounded-lg border border-gray-700 hover:border-gray-600 transition-colors"
                 >
                     <!-- Timestamp -->
-                    <div class="flex-shrink-0 text-xs text-gray-400 font-mono pt-1 w-20">
+                    <div class="flex-shrink-0 text-xs text-gray-500 font-mono pt-1 w-20">
                         {{ formatTime(segment.start) }}
                         <br />
                         {{ formatTime(segment.end) }}
@@ -108,7 +108,7 @@ function formatTime(seconds) {
                         <textarea
                             :value="segment.text"
                             @input="updateSegmentText(index, $event.target.value)"
-                            class="w-full text-sm text-gray-800 bg-transparent border-none resize-none focus:outline-none focus:ring-0 p-0"
+                            class="w-full text-sm text-gray-200 bg-transparent border-none resize-none focus:outline-none focus:ring-0 p-0"
                             rows="2"
                         ></textarea>
                     </div>
@@ -118,7 +118,7 @@ function formatTime(seconds) {
                         <button
                             v-if="index < editableSegments.length - 1"
                             @click="mergeWithNext(index)"
-                            class="p-1 text-gray-400 hover:text-blue-600 rounded"
+                            class="p-1 text-gray-500 hover:text-violet-400 rounded"
                             :title="t('videoEditor.transcript.merge')"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -127,7 +127,7 @@ function formatTime(seconds) {
                         </button>
                         <button
                             @click="deleteSegment(index)"
-                            class="p-1 text-gray-400 hover:text-red-600 rounded"
+                            class="p-1 text-gray-500 hover:text-red-400 rounded"
                             :title="t('videoEditor.transcript.delete')"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">

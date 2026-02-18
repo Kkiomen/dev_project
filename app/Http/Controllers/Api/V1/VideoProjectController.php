@@ -5,10 +5,13 @@ namespace App\Http\Controllers\Api\V1;
 use App\Enums\VideoProjectStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoProjectResource;
+use App\Jobs\ExportTimelineJob;
 use App\Jobs\RenderCaptionsJob;
 use App\Jobs\RemoveSilenceJob;
 use App\Jobs\TranscribeVideoJob;
+use App\Models\Brand;
 use App\Models\VideoProject;
+use App\Services\CompositionService;
 use App\Services\TranscriberService;
 use App\Services\VideoEditorService;
 use Illuminate\Http\JsonResponse;
@@ -24,7 +27,8 @@ class VideoProjectController extends Controller
             ->latest();
 
         if ($request->filled('brand_id')) {
-            $query->where('brand_id', $request->input('brand_id'));
+            $brandId = Brand::where('public_id', $request->input('brand_id'))->value('id');
+            $query->where('brand_id', $brandId);
         }
 
         if ($request->filled('status')) {
@@ -42,7 +46,7 @@ class VideoProjectController extends Controller
             'video' => ['required', 'file', 'mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/webm,video/x-matroska', 'max:512000'],
             'title' => ['nullable', 'string', 'max:255'],
             'language' => ['nullable', 'string', 'max:10'],
-            'brand_id' => ['nullable', 'exists:brands,id'],
+            'brand_id' => ['nullable', 'exists:brands,public_id'],
             'caption_style' => ['nullable', 'string', 'in:hormozi,mrbeast,clean,bold,neon'],
         ]);
 
@@ -55,9 +59,14 @@ class VideoProjectController extends Controller
             $filename
         );
 
+        $brandId = null;
+        if ($request->filled('brand_id')) {
+            $brandId = Brand::where('public_id', $request->input('brand_id'))->value('id');
+        }
+
         $project = VideoProject::create([
             'user_id' => $request->user()->id,
-            'brand_id' => $request->input('brand_id'),
+            'brand_id' => $brandId,
             'title' => $request->input('title', pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME)),
             'original_filename' => $file->getClientOriginalName(),
             'video_path' => $videoPath,
@@ -156,6 +165,50 @@ class VideoProjectController extends Controller
     }
 
     /**
+     * Stream the original video for preview.
+     */
+    public function stream(Request $request, string $publicId)
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        if (!$project->video_path || !Storage::exists($project->video_path)) {
+            return response()->json(['message' => 'No video file available'], 404);
+        }
+
+        $path = Storage::path($project->video_path);
+        $mime = Storage::mimeType($project->video_path);
+        $size = Storage::size($project->video_path);
+
+        $headers = [
+            'Content-Type' => $mime ?: 'video/mp4',
+            'Accept-Ranges' => 'bytes',
+        ];
+
+        // Support range requests for video seeking
+        $range = $request->header('Range');
+        if ($range) {
+            preg_match('/bytes=(\d+)-(\d*)/', $range, $matches);
+            $start = (int) $matches[1];
+            $end = $matches[2] !== '' ? (int) $matches[2] : $size - 1;
+            $length = $end - $start + 1;
+
+            return response()->stream(function () use ($path, $start, $length) {
+                $stream = fopen($path, 'rb');
+                fseek($stream, $start);
+                echo fread($stream, $length);
+                fclose($stream);
+            }, 206, array_merge($headers, [
+                'Content-Range' => "bytes {$start}-{$end}/{$size}",
+                'Content-Length' => $length,
+            ]));
+        }
+
+        return response()->file($path, $headers);
+    }
+
+    /**
      * Download the rendered output video.
      */
     public function download(Request $request, string $publicId)
@@ -205,7 +258,8 @@ class VideoProjectController extends Controller
         $query = VideoProject::forUser($request->user());
 
         if ($request->filled('brand_id')) {
-            $query->where('brand_id', $request->input('brand_id'));
+            $brandId = Brand::where('public_id', $request->input('brand_id'))->value('id');
+            $query->where('brand_id', $brandId);
         }
 
         $total = (clone $query)->count();
@@ -312,6 +366,137 @@ class VideoProjectController extends Controller
     }
 
     /**
+     * Get waveform peaks for a video project (proxy to Flask service).
+     */
+    public function waveform(Request $request, string $publicId, VideoEditorService $editor): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        if (!$project->video_path || !Storage::exists($project->video_path)) {
+            return response()->json(['message' => 'No video file available'], 404);
+        }
+
+        $cacheKey = "waveform_{$project->id}";
+        $cached = cache($cacheKey);
+        if ($cached) {
+            return response()->json($cached);
+        }
+
+        try {
+            $data = $editor->getWaveformPeaks($project->video_path);
+            cache([$cacheKey => $data], now()->addHours(24));
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Waveform extraction failed', 'peaks' => []], 200);
+        }
+    }
+
+    /**
+     * Get filmstrip thumbnails for a video project (proxy to Flask service).
+     */
+    public function thumbnails(Request $request, string $publicId, VideoEditorService $editor): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        if (!$project->video_path || !Storage::exists($project->video_path)) {
+            return response()->json(['message' => 'No video file available'], 404);
+        }
+
+        $cacheKey = "thumbnails_{$project->id}";
+        $cached = cache($cacheKey);
+        if ($cached) {
+            return response()->json($cached);
+        }
+
+        try {
+            $data = $editor->getThumbnails($project->video_path);
+            cache([$cacheKey => $data], now()->addHours(24));
+            return response()->json($data);
+        } catch (\Exception $e) {
+            return response()->json(['error' => 'Thumbnail generation failed', 'thumbnails' => []], 200);
+        }
+    }
+
+    /**
+     * Export timeline using an Edit Decision List.
+     */
+    public function exportTimeline(Request $request, string $publicId): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        $request->validate([
+            'edl' => ['required', 'array'],
+            'edl.tracks' => ['required', 'array'],
+        ]);
+
+        if ($project->isProcessing()) {
+            return response()->json(['message' => 'Project is currently processing'], 422);
+        }
+
+        ExportTimelineJob::dispatch($project, $request->input('edl'));
+
+        return response()->json([
+            'message' => 'Timeline export started',
+            'project' => new VideoProjectResource($project->fresh()),
+        ]);
+    }
+
+    /**
+     * Save composition JSON for a video project.
+     */
+    public function saveComposition(Request $request, string $publicId, CompositionService $compositionService): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        $request->validate([
+            'composition' => ['required', 'array'],
+            'composition.version' => ['required', 'integer'],
+            'composition.width' => ['required', 'integer', 'min:1'],
+            'composition.height' => ['required', 'integer', 'min:1'],
+            'composition.tracks' => ['required', 'array'],
+        ]);
+
+        $composition = $request->input('composition');
+
+        if (!$compositionService->validateComposition($composition)) {
+            return response()->json(['message' => 'Invalid composition structure'], 422);
+        }
+
+        $project->update(['composition' => $composition]);
+
+        return response()->json([
+            'message' => 'Composition saved',
+            'project' => new VideoProjectResource($project->fresh()),
+        ]);
+    }
+
+    /**
+     * Build default composition from existing project data.
+     */
+    public function buildComposition(Request $request, string $publicId, CompositionService $compositionService): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        $composition = $compositionService->buildDefaultComposition($project);
+        $project->update(['composition' => $composition]);
+
+        return response()->json([
+            'message' => 'Composition built',
+            'project' => new VideoProjectResource($project->fresh()),
+        ]);
+    }
+
+    /**
      * Remove silence from a video project.
      */
     public function removeSilence(Request $request, string $publicId): JsonResponse
@@ -342,6 +527,58 @@ class VideoProjectController extends Controller
         return response()->json([
             'message' => 'Silence removal started',
             'project' => new VideoProjectResource($project->fresh()),
+        ]);
+    }
+
+    /**
+     * Serve an uploaded media file (image/audio) from a video project.
+     */
+    public function serveMedia(Request $request, string $publicId, string $filename)
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        $path = "video-projects/{$project->user_id}/media/{$filename}";
+
+        if (!Storage::exists($path)) {
+            return response()->json(['message' => 'Media file not found'], 404);
+        }
+
+        $fullPath = Storage::path($path);
+        $mime = Storage::mimeType($path);
+
+        return response()->file($fullPath, [
+            'Content-Type' => $mime,
+            'Cache-Control' => 'public, max-age=86400',
+        ]);
+    }
+
+    /**
+     * Upload a media file (image/audio) to a video project for use in the NLE timeline.
+     */
+    public function uploadMedia(Request $request, string $publicId): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        $request->validate([
+            'file' => ['required', 'file', 'max:51200', 'mimes:jpg,jpeg,png,gif,webp,svg,mp3,wav,ogg,aac'],
+        ]);
+
+        $file = $request->file('file');
+        $filename = time() . '_' . $file->getClientOriginalName();
+        $directory = "video-projects/{$project->user_id}/media";
+        $path = $file->storeAs($directory, $filename);
+
+        $isImage = str_starts_with($file->getMimeType(), 'image/');
+
+        return response()->json([
+            'name' => $file->getClientOriginalName(),
+            'type' => $isImage ? 'image' : 'audio',
+            'source' => "media://{$path}",
+            'size' => $file->getSize(),
         ]);
     }
 }

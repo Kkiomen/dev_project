@@ -4266,6 +4266,115 @@
             "uploading": "Uploading..."
         }
     },
+    "nle": {
+        "loading": "Loading editor...",
+        "goBack": "Go Back",
+        "toolbar": {
+            "save": "Save",
+            "render": "Render",
+            "undo": "Undo",
+            "redo": "Redo",
+            "saving": "Saving...",
+            "unsaved": "Unsaved changes",
+            "saved": "Saved",
+            "preset": {
+                "reel": "Reel / TikTok",
+                "youtube": "YouTube HD",
+                "square": "Square",
+                "youtube4k": "YouTube 4K",
+                "custom": "Custom size",
+                "apply": "Apply"
+            }
+        },
+        "timeline": {
+            "addTrack": "Add Track",
+            "split": "Split",
+            "delete": "Delete",
+            "snap": "Snap",
+            "zoom": "Zoom"
+        },
+        "inspector": {
+            "properties": "Properties",
+            "effects": "Effects",
+            "captions": "Captions",
+            "noSelection": "Select an element to edit its properties",
+            "multiSelection": "{count} elements selected",
+            "name": "Name",
+            "timing": "Timing",
+            "startTime": "Start",
+            "duration": "Duration",
+            "position": "Position",
+            "size": "Size",
+            "width": "Width",
+            "height": "Height",
+            "visual": "Visual",
+            "opacity": "Opacity",
+            "rotation": "Rotation",
+            "fit": "Fit",
+            "audio": "Audio",
+            "volume": "Volume",
+            "modificationKey": "Modification Key",
+            "modificationKeyPlaceholder": "e.g. hero_video",
+            "textProperties": "Text Properties",
+            "text": "Text",
+            "fontFamily": "Font Family",
+            "fontSize": "Font Size",
+            "fontWeight": "Font Weight",
+            "color": "Color",
+            "textAlign": "Text Align",
+            "stroke": "Stroke",
+            "videoProperties": "Video Properties",
+            "trimming": "Trimming",
+            "trimStart": "Trim Start",
+            "trimEnd": "Trim End",
+            "fadeIn": "Fade In",
+            "fadeOut": "Fade Out",
+            "audioProperties": "Audio Properties",
+            "addEffect": "Add Effect",
+            "transition": "Transition",
+            "noTransition": "None",
+            "transitionDuration": "Duration (s)"
+        },
+        "media": {
+            "all": "All",
+            "videos": "Videos",
+            "images": "Images",
+            "audio": "Audio",
+            "upload": "Drop files or click to upload",
+            "empty": "No media files yet"
+        },
+        "track": {
+            "video": "Video Track",
+            "audio": "Audio Track",
+            "overlay": "Overlay Track",
+            "mute": "Mute",
+            "lock": "Lock",
+            "visibility": "Visibility",
+            "moveUp": "Move layer up",
+            "moveDown": "Move layer down"
+        },
+        "effects": {
+            "brightness": "Brightness",
+            "contrast": "Contrast",
+            "saturation": "Saturation",
+            "blur": "Blur",
+            "grayscale": "Grayscale",
+            "sepia": "Sepia"
+        },
+        "captions": {
+            "enabled": "Enable Captions",
+            "style": "Style",
+            "position": "Position",
+            "fontSize": "Font Size",
+            "highlightKeywords": "Highlight Keywords",
+            "segments": "{count} segments",
+            "noCaptions": "No captions available"
+        },
+        "playback": {
+            "volume": "Volume",
+            "mute": "Mute"
+        }
+    },
     "videoEditor": {
         "loading": "Loading...",
         "language": "Language",
@@ -4327,6 +4436,47 @@
             "readyTitle": "Video Ready",
             "download": "Download Video",
             "errorTitle": "Processing Error"
+        },
+        "toolbar": {
+            "back": "Back to library",
+            "undo": "Undo",
+            "redo": "Redo",
+            "save": "Save",
+            "saving": "Saving...",
+            "export": "Export"
+        },
+        "timeline": {
+            "zoomIn": "Zoom in",
+            "zoomOut": "Zoom out",
+            "split": "Split",
+            "delete": "Delete",
+            "mute": "Mute",
+            "snap": "Snap",
+            "noTracks": "No tracks available"
+        },
+        "inspector": {
+            "properties": "Properties",
+            "captions": "Captions",
+            "transcript": "Transcript",
+            "export": "Export",
+            "clipProperties": "Clip Properties",
+            "type": "Type",
+            "duration": "Duration",
+            "text": "Text",
+            "noSelection": "Select a clip to see its properties",
+            "projectInfo": "Project Info",
+            "resolution": "Resolution",
+            "language": "Language",
+            "noTranscription": "No transcription available",
+            "segments": "segments",
+            "timelineStart": "Position",
+            "sourceRange": "Source Range"
+        },
+        "tracks": {
+            "video": "Video",
+            "audio": "Audio",
+            "captions": "Captions",
+            "music": "Music"
         }
     },
     "videoManager": {
@@ -4642,6 +4792,12 @@
             "text": "T",
             "image": "Img"
         },
+        "handleLabels": {
+            "text": "Text",
+            "image": "Image",
+            "template": "Template",
+            "analysis": "Analysis"
+        },
         "aiGenerator": {
             "defaultModel": "AI Model",
             "model": "Model",
@@ -4658,6 +4814,7 @@
             "promptRequired": "Please enter a prompt first",
             "img2imgMode": "Image to Image",
             "directCompositeMode": "Direct Composite",
+            "multiImageMode": "Multi-image",
             "strength": "Strength",
             "strengthSubtle": "Subtle",
             "strengthBalanced": "Balanced",

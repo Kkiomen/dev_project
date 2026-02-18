@@ -31,6 +31,10 @@ class VideoProject extends Model
         'caption_settings',
         'transcription',
         'video_metadata',
+        'composition',
+        'is_template',
+        'template_name',
+        'template_defaults',
         'error_message',
         'completed_at',
     ];
@@ -40,6 +44,9 @@ class VideoProject extends Model
         'caption_settings' => 'array',
         'transcription' => 'array',
         'video_metadata' => 'array',
+        'composition' => 'array',
+        'template_defaults' => 'array',
+        'is_template' => 'boolean',
         'language_probability' => 'float',
         'duration' => 'float',
         'completed_at' => 'datetime',
@@ -122,5 +129,15 @@ class VideoProject extends Model
     public function hasTranscription(): bool
     {
         return !empty($this->transcription['segments']);
+    }
+
+    public function hasComposition(): bool
+    {
+        return !empty($this->composition);
+    }
+
+    public function isTemplate(): bool
+    {
+        return $this->is_template;
     }
 }

@@ -274,8 +274,8 @@ export const useVideoManagerStore = defineStore('videoManager', {
             this.error = null;
             try {
                 const response = await axios.post(`/api/v1/video-projects/${publicId}/render`);
-                if (response.data.project?.data) {
-                    this.currentProject = response.data.project.data;
+                if (response.data.project) {
+                    this.currentProject = response.data.project;
                 }
                 return response.data;
             } catch (error) {
@@ -288,8 +288,8 @@ export const useVideoManagerStore = defineStore('videoManager', {
             this.error = null;
             try {
                 const response = await axios.post(`/api/v1/video-projects/${publicId}/remove-silence`, options);
-                if (response.data.project?.data) {
-                    this.currentProject = response.data.project.data;
+                if (response.data.project) {
+                    this.currentProject = response.data.project;
                 }
                 return response.data;
             } catch (error) {

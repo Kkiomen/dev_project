@@ -76,9 +76,22 @@ const useAsInput = () => {
 
 <template>
     <div class="relative">
-    <!-- Input handles -->
+    <!-- Input handles with external labels -->
     <Handle type="target" :position="Position.Left" id="image" style="top: 40%" />
+    <div class="absolute flex items-center gap-1 pointer-events-none whitespace-nowrap" style="top: 40%; right: calc(100% + 4px); transform: translateY(-50%)">
+        <span class="text-[9px] text-gray-500 font-medium">{{ t('pipeline.handleLabels.image') }}</span>
+        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+        </svg>
+    </div>
+
     <Handle type="target" :position="Position.Left" id="text" style="top: 65%" />
+    <div class="absolute flex items-center gap-1 pointer-events-none whitespace-nowrap" style="top: 65%; right: calc(100% + 4px); transform: translateY(-50%)">
+        <span class="text-[9px] text-gray-500 font-medium">{{ t('pipeline.handleLabels.text') }}</span>
+        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+    </div>
 
     <div
         :class="[

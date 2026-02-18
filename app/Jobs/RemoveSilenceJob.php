@@ -42,26 +42,42 @@ class RemoveSilenceJob implements ShouldQueue
         try {
             $this->project->markAs(VideoProjectStatus::Editing);
 
-            if (!$this->project->hasTranscription()) {
-                throw new \RuntimeException('No transcription available for silence removal');
+            // Detect silence using audio-level analysis (FFmpeg silencedetect)
+            $detection = $editor->detectSilence(
+                $this->project->video_path,
+                $this->minSilence,
+            );
+
+            $speechRegions = $detection['speech_regions'] ?? [];
+            $silenceRegions = $detection['silence_regions'] ?? [];
+
+            if (empty($silenceRegions)) {
+                Log::info('[RemoveSilenceJob] No silence detected, skipping', [
+                    'project_id' => $this->project->id,
+                ]);
+                $this->project->markAs(VideoProjectStatus::Transcribed);
+                broadcast(new TaskCompleted(
+                    $this->project->user_id,
+                    $taskId,
+                    'video_silence_removal',
+                    true,
+                    null,
+                    ['project_id' => $this->project->public_id]
+                ));
+                return;
             }
 
-            $segments = $this->project->getSegments();
-
-            // Filter segments: keep speech segments (those longer than minSilence gap between them)
-            $speechSegments = [];
-            foreach ($segments as $segment) {
-                $speechSegments[] = [
-                    'start' => $segment['start'],
-                    'end' => $segment['end'],
-                ];
-            }
+            Log::info('[RemoveSilenceJob] Silence detected', [
+                'project_id' => $this->project->id,
+                'silence_regions' => count($silenceRegions),
+                'speech_regions' => count($speechRegions),
+            ]);
 
             $outputPath = 'video-projects/' . $this->project->user_id . '/silence_removed_' . time() . '.mp4';
 
             $editor->removeSilence(
                 $this->project->video_path,
-                $speechSegments,
+                $speechRegions,
                 $outputPath,
                 $this->padding,
             );
@@ -74,6 +90,7 @@ class RemoveSilenceJob implements ShouldQueue
             Log::info('[RemoveSilenceJob] Completed', [
                 'project_id' => $this->project->id,
                 'output' => $outputPath,
+                'silence_removed' => count($silenceRegions),
             ]);
 
             broadcast(new TaskCompleted(

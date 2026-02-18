@@ -4269,6 +4269,115 @@
             "uploading": "Przesyłanie..."
         }
     },
+    "nle": {
+        "loading": "Ładowanie edytora...",
+        "goBack": "Wróć",
+        "toolbar": {
+            "save": "Zapisz",
+            "render": "Renderuj",
+            "undo": "Cofnij",
+            "redo": "Ponów",
+            "saving": "Zapisywanie...",
+            "unsaved": "Niezapisane zmiany",
+            "saved": "Zapisano",
+            "preset": {
+                "reel": "Reel / TikTok",
+                "youtube": "YouTube HD",
+                "square": "Kwadrat",
+                "youtube4k": "YouTube 4K",
+                "custom": "Własny rozmiar",
+                "apply": "Zastosuj"
+            }
+        },
+        "timeline": {
+            "addTrack": "Dodaj ścieżkę",
+            "split": "Podziel",
+            "delete": "Usuń",
+            "snap": "Przyciąganie",
+            "zoom": "Powiększenie"
+        },
+        "inspector": {
+            "properties": "Właściwości",
+            "effects": "Efekty",
+            "captions": "Napisy",
+            "noSelection": "Wybierz element aby edytować jego właściwości",
+            "multiSelection": "{count} elementów zaznaczonych",
+            "name": "Nazwa",
+            "timing": "Czas",
+            "startTime": "Początek",
+            "duration": "Czas trwania",
+            "position": "Pozycja",
+            "size": "Rozmiar",
+            "width": "Szerokość",
+            "height": "Wysokość",
+            "visual": "Wizualne",
+            "opacity": "Przezroczystość",
+            "rotation": "Obrót",
+            "fit": "Dopasowanie",
+            "audio": "Audio",
+            "volume": "Głośność",
+            "modificationKey": "Klucz modyfikacji",
+            "modificationKeyPlaceholder": "np. hero_video",
+            "textProperties": "Właściwości tekstu",
+            "text": "Tekst",
+            "fontFamily": "Czcionka",
+            "fontSize": "Rozmiar czcionki",
+            "fontWeight": "Grubość czcionki",
+            "color": "Kolor",
+            "textAlign": "Wyrównanie tekstu",
+            "stroke": "Obramowanie",
+            "videoProperties": "Właściwości wideo",
+            "trimming": "Przycinanie",
+            "trimStart": "Początek przycinania",
+            "trimEnd": "Koniec przycinania",
+            "fadeIn": "Zanikanie wejścia",
+            "fadeOut": "Zanikanie wyjścia",
+            "audioProperties": "Właściwości audio",
+            "addEffect": "Dodaj efekt",
+            "transition": "Przejście",
+            "noTransition": "Brak",
+            "transitionDuration": "Czas trwania (s)"
+        },
+        "media": {
+            "all": "Wszystko",
+            "videos": "Wideo",
+            "images": "Obrazy",
+            "audio": "Audio",
+            "upload": "Przeciągnij pliki lub kliknij aby przesłać",
+            "empty": "Brak plików multimedialnych"
+        },
+        "track": {
+            "video": "Ścieżka wideo",
+            "audio": "Ścieżka audio",
+            "overlay": "Ścieżka nakładek",
+            "mute": "Wycisz",
+            "lock": "Zablokuj",
+            "visibility": "Widoczność",
+            "moveUp": "Przesuń warstwę w górę",
+            "moveDown": "Przesuń warstwę w dół"
+        },
+        "effects": {
+            "brightness": "Jasność",
+            "contrast": "Kontrast",
+            "saturation": "Nasycenie",
+            "blur": "Rozmycie",
+            "grayscale": "Szarość",
+            "sepia": "Sepia"
+        },
+        "captions": {
+            "enabled": "Włącz napisy",
+            "style": "Styl",
+            "position": "Pozycja",
+            "fontSize": "Rozmiar czcionki",
+            "highlightKeywords": "Podświetl słowa kluczowe",
+            "segments": "{count} segmentów",
+            "noCaptions": "Brak dostępnych napisów"
+        },
+        "playback": {
+            "volume": "Głośność",
+            "mute": "Wycisz"
+        }
+    },
     "videoEditor": {
         "loading": "Ładowanie...",
         "language": "Język",
@@ -4330,6 +4439,47 @@
             "readyTitle": "Wideo gotowe",
             "download": "Pobierz wideo",
             "errorTitle": "Błąd przetwarzania"
+        },
+        "toolbar": {
+            "back": "Powrót do biblioteki",
+            "undo": "Cofnij",
+            "redo": "Ponów",
+            "save": "Zapisz",
+            "saving": "Zapisywanie...",
+            "export": "Eksportuj"
+        },
+        "timeline": {
+            "zoomIn": "Przybliż",
+            "zoomOut": "Oddal",
+            "split": "Podziel",
+            "delete": "Usuń",
+            "mute": "Wycisz",
+            "snap": "Przyciąganie",
+            "noTracks": "Brak dostępnych ścieżek"
+        },
+        "inspector": {
+            "properties": "Właściwości",
+            "captions": "Napisy",
+            "transcript": "Transkrypcja",
+            "export": "Eksport",
+            "clipProperties": "Właściwości klipu",
+            "type": "Typ",
+            "duration": "Czas trwania",
+            "text": "Tekst",
+            "noSelection": "Wybierz klip, aby zobaczyć jego właściwości",
+            "projectInfo": "Informacje o projekcie",
+            "resolution": "Rozdzielczość",
+            "language": "Język",
+            "noTranscription": "Brak dostępnej transkrypcji",
+            "segments": "segmentów",
+            "timelineStart": "Pozycja",
+            "sourceRange": "Zakres źródłowy"
+        },
+        "tracks": {
+            "video": "Wideo",
+            "audio": "Audio",
+            "captions": "Napisy",
+            "music": "Muzyka"
         }
     },
     "videoManager": {
@@ -4645,6 +4795,12 @@
             "text": "T",
             "image": "Img"
         },
+        "handleLabels": {
+            "text": "Tekst",
+            "image": "Obraz",
+            "template": "Szablon",
+            "analysis": "Analiza"
+        },
         "aiGenerator": {
             "defaultModel": "Model AI",
             "model": "Model",
@@ -4661,6 +4817,7 @@
             "promptRequired": "Najpierw wpisz prompt",
             "img2imgMode": "Obraz na obraz",
             "directCompositeMode": "Bezpośrednie kompozytowanie",
+            "multiImageMode": "Multi-obraz",
             "strength": "Siła",
             "strengthSubtle": "Subtelne",
             "strengthBalanced": "Zbalansowane",

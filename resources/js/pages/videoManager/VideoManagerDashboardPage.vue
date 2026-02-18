@@ -137,7 +137,7 @@ watch(() => brandsStore.currentBrand?.id, () => {
                         v-else
                         v-for="project in recentProjects"
                         :key="project.id"
-                        @click="router.push({ name: 'videoManager.editor', params: { projectId: project.id } })"
+                        @click="router.push({ name: 'videoManager.nle', params: { projectId: project.id } })"
                         class="px-5 py-3 flex items-center justify-between hover:bg-gray-800/50 cursor-pointer transition-colors"
                     >
                         <div class="min-w-0 flex-1">

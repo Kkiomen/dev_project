@@ -141,6 +141,14 @@ const routes = [
             },
         ],
     },
+    // NLE Video Editor (fullscreen, no layout wrapper)
+    {
+        path: '/app/video/nle/:projectId',
+        name: 'videoManager.nle',
+        component: () => import('@/pages/videoManager/NleEditorPage.vue'),
+        props: true,
+        meta: { hideLayout: true },
+    },
     {
         path: '/posts/verify',
         name: 'post.verify',

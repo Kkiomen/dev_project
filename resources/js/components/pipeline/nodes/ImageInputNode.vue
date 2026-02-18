@@ -137,7 +137,13 @@ const handleToolbarAction = (action) => {
 
     </BaseNode>
 
-    <!-- Output handle -->
+    <!-- Output handle with external label -->
     <Handle type="source" :position="Position.Right" id="image" />
+    <div class="absolute flex items-center gap-1 pointer-events-none whitespace-nowrap" style="top: 50%; left: calc(100% + 4px); transform: translateY(-50%)">
+        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+        </svg>
+        <span class="text-[9px] text-gray-500 font-medium">{{ t('pipeline.handleLabels.image') }}</span>
+    </div>
     </div>
 </template>

@@ -33,20 +33,23 @@ class AiImageGeneratorExecutor implements PipelineNodeExecutorInterface
         $config = $node->config ?? [];
         $prompt = $inputs['text'] ?? $config['prompt'] ?? '';
         $inputImage = $inputs['image'] ?? null;
-        $hasTemplate = isset($inputs['template']) && is_array($inputs['template']);
+        $templateInput = $inputs['template'] ?? null;
 
-        // Direct composite mode: image + template → skip AI, compose directly
-        if ($inputImage && $hasTemplate) {
-            $composedPath = $this->composeWithTemplate($inputImage, $inputs, $brand);
-            return ['image' => $composedPath];
+        // Collect all image paths to send to AI
+        $imagePaths = [];
+        if ($inputImage) {
+            $imagePaths[] = $inputImage;
+        }
+        if ($templateInput && is_string($templateInput)) {
+            $imagePaths[] = $templateInput;
         }
 
         if (empty($prompt)) {
             throw new \RuntimeException('AI Image Generator requires a text prompt');
         }
 
-        if ($inputImage) {
-            $result = $this->generateImageToImage($brand, $prompt, $inputImage, $config);
+        if (count($imagePaths) > 0) {
+            $result = $this->generateFromImages($brand, $prompt, $imagePaths, $config);
         } else {
             $result = $this->imageGenerator->generateFromPrompt($brand, $prompt, $config);
         }
@@ -57,20 +60,28 @@ class AiImageGeneratorExecutor implements PipelineNodeExecutorInterface
 
         $imagePath = $result['image_path'];
 
-        // If template input exists, compose generated image into template
-        if (isset($inputs['template']) && is_array($inputs['template'])) {
-            $imagePath = $this->composeWithTemplate($imagePath, $inputs, $brand);
+        // If template is canvas JSON (from Template node), compose AI result into it
+        if (is_array($templateInput)) {
+            $imagePath = $this->composeWithCanvas($imagePath, $templateInput, $brand);
         }
 
         return ['image' => $imagePath];
     }
 
-    private function generateImageToImage(Brand $brand, string $prompt, string $inputImage, array $config): array
+    /**
+     * Send one or more images to the AI model with a prompt.
+     * Uses array-image models (GPT Image 1.5, Nano Banana edit) for multi-image support.
+     */
+    private function generateFromImages(Brand $brand, string $prompt, array $imagePaths, array $config): array
     {
         $i2iModel = $this->resolveImageToImageModel($config['model'] ?? null);
         $i2iConfig = array_merge($config, ['model' => $i2iModel]);
 
-        return $this->imageGenerator->generateFromImage($brand, $prompt, $inputImage, $i2iConfig);
+        if (count($imagePaths) === 1) {
+            return $this->imageGenerator->generateFromImage($brand, $prompt, $imagePaths[0], $i2iConfig);
+        }
+
+        return $this->imageGenerator->generateFromMultipleImages($brand, $prompt, $imagePaths, $i2iConfig);
     }
 
     private function resolveImageToImageModel(?string $t2iModel): string
@@ -83,23 +94,20 @@ class AiImageGeneratorExecutor implements PipelineNodeExecutorInterface
     }
 
     /**
-     * Compose the generated image into a template by replacing the first image layer.
-     * Sends the modified canvas to the template-renderer microservice for rendering.
+     * Compose a foreground image into canvas data and render via template-renderer.
+     * Replaces the first 'image' layer's src with the foreground image.
+     * Used when template input is canvas JSON (from Template node).
      */
-    private function composeWithTemplate(string $generatedImagePath, array $inputs, Brand $brand): string
+    private function composeWithCanvas(string $foregroundPath, array $canvasData, Brand $brand): string
     {
-        $canvasData = $inputs['template'];
-
-        // Replace first image layer in template with the generated image
         if (isset($canvasData['layers']) && is_array($canvasData['layers'])) {
             $imageReplaced = false;
 
             foreach ($canvasData['layers'] as &$layer) {
                 $type = $layer['type'] ?? '';
 
-                // Replace first image layer with generated image
                 if (!$imageReplaced && $type === 'image') {
-                    $base64 = $this->imageToBase64($generatedImagePath);
+                    $base64 = $this->imageToBase64($foregroundPath);
                     if ($base64) {
                         $layer['properties']['src'] = $base64;
                     }
@@ -112,7 +120,6 @@ class AiImageGeneratorExecutor implements PipelineNodeExecutorInterface
         $width = $canvasData['width'] ?? 1080;
         $height = $canvasData['height'] ?? 1080;
 
-        // Render via template-renderer microservice
         $rendererUrl = config('services.template_renderer.url', 'http://template-renderer:3336');
 
         $response = Http::timeout(60)->post("{$rendererUrl}/render-vue", [

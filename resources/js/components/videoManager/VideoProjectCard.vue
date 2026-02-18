@@ -36,7 +36,7 @@ const formatDate = (date) => {
 };
 
 const openProject = () => {
-    router.push({ name: 'videoManager.editor', params: { projectId: props.project.id } });
+    router.push({ name: 'videoManager.nle', params: { projectId: props.project.id } });
 };
 </script>
 

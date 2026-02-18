@@ -301,6 +301,117 @@ def remove_silence():
         _cleanup(tmp_input.name, tmp_output.name, tmp_list.name, *segment_files)
 
 
+@app.route("/detect-silence", methods=["POST"])
+def detect_silence():
+    """
+    Detect silent regions in a video/audio file using FFmpeg silencedetect.
+
+    Accepts:
+        - multipart/form-data with 'file' field
+        - Optional form params:
+            - noise: silence threshold in dB (default: -30)
+            - duration: minimum silence duration in seconds (default: 0.5)
+
+    Returns:
+        JSON with silence_regions and speech_regions arrays of {start, end}.
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["file"]
+    noise_db = request.form.get("noise", "-30")
+    min_duration = request.form.get("duration", "0.5")
+
+    suffix = os.path.splitext(file.filename)[1] or ".mp4"
+    tmp_input = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=TEMP_DIR)
+
+    try:
+        file.save(tmp_input.name)
+        tmp_input.close()
+
+        # Get total duration
+        video_info = _get_video_info(tmp_input.name)
+        total_duration = video_info.get("duration", 0)
+
+        # Run silencedetect filter
+        cmd = [
+            "ffmpeg", "-i", tmp_input.name,
+            "-af", f"silencedetect=noise={noise_db}dB:d={min_duration}",
+            "-f", "null", "-",
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
+
+        # Parse silence regions from stderr
+        silence_regions = _parse_silencedetect(result.stderr)
+
+        # Invert to get speech regions
+        speech_regions = _invert_regions(silence_regions, total_duration)
+
+        logger.info(f"[VIDEO-EDITOR] Detected {len(silence_regions)} silence regions, {len(speech_regions)} speech regions")
+
+        return jsonify({
+            "silence_regions": silence_regions,
+            "speech_regions": speech_regions,
+            "total_duration": total_duration,
+        })
+    except Exception as e:
+        logger.error(f"[VIDEO-EDITOR] Silence detection error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        _cleanup(tmp_input.name)
+
+
+def _parse_silencedetect(stderr_output):
+    """Parse FFmpeg silencedetect output into list of {start, end} regions."""
+    import re
+    silence_regions = []
+    silence_start = None
+
+    for line in stderr_output.split("\n"):
+        # Match: [silencedetect @ ...] silence_start: 47.832
+        start_match = re.search(r"silence_start:\s*([\d.]+)", line)
+        if start_match:
+            silence_start = float(start_match.group(1))
+            continue
+
+        # Match: [silencedetect @ ...] silence_end: 61.024 | silence_duration: 13.192
+        end_match = re.search(r"silence_end:\s*([\d.]+)", line)
+        if end_match and silence_start is not None:
+            silence_end = float(end_match.group(1))
+            silence_regions.append({
+                "start": round(silence_start, 3),
+                "end": round(silence_end, 3),
+            })
+            silence_start = None
+
+    return silence_regions
+
+
+def _invert_regions(silence_regions, total_duration):
+    """Convert silence regions to speech regions (invert)."""
+    if not silence_regions:
+        return [{"start": 0, "end": total_duration}]
+
+    speech_regions = []
+    cursor = 0.0
+
+    for silence in sorted(silence_regions, key=lambda r: r["start"]):
+        if silence["start"] > cursor:
+            speech_regions.append({
+                "start": round(cursor, 3),
+                "end": round(silence["start"], 3),
+            })
+        cursor = silence["end"]
+
+    if cursor < total_duration:
+        speech_regions.append({
+            "start": round(cursor, 3),
+            "end": round(total_duration, 3),
+        })
+
+    return speech_regions
+
+
 @app.route("/probe", methods=["POST"])
 def probe_video():
     """
@@ -503,6 +614,254 @@ def _cleanup(*paths):
                 os.unlink(path)
         except OSError:
             pass
+
+
+@app.route("/waveform-peaks", methods=["POST"])
+def waveform_peaks():
+    """
+    Extract audio waveform peak values from a video file using FFmpeg.
+
+    Accepts:
+        - multipart/form-data with 'file' field
+        - Optional query params:
+            - samples: number of peak samples (default: 800)
+
+    Returns:
+        JSON with peaks array of float values [-1.0, 1.0].
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["file"]
+    num_samples = int(request.args.get("samples", "800"))
+
+    suffix = os.path.splitext(file.filename)[1] or ".mp4"
+    tmp_input = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=TEMP_DIR)
+    tmp_pcm = tempfile.NamedTemporaryFile(delete=False, suffix=".raw", dir=TEMP_DIR)
+
+    try:
+        file.save(tmp_input.name)
+        tmp_input.close()
+        tmp_pcm.close()
+
+        # Extract raw PCM audio (mono, 8kHz, 16-bit signed)
+        cmd = [
+            "ffmpeg", "-y", "-i", tmp_input.name,
+            "-vn", "-ac", "1", "-ar", "8000",
+            "-f", "s16le", "-acodec", "pcm_s16le",
+            tmp_pcm.name,
+        ]
+        _run_ffmpeg(cmd)
+
+        # Read raw PCM and compute peaks
+        import struct
+        with open(tmp_pcm.name, "rb") as f:
+            raw = f.read()
+
+        total_samples = len(raw) // 2
+        if total_samples == 0:
+            return jsonify({"peaks": []})
+
+        samples_per_peak = max(1, total_samples // num_samples)
+        peaks = []
+
+        for i in range(0, total_samples, samples_per_peak):
+            chunk_end = min(i + samples_per_peak, total_samples)
+            chunk = raw[i * 2:chunk_end * 2]
+            values = struct.unpack(f"<{len(chunk) // 2}h", chunk)
+            max_val = max(abs(v) for v in values) if values else 0
+            peaks.append(round(max_val / 32768.0, 4))
+
+        logger.info(f"[VIDEO-EDITOR] Waveform extracted: {len(peaks)} peaks from {total_samples} samples")
+
+        return jsonify({"peaks": peaks})
+    except Exception as e:
+        logger.error(f"[VIDEO-EDITOR] Waveform extraction error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        _cleanup(tmp_input.name, tmp_pcm.name)
+
+
+@app.route("/thumbnails", methods=["POST"])
+def generate_thumbnails():
+    """
+    Generate filmstrip thumbnails from a video file.
+
+    Accepts:
+        - multipart/form-data with 'file' field
+        - Optional query params:
+            - count: number of thumbnails (default: 10)
+            - height: thumbnail height in pixels (default: 60)
+
+    Returns:
+        JSON with thumbnails array of base64-encoded JPEG strings.
+    """
+    import base64
+
+    if "file" not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+
+    file = request.files["file"]
+    count = int(request.args.get("count", "10"))
+    thumb_height = int(request.args.get("height", "60"))
+
+    suffix = os.path.splitext(file.filename)[1] or ".mp4"
+    tmp_input = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=TEMP_DIR)
+    thumb_dir = tempfile.mkdtemp(dir=TEMP_DIR)
+
+    try:
+        file.save(tmp_input.name)
+        tmp_input.close()
+
+        # Get duration
+        info = _get_video_info(tmp_input.name)
+        duration = info.get("duration", 0)
+        if duration <= 0:
+            return jsonify({"thumbnails": []})
+
+        interval = duration / count
+        thumbnails = []
+
+        for i in range(count):
+            timestamp = i * interval
+            thumb_path = os.path.join(thumb_dir, f"thumb_{i:04d}.jpg")
+
+            cmd = [
+                "ffmpeg", "-y", "-ss", str(timestamp),
+                "-i", tmp_input.name,
+                "-vframes", "1",
+                "-vf", f"scale=-1:{thumb_height}",
+                "-q:v", "8",
+                thumb_path,
+            ]
+            try:
+                _run_ffmpeg(cmd, timeout=15)
+                if os.path.exists(thumb_path):
+                    with open(thumb_path, "rb") as f:
+                        b64 = base64.b64encode(f.read()).decode("utf-8")
+                        thumbnails.append(f"data:image/jpeg;base64,{b64}")
+            except Exception:
+                thumbnails.append(None)
+
+        logger.info(f"[VIDEO-EDITOR] Generated {len(thumbnails)} thumbnails")
+
+        return jsonify({"thumbnails": thumbnails})
+    except Exception as e:
+        logger.error(f"[VIDEO-EDITOR] Thumbnail generation error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        _cleanup(tmp_input.name)
+        shutil.rmtree(thumb_dir, ignore_errors=True)
+
+
+@app.route("/export-timeline", methods=["POST"])
+def export_timeline():
+    """
+    Render a full timeline from an EDL (Edit Decision List).
+
+    Accepts:
+        - multipart/form-data with 'file' field (source video)
+        - JSON body 'edl' field with timeline data:
+            {
+                "tracks": [
+                    {"id": "video", "type": "video", "muted": false, "clips": [
+                        {"start": 0, "end": 10, "trimStart": 0, "trimEnd": 0}
+                    ]},
+                    ...
+                ]
+            }
+
+    Returns:
+        Rendered video file (MP4).
+    """
+    if "file" not in request.files:
+        return jsonify({"error": "No video file provided"}), 400
+
+    edl_raw = request.form.get("edl")
+    if not edl_raw:
+        return jsonify({"error": "No EDL data provided"}), 400
+
+    try:
+        edl = json.loads(edl_raw)
+    except json.JSONDecodeError:
+        return jsonify({"error": "Invalid EDL JSON"}), 400
+
+    file = request.files["file"]
+    suffix = os.path.splitext(file.filename)[1] or ".mp4"
+    tmp_input = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=TEMP_DIR)
+    tmp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=TEMP_DIR)
+    tmp_list = tempfile.NamedTemporaryFile(delete=False, suffix=".txt", dir=TEMP_DIR, mode="w")
+    segment_files = []
+
+    try:
+        file.save(tmp_input.name)
+        tmp_input.close()
+        tmp_output.close()
+
+        # Extract video clips from EDL
+        video_track = None
+        for track in edl.get("tracks", []):
+            if track.get("type") == "video":
+                video_track = track
+                break
+
+        if not video_track or not video_track.get("clips"):
+            return jsonify({"error": "No video clips in EDL"}), 400
+
+        clips = sorted(video_track["clips"], key=lambda c: c.get("start", 0))
+
+        for i, clip in enumerate(clips):
+            start = clip.get("start", 0) + clip.get("trimStart", 0)
+            end = clip.get("end", 0) - clip.get("trimEnd", 0)
+
+            if end <= start:
+                continue
+
+            seg_file = os.path.join(TEMP_DIR, f"edl_seg_{os.getpid()}_{i}.mp4")
+            segment_files.append(seg_file)
+
+            cmd = [
+                "ffmpeg", "-y", "-i", tmp_input.name,
+                "-ss", str(start), "-to", str(end),
+                "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+                "-c:a", "aac",
+                seg_file,
+            ]
+            _run_ffmpeg(cmd)
+            tmp_list.write(f"file '{seg_file}'\n")
+
+        tmp_list.close()
+
+        if not segment_files:
+            return jsonify({"error": "No valid segments to render"}), 400
+
+        # Concatenate segments
+        cmd = [
+            "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+            "-i", tmp_list.name,
+            "-c:v", "libx264", "-preset", "medium", "-crf", "23",
+            "-c:a", "aac",
+            "-movflags", "+faststart",
+            tmp_output.name,
+        ]
+        _run_ffmpeg(cmd)
+
+        logger.info(f"[VIDEO-EDITOR] Timeline exported: {len(segment_files)} segments")
+
+        return send_file(
+            tmp_output.name,
+            mimetype="video/mp4",
+            as_attachment=True,
+            download_name="timeline_export.mp4",
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"[VIDEO-EDITOR] FFmpeg error: {e.stderr}")
+        return jsonify({"error": "Timeline export failed", "details": e.stderr}), 500
+    except Exception as e:
+        logger.error(f"[VIDEO-EDITOR] Export error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        _cleanup(tmp_input.name, tmp_output.name, tmp_list.name, *segment_files)
 
 
 # Ensure temp directory exists

@@ -275,10 +275,30 @@ const handleToolbarAction = (key) => {
 
 <template>
     <div class="relative group">
-    <!-- Input handles (functional VueFlow targets) -->
+    <!-- Input handles with external labels -->
     <Handle type="target" :position="Position.Left" id="text" style="top: 25%" />
+    <div class="absolute flex items-center gap-1 pointer-events-none whitespace-nowrap" style="top: 25%; right: calc(100% + 4px); transform: translateY(-50%)">
+        <span class="text-[9px] text-gray-500 font-medium">{{ t('pipeline.handleLabels.text') }}</span>
+        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+        </svg>
+    </div>
+
     <Handle type="target" :position="Position.Left" id="image" style="top: 50%" />
+    <div class="absolute flex items-center gap-1 pointer-events-none whitespace-nowrap" style="top: 50%; right: calc(100% + 4px); transform: translateY(-50%)">
+        <span class="text-[9px] text-gray-500 font-medium">{{ t('pipeline.handleLabels.image') }}</span>
+        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+        </svg>
+    </div>
+
     <Handle type="target" :position="Position.Left" id="template" style="top: 75%" />
+    <div class="absolute flex items-center gap-1 pointer-events-none whitespace-nowrap" style="top: 75%; right: calc(100% + 4px); transform: translateY(-50%)">
+        <span class="text-[9px] text-gray-500 font-medium">{{ t('pipeline.handleLabels.template') }}</span>
+        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6Z" />
+        </svg>
+    </div>
 
     <BaseNode
         :id="id"
@@ -289,13 +309,13 @@ const handleToolbarAction = (key) => {
         icon-path="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456z"
         @toolbar-action="handleToolbarAction"
     >
-        <!-- Direct composite mode indicator (image + template) -->
+        <!-- Multi-image mode indicator (image + template connected) -->
         <div v-if="isDirectCompositeMode" class="flex items-center gap-1.5 mb-1.5">
             <span class="inline-flex items-center gap-1 bg-green-100 text-green-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 0 1 6 3.75h2.25A2.25 2.25 0 0 1 10.5 6v2.25a2.25 2.25 0 0 1-2.25 2.25H6a2.25 2.25 0 0 1-2.25-2.25V6ZM3.75 15.75A2.25 2.25 0 0 1 6 13.5h2.25a2.25 2.25 0 0 1 2.25 2.25V18a2.25 2.25 0 0 1-2.25 2.25H6A2.25 2.25 0 0 1 3.75 18v-2.25ZM13.5 6a2.25 2.25 0 0 1 2.25-2.25H18A2.25 2.25 0 0 1 20.25 6v2.25A2.25 2.25 0 0 1 18 10.5h-2.25a2.25 2.25 0 0 1-2.25-2.25V6Z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0L21.75 16.5 12 21.75 2.25 16.5l4.179-2.25m0 0 5.571 3 5.571-3" />
                 </svg>
-                {{ t('pipeline.aiGenerator.directCompositeMode') }}
+                {{ t('pipeline.aiGenerator.multiImageMode') }}
             </span>
         </div>
 
@@ -484,8 +504,8 @@ const handleToolbarAction = (key) => {
                 </Transition>
             </div>
 
-            <!-- Strength chip + dropdown (only visible in img2img mode, hidden in direct composite) -->
-            <div v-if="hasImageConnection && !isDirectCompositeMode" class="relative">
+            <!-- Strength chip + dropdown (visible when any image is connected) -->
+            <div v-if="hasImageConnection" class="relative">
                 <span
                     class="inline-flex items-center gap-0.5 bg-purple-100 text-purple-600 text-[10px] font-medium px-1.5 py-0.5 rounded-full cursor-pointer hover:bg-purple-200 transition-colors"
                     @click.stop="toggleDropdown('strength')"
@@ -582,7 +602,13 @@ const handleToolbarAction = (key) => {
         </div>
     </BaseNode>
 
-    <!-- Output handle (functional VueFlow source) -->
+    <!-- Output handle with external label -->
     <Handle type="source" :position="Position.Right" id="image" />
+    <div class="absolute flex items-center gap-1 pointer-events-none whitespace-nowrap" style="top: 50%; left: calc(100% + 4px); transform: translateY(-50%)">
+        <svg class="w-2.5 h-2.5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m2.25 15.75 5.159-5.159a2.25 2.25 0 0 1 3.182 0l5.159 5.159m-1.5-1.5 1.409-1.409a2.25 2.25 0 0 1 3.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0 0 22.5 18.75V5.25A2.25 2.25 0 0 0 20.25 3H3.75A2.25 2.25 0 0 0 1.5 5.25v13.5A2.25 2.25 0 0 0 3.75 21Z" />
+        </svg>
+        <span class="text-[9px] text-gray-500 font-medium">{{ t('pipeline.handleLabels.image') }}</span>
+    </div>
     </div>
 </template>
