@@ -311,6 +311,7 @@
         "admin": "Admin",
         "adminUsers": "Users",
         "devTasks": "Dev Tasks",
+        "adminSettings": "Settings",
         "video": "Video",
         "rssFeeds": "RSS Feeds",
         "aiManager": "AI Manager"
@@ -325,7 +326,8 @@
             "ai": "AI Settings",
             "notifications": "Notifications",
             "tokens": "Tokens",
-            "aiKeys": "AI Keys"
+            "aiKeys": "AI Keys",
+            "aiUsage": "AI Costs"
         },
         "tokens": {
             "title": "API Tokens",
@@ -2145,7 +2147,8 @@
             "openai": "OpenAI",
             "gemini": "Gemini",
             "wavespeed": "WaveSpeed AI",
-            "getlate": "GetLate"
+            "getlate": "GetLate",
+            "apify": "Apify"
         },
         "form": {
             "apiKey": "API Key",
@@ -3016,6 +3019,19 @@
                 "other": "Other"
             }
         }
+    },
+    "adminSettings": {
+        "title": "Application Settings",
+        "subtitle": "Manage global application settings",
+        "accessControlSection": "Access Control",
+        "registrationEnabled": "Registration enabled",
+        "registrationDisabled": "Registration disabled",
+        "registrationDescription": "When disabled, new users will not be able to create accounts. Existing users are not affected.",
+        "loginEnabled": "Login enabled",
+        "loginDisabled": "Login disabled",
+        "loginDescription": "When disabled, only administrators can log in. Other users will be blocked from signing in.",
+        "settingsUpdated": "Settings updated successfully",
+        "settingsUpdateError": "Failed to update settings"
     },
     "devTasks": {
         "title": "Dev Tasks",
@@ -4840,5 +4856,185 @@
             "uploaded": "Image uploaded successfully",
             "uploadError": "Failed to upload image"
         }
+    },
+    "ci": {
+        "title": "Competitive Intelligence",
+        "description": "Track competitors and discover trends to improve your content strategy",
+        "competitors": {
+            "title": "Competitors",
+            "add": "Add Competitor",
+            "edit": "Edit Competitor",
+            "name": "Competitor Name",
+            "namePlaceholder": "e.g. John Doe Brand",
+            "notes": "Notes",
+            "notesPlaceholder": "Optional notes about this competitor",
+            "accounts": "Social Accounts",
+            "addAccount": "Add Account",
+            "platform": "Platform",
+            "handle": "Handle",
+            "handlePlaceholder": "@username",
+            "posts": "Posts",
+            "postsCount": "{count} posts",
+            "lastScraped": "Last scraped",
+            "neverScraped": "Never scraped",
+            "noCompetitors": "No competitors added yet",
+            "noCompetitorsDescription": "Add your competitors to start tracking their performance and content strategy",
+            "deleteConfirm": "Are you sure you want to delete this competitor? All associated data will be removed.",
+            "created": "Competitor added successfully",
+            "updated": "Competitor updated successfully",
+            "deleted": "Competitor deleted successfully"
+        },
+        "insights": {
+            "title": "Insights",
+            "noInsights": "No insights available yet",
+            "noInsightsDescription": "Insights will appear after competitor data is analyzed",
+            "collectData": "Collect & analyze data",
+            "addCompetitorsFirst": "Add competitors to get started",
+            "apply": "Apply",
+            "dismiss": "Dismiss",
+            "applied": "Insight marked as applied",
+            "dismissed": "Insight dismissed",
+            "types": {
+                "content_gap": "Content Gap",
+                "timing_optimization": "Timing Optimization",
+                "hashtag_strategy": "Hashtag Strategy",
+                "format_recommendation": "Format Recommendation",
+                "trend_alert": "Trend Alert"
+            },
+            "priority": "Priority",
+            "highPriority": "High Priority",
+            "mediumPriority": "Medium Priority",
+            "lowPriority": "Low Priority"
+        },
+        "trends": {
+            "title": "Trending Topics",
+            "noTrends": "No trending topics found",
+            "noTrendsDescription": "Trending topics will appear after data is collected",
+            "collectTrends": "Collect trends",
+            "addCompetitorsFirst": "Add competitors to discover trends",
+            "direction": {
+                "rising": "Rising",
+                "stable": "Stable",
+                "declining": "Declining",
+                "breakout": "Breakout"
+            },
+            "volume": "Volume",
+            "growthRate": "Growth Rate",
+            "source": "Source",
+            "validUntil": "Valid until",
+            "relatedHashtags": "Related Hashtags"
+        },
+        "benchmarks": {
+            "title": "Benchmarks",
+            "engagementRate": "Engagement Rate",
+            "avgLikes": "Avg. Likes",
+            "avgComments": "Avg. Comments",
+            "avgShares": "Avg. Shares",
+            "avgViews": "Avg. Views",
+            "topPerforming": "Top Performing Content",
+            "byPlatform": "By Platform",
+            "byContentType": "By Content Type",
+            "yourBrand": "Your Brand",
+            "competitorAvg": "Competitor Average",
+            "noBenchmarks": "No benchmark data available yet",
+            "collectData": "Collect benchmark data",
+            "addCompetitorsFirst": "Add competitors to see benchmarks"
+        },
+        "scrape": {
+            "title": "Data Collection",
+            "triggerScrape": "Collect Data",
+            "scrapeProfiles": "Scrape Profiles",
+            "scrapePosts": "Scrape Posts",
+            "scrapeTrends": "Scrape Trends",
+            "status": "Status",
+            "activeRuns": "Active Runs",
+            "recentRuns": "Recent Runs",
+            "noActiveRuns": "No active scraping runs",
+            "dispatched": "Scrape job started",
+            "budgetExceeded": "Monthly budget exceeded"
+        },
+        "cost": {
+            "title": "Cost Tracking",
+            "currentMonth": "Current Month",
+            "budget": "Budget",
+            "used": "Used",
+            "remaining": "Remaining",
+            "totalRuns": "Total Runs",
+            "totalResults": "Total Results",
+            "history": "Cost History",
+            "breakdown": "Cost Breakdown"
+        },
+        "platforms": {
+            "instagram": "Instagram",
+            "tiktok": "TikTok",
+            "linkedin": "LinkedIn",
+            "youtube": "YouTube",
+            "twitter": "X (Twitter)"
+        },
+        "discover": {
+            "title": "Discover Competitors",
+            "description": "AI will analyze your brand profile and suggest relevant competitors to track",
+            "button": "Discover Competitors",
+            "searching": "Searching for competitors...",
+            "noResults": "No competitors found",
+            "noResultsDescription": "Make sure your brand has industry and description filled in for better results",
+            "addSelected": "Add selected ({count})",
+            "relevance": "Relevance",
+            "selectAll": "Select all",
+            "deselectAll": "Deselect all",
+            "added": "{count} competitor(s) added successfully",
+            "addFailed": "{count} competitor(s) could not be added",
+            "noApiKey": "OpenAI API key is required to discover competitors"
+        },
+        "dashboard": {
+            "overview": "Overview",
+            "competitorsTab": "Competitors",
+            "insightsTab": "Insights",
+            "trendsTab": "Trends",
+            "benchmarksTab": "Benchmarks",
+            "settingsTab": "Settings"
+        },
+        "onboarding": {
+            "title": "Get Started",
+            "description": "You've added competitors. Now collect data to unlock insights, trends, and benchmarks.",
+            "collectAll": "Collect All Data",
+            "step1": "Add competitors",
+            "step2": "Collect data",
+            "step3": "View insights",
+            "scrapeRunning": "Collecting data..."
+        }
+    },
+    "aiUsage": {
+        "title": "AI Costs",
+        "description": "Monitor your AI API usage and costs across all providers",
+        "totalCost": "Total Cost",
+        "totalRequests": "Total Requests",
+        "tokens": "tokens",
+        "requests": "requests",
+        "avgDuration": "Avg. duration",
+        "period": {
+            "7days": "7 days",
+            "30days": "30 days",
+            "90days": "90 days"
+        },
+        "dailyChart": {
+            "title": "Daily Costs"
+        },
+        "operations": {
+            "title": "Operations Breakdown",
+            "name": "Operation",
+            "requests": "Requests",
+            "tokens": "Tokens",
+            "cost": "Cost"
+        },
+        "apify": {
+            "title": "Apify Details",
+            "budget": "Budget",
+            "remaining": "remaining",
+            "runs": "Runs",
+            "results": "Results"
+        },
+        "noData": "No usage data for the selected period",
+        "loading": "Loading usage data..."
     }
 }

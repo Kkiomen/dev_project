@@ -312,6 +312,7 @@
         "admin": "Admin",
         "adminUsers": "Uzytkownicy",
         "devTasks": "Dev Tasks",
+        "adminSettings": "Ustawienia",
         "video": "Wideo",
         "rssFeeds": "Kanały RSS",
         "aiManager": "AI Manager"
@@ -326,7 +327,8 @@
             "ai": "Ustawienia AI",
             "notifications": "Powiadomienia",
             "tokens": "Tokeny",
-            "aiKeys": "Klucze AI"
+            "aiKeys": "Klucze AI",
+            "aiUsage": "Koszty AI"
         },
         "tokens": {
             "title": "Tokeny API",
@@ -2148,7 +2150,8 @@
             "openai": "OpenAI",
             "gemini": "Gemini",
             "wavespeed": "WaveSpeed AI",
-            "getlate": "GetLate"
+            "getlate": "GetLate",
+            "apify": "Apify"
         },
         "form": {
             "apiKey": "Klucz API",
@@ -3019,6 +3022,19 @@
                 "other": "Inne"
             }
         }
+    },
+    "adminSettings": {
+        "title": "Ustawienia aplikacji",
+        "subtitle": "Zarządzaj globalnymi ustawieniami aplikacji",
+        "accessControlSection": "Kontrola dostępu",
+        "registrationEnabled": "Rejestracja włączona",
+        "registrationDisabled": "Rejestracja wyłączona",
+        "registrationDescription": "Gdy wyłączone, nowi użytkownicy nie będą mogli zakładać kont. Istniejący użytkownicy nie są dotknięci.",
+        "loginEnabled": "Logowanie włączone",
+        "loginDisabled": "Logowanie wyłączone",
+        "loginDescription": "Gdy wyłączone, tylko administratorzy mogą się logować. Pozostali użytkownicy zostaną zablokowani.",
+        "settingsUpdated": "Ustawienia zostały zaktualizowane",
+        "settingsUpdateError": "Nie udało się zaktualizować ustawień"
     },
     "devTasks": {
         "title": "Dev Tasks",
@@ -4843,5 +4859,185 @@
             "uploaded": "Obraz wgrany pomyślnie",
             "uploadError": "Nie udało się wgrać obrazu"
         }
+    },
+    "ci": {
+        "title": "Analiza Konkurencji",
+        "description": "Śledź konkurencję i odkrywaj trendy, aby ulepszyć strategię treści",
+        "competitors": {
+            "title": "Konkurenci",
+            "add": "Dodaj Konkurenta",
+            "edit": "Edytuj Konkurenta",
+            "name": "Nazwa Konkurenta",
+            "namePlaceholder": "np. Marka Jan Kowalski",
+            "notes": "Notatki",
+            "notesPlaceholder": "Opcjonalne notatki o konkurencie",
+            "accounts": "Konta Społecznościowe",
+            "addAccount": "Dodaj Konto",
+            "platform": "Platforma",
+            "handle": "Nazwa użytkownika",
+            "handlePlaceholder": "@nazwaużytkownika",
+            "posts": "Posty",
+            "postsCount": "{count} postów",
+            "lastScraped": "Ostatni scraping",
+            "neverScraped": "Nigdy nie scrapowano",
+            "noCompetitors": "Brak dodanych konkurentów",
+            "noCompetitorsDescription": "Dodaj konkurentów, aby śledzić ich wyniki i strategię treści",
+            "deleteConfirm": "Czy na pewno chcesz usunąć tego konkurenta? Wszystkie powiązane dane zostaną usunięte.",
+            "created": "Konkurent dodany pomyślnie",
+            "updated": "Konkurent zaktualizowany pomyślnie",
+            "deleted": "Konkurent usunięty pomyślnie"
+        },
+        "insights": {
+            "title": "Wnioski",
+            "noInsights": "Brak dostępnych wniosków",
+            "noInsightsDescription": "Wnioski pojawią się po przeanalizowaniu danych konkurencji",
+            "collectData": "Zbierz i analizuj dane",
+            "addCompetitorsFirst": "Dodaj konkurentów aby rozpocząć",
+            "apply": "Zastosuj",
+            "dismiss": "Odrzuć",
+            "applied": "Wniosek oznaczony jako zastosowany",
+            "dismissed": "Wniosek odrzucony",
+            "types": {
+                "content_gap": "Luka Treściowa",
+                "timing_optimization": "Optymalizacja Czasu",
+                "hashtag_strategy": "Strategia Hashtagów",
+                "format_recommendation": "Rekomendacja Formatu",
+                "trend_alert": "Alert Trendu"
+            },
+            "priority": "Priorytet",
+            "highPriority": "Wysoki Priorytet",
+            "mediumPriority": "Średni Priorytet",
+            "lowPriority": "Niski Priorytet"
+        },
+        "trends": {
+            "title": "Trendy",
+            "noTrends": "Brak trendów",
+            "noTrendsDescription": "Trendy pojawią się po zebraniu danych",
+            "collectTrends": "Zbierz trendy",
+            "addCompetitorsFirst": "Dodaj konkurentów aby odkryć trendy",
+            "direction": {
+                "rising": "Rosnący",
+                "stable": "Stabilny",
+                "declining": "Spadający",
+                "breakout": "Wybuchowy"
+            },
+            "volume": "Wolumen",
+            "growthRate": "Tempo Wzrostu",
+            "source": "Źródło",
+            "validUntil": "Ważny do",
+            "relatedHashtags": "Powiązane Hashtagi"
+        },
+        "benchmarks": {
+            "title": "Benchmarki",
+            "engagementRate": "Wskaźnik Zaangażowania",
+            "avgLikes": "Śr. Polubienia",
+            "avgComments": "Śr. Komentarze",
+            "avgShares": "Śr. Udostępnienia",
+            "avgViews": "Śr. Wyświetlenia",
+            "topPerforming": "Najlepsze Treści",
+            "byPlatform": "Wg Platformy",
+            "byContentType": "Wg Typu Treści",
+            "yourBrand": "Twoja Marka",
+            "competitorAvg": "Średnia Konkurencji",
+            "noBenchmarks": "Brak danych benchmarkowych",
+            "collectData": "Zbierz dane benchmarkowe",
+            "addCompetitorsFirst": "Dodaj konkurentów aby zobaczyć benchmarki"
+        },
+        "scrape": {
+            "title": "Zbieranie Danych",
+            "triggerScrape": "Zbierz Dane",
+            "scrapeProfiles": "Pobierz Profile",
+            "scrapePosts": "Pobierz Posty",
+            "scrapeTrends": "Pobierz Trendy",
+            "status": "Status",
+            "activeRuns": "Aktywne Zadania",
+            "recentRuns": "Ostatnie Zadania",
+            "noActiveRuns": "Brak aktywnych zadań",
+            "dispatched": "Zadanie scrapingu uruchomione",
+            "budgetExceeded": "Budżet miesięczny przekroczony"
+        },
+        "cost": {
+            "title": "Śledzenie Kosztów",
+            "currentMonth": "Bieżący Miesiąc",
+            "budget": "Budżet",
+            "used": "Wykorzystano",
+            "remaining": "Pozostało",
+            "totalRuns": "Łączne Uruchomienia",
+            "totalResults": "Łączne Wyniki",
+            "history": "Historia Kosztów",
+            "breakdown": "Podział Kosztów"
+        },
+        "platforms": {
+            "instagram": "Instagram",
+            "tiktok": "TikTok",
+            "linkedin": "LinkedIn",
+            "youtube": "YouTube",
+            "twitter": "X (Twitter)"
+        },
+        "discover": {
+            "title": "Znajdź Konkurentów",
+            "description": "AI przeanalizuje profil Twojej marki i zasugeruje odpowiednich konkurentów do śledzenia",
+            "button": "Znajdź Konkurentów",
+            "searching": "Szukanie konkurentów...",
+            "noResults": "Nie znaleziono konkurentów",
+            "noResultsDescription": "Upewnij się, że Twoja marka ma uzupełnioną branżę i opis dla lepszych wyników",
+            "addSelected": "Dodaj wybrane ({count})",
+            "relevance": "Trafność",
+            "selectAll": "Zaznacz wszystkie",
+            "deselectAll": "Odznacz wszystkie",
+            "added": "Dodano {count} konkurentów pomyślnie",
+            "addFailed": "Nie udało się dodać {count} konkurentów",
+            "noApiKey": "Klucz API OpenAI jest wymagany do wyszukiwania konkurentów"
+        },
+        "dashboard": {
+            "overview": "Przegląd",
+            "competitorsTab": "Konkurenci",
+            "insightsTab": "Wnioski",
+            "trendsTab": "Trendy",
+            "benchmarksTab": "Benchmarki",
+            "settingsTab": "Ustawienia"
+        },
+        "onboarding": {
+            "title": "Rozpocznij",
+            "description": "Dodałeś konkurentów. Teraz zbierz dane, aby odblokować wnioski, trendy i benchmarki.",
+            "collectAll": "Zbierz wszystkie dane",
+            "step1": "Dodaj konkurentów",
+            "step2": "Zbierz dane",
+            "step3": "Przeglądaj analizy",
+            "scrapeRunning": "Zbieranie danych..."
+        }
+    },
+    "aiUsage": {
+        "title": "Koszty AI",
+        "description": "Monitoruj zużycie i koszty API AI u wszystkich dostawców",
+        "totalCost": "Łączny koszt",
+        "totalRequests": "Łączne zapytania",
+        "tokens": "tokenów",
+        "requests": "zapytań",
+        "avgDuration": "Śr. czas",
+        "period": {
+            "7days": "7 dni",
+            "30days": "30 dni",
+            "90days": "90 dni"
+        },
+        "dailyChart": {
+            "title": "Dzienne koszty"
+        },
+        "operations": {
+            "title": "Podział na operacje",
+            "name": "Operacja",
+            "requests": "Zapytania",
+            "tokens": "Tokeny",
+            "cost": "Koszt"
+        },
+        "apify": {
+            "title": "Szczegóły Apify",
+            "budget": "Budżet",
+            "remaining": "pozostało",
+            "runs": "Uruchomienia",
+            "results": "Wyniki"
+        },
+        "noData": "Brak danych o użyciu w wybranym okresie",
+        "loading": "Ładowanie danych o użyciu..."
     }
 }

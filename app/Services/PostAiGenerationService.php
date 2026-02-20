@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Brand;
+use App\Services\Apify\ContentInsightsService;
 use App\Services\Concerns\LogsApiUsage;
 use OpenAI\Responses\Chat\CreateResponse;
 
@@ -88,6 +89,7 @@ IMPORTANT FORMATTING RULES:
 - Keep paragraphs short and scannable
 - Use line breaks for readability
 
+{$this->getCompetitiveContext($config)}
 RESPONSE FORMAT:
 You MUST respond with valid JSON only. No additional text before or after the JSON.
 {$this->getResponseFormat($platform)}
@@ -318,5 +320,39 @@ PROMPT;
         }
 
         return $decoded;
+    }
+
+    protected function getCompetitiveContext(array $config): string
+    {
+        try {
+            $brand = $config['brand'] ?? null;
+            if (!$brand instanceof Brand) {
+                return '';
+            }
+
+            $insightsService = app(ContentInsightsService::class);
+            $context = $insightsService->getContentGenerationContext($brand, $config['platform'] ?? null);
+
+            $lines = [];
+
+            if (!empty($context['effective_hooks'])) {
+                $lines[] = "COMPETITIVE INSIGHTS:";
+                $lines[] = "- Most effective hook types: " . implode(', ', $context['effective_hooks']);
+            }
+
+            if (!empty($context['effective_ctas'])) {
+                $lines[] = "- Most effective CTA types: " . implode(', ', $context['effective_ctas']);
+            }
+
+            if (!empty($context['style_tips'])) {
+                foreach ($context['style_tips'] as $tip) {
+                    $lines[] = "- {$tip}";
+                }
+            }
+
+            return !empty($lines) ? implode("\n", $lines) . "\n" : '';
+        } catch (\Throwable $e) {
+            return '';
+        }
     }
 }

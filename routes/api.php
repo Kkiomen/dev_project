@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AppSettingsController;
 use App\Http\Controllers\Admin\DevTaskController;
 use App\Http\Controllers\Admin\DevTaskLogController;
 use App\Http\Controllers\Admin\DevTaskSubtaskController;
@@ -62,6 +63,8 @@ use App\Http\Controllers\Api\V1\SmCrisisAlertController;
 use App\Http\Controllers\Api\V1\SmMonitoredKeywordController;
 use App\Http\Controllers\Api\V1\SmListeningController;
 use App\Http\Controllers\Api\V1\SmPipelineController;
+use App\Http\Controllers\Api\V1\AiUsageStatsController;
+use App\Http\Controllers\Api\V1\CiCompetitorController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
@@ -215,6 +218,10 @@ $adminRoutes = function () {
     Route::delete('users/{user}', [AdminUserController::class, 'destroy']);
     Route::get('users/{user}/notifications', [AdminUserController::class, 'notifications']);
 
+    // === APP SETTINGS ===
+    Route::get('settings', [AppSettingsController::class, 'index']);
+    Route::put('settings', [AppSettingsController::class, 'update']);
+
     // === DEV TASKS (Mini-Jira) ===
     Route::prefix('dev-tasks')->group(function () {
         Route::get('projects', [DevTaskController::class, 'projects']);
@@ -316,6 +323,9 @@ $v1Routes = function () {
         Route::post('/', [BrandAiKeyController::class, 'store']);
         Route::delete('{provider}', [BrandAiKeyController::class, 'destroy']);
     });
+
+    // === AI USAGE STATS ===
+    Route::get('brands/{brand}/ai-usage-stats', [AiUsageStatsController::class, 'index']);
 
     // === PLATFORM CREDENTIALS (Facebook/Instagram OAuth) ===
     Route::prefix('brands/{brand}/platforms')->group(function () {
@@ -718,6 +728,28 @@ $v1Routes = function () {
         Route::get('{smPipeline}/runs/{run}', [SmPipelineController::class, 'runStatus']);
         Route::post('{smPipeline}/nodes/{nodeId}/preview', [SmPipelineController::class, 'previewNode']);
         Route::post('{smPipeline}/upload-image', [SmPipelineController::class, 'uploadNodeImage']);
+    });
+
+    // === COMPETITIVE INTELLIGENCE ===
+    Route::prefix('brands/{brand}/ci')->group(function () {
+        Route::get('competitors', [CiCompetitorController::class, 'index']);
+        Route::post('competitors', [CiCompetitorController::class, 'store']);
+        Route::get('competitors/{competitor}', [CiCompetitorController::class, 'show']);
+        Route::put('competitors/{competitor}', [CiCompetitorController::class, 'update']);
+        Route::delete('competitors/{competitor}', [CiCompetitorController::class, 'destroy']);
+        Route::get('competitors/{competitor}/posts', [CiCompetitorController::class, 'posts']);
+
+        Route::post('discover-competitors', [CiCompetitorController::class, 'discoverCompetitors']);
+
+        Route::get('insights', [CiCompetitorController::class, 'insights']);
+        Route::post('insights/{insight}/action', [CiCompetitorController::class, 'actionInsight']);
+
+        Route::get('benchmarks', [CiCompetitorController::class, 'benchmarks']);
+        Route::get('trends', [CiCompetitorController::class, 'trends']);
+
+        Route::post('scrape', [CiCompetitorController::class, 'scrape']);
+        Route::get('scrape-status', [CiCompetitorController::class, 'scrapeStatus']);
+        Route::get('cost', [CiCompetitorController::class, 'cost']);
     });
 
     // === RSS FEEDS ===

@@ -8,6 +8,7 @@ enum AiProvider: string
     case Gemini = 'gemini';
     case WaveSpeed = 'wavespeed';
     case GetLate = 'getlate';
+    case Apify = 'apify';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum AiProvider: string
             self::Gemini => 'Gemini',
             self::WaveSpeed => 'WaveSpeed AI',
             self::GetLate => 'GetLate',
+            self::Apify => 'Apify',
         };
     }
 

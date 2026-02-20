@@ -17,7 +17,18 @@
       "Bash(python -c \"import py_compile; py_compile.compile\\(''docker/video-editor/server.py'', doraise=True\\)\")",
       "Bash(docker compose build:*)",
       "Bash(docker compose:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(grep:*)",
+      "Bash(./vendor/bin/sail artisan migrate:*)",
+      "Bash(php artisan migrate:*)",
+      "WebFetch(domain:apify.com)",
+      "Bash(php artisan route:list:*)",
+      "Bash(php artisan list:*)",
+      "Bash(npx vite build:*)",
+      "Bash(./vendor/bin/sail artisan migrate:rollback:*)",
+      "Bash(./vendor/bin/sail artisan tinker --execute=\"DB::statement\\(''DROP TABLE IF EXISTS ci_competitor_posts''\\);\")",
+      "Bash(./vendor/bin/sail artisan tinker:*)",
+      "Bash(./vendor/bin/sail artisan queue:work:*)"
     ]
   }
 }

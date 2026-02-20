@@ -8,6 +8,7 @@ use App\Enums\ProposalStatus;
 use App\Models\Brand;
 use App\Models\BrandAiKey;
 use App\Models\PostProposal;
+use App\Services\Apify\ContentInsightsService;
 use App\Models\SocialPost;
 use App\Models\User;
 use Carbon\Carbon;
@@ -144,6 +145,25 @@ class ProposalBatchGeneratorService
             return $slots->map(fn ($slot) => array_merge($slot, ['pillar' => null]));
         }
 
+        // Use trend-adjusted percentages if CI data is available
+        try {
+            $insightsService = app(ContentInsightsService::class);
+            $adjusted = $insightsService->getTrendAdjustedPillars($brand);
+            if (!empty($adjusted)) {
+                $pillars = array_map(function ($pillar) use ($adjusted) {
+                    foreach ($adjusted as $adj) {
+                        if (($adj['name'] ?? '') === ($pillar['name'] ?? '')) {
+                            $pillar['percentage'] = $adj['adjusted_percentage'];
+                            break;
+                        }
+                    }
+                    return $pillar;
+                }, $pillars);
+            }
+        } catch (\Throwable $e) {
+            // CI data unavailable — use original pillars
+        }
+
         $totalSlots = $slots->count();
         $assignments = [];
 
@@ -227,6 +247,20 @@ class ProposalBatchGeneratorService
 
         if ($emojiUsage) {
             $prompt .= "Emoji usage: {$emojiUsage}.\n";
+        }
+
+        // Inject competitive intelligence context
+        try {
+            $insightsService = app(ContentInsightsService::class);
+            $ciContext = $insightsService->getProposalContext($brand);
+            if (!empty($ciContext['competitor_context'])) {
+                $prompt .= "\n\n" . $ciContext['competitor_context'];
+            }
+            if (!empty($ciContext['trending_topics'])) {
+                $prompt .= "\n\n" . $ciContext['trending_topics'];
+            }
+        } catch (\Throwable $e) {
+            // CI data unavailable — proceed without it
         }
 
         $prompt .= <<<'PROMPT'

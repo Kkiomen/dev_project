@@ -7,6 +7,7 @@ use App\Enums\ApiProvider;
 use App\Models\Brand;
 use App\Models\BrandAiKey;
 use App\Models\SmAnalyticsSnapshot;
+use App\Services\Apify\ContentInsightsService;
 use App\Models\SmPerformanceScore;
 use App\Models\SmPostAnalytics;
 use App\Models\SmScheduledPost;
@@ -207,6 +208,7 @@ class SmReportGeneratorService
                     ? round((float) $postAnalytics->avg('engagement_rate'), 4)
                     : 0,
             ],
+            'competitive_benchmarks' => $this->getCompetitiveBenchmarks($brand),
         ];
     }
 
@@ -563,5 +565,15 @@ PROMPT;
                 $data['total_posts'] === 0 ? "No posts were published this period" : null,
             ]),
         ];
+    }
+
+    protected function getCompetitiveBenchmarks(Brand $brand): ?array
+    {
+        try {
+            $insightsService = app(ContentInsightsService::class);
+            return $insightsService->getReportBenchmarks($brand);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 }

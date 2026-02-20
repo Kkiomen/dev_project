@@ -10,6 +10,7 @@ enum ApiProvider: string
     case UNSPLASH = 'unsplash';
     case WAVESPEED = 'wavespeed';
     case GETLATE = 'getlate';
+    case APIFY = 'apify';
 
     public function label(): string
     {
@@ -20,6 +21,7 @@ enum ApiProvider: string
             self::UNSPLASH => 'Unsplash',
             self::WAVESPEED => 'WaveSpeed AI',
             self::GETLATE => 'GetLate',
+            self::APIFY => 'Apify',
         };
     }
 

@@ -48,6 +48,18 @@
 - **Missing class PHPDoc** on `CompositionService` and `VideoEditorService`.
 - Route: POST `/api/v1/video-projects/{publicId}/render-composition` at api.php L752
 
+## App Settings Feature (2026-02-20 review)
+- Files: `database/migrations/2026_02_20_000001_create_app_settings_table.php`, `app/Models/AppSetting.php`, `app/Http/Middleware/CheckRegistrationEnabled.php`, `app/Http/Controllers/Admin/AppSettingsController.php`, `resources/js/stores/adminSettings.js`, `resources/js/pages/AdminSettingsPage.vue`
+- **Critical Bug (AppSetting::getValue):** `Cache::remember` caches `null` when DB returns null AND default is null. The `$default` in the closure is applied before caching, so if DB row doesn't exist and no default is passed, `null` is cached and subsequent calls with different defaults still return cached `null`. `getBool()` calls `getValue($key)` with NO default, so if row doesn't exist, `null` is cached, then `getBool()` returns its `$default`. But this only matters if the DB row was deleted — seeded rows always exist. Low-risk but architecturally fragile.
+- **Critical Bug (AppSetting::getValue):** `Cache::remember` caches the RESULT of the closure, which is `static::where('key', $key)->value('value') ?? $default`. If `$default` is non-null (e.g. passed as `true`), its stringified form gets cached. But `getBool()` calls `getValue($key)` WITHOUT a default, so `$default` is `null` in the closure — the `?? $default` part returns `null` — which IS cached. This means the cache never stores the `$default` of `getBool()` — only `getBool()` handles its own default. Behavior is correct but the two-level default system is confusing.
+- **Bug (router/index.js):** `requiresAdmin` meta is set on admin routes but the `beforeEach` guard NEVER checks it — any logged-in user can navigate to `/admin/settings`. Backend is still protected, but the UI routes are not guarded.
+- **Critical (Navigation.vue L289):** "Admin" section header label is hardcoded as the string `Admin` — not translated via `t()`. Minor in practice (it's a proper noun) but violates the project's strict no-hardcode rule.
+- **API URL pattern:** Store correctly uses `/api/admin/settings` which maps through bootstrap.js interceptor to `/api/panel/admin/` for SPA — correct pattern.
+- **DRY (AppSettingsController::update L33):** After `setValue()`, re-reads from DB (via `getBool()`) to build the response. Since `setValue()` already invalidates cache and `getBool()` re-queries, this is one extra query per updated key. Could return the validated input directly since we just wrote it.
+- **Missing PHPDoc:** `AppSettingsController`, `AppSetting` model, `CheckRegistrationEnabled` — no class or method docblocks.
+- **Translation:** All `adminSettings.*` keys exist in both `en.json` and `pl.json` — fully covered.
+- **Backend translation:** `CheckRegistrationEnabled` uses `__('Registration is currently disabled.')` inline — not in any `lang/en/` or `lang/pl/` PHP file. Works because Laravel falls back to the string itself as the key, but it should be in `lang/en/auth.php` or `lang/en/app.php`.
+
 ## NLE Remove Silence Feature (2026-02-18 review)
 - **Critical Issue:** Missing translation keys: `nle.timeline.removeSilence`, `nle.timeline.detectingSilence`, `nle.timeline.noSilenceDetected` — MUST be added to all locale files before deployment
 - **Major Issues:**
@@ -60,3 +72,12 @@
   - PHPDoc incomplete on controller methods
 - **Implementation Quality:** Algorithm is fundamentally sound, grouping by source and computing timeline positions correctly. Needs refinement for edge cases and better error communication.
 - Routes: POST `/api/v1/video-projects/{publicId}/detect-silence` and `{publicId}/remove-silence` defined in api.php line 745-746
+
+## Auto-Discover Competitors Feature (2026-02-20 review)
+- Files: `app/Services/Apify/CompetitorAnalysisService.php` (new methods), `app/Http/Controllers/Api/V1/CiCompetitorController.php` (new action), `routes/api.php` (POST `/discover-competitors` at L738), `resources/js/stores/competitiveIntelligence.js` (new state/action), `resources/js/components/ci/DiscoverCompetitorsModal.vue` (new), `resources/js/components/ci/CompetitorList.vue` (modified), `resources/js/components/ci/CiDashboard.vue` (modified)
+- **Code Quality: EXCELLENT** — All SOLID principles followed, translations complete in en/pl, responsive design, error handling proper
+- **Best Practices:** Service uses correct AI key pattern, controller properly guards with `authorize('update')`, store actions correct, Vue components use Composition API properly, all text translated via `t()`
+- **Architecture:** Follows existing patterns — strategy in service, error code handling, modal component reuse, toast integration
+- **Translation:** All `ci.discover.*` keys (14 keys) exist in both en.json and pl.json — fully covered
+- **Zero Critical/Major Issues:** Implementation is production-ready
+- Route: POST `/api/v1/brands/{brand}/ci/discover-competitors` with optional `platforms[]` param

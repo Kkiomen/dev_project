@@ -93,3 +93,47 @@ Schedule::command('sm:generate-plans')
     ->monthlyOn(28, '03:00')
     ->withoutOverlapping()
     ->runInBackground();
+
+/*
+|--------------------------------------------------------------------------
+| Competitive Intelligence
+|--------------------------------------------------------------------------
+|
+| Apify-based competitor tracking and trend discovery
+|
+*/
+
+// Scrape competitor profiles weekly (Sunday 03:00)
+Schedule::command('ci:scrape-competitors --type=profiles')
+    ->weeklyOn(0, '03:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Scrape competitor posts weekly (Monday 03:00)
+Schedule::command('ci:scrape-competitors --type=posts')
+    ->weeklyOn(1, '03:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Scrape trending hashtags and Google Trends (Wednesday + Saturday 04:00)
+Schedule::command('ci:scrape-trends')
+    ->weeklyOn(3, '04:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+Schedule::command('ci:scrape-trends')
+    ->weeklyOn(6, '04:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Generate insights after scrapes complete (Monday 06:00)
+Schedule::command('ci:generate-insights')
+    ->weeklyOn(1, '06:00')
+    ->withoutOverlapping()
+    ->runInBackground();
+
+// Cleanup old CI data (1st of each month at 02:00)
+Schedule::command('ci:cleanup')
+    ->monthlyOn(1, '02:00')
+    ->withoutOverlapping()
+    ->runInBackground();

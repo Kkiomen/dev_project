@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'admin' => \App\Http\Middleware\IsAdmin::class,
             'brand.selected' => \App\Http\Middleware\EnsureBrandSelected::class,
+            'registration.enabled' => \App\Http\Middleware\CheckRegistrationEnabled::class,
         ]);
         $middleware->web(append: [
             \App\Http\Middleware\SetLocale::class,

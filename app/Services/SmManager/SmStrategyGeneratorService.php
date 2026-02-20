@@ -6,6 +6,7 @@ use App\Enums\AiProvider;
 use App\Models\Brand;
 use App\Models\BrandAiKey;
 use App\Models\SmStrategy;
+use App\Services\Apify\CompetitorAnalysisService;
 use App\Services\Concerns\LogsApiUsage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -287,6 +288,17 @@ PROMPT;
 
         if (!empty($context['voice']['personality'])) {
             $prompt .= "\n- Personality: " . implode(', ', $context['voice']['personality']);
+        }
+
+        // Inject competitive landscape from CI
+        try {
+            $analysisService = app(CompetitorAnalysisService::class);
+            $competitorContext = $analysisService->buildCompetitorContextForPrompt($brand);
+            if (!empty($competitorContext)) {
+                $prompt .= "\n\nCOMPETITIVE LANDSCAPE:\n" . $competitorContext;
+            }
+        } catch (\Throwable $e) {
+            // CI data unavailable — proceed without it
         }
 
         $prompt .= "\n\nGenerate a strategy that includes content pillars, posting frequency per platform, refined target audience, goals with KPIs, content mix percentages, optimal posting times, and strategic recommendations.";

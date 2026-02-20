@@ -6,6 +6,7 @@ use App\Enums\AiProvider;
 use App\Models\Brand;
 use App\Models\BrandAiKey;
 use App\Models\SmBrandKit;
+use App\Services\Apify\TrendingContentService;
 use App\Services\Concerns\LogsApiUsage;
 use Illuminate\Support\Facades\Log;
 use OpenAI;
@@ -176,6 +177,26 @@ PROMPT;
             if (!empty($industryTags)) {
                 $prompt .= "\n\nINDUSTRY HASHTAGS (consider including relevant ones):\n" . implode(' ', $industryTags);
             }
+        }
+
+        // Inject real trending hashtags from competitive intelligence
+        try {
+            $trendingService = app(TrendingContentService::class);
+            $ciHashtags = $trendingService->getHashtagsForPrompt($brand, $platform);
+
+            if (!empty($ciHashtags['trending'])) {
+                $prompt .= "\n\nRESEARCHED TRENDING HASHTAGS (verified from competitive analysis - prioritize these):\n" . implode(' ', array_map(fn ($h) => "#{$h}", $ciHashtags['trending']));
+            }
+
+            if (!empty($ciHashtags['rising'])) {
+                $prompt .= "\n\nRISING HASHTAGS (growing fast, good for early adoption):\n" . implode(' ', array_map(fn ($h) => "#{$h}", $ciHashtags['rising']));
+            }
+
+            if (!empty($ciHashtags['niche'])) {
+                $prompt .= "\n\nNICHE HASHTAGS (lower competition, targeted):\n" . implode(' ', array_map(fn ($h) => "#{$h}", $ciHashtags['niche']));
+            }
+        } catch (\Throwable $e) {
+            // CI data unavailable — proceed without it
         }
 
         $prompt .= <<<PROMPT
