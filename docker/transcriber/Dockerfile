@@ -2,6 +2,10 @@ FROM python:3.12-slim
 
 WORKDIR /app
 
+# Fix WSL2 clock skew issues with apt
+RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid && \
+    echo 'Acquire::Check-Date "false";' >> /etc/apt/apt.conf.d/99no-check-valid
+
 # Install system dependencies for audio processing
 RUN apt-get update && apt-get install -y \
     ffmpeg \

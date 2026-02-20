@@ -37,7 +37,7 @@ class CompositionService
                         'rotation' => 0,
                         'opacity' => 1.0,
                         'fit' => 'cover',
-                        'volume' => 1.0,
+                        'volume' => 0,
                         'fade_in' => 0,
                         'fade_out' => 0,
                         'effects' => [],
@@ -181,6 +181,148 @@ class CompositionService
         }
 
         return true;
+    }
+
+    public function compositionToEdl(array $composition): array
+    {
+        $clips = [];
+
+        foreach ($composition['tracks'] ?? [] as $track) {
+            if ($track['type'] !== 'video') {
+                continue;
+            }
+
+            foreach ($track['elements'] ?? [] as $element) {
+                if ($element['type'] !== 'video') {
+                    continue;
+                }
+
+                $clips[] = [
+                    'time' => $element['time'] ?? 0,
+                    'start' => $element['trim_start'] ?? 0,
+                    'end' => ($element['trim_start'] ?? 0) + ($element['duration'] ?? 0),
+                    'trimStart' => 0,
+                    'trimEnd' => 0,
+                ];
+            }
+        }
+
+        usort($clips, fn($a, $b) => $a['time'] <=> $b['time']);
+
+        // Remove the timeline position key — EDL only needs start/end
+        $edlClips = array_map(fn($clip) => [
+            'start' => $clip['start'],
+            'end' => $clip['end'],
+            'trimStart' => $clip['trimStart'],
+            'trimEnd' => $clip['trimEnd'],
+        ], $clips);
+
+        return [
+            'tracks' => [
+                [
+                    'type' => 'video',
+                    'clips' => array_values($edlClips),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * Build a render plan from composition: multi-layer with positions matching the NLE player.
+     *
+     * Layers are ordered bottom-to-top (matching the player's draw order:
+     * track[last] drawn first = behind, track[0] drawn last = on top).
+     *
+     * @return array{layers: array, audio: array, media_sources: array, width: int, height: int, fps: int, total_duration: float}
+     */
+    public function buildRenderPlan(array $composition): array
+    {
+        $width = $composition['width'] ?? 1080;
+        $height = $composition['height'] ?? 1920;
+        $fps = $composition['fps'] ?? 30;
+        $totalDuration = $this->calculateDuration($composition);
+
+        $layers = [];
+        $audioElements = [];
+        $mediaSources = [];
+
+        $tracks = $composition['tracks'] ?? [];
+
+        // Player draws tracks in reverse: track[last] first (behind), track[0] last (on top).
+        for ($i = count($tracks) - 1; $i >= 0; $i--) {
+            $track = $tracks[$i];
+            if (!($track['visible'] ?? true)) {
+                continue;
+            }
+
+            foreach ($track['elements'] ?? [] as $element) {
+                $elType = $element['type'] ?? '';
+                $source = $element['source'] ?? null;
+
+                if (in_array($elType, ['video', 'image'])) {
+                    $centerX = $this->resolvePosition($element['x'] ?? '50%', $width);
+                    $centerY = $this->resolvePosition($element['y'] ?? '50%', $height);
+                    $targetW = $this->resolveSize($element['width'] ?? '100%', $width);
+                    $targetH = $this->resolveSize($element['height'] ?? '100%', $height);
+
+                    $layers[] = [
+                        'type' => $elType,
+                        'source' => $source,
+                        'time' => round((float) ($element['time'] ?? 0), 4),
+                        'duration' => round((float) ($element['duration'] ?? 0), 4),
+                        'trim_start' => round((float) ($element['trim_start'] ?? 0), 4),
+                        'x' => (int) round($centerX - $targetW / 2),
+                        'y' => (int) round($centerY - $targetH / 2),
+                        'width' => max(2, (int) round($targetW)),
+                        'height' => max(2, (int) round($targetH)),
+                        'opacity' => (float) ($element['opacity'] ?? 1.0),
+                        'fit' => $element['fit'] ?? 'cover',
+                    ];
+
+                    if ($source && !in_array($source, $mediaSources)) {
+                        $mediaSources[] = $source;
+                    }
+                } elseif ($elType === 'audio' && ($track['type'] ?? '') === 'audio') {
+                    if (!($track['muted'] ?? false)) {
+                        $audioElements[] = [
+                            'source' => $source,
+                            'time' => round((float) ($element['time'] ?? 0), 4),
+                            'duration' => round((float) ($element['duration'] ?? 0), 4),
+                            'trim_start' => round((float) ($element['trim_start'] ?? 0), 4),
+                            'volume' => (float) ($element['volume'] ?? 1.0),
+                        ];
+                    }
+                }
+            }
+        }
+
+        return [
+            'layers' => $layers,
+            'audio' => $audioElements,
+            'media_sources' => $mediaSources,
+            'width' => $width,
+            'height' => $height,
+            'fps' => $fps,
+            'total_duration' => round($totalDuration, 4),
+        ];
+    }
+
+    protected function resolvePosition($value, int $total): float
+    {
+        if (is_string($value) && str_ends_with($value, '%')) {
+            return (floatval($value) / 100) * $total;
+        }
+
+        return floatval($value);
+    }
+
+    protected function resolveSize($value, int $total): float
+    {
+        if (is_string($value) && str_ends_with($value, '%')) {
+            return (floatval($value) / 100) * $total;
+        }
+
+        return floatval($value) ?: $total;
     }
 
     public function calculateDuration(array $composition): float

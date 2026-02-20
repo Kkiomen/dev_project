@@ -25,6 +25,8 @@ export const useVideoEditorStore = defineStore('videoEditorNew', {
         thumbnailCache: {},
         uploadedMedia: [], // additional media items uploaded by user
 
+        rendering: false,
+
         loading: false,
         saving: false,
         error: null,
@@ -476,6 +478,59 @@ export const useVideoEditorStore = defineStore('videoEditorNew', {
             );
         },
 
+        selectTrackElements(trackId) {
+            if (!this.composition?.tracks) return;
+            const track = this.composition.tracks.find(t => t.id === trackId);
+            if (!track) return;
+            this.selectedElementIds = track.elements.map(e => e.id);
+            this.selectedTrackId = trackId;
+        },
+
+        selectElementRange(elementId) {
+            if (!this.composition?.tracks) return;
+            const lastId = this.selectedElementIds[this.selectedElementIds.length - 1];
+            if (!lastId) {
+                this.selectElement(elementId);
+                return;
+            }
+
+            // Find both elements — they must be on the same track
+            let anchorTrack = null;
+            let anchorIdx = -1;
+            let targetIdx = -1;
+
+            for (const track of this.composition.tracks) {
+                const aIdx = track.elements.findIndex(e => e.id === lastId);
+                const tIdx = track.elements.findIndex(e => e.id === elementId);
+                if (aIdx !== -1 && tIdx !== -1) {
+                    anchorTrack = track;
+                    anchorIdx = aIdx;
+                    targetIdx = tIdx;
+                    break;
+                }
+            }
+
+            if (!anchorTrack) {
+                // Different tracks — just add to selection
+                if (!this.selectedElementIds.includes(elementId)) {
+                    this.selectedElementIds.push(elementId);
+                }
+                return;
+            }
+
+            // Select range between anchor and target (by timeline position)
+            const sorted = [...anchorTrack.elements].sort((a, b) => a.time - b.time);
+            const aPos = sorted.findIndex(e => e.id === lastId);
+            const tPos = sorted.findIndex(e => e.id === elementId);
+            const from = Math.min(aPos, tPos);
+            const to = Math.max(aPos, tPos);
+
+            const rangeIds = sorted.slice(from, to + 1).map(e => e.id);
+            const merged = new Set([...this.selectedElementIds, ...rangeIds]);
+            this.selectedElementIds = [...merged];
+            this.selectedTrackId = anchorTrack.id;
+        },
+
         selectTrack(trackId) {
             this.selectedTrackId = trackId;
             this.selectedElementIds = [];
@@ -566,6 +621,164 @@ export const useVideoEditorStore = defineStore('videoEditorNew', {
             }
         },
 
+        // === Silence Removal ===
+
+        async detectSilence(options = {}) {
+            if (!this.projectId) return null;
+            try {
+                const { data } = await axios.post(
+                    `/api/v1/video-projects/${this.projectId}/detect-silence`,
+                    options
+                );
+                return data;
+            } catch (err) {
+                this.error = err.response?.data?.message || err.message;
+                return null;
+            }
+        },
+
+        applySilenceRemoval(speechRegions, padding = 0.3) {
+            if (!this.composition?.tracks || !speechRegions?.length) return 0;
+
+            // Expand speech regions by padding and merge overlapping ones
+            const padded = speechRegions
+                .map((sr) => ({
+                    start: Math.max(0, sr.start - padding),
+                    end: sr.end + padding,
+                }))
+                .sort((a, b) => a.start - b.start);
+
+            const merged = [padded[0]];
+            for (let i = 1; i < padded.length; i++) {
+                const last = merged[merged.length - 1];
+                if (padded[i].start <= last.end) {
+                    last.end = Math.max(last.end, padded[i].end);
+                } else {
+                    merged.push({ ...padded[i] });
+                }
+            }
+
+            let changed = false;
+
+            // Group elements by source URI to handle video+audio pairs together
+            const sourceGroups = new Map();
+            for (const track of this.composition.tracks) {
+                for (const el of track.elements) {
+                    if (!el.source) continue;
+                    if (!sourceGroups.has(el.source)) {
+                        sourceGroups.set(el.source, []);
+                    }
+                    sourceGroups.get(el.source).push({ element: el, track });
+                }
+            }
+
+            for (const [, entries] of sourceGroups) {
+                const firstEl = entries[0].element;
+                const mediaStart = firstEl.trim_start || 0;
+                const mediaEnd = mediaStart + firstEl.duration;
+
+                // Find speech regions overlapping this element's media range
+                const overlapping = merged
+                    .map((sr) => ({
+                        start: Math.max(mediaStart, sr.start),
+                        end: Math.min(mediaEnd, sr.end),
+                    }))
+                    .filter((sr) => sr.end > sr.start);
+
+                if (overlapping.length === 0) continue;
+
+                // If speech covers the entire element, nothing to remove
+                const totalSpeech = overlapping.reduce((sum, sr) => sum + (sr.end - sr.start), 0);
+                if (Math.abs(totalSpeech - firstEl.duration) < 0.01) continue;
+
+                // Compute timeline positions (closing gaps between speech segments)
+                let accTime = firstEl.time;
+                const segments = overlapping.map((sr) => {
+                    const seg = {
+                        trim_start: sr.start,
+                        duration: sr.end - sr.start,
+                        time: accTime,
+                    };
+                    accTime += seg.duration;
+                    return seg;
+                });
+
+                // Replace original elements with split segments in each paired track
+                for (const { element, track } of entries) {
+                    const idx = track.elements.findIndex((e) => e.id === element.id);
+                    if (idx === -1) continue;
+
+                    const newElements = segments.map((seg) => ({
+                        ...JSON.parse(JSON.stringify(element)),
+                        id: generateId('el'),
+                        time: seg.time,
+                        duration: seg.duration,
+                        trim_start: seg.trim_start,
+                    }));
+
+                    track.elements.splice(idx, 1, ...newElements);
+                }
+
+                changed = true;
+            }
+
+            if (changed) {
+                this.selectedElementIds = [];
+                this.markDirty();
+            }
+
+            return changed ? 1 : 0;
+        },
+
+        // === Rendering ===
+
+        async renderComposition() {
+            if (!this.projectId || this.rendering) return;
+
+            // Save first if dirty
+            if (this.isDirty) {
+                await this.saveComposition();
+            }
+
+            this.rendering = true;
+            try {
+                const { data } = await axios.post(
+                    `/api/v1/video-projects/${this.projectId}/render-composition`
+                );
+                this.project = data.project;
+                this.pollRenderStatus();
+            } catch (err) {
+                this.error = err.response?.data?.message || err.message;
+                this.rendering = false;
+            }
+        },
+
+        async pollRenderStatus() {
+            const poll = async () => {
+                try {
+                    const { data } = await axios.get(
+                        `/api/v1/video-projects/${this.projectId}`
+                    );
+                    this.project = data.data;
+
+                    if (data.data.is_processing) {
+                        setTimeout(poll, 3000);
+                    } else {
+                        this.rendering = false;
+                    }
+                } catch {
+                    this.rendering = false;
+                }
+            };
+            setTimeout(poll, 3000);
+        },
+
+        downloadOutput() {
+            if (this.project?.output_url) {
+                window.open(this.project.output_url, '_blank');
+            }
+        },
+
         // === Internal helpers ===
 
         _findElement(elementId) {
@@ -589,6 +802,7 @@ export const useVideoEditorStore = defineStore('videoEditorNew', {
             this.selectedTrackId = null;
             this.isPlaying = false;
             this.isDirty = false;
+            this.rendering = false;
             this.inspectorTab = 'properties';
             this.snapEnabled = true;
             this.masterVolume = 1.0;

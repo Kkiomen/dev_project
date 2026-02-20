@@ -194,6 +194,7 @@ def add_captions():
             "ffmpeg", "-y", "-i", tmp_input.name,
             "-vf", f"ass={tmp_ass.name}",
             "-c:v", "libx264", "-preset", "medium", "-crf", "23",
+            "-pix_fmt", "yuv420p",
             "-c:a", "copy",
             "-movflags", "+faststart",
             tmp_output.name,
@@ -267,6 +268,7 @@ def remove_silence():
                 "ffmpeg", "-y", "-i", tmp_input.name,
                 "-ss", str(start), "-to", str(end),
                 "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+                "-pix_fmt", "yuv420p",
                 "-c:a", "aac",
                 seg_file,
             ]
@@ -280,6 +282,7 @@ def remove_silence():
             "ffmpeg", "-y", "-f", "concat", "-safe", "0",
             "-i", tmp_list.name,
             "-c:v", "libx264", "-preset", "medium", "-crf", "23",
+            "-pix_fmt", "yuv420p",
             "-c:a", "aac",
             "-movflags", "+faststart",
             tmp_output.name,
@@ -754,6 +757,345 @@ def generate_thumbnails():
         shutil.rmtree(thumb_dir, ignore_errors=True)
 
 
+@app.route("/render-composition", methods=["POST"])
+def render_composition():
+    """
+    Render a full composition with layered video clips, images, and audio.
+
+    Uses segment-based compositing: splits timeline at layer boundaries,
+    composites each segment independently (all inputs start at PTS=0),
+    then concatenates. This avoids FFmpeg PTS sync issues.
+
+    Accepts:
+        - multipart/form-data with 'video' field (main source video)
+        - Optional 'image_0', 'image_1', ... fields (overlay images)
+        - JSON 'render_plan' field with:
+            {
+                "layers": [
+                    {"type": "video", "source": "video", "time": 0, "duration": 10,
+                     "trim_start": 0, "x": 0, "y": 0, "width": 1080, "height": 1920,
+                     "opacity": 1.0, "fit": "cover"},
+                    {"type": "image", "source": "image_0", "time": 3, "duration": 4,
+                     "x": 800, "y": 50, "width": 200, "height": 200,
+                     "opacity": 0.9, "fit": "contain"}
+                ],
+                "audio": [{"source": "video", "time": 0, "duration": 17.5, "trim_start": 0}],
+                "width": 1080, "height": 1920, "fps": 30, "total_duration": 17.5
+            }
+
+    Returns:
+        Rendered video file (MP4).
+    """
+    if "video" not in request.files:
+        return jsonify({"error": "No video file provided"}), 400
+
+    render_plan_raw = request.form.get("render_plan")
+    if not render_plan_raw:
+        return jsonify({"error": "No render_plan data provided"}), 400
+
+    try:
+        render_plan = json.loads(render_plan_raw)
+    except json.JSONDecodeError:
+        return jsonify({"error": "Invalid render_plan JSON"}), 400
+
+    layers = render_plan.get("layers", [])
+    audio_segments = render_plan.get("audio", [])
+    comp_width = render_plan.get("width", 1080)
+    comp_height = render_plan.get("height", 1920)
+    comp_fps = render_plan.get("fps", 30)
+    total_duration = render_plan.get("total_duration", 0)
+
+    if not layers and not audio_segments:
+        return jsonify({"error": "No layers in render plan"}), 400
+
+    # Save uploaded files
+    video_file = request.files["video"]
+    suffix = os.path.splitext(video_file.filename)[1] or ".mp4"
+    tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=suffix, dir=TEMP_DIR)
+    video_file.save(tmp_video.name)
+    tmp_video.close()
+
+    image_files = {}
+    for key in request.files:
+        if key.startswith("image_"):
+            img = request.files[key]
+            img_suffix = os.path.splitext(img.filename)[1] or ".png"
+            tmp_img = tempfile.NamedTemporaryFile(delete=False, suffix=img_suffix, dir=TEMP_DIR)
+            img.save(tmp_img.name)
+            tmp_img.close()
+            image_files[key] = tmp_img.name
+
+    tmp_output = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4", dir=TEMP_DIR)
+    tmp_output.close()
+    all_temp = [tmp_video.name, tmp_output.name]
+
+    try:
+        pid = os.getpid()
+
+        # 1. Collect time boundaries from all layers
+        boundaries = sorted(set(
+            [0.0, total_duration] +
+            [l["time"] for l in layers] +
+            [l["time"] + l["duration"] for l in layers]
+        ))
+
+        # 2. Render each timeline segment by compositing active layers
+        seg_files = []
+        for seg_idx in range(len(boundaries) - 1):
+            seg_start = boundaries[seg_idx]
+            seg_end = boundaries[seg_idx + 1]
+            seg_dur = seg_end - seg_start
+            if seg_dur <= 0.001:
+                continue
+
+            active = [l for l in layers
+                      if l["time"] <= seg_start + 0.001
+                      and l["time"] + l["duration"] >= seg_end - 0.001]
+
+            seg_file = os.path.join(TEMP_DIR, f"cseg_{pid}_{seg_idx}.mp4")
+            seg_files.append(seg_file)
+            all_temp.append(seg_file)
+
+            if not active:
+                _make_black_segment(seg_file, comp_width, comp_height, seg_dur, comp_fps)
+            else:
+                _composite_segment(
+                    seg_file, seg_start, seg_dur, active,
+                    tmp_video.name, image_files,
+                    comp_width, comp_height, comp_fps,
+                )
+
+        if not seg_files:
+            return jsonify({"error": "No segments generated"}), 400
+
+        # 3. Concat all segments
+        tmp_concat = tempfile.NamedTemporaryFile(delete=False, suffix=".txt", dir=TEMP_DIR, mode="w")
+        all_temp.append(tmp_concat.name)
+        for sf in seg_files:
+            tmp_concat.write(f"file '{sf}'\n")
+        tmp_concat.close()
+
+        tmp_video_only = os.path.join(TEMP_DIR, f"cconcat_{pid}.mp4")
+        all_temp.append(tmp_video_only)
+
+        if len(seg_files) == 1:
+            shutil.copy2(seg_files[0], tmp_video_only)
+        else:
+            cmd = [
+                "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                "-i", tmp_concat.name,
+                "-c:v", "libx264", "-preset", "medium", "-crf", "23",
+                "-pix_fmt", "yuv420p",
+                tmp_video_only,
+            ]
+            _run_ffmpeg(cmd)
+
+        # 4. Add audio — cut each audio segment, concat, merge with video
+        if audio_segments:
+            audio_seg_files = []
+            audio_concat = tempfile.NamedTemporaryFile(
+                delete=False, suffix=".txt", dir=TEMP_DIR, mode="w"
+            )
+            all_temp.append(audio_concat.name)
+
+            for ai, a in enumerate(audio_segments):
+                a_trim = a.get("trim_start", 0)
+                a_dur = a.get("duration", 0)
+                if a_dur <= 0:
+                    continue
+
+                aseg = os.path.join(TEMP_DIR, f"caseg_{pid}_{ai}.aac")
+                audio_seg_files.append(aseg)
+                all_temp.append(aseg)
+
+                cmd = [
+                    "ffmpeg", "-y", "-i", tmp_video.name,
+                    "-ss", str(a_trim), "-t", str(a_dur),
+                    "-vn", "-acodec", "aac", "-b:a", "192k",
+                    aseg,
+                ]
+                _run_ffmpeg(cmd)
+                audio_concat.write(f"file '{aseg}'\n")
+
+            audio_concat.close()
+
+            tmp_audio = os.path.join(TEMP_DIR, f"caudio_{pid}.aac")
+            all_temp.append(tmp_audio)
+
+            if len(audio_seg_files) == 1:
+                shutil.copy2(audio_seg_files[0], tmp_audio)
+            elif audio_seg_files:
+                cmd = [
+                    "ffmpeg", "-y", "-f", "concat", "-safe", "0",
+                    "-i", audio_concat.name,
+                    "-acodec", "aac", "-b:a", "192k",
+                    tmp_audio,
+                ]
+                _run_ffmpeg(cmd)
+
+            if audio_seg_files:
+                cmd = [
+                    "ffmpeg", "-y",
+                    "-i", tmp_video_only, "-i", tmp_audio,
+                    "-c:v", "copy", "-c:a", "aac",
+                    "-movflags", "+faststart",
+                    tmp_output.name,
+                ]
+                _run_ffmpeg(cmd)
+            else:
+                shutil.copy2(tmp_video_only, tmp_output.name)
+        else:
+            cmd = [
+                "ffmpeg", "-y", "-i", tmp_video_only,
+                "-c:v", "copy", "-movflags", "+faststart",
+                tmp_output.name,
+            ]
+            _run_ffmpeg(cmd)
+
+        logger.info(f"[RENDER] Composition rendered: {len(layers)} layers, {len(seg_files)} segments")
+
+        return send_file(
+            tmp_output.name,
+            mimetype="video/mp4",
+            as_attachment=True,
+            download_name="composition_render.mp4",
+        )
+    except subprocess.CalledProcessError as e:
+        logger.error(f"[RENDER] FFmpeg error: {e.stderr}")
+        return jsonify({"error": "Composition render failed", "details": e.stderr}), 500
+    except Exception as e:
+        logger.error(f"[RENDER] Error: {e}")
+        return jsonify({"error": str(e)}), 500
+    finally:
+        _cleanup(*all_temp, *image_files.values())
+
+
+def _make_black_segment(output_path, width, height, duration, fps):
+    """Generate a black video segment."""
+    cmd = [
+        "ffmpeg", "-y",
+        "-f", "lavfi", "-i", f"color=black:s={width}x{height}:d={duration}:r={fps}",
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+        "-pix_fmt", "yuv420p",
+        output_path,
+    ]
+    _run_ffmpeg(cmd)
+
+
+def _composite_segment(output_path, seg_start, seg_dur, active_layers,
+                       video_path, image_files, comp_w, comp_h, fps):
+    """
+    Composite multiple layers for a single timeline segment.
+
+    All inputs start at PTS=0, run for seg_dur seconds. This avoids
+    FFmpeg timing/sync issues since every stream is time-aligned.
+
+    Uses a complex filtergraph:
+      [base] -> overlay [layer0] -> overlay [layer1] -> ... -> output
+    """
+    inputs = []
+    filter_parts = []
+    input_idx = 0
+
+    # Input 0: black base canvas
+    inputs.extend([
+        "-f", "lavfi", "-i",
+        f"color=black:s={comp_w}x{comp_h}:d={seg_dur}:r={fps}",
+    ])
+    input_idx += 1
+
+    # Collect layer inputs and build per-layer filter chains
+    layer_labels = []
+    for i, layer in enumerate(active_layers):
+        lt = layer["type"]
+        lw = _even(layer.get("width", comp_w))
+        lh = _even(layer.get("height", comp_h))
+        opacity = layer.get("opacity", 1.0)
+        fit = layer.get("fit", "cover")
+
+        # Offset: how far into this layer the segment starts
+        offset_in_layer = seg_start - layer["time"]
+        trim_start = layer.get("trim_start", 0) + offset_in_layer
+
+        label = f"L{i}"
+
+        if lt == "video":
+            inputs.extend([
+                "-ss", str(trim_start), "-t", str(seg_dur),
+                "-i", video_path,
+            ])
+            scale = _build_scale_filter(lw, lh, fit)
+            chain = f"[{input_idx}:v]{scale},format=yuva420p"
+            if opacity < 0.99:
+                chain += f",colorchannelmixer=aa={opacity}"
+            chain += f"[{label}]"
+            filter_parts.append(chain)
+            input_idx += 1
+
+        elif lt == "image":
+            source_key = layer.get("source", "")
+            img_path = image_files.get(source_key)
+            if not img_path:
+                logger.warning(f"[RENDER] Missing image: {source_key}")
+                continue
+
+            inputs.extend(["-loop", "1", "-t", str(seg_dur), "-i", img_path])
+            scale = _build_scale_filter(lw, lh, fit)
+            chain = f"[{input_idx}:v]{scale},format=yuva420p"
+            if opacity < 0.99:
+                chain += f",colorchannelmixer=aa={opacity}"
+            chain += f"[{label}]"
+            filter_parts.append(chain)
+            input_idx += 1
+        else:
+            continue
+
+        layer_labels.append((label, layer))
+
+    if not layer_labels:
+        _make_black_segment(output_path, comp_w, comp_h, seg_dur, fps)
+        return
+
+    # Build overlay chain: base -> overlay L0 -> overlay L1 -> ...
+    prev = "0:v"
+    for idx, (label, layer) in enumerate(layer_labels):
+        lx = int(layer.get("x", 0))
+        ly = int(layer.get("y", 0))
+        out = f"out{idx}" if idx < len(layer_labels) - 1 else "vout"
+        filter_parts.append(
+            f"[{prev}][{label}]overlay={lx}:{ly}:eof_action=pass:format=auto[{out}]"
+        )
+        prev = out
+
+    filtergraph = ";".join(filter_parts)
+
+    cmd = ["ffmpeg", "-y"] + inputs + [
+        "-filter_complex", filtergraph,
+        "-map", f"[{prev}]",
+        "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+        "-pix_fmt", "yuv420p", "-an",
+        output_path,
+    ]
+    _run_ffmpeg(cmd)
+
+
+def _build_scale_filter(width, height, fit):
+    """Build FFmpeg scale+crop/pad filter string for a given fit mode."""
+    if fit == "cover":
+        return (
+            f"scale={width}:{height}:force_original_aspect_ratio=increase,"
+            f"crop={width}:{height}"
+        )
+    # contain: scale down, no padding (transparent background via yuva420p)
+    return f"scale={width}:{height}:force_original_aspect_ratio=decrease"
+
+
+def _even(n):
+    """Ensure a dimension is even (required by libx264)."""
+    n = max(2, int(n))
+    return n + (n % 2)
+
+
 @app.route("/export-timeline", methods=["POST"])
 def export_timeline():
     """
@@ -824,6 +1166,7 @@ def export_timeline():
                 "ffmpeg", "-y", "-i", tmp_input.name,
                 "-ss", str(start), "-to", str(end),
                 "-c:v", "libx264", "-preset", "ultrafast", "-crf", "18",
+                "-pix_fmt", "yuv420p",
                 "-c:a", "aac",
                 seg_file,
             ]
@@ -840,6 +1183,7 @@ def export_timeline():
             "ffmpeg", "-y", "-f", "concat", "-safe", "0",
             "-i", tmp_list.name,
             "-c:v", "libx264", "-preset", "medium", "-crf", "23",
+            "-pix_fmt", "yuv420p",
             "-c:a", "aac",
             "-movflags", "+faststart",
             tmp_output.name,

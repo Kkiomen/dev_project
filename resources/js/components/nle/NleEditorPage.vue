@@ -146,14 +146,23 @@ function handleKeyDown(event) {
             history.captureState();
             store.duplicateElement(store.selectedElementId);
         }
+    } else if (event.key === 'ArrowLeft' && store.selectedElementIds.length) {
+        event.preventDefault();
+        history.captureState();
+        const amount = event.shiftKey ? 1.0 : 0.1;
+        store.moveElements([...store.selectedElementIds], -amount);
+    } else if (event.key === 'ArrowRight' && store.selectedElementIds.length) {
+        event.preventDefault();
+        history.captureState();
+        const amount = event.shiftKey ? 1.0 : 0.1;
+        store.moveElements([...store.selectedElementIds], amount);
     } else if (event.key === 'Escape') {
         store.clearSelection();
     }
 }
 
 function handleRender() {
-    // Will be expanded in Phase 2
-    autoSave.saveNow();
+    store.renderComposition();
 }
 
 async function handleUpload(files) {

@@ -35,3 +35,28 @@
 ## Patterns
 - Clip components (VideoClip, AudioWaveform, CaptionClip) handle drag/trim interaction inline via pointer events, emitting `move`/`trim` events up to TimelineContainer, which re-emits to VideoManagerEditorPage, which calls store actions — clean unidirectional data flow
 - History: `useEditorHistory` uses command pattern; keyboard Ctrl+Z/Shift+Ctrl+Z handled in composable; Space/Delete/S/Arrows handled in page — no conflict
+
+## Full Composition Render Feature (2026-02-18 review)
+- Files: `docker/video-editor/server.py` (new `/render-composition`), `app/Services/CompositionService.php` (`buildRenderPlan`, `buildVisualSegments`, `mergeAdjacentSegments`), `app/Services/VideoEditorService.php` (`renderComposition`), `app/Jobs/ExportTimelineJob.php` (dual-mode), `app/Http/Controllers/Api/V1/VideoProjectController.php` (`renderComposition`, `resolveMediaSources`)
+- **Critical Bug (server.py L879):** Double-render logic error — when image source is missing, `seg["type"]` is mutated to `"black"` (L866), but then the fallback `if` at L879 checks the original `seg_type` variable (captured before the branch), so it evaluates `seg_type == "image" and not image_files.get(...)` which IS TRUE — both the mutation-to-black AND the fallback fire, but the fallback actually renders correctly. However the seg_file is written twice to concat list. Actually wait: the `seg_file` write to list is at L890 after both. The real issue: the fallback check at L879 is redundant and confusing — black segments ARE caught by `seg_type == "black"` initially but only if type was originally "black". If type was "image" with missing source, `seg_type` still == "image" at L879, so the condition `seg_type == "image" and not image_files.get(...)` correctly catches it. So functionally it works but there's dead code: `seg["type"] = "black"` mutation at L866 is never read again.
+- **Bug (server.py L879):** `seg_file` appended to `segment_files` BEFORE the `continue` branch at L843-844 — if `seg_duration <= 0` we skip rendering but still append the seg_file path, so the cleanup will try to unlink a non-existent file (harmless due to `_cleanup` ignoring errors) and the path is never written to concat list (because L890 checks `os.path.exists(seg_file)`). So functionally safe but wastes list space.
+- **Bug (ExportTimelineJob):** `$this->project->video_path` is used without null check — if project has no video_path, the VideoEditorService throws "Video file not found" which is caught and sets status to Failed. Acceptable but could be cleaner.
+- **Security (controller resolveMediaSources):** `str_replace('media://', '', $source)` can produce paths like `../../../etc/passwd` if a user crafts a `media://` URI with traversal. The Storage::exists() call goes through Laravel's filesystem which is rooted to storage root, so traversal is blocked. But there is NO ownership check — any authenticated user could reference another user's file if they know the path. Missing: verify that `$storagePath` starts with `video-projects/{$project->user_id}/`.
+- **SOLID (ExportTimelineJob):** Dual-mode flag (`$renderPlan !== null`) violates SRP — the job has two different responsibilities. Should be two separate job classes: `ExportTimelineJob` and `RenderCompositionJob`.
+- **Controller:** `renderComposition` action is not guarded by `canExport()` / `canEdit()` — only checks `isProcessing()`. A project in `Pending` or `Transcribing` state with a manually-set composition could be rendered. Recommend adding a state guard.
+- **CompositionService `buildRenderPlan`:** No PHPDoc on `buildVisualSegments` or `mergeAdjacentSegments` despite being non-trivial protected methods.
+- **Missing class PHPDoc** on `CompositionService` and `VideoEditorService`.
+- Route: POST `/api/v1/video-projects/{publicId}/render-composition` at api.php L752
+
+## NLE Remove Silence Feature (2026-02-18 review)
+- **Critical Issue:** Missing translation keys: `nle.timeline.removeSilence`, `nle.timeline.detectingSilence`, `nle.timeline.noSilenceDetected` — MUST be added to all locale files before deployment
+- **Major Issues:**
+  - `applySilenceRemoval()` algorithm returns 0/1 but semantics unclear (no composition vs. no applicable speech)
+  - Error handling in `detectSilence()` returns null without distinguishing error types
+  - Floating-point tolerance (0.01s) hardcoded without explanation
+- **Minor Issues:**
+  - Uses `JSON.parse(JSON.stringify())` for cloning (inefficient, should use structuredClone)
+  - Missing error state clear on success
+  - PHPDoc incomplete on controller methods
+- **Implementation Quality:** Algorithm is fundamentally sound, grouping by source and computing timeline positions correctly. Needs refinement for edge cases and better error communication.
+- Routes: POST `/api/v1/video-projects/{publicId}/detect-silence` and `{publicId}/remove-silence` defined in api.php line 745-746

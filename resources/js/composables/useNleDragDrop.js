@@ -14,6 +14,7 @@ export function useNleDragDrop() {
     const dragStartX = ref(0);
     const dragStartTime = ref(0);
     const dragStartTimes = ref(new Map()); // id -> startTime for group move
+    const dragSourceTrackId = ref(null); // track where drag started
 
     function startElementDrag(event, elementId, type = 'move') {
         history.captureState();
@@ -26,6 +27,12 @@ export function useNleDragDrop() {
         if (el) {
             dragStartTime.value = type === 'trim-end' ? el.time + el.duration : el.time;
         }
+
+        // Remember source track for cross-track moves
+        const srcTrack = store.composition?.tracks.find(t =>
+            t.elements.some(e => e.id === elementId)
+        );
+        dragSourceTrackId.value = srcTrack?.id || null;
 
         // Capture start times for all selected elements (group move)
         dragStartTimes.value = new Map();
@@ -43,6 +50,7 @@ export function useNleDragDrop() {
             isDragging.value = false;
             dragType.value = null;
             dragElementId.value = null;
+            dragSourceTrackId.value = null;
             dragStartTimes.value = new Map();
             document.removeEventListener('mousemove', onMove);
             document.removeEventListener('mouseup', onUp);
@@ -52,6 +60,19 @@ export function useNleDragDrop() {
         document.addEventListener('mouseup', onUp);
     }
 
+    function isTrackCompatible(elementType, trackType) {
+        if (elementType === 'audio') return trackType === 'audio';
+        return trackType !== 'audio';
+    }
+
+    function getTrackIdAtPoint(x, y) {
+        const els = document.elementsFromPoint(x, y);
+        for (const el of els) {
+            if (el.dataset?.trackId) return el.dataset.trackId;
+        }
+        return null;
+    }
+
     function handleDragMove(event) {
         if (!isDragging.value || !dragElementId.value) return;
 
@@ -59,6 +80,17 @@ export function useNleDragDrop() {
         const deltaTime = timeline.pixelToTime(deltaX);
 
         if (dragType.value === 'move') {
+            // Detect cross-track movement via Y axis
+            const hoverTrackId = getTrackIdAtPoint(event.clientX, event.clientY);
+            if (hoverTrackId && hoverTrackId !== dragSourceTrackId.value) {
+                const el = store._findElement(dragElementId.value);
+                const targetTrack = store.composition?.tracks.find(t => t.id === hoverTrackId);
+                if (el && targetTrack && isTrackCompatible(el.type, targetTrack.type)) {
+                    store.moveElementToTrack(dragElementId.value, hoverTrackId);
+                    dragSourceTrackId.value = hoverTrackId;
+                }
+            }
+
             // Group move when multiple selected
             if (dragStartTimes.value.size > 1) {
                 for (const [id, startTime] of dragStartTimes.value) {

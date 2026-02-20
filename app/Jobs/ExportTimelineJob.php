@@ -23,12 +23,17 @@ class ExportTimelineJob implements ShouldQueue
     public function __construct(
         protected VideoProject $project,
         protected array $edl,
+        protected ?array $renderPlan = null,
+        protected array $mediaFiles = [],
     ) {}
 
     public function handle(VideoEditorService $editor): void
     {
-        Log::info('[ExportTimelineJob] Starting timeline export', [
+        $useRenderPlan = $this->renderPlan !== null;
+
+        Log::info('[ExportTimelineJob] Starting export', [
             'project_id' => $this->project->id,
+            'mode' => $useRenderPlan ? 'composition' : 'edl',
         ]);
 
         try {
@@ -36,11 +41,20 @@ class ExportTimelineJob implements ShouldQueue
 
             $outputPath = 'video-projects/' . $this->project->user_id . '/timeline_' . time() . '.mp4';
 
-            $editor->exportTimeline(
-                $this->project->video_path,
-                $this->edl,
-                $outputPath,
-            );
+            if ($useRenderPlan) {
+                $editor->renderComposition(
+                    $this->project->video_path,
+                    $this->renderPlan,
+                    $this->mediaFiles,
+                    $outputPath,
+                );
+            } else {
+                $editor->exportTimeline(
+                    $this->project->video_path,
+                    $this->edl,
+                    $outputPath,
+                );
+            }
 
             $this->project->update([
                 'output_path' => $outputPath,
@@ -48,9 +62,10 @@ class ExportTimelineJob implements ShouldQueue
                 'completed_at' => now(),
             ]);
 
-            Log::info('[ExportTimelineJob] Timeline export completed', [
+            Log::info('[ExportTimelineJob] Export completed', [
                 'project_id' => $this->project->id,
                 'output' => $outputPath,
+                'mode' => $useRenderPlan ? 'composition' : 'edl',
             ]);
         } catch (\Exception $e) {
             Log::error('[ExportTimelineJob] Failed', [

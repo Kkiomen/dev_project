@@ -4275,6 +4275,11 @@
         "toolbar": {
             "save": "Zapisz",
             "render": "Renderuj",
+            "rendering": "Renderowanie...",
+            "download": "Pobierz",
+            "renderStarted": "Renderowanie rozpoczęte",
+            "renderComplete": "Renderowanie zakończone!",
+            "renderFailed": "Renderowanie nie powiodło się",
             "undo": "Cofnij",
             "redo": "Ponów",
             "saving": "Zapisywanie...",
@@ -4294,7 +4299,14 @@
             "split": "Podziel",
             "delete": "Usuń",
             "snap": "Przyciąganie",
-            "zoom": "Powiększenie"
+            "zoom": "Powiększenie",
+            "selectAllInTrack": "Zaznacz wszystko w ścieżce",
+            "nudgeLeft": "Przesuń w lewo",
+            "nudgeRight": "Przesuń w prawo",
+            "removeSilence": "Usuń ciszę",
+            "detectingSilence": "Wykrywanie ciszy...",
+            "noSilenceDetected": "Nie wykryto ciszy",
+            "silenceRemoved": "Usunięto {count} fragmentów ciszy"
         },
         "inspector": {
             "properties": "Właściwości",

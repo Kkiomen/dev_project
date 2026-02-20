@@ -122,10 +122,20 @@
             </button>
 
             <button
-                @click="$emit('render')"
-                class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-500 rounded transition-colors"
+                v-if="store.project?.has_output && !store.rendering"
+                @click="store.downloadOutput()"
+                class="px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-500 rounded transition-colors"
             >
-                {{ t('nle.toolbar.render') }}
+                {{ t('nle.toolbar.download') }}
+            </button>
+
+            <button
+                @click="$emit('render')"
+                :disabled="store.rendering || store.project?.is_processing"
+                class="px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-500 rounded disabled:opacity-40 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+            >
+                <div v-if="store.rendering" class="w-3 h-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                {{ store.rendering ? t('nle.toolbar.rendering') : t('nle.toolbar.render') }}
             </button>
         </div>
     </div>

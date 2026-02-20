@@ -34,6 +34,9 @@ export function useNlePlayback(canvasRef) {
     // Seek guard (generation counter prevents stale seeks from rendering)
     let seekGeneration = 0;
 
+    // Transition seek guard — prevents RVFC from using stale mediaTime after a seek
+    let transitionSeekPending = false;
+
     // Last good frame cache (prevents black flash when video not ready)
     let cachedFrameCanvas = null;
     let hasCachedFrame = false;
@@ -201,13 +204,41 @@ export function useNlePlayback(canvasRef) {
         }
     }
 
+    /**
+     * Get all media elements from all tracks (not filtered by time).
+     */
+    function getAllMediaElements() {
+        if (!store.composition?.tracks) return [];
+        const elements = [];
+        for (const track of store.composition.tracks) {
+            for (const el of track.elements) {
+                if (el.type === 'video' || el.type === 'audio') {
+                    elements.push({ ...el, trackMuted: track.muted });
+                }
+            }
+        }
+        return elements;
+    }
+
     function updateAudioGains(timelineTime) {
         const activeEls = getActiveElements(timelineTime);
+        const allEls = getAllMediaElements();
 
         for (const [uri, nodes] of audioNodes) {
-            const el = activeEls.find(
+            const hasDedicatedAudio = allEls.some(
+                e => e.type === 'audio' && e.source === uri
+            );
+
+            const matchingActive = activeEls.filter(
                 e => (e.type === 'video' || e.type === 'audio') && e.source === uri
             );
+
+            let el;
+            if (hasDedicatedAudio) {
+                el = matchingActive.find(e => e.type === 'audio');
+            } else {
+                el = matchingActive.find(e => e.type === 'video');
+            }
 
             if (el && !el.trackMuted) {
                 let vol = el.volume ?? 1.0;
@@ -436,6 +467,8 @@ export function useNlePlayback(canvasRef) {
         if (videoEl) {
             startVideoPlayback(videoEl);
         } else {
+            // No video at current position — start audio-only sources and use timer
+            syncActiveAudioSources(store.playhead);
             startTimerPlayback();
         }
 
@@ -487,6 +520,28 @@ export function useNlePlayback(canvasRef) {
         }
     }
 
+    /**
+     * Ensure HTMLVideoElements for active audio-only elements keep playing.
+     * Called when no video element is active but audio elements still need
+     * their shared HTMLVideoElement to be playing for Web Audio API to work.
+     */
+    function syncActiveAudioSources(time) {
+        const active = getActiveElements(time);
+        for (const el of active) {
+            if (el.type === 'audio' && el.source) {
+                const video = getOrCreateVideoElement(el.source);
+                connectAudio(el.source);
+                const localTime = time - (el.time || 0) + (el.trim_start || 0);
+                if (Math.abs(video.currentTime - localTime) > 0.1) {
+                    video.currentTime = Math.max(0, localTime);
+                }
+                if (video.paused) {
+                    video.play().catch(() => {});
+                }
+            }
+        }
+    }
+
     function stopPlaybackEngine() {
         if (animFrameId) {
             cancelAnimationFrame(animFrameId);
@@ -501,6 +556,7 @@ export function useNlePlayback(canvasRef) {
 
         primaryElSnapshot = null;
         primaryVideo = null;
+        transitionSeekPending = false;
     }
 
     // --- RVFC sync (frame-accurate, decoded-frame callback) ---
@@ -510,6 +566,14 @@ export function useNlePlayback(canvasRef) {
 
         function onVideoFrame(now, metadata) {
             if (!store.isPlaying || !primaryVideo) return;
+
+            // Skip stale frames delivered before a pending seek completes
+            if (transitionSeekPending) {
+                if (store.isPlaying && primaryVideo) {
+                    primaryVideo.requestVideoFrameCallback(onVideoFrame);
+                }
+                return;
+            }
 
             const sourceTime = metadata.mediaTime;
             const timelineTime = sourceTime - (primaryElSnapshot.trim_start || 0) + (primaryElSnapshot.time || 0);
@@ -529,6 +593,12 @@ export function useNlePlayback(canvasRef) {
     function startRAFSync() {
         function tick() {
             if (!store.isPlaying || !primaryVideo) return;
+
+            // Skip ticks while a transition seek is in progress
+            if (transitionSeekPending) {
+                animFrameId = requestAnimationFrame(tick);
+                return;
+            }
 
             const sourceTime = primaryVideo.currentTime;
             const timelineTime = sourceTime - (primaryElSnapshot.trim_start || 0) + (primaryElSnapshot.time || 0);
@@ -552,6 +622,7 @@ export function useNlePlayback(canvasRef) {
         }
 
         let lastTs = performance.now();
+        let lastAudioSync = 0;
 
         function tick(ts) {
             if (!store.isPlaying) return;
@@ -579,6 +650,12 @@ export function useNlePlayback(canvasRef) {
             }
 
             store.playhead = newTime;
+
+            // Periodically sync audio-only sources (every ~500ms, not every frame)
+            if (ts - lastAudioSync > 500) {
+                syncActiveAudioSources(newTime);
+                lastAudioSync = ts;
+            }
             updateAudioGains(newTime);
             renderFrame(newTime);
 
@@ -632,8 +709,15 @@ export function useNlePlayback(canvasRef) {
             connectAudio(nextVideo.source);
 
             const localTime = timelineTime - (nextVideo.time || 0) + (nextVideo.trim_start || 0);
-            if (Math.abs(video.currentTime - localTime) > 0.15) {
+            if (Math.abs(video.currentTime - localTime) > 0.05) {
+                // Guard: block sync ticks until seek completes to prevent
+                // stale mediaTime from producing wrong timeline positions
+                transitionSeekPending = true;
                 video.currentTime = Math.max(0, localTime);
+                video.addEventListener('seeked', function onSeeked() {
+                    video.removeEventListener('seeked', onSeeked);
+                    transitionSeekPending = false;
+                }, { once: true });
             }
 
             if (video.paused && store.isPlaying) {
@@ -644,6 +728,11 @@ export function useNlePlayback(canvasRef) {
             if (primaryVideo) primaryVideo.pause();
             primaryElSnapshot = null;
             primaryVideo = null;
+            transitionSeekPending = false;
+
+            // Keep audio sources playing even when no video element is on screen
+            syncActiveAudioSources(timelineTime);
+
             startTimerPlayback();
         }
     }
@@ -740,6 +829,22 @@ export function useNlePlayback(canvasRef) {
         hasCachedFrame = false;
     });
 
+    function getAudioDebugInfo() {
+        const gains = {};
+        for (const [uri, nodes] of audioNodes) {
+            gains[uri] = {
+                gain: nodes.gainNode.gain.value,
+            };
+        }
+        return {
+            gains,
+            masterVolume: masterGainNode ? masterGainNode.gain.value : null,
+            audioContextState: audioCtx ? audioCtx.state : null,
+            videoElementCount: videoElements.value.size,
+            audioNodeCount: audioNodes.size,
+        };
+    }
+
     return {
         renderFrame,
         getActiveElements,
@@ -749,5 +854,10 @@ export function useNlePlayback(canvasRef) {
         calculateFit,
         canvasWidth,
         canvasHeight,
+        getAudioDebugInfo,
+        updateAudioGains,
+        ensureAudioContext,
+        connectAudio,
+        getOrCreateVideoElement,
     };
 }

@@ -54,6 +54,64 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
             </button>
+
+            <!-- Select All in Track -->
+            <button
+                @click="selectAllInTrack"
+                :disabled="!store.selectedTrackId"
+                class="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                :title="t('nle.timeline.selectAllInTrack')"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                </svg>
+            </button>
+
+            <div class="w-px h-4 bg-gray-700" />
+
+            <!-- Nudge Left -->
+            <button
+                @click="nudgeLeft"
+                :disabled="!store.selectedElementIds.length"
+                class="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                :title="t('nle.timeline.nudgeLeft')"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                </svg>
+            </button>
+
+            <!-- Nudge Right -->
+            <button
+                @click="nudgeRight"
+                :disabled="!store.selectedElementIds.length"
+                class="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-400 hover:text-white bg-gray-800 hover:bg-gray-700 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                :title="t('nle.timeline.nudgeRight')"
+            >
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+            </button>
+
+            <div class="w-px h-4 bg-gray-700" />
+
+            <!-- Remove Silence -->
+            <button
+                @click="removeSilence"
+                :disabled="detectingSilence"
+                class="flex items-center gap-1 px-2 py-1 text-[11px] text-gray-400 hover:text-yellow-400 bg-gray-800 hover:bg-gray-700 rounded transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                :title="t('nle.timeline.removeSilence')"
+            >
+                <svg v-if="!detectingSilence" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
+                </svg>
+                <svg v-else class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                {{ detectingSilence ? t('nle.timeline.detectingSilence') : t('nle.timeline.removeSilence') }}
+            </button>
         </div>
 
         <!-- Right: Zoom + Snap -->
@@ -112,16 +170,56 @@ const history = useNleHistory();
 
 const showAddTrack = ref(false);
 const addTrackRef = ref(null);
+const detectingSilence = ref(false);
 
 function addTrack(type) {
     store.addTrack(type);
     showAddTrack.value = false;
 }
 
+const NUDGE_AMOUNT = 0.1; // seconds
+
+function nudgeLeft() {
+    if (!store.selectedElementIds.length) return;
+    history.captureState();
+    store.moveElements([...store.selectedElementIds], -NUDGE_AMOUNT);
+}
+
+function nudgeRight() {
+    if (!store.selectedElementIds.length) return;
+    history.captureState();
+    store.moveElements([...store.selectedElementIds], NUDGE_AMOUNT);
+}
+
+function selectAllInTrack() {
+    if (store.selectedTrackId) {
+        store.selectTrackElements(store.selectedTrackId);
+    }
+}
+
 function deleteSelected() {
     if (!store.selectedElementIds.length) return;
     history.captureState();
     store.removeElements([...store.selectedElementIds]);
+}
+
+async function removeSilence() {
+    if (detectingSilence.value) return;
+    detectingSilence.value = true;
+    try {
+        const result = await store.detectSilence();
+        if (!result?.speech_regions?.length) {
+            store.error = t('nle.timeline.noSilenceDetected');
+            return;
+        }
+        history.captureState();
+        const changed = store.applySilenceRemoval(result.speech_regions);
+        if (!changed) {
+            store.error = t('nle.timeline.noSilenceDetected');
+        }
+    } finally {
+        detectingSilence.value = false;
+    }
 }
 
 function handleClickOutside(event) {

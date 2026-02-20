@@ -86,8 +86,19 @@ const blockColorClass = computed(() => {
 function handleMouseDown(event) {
     if (props.track.locked) return;
 
+    if (event.shiftKey) {
+        store.selectElementRange(props.element.id);
+        // Start drag immediately so user can shift+click and drag in one motion
+        dragDrop.startElementDrag(event, props.element.id, 'move');
+        return;
+    }
+
     if (event.ctrlKey || event.metaKey) {
         store.toggleElementSelection(props.element.id);
+        // Start drag if element is now in selection (not if it was just deselected)
+        if (store.selectedElementIds.includes(props.element.id)) {
+            dragDrop.startElementDrag(event, props.element.id, 'move');
+        }
         return;
     }
 

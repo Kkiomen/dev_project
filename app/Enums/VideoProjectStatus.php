@@ -43,17 +43,17 @@ enum VideoProjectStatus: string
 
     public function isProcessing(): bool
     {
-        return in_array($this, [self::Uploading, self::Transcribing, self::Editing, self::Rendering]);
+        return in_array($this, [self::Uploading, self::Transcribing, self::Rendering]);
     }
 
     public function canEdit(): bool
     {
-        return in_array($this, [self::Transcribed, self::Completed]);
+        return in_array($this, [self::Transcribed, self::Editing, self::Completed]);
     }
 
     public function canExport(): bool
     {
-        return in_array($this, [self::Transcribed, self::Completed]);
+        return in_array($this, [self::Transcribed, self::Editing, self::Completed]);
     }
 
     public static function values(): array

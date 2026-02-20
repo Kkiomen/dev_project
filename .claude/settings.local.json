@@ -1,0 +1,23 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose exec:*)",
+      "Bash(node:*)",
+      "Bash(powershell.exe -Command \"Get-ItemProperty ''HKLM:\\\\SOFTWARE\\\\Microsoft\\\\Windows\\\\CurrentVersion\\\\App Paths\\\\chrome.exe'' -ErrorAction SilentlyContinue | Select-Object -ExpandProperty ''\\(default\\)''\")",
+      "Bash(powershell.exe -Command \"docker ps\")",
+      "Bash(curl:*)",
+      "WebFetch(domain:creatomate.com)",
+      "WebSearch",
+      "Bash(git -C /d/projects/dev_project status)",
+      "Bash(git log:*)",
+      "Bash(git -C /d/projects/dev_project log --oneline)",
+      "Bash(npx vite build)",
+      "Bash(npm run build:*)",
+      "Bash(php -l:*)",
+      "Bash(python -c \"import py_compile; py_compile.compile\\(''docker/video-editor/server.py'', doraise=True\\)\")",
+      "Bash(docker compose build:*)",
+      "Bash(docker compose:*)",
+      "Bash(echo:*)"
+    ]
+  }
+}

@@ -4272,6 +4272,11 @@
         "toolbar": {
             "save": "Save",
             "render": "Render",
+            "rendering": "Rendering...",
+            "download": "Download",
+            "renderStarted": "Render started",
+            "renderComplete": "Render complete!",
+            "renderFailed": "Render failed",
             "undo": "Undo",
             "redo": "Redo",
             "saving": "Saving...",
@@ -4291,7 +4296,14 @@
             "split": "Split",
             "delete": "Delete",
             "snap": "Snap",
-            "zoom": "Zoom"
+            "zoom": "Zoom",
+            "selectAllInTrack": "Select all in track",
+            "nudgeLeft": "Nudge left",
+            "nudgeRight": "Nudge right",
+            "removeSilence": "Remove Silence",
+            "detectingSilence": "Detecting silence...",
+            "noSilenceDetected": "No silence detected",
+            "silenceRemoved": "Removed {count} silent segments"
         },
         "inspector": {
             "properties": "Properties",

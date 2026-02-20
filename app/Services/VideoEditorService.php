@@ -278,6 +278,102 @@ class VideoEditorService
     }
 
     /**
+     * Render a full composition (video + images + audio).
+     *
+     * @param string $videoPath Main source video path in storage
+     * @param array $renderPlan Render plan from CompositionService::buildRenderPlan()
+     * @param array $mediaFiles Map of source URI => storage path for image files
+     * @param string $outputPath Where to store the result in storage
+     * @return string The output path in storage
+     */
+    public function renderComposition(string $videoPath, array $renderPlan, array $mediaFiles, string $outputPath): string
+    {
+        $fullVideoPath = Storage::path($videoPath);
+
+        if (!file_exists($fullVideoPath)) {
+            throw new Exception("Video file not found: {$videoPath}");
+        }
+
+        Log::info('[VideoEditorService] Rendering composition', [
+            'video' => $videoPath,
+            'layers' => count($renderPlan['layers'] ?? []),
+            'audio' => count($renderPlan['audio'] ?? []),
+            'images' => count($mediaFiles),
+        ]);
+
+        // Map image sources to sequential keys (image_0, image_1, ...)
+        $imageKeyMap = [];
+        $imageIndex = 0;
+
+        // Rewrite layer sources to use image_N keys for images, 'video' for video
+        $rewrittenLayers = [];
+        foreach ($renderPlan['layers'] as $layer) {
+            $rewritten = $layer;
+            if ($layer['type'] === 'image' && isset($layer['source'])) {
+                $source = $layer['source'];
+                if (!isset($imageKeyMap[$source])) {
+                    $imageKeyMap[$source] = "image_{$imageIndex}";
+                    $imageIndex++;
+                }
+                $rewritten['source'] = $imageKeyMap[$source];
+            } elseif ($layer['type'] === 'video') {
+                $rewritten['source'] = 'video';
+            }
+            $rewrittenLayers[] = $rewritten;
+        }
+
+        // Rewrite audio sources
+        $rewrittenAudio = [];
+        foreach ($renderPlan['audio'] ?? [] as $audioSeg) {
+            $rewritten = $audioSeg;
+            $rewritten['source'] = 'video';
+            $rewrittenAudio[] = $rewritten;
+        }
+
+        $flaskPlan = [
+            'layers' => $rewrittenLayers,
+            'audio' => $rewrittenAudio,
+            'width' => $renderPlan['width'],
+            'height' => $renderPlan['height'],
+            'fps' => $renderPlan['fps'],
+            'total_duration' => $renderPlan['total_duration'],
+        ];
+
+        $request = Http::timeout($this->timeout)
+            ->attach('video', fopen($fullVideoPath, 'r'), basename($videoPath));
+
+        // Attach image files
+        foreach ($imageKeyMap as $sourceUri => $imageKey) {
+            if (!isset($mediaFiles[$sourceUri])) {
+                Log::warning("[VideoEditorService] Image not found for source: {$sourceUri}");
+                continue;
+            }
+            $imagePath = Storage::path($mediaFiles[$sourceUri]);
+            if (!file_exists($imagePath)) {
+                Log::warning("[VideoEditorService] Image file missing: {$mediaFiles[$sourceUri]}");
+                continue;
+            }
+            $request = $request->attach($imageKey, fopen($imagePath, 'r'), basename($mediaFiles[$sourceUri]));
+        }
+
+        $response = $request->post("{$this->baseUrl}/render-composition", [
+            'render_plan' => json_encode($flaskPlan),
+        ]);
+
+        if ($response->failed()) {
+            $error = $response->json('error') ?? 'Composition render failed';
+            Log::error('[VideoEditorService] Composition render failed', ['error' => $error]);
+            throw new Exception("Composition render failed: {$error}");
+        }
+
+        Storage::put($outputPath, $response->body());
+
+        Log::info('[VideoEditorService] Composition rendered successfully', ['output' => $outputPath]);
+
+        return $outputPath;
+    }
+
+    /**
      * Check if the video editor service is healthy.
      */
     public function isHealthy(): bool

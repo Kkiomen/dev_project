@@ -743,11 +743,13 @@ $v1Routes = function () {
     Route::delete('video-projects/{publicId}', [VideoProjectController::class, 'destroy']);
     Route::post('video-projects/{publicId}/render', [VideoProjectController::class, 'render']);
     Route::post('video-projects/{publicId}/remove-silence', [VideoProjectController::class, 'removeSilence']);
+    Route::post('video-projects/{publicId}/detect-silence', [VideoProjectController::class, 'detectSilence']);
     Route::get('video-projects/{publicId}/download', [VideoProjectController::class, 'download']);
     Route::get('video-projects/{publicId}/stream', [VideoProjectController::class, 'stream']);
     Route::get('video-projects/{publicId}/waveform', [VideoProjectController::class, 'waveform']);
     Route::get('video-projects/{publicId}/thumbnails', [VideoProjectController::class, 'thumbnails']);
     Route::post('video-projects/{publicId}/export-timeline', [VideoProjectController::class, 'exportTimeline']);
+    Route::post('video-projects/{publicId}/render-composition', [VideoProjectController::class, 'renderComposition']);
     Route::put('video-projects/{publicId}/composition', [VideoProjectController::class, 'saveComposition']);
     Route::post('video-projects/{publicId}/build-composition', [VideoProjectController::class, 'buildComposition']);
     Route::post('video-projects/{publicId}/upload-media', [VideoProjectController::class, 'uploadMedia']);

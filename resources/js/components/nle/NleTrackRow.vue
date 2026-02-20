@@ -9,6 +9,7 @@
                 'opacity-50': !track.visible,
             },
         ]"
+        :data-track-id="track.id"
         @dragover="dragDrop.handleDragOver"
         @drop="dragDrop.handleMediaDrop($event, track.id)"
         @click.self="handleTrackClick"

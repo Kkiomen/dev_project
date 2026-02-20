@@ -48,7 +48,11 @@ const store = useVideoEditorStore();
 const canvasEl = ref(null);
 const overlayEl = ref(null);
 
-const { renderFrame, canvasWidth, canvasHeight } = useNlePlayback(canvasEl);
+const playback = useNlePlayback(canvasEl);
+const { renderFrame, canvasWidth, canvasHeight } = playback;
+
+// Expose playback debug info for browser tests
+window.__nlePlaybackDebug = playback;
 const canvasInteraction = useNleCanvasInteraction();
 
 const containerStyle = computed(() => {

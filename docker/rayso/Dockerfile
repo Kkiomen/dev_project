@@ -1,7 +1,9 @@
 FROM node:20-slim
 
 # Install Chrome dependencies for Puppeteer
-RUN apt-get update && apt-get install -y \
+RUN echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid && \
+    echo 'Acquire::Check-Date "false";' >> /etc/apt/apt.conf.d/99no-check-valid && \
+    apt-get update && apt-get install -y \
     chromium \
     fonts-liberation \
     fonts-noto-color-emoji \

@@ -422,6 +422,85 @@ class VideoProjectController extends Controller
     }
 
     /**
+     * Render composition: build render plan and dispatch export job.
+     */
+    public function renderComposition(Request $request, string $publicId, CompositionService $compositionService): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        if ($project->isProcessing()) {
+            return response()->json(['message' => 'Project is currently processing'], 422);
+        }
+
+        if (!$project->video_path || !Storage::exists($project->video_path)) {
+            return response()->json(['message' => 'No video file available'], 422);
+        }
+
+        // Save composition if provided in request
+        if ($request->has('composition')) {
+            $composition = $request->input('composition');
+
+            if (!$compositionService->validateComposition($composition)) {
+                return response()->json(['message' => 'Invalid composition structure'], 422);
+            }
+
+            $project->update(['composition' => $composition]);
+        }
+
+        $composition = $project->composition;
+
+        if (!$composition) {
+            return response()->json(['message' => 'No composition to render'], 422);
+        }
+
+        $renderPlan = $compositionService->buildRenderPlan($composition);
+
+        // Resolve media:// URIs to storage paths for image sources
+        $mediaFiles = $this->resolveMediaSources($renderPlan['media_sources'] ?? [], $project);
+
+        ExportTimelineJob::dispatch(
+            $project,
+            [], // edl not used in render plan mode
+            $renderPlan,
+            $mediaFiles,
+        );
+
+        return response()->json([
+            'message' => 'Render started',
+            'project' => new VideoProjectResource($project->fresh()),
+        ]);
+    }
+
+    /**
+     * Resolve media:// URIs to storage paths.
+     */
+    protected function resolveMediaSources(array $sources, VideoProject $project): array
+    {
+        $resolved = [];
+        $allowedPrefix = "video-projects/{$project->user_id}/";
+
+        foreach ($sources as $source) {
+            if (!is_string($source) || !str_starts_with($source, 'media://')) {
+                continue;
+            }
+
+            $storagePath = str_replace('media://', '', $source);
+
+            if (!str_starts_with($storagePath, $allowedPrefix)) {
+                continue;
+            }
+
+            if (Storage::exists($storagePath)) {
+                $resolved[$source] = $storagePath;
+            }
+        }
+
+        return $resolved;
+    }
+
+    /**
      * Export timeline using an Edit Decision List.
      */
     public function exportTimeline(Request $request, string $publicId): JsonResponse
@@ -494,6 +573,37 @@ class VideoProjectController extends Controller
             'message' => 'Composition built',
             'project' => new VideoProjectResource($project->fresh()),
         ]);
+    }
+
+    /**
+     * Detect silence regions in a video project's audio (returns JSON, no re-encoding).
+     */
+    public function detectSilence(Request $request, string $publicId, VideoEditorService $editor): JsonResponse
+    {
+        $project = VideoProject::where('public_id', $publicId)
+            ->forUser($request->user())
+            ->firstOrFail();
+
+        if (!$project->video_path || !Storage::exists($project->video_path)) {
+            return response()->json(['message' => 'No video file available'], 404);
+        }
+
+        $request->validate([
+            'min_silence' => ['sometimes', 'numeric', 'min:0.1', 'max:5.0'],
+            'noise_db' => ['sometimes', 'integer', 'min:-50', 'max:-10'],
+        ]);
+
+        try {
+            $result = $editor->detectSilence(
+                $project->video_path,
+                $request->input('min_silence', 0.5),
+                $request->input('noise_db', -30),
+            );
+
+            return response()->json($result);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Silence detection failed: ' . $e->getMessage()], 500);
+        }
     }
 
     /**
