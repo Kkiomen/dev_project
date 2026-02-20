@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import { usePostsStore } from '@/stores/posts';
 import { useBrandsStore } from '@/stores/brands';
+import { useProposalsStore } from '@/stores/proposals';
 import { useToast } from '@/composables/useToast';
+import { useAutoPipeline, getPipelineSummary, getPostPipelineStep } from '@/composables/useAutoPipeline';
 
 import ProposalsTab from '@/components/proposals/ProposalsTab.vue';
 import AutomationStatsBar from '@/components/automation/AutomationStatsBar.vue';
@@ -15,6 +17,7 @@ import AutomationPostCard from '@/components/automation/AutomationPostCard.vue';
 import AutomationBulkBar from '@/components/automation/AutomationBulkBar.vue';
 import AutomationPagination from '@/components/automation/AutomationPagination.vue';
 import AutomationEmptyState from '@/components/automation/AutomationEmptyState.vue';
+import AutoPipelineModal from '@/components/automation/AutoPipelineModal.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 import WebhookSettingsModal from '@/components/automation/WebhookSettingsModal.vue';
 import PostPreviewModal from '@/components/automation/PostPreviewModal.vue';
@@ -24,7 +27,16 @@ const { t } = useI18n();
 const router = useRouter();
 const postsStore = usePostsStore();
 const brandsStore = useBrandsStore();
+const proposalsStore = useProposalsStore();
 const toast = useToast();
+const {
+    isProcessing: pipelineProcessing,
+    currentStep: pipelineStep,
+    progress: pipelineProgress,
+    processNextStep: pipelineProcessNextStep,
+    processAll: pipelineProcessAll,
+    cancel: pipelineCancel,
+} = useAutoPipeline();
 
 // State
 const activeMainTab = ref('automation');
@@ -43,6 +55,7 @@ const bulkDeleting = ref(false);
 const stats = ref({});
 const statsLoading = ref(false);
 const autoRefreshInterval = ref(null);
+const showPipelineModal = ref(false);
 
 const platformColors = {
     facebook: { bg: 'bg-blue-100', text: 'text-blue-700', dot: 'bg-blue-500' },
@@ -54,6 +67,8 @@ const platformColors = {
 const posts = computed(() => postsStore.automationPosts);
 const pagination = computed(() => postsStore.automationPagination);
 const loading = computed(() => postsStore.loading);
+const pipelineSummary = computed(() => getPipelineSummary(posts.value));
+const hasProposals = computed(() => (proposalsStore.proposals?.length || 0) > 0);
 
 // Data fetching
 function fetchPosts(page = 1) {
@@ -111,6 +126,15 @@ function stopAutoRefresh() {
         autoRefreshInterval.value = null;
     }
 }
+
+// Pause auto-refresh during pipeline
+watch(pipelineProcessing, (processing) => {
+    if (processing) {
+        stopAutoRefresh();
+    } else {
+        startAutoRefresh();
+    }
+});
 
 // Selection
 function toggleSelect(id) {
@@ -392,6 +416,62 @@ async function bulkDelete() {
     }
 }
 
+// Pipeline actions
+async function handleProcessAll() {
+    showPipelineModal.value = true;
+    await pipelineProcessAll(posts.value, silentRefresh);
+    await silentRefresh();
+}
+
+async function handleProcessNext(postId) {
+    await pipelineProcessNextStep(postId, silentRefresh);
+    await silentRefresh();
+}
+
+async function handleBulkAutoProcess() {
+    const selectedPosts = posts.value.filter(p => selectedIds.value.includes(p.id));
+    if (!selectedPosts.length) return;
+    showPipelineModal.value = true;
+    await pipelineProcessAll(selectedPosts, silentRefresh);
+    selectedIds.value = [];
+    await silentRefresh();
+}
+
+function handlePipelineCancel() {
+    pipelineCancel();
+}
+
+function handlePipelineModalClose() {
+    showPipelineModal.value = false;
+}
+
+// Pipeline action from stats bar
+async function handlePipelineAction(step) {
+    const filtered = posts.value.filter(p => getPostPipelineStep(p) === step);
+    if (!filtered.length) return;
+    showPipelineModal.value = true;
+    await pipelineProcessAll(filtered, silentRefresh);
+    await silentRefresh();
+}
+
+// Empty state actions
+function goToProposals() {
+    activeMainTab.value = 'proposals';
+}
+
+// Express process from proposals
+async function handleExpressProcess(postIds) {
+    activeMainTab.value = 'automation';
+    await silentRefresh();
+    const targetPosts = postIds?.length
+        ? posts.value.filter(p => postIds.includes(p.id))
+        : posts.value;
+    if (!targetPosts.length) return;
+    showPipelineModal.value = true;
+    await pipeline.processAll(targetPosts, silentRefresh);
+    await silentRefresh();
+}
+
 // Page change
 function onPageChange(page) {
     fetchPosts(page);
@@ -425,6 +505,10 @@ onMounted(() => {
     fetchPosts();
     fetchStats();
     startAutoRefresh();
+    // Quick check for proposals
+    if (brandsStore.currentBrand?.id) {
+        proposalsStore.fetchProposals({ brand_id: brandsStore.currentBrand.id, per_page: 1 }).catch(() => {});
+    }
 });
 
 onUnmounted(() => {
@@ -472,7 +556,10 @@ onUnmounted(() => {
         </div>
 
         <!-- Proposals Tab -->
-        <ProposalsTab v-if="activeMainTab === 'proposals'" />
+        <ProposalsTab
+            v-if="activeMainTab === 'proposals'"
+            @express-process="handleExpressProcess"
+        />
 
         <!-- Automation Tab -->
         <template v-if="activeMainTab === 'automation'">
@@ -481,7 +568,9 @@ onUnmounted(() => {
         <AutomationStatsBar
             :stats="stats"
             :loading="statsLoading"
+            :pipeline-summary="pipelineSummary"
             @filter="filterByStatus"
+            @pipeline-action="handlePipelineAction"
         />
 
         <!-- Status Tabs -->
@@ -498,6 +587,7 @@ onUnmounted(() => {
             @text-prompt="showTextPrompt = true"
             @image-prompt="showImagePrompt = true"
             @refresh="refresh"
+            @process-all="handleProcessAll"
         />
 
         <!-- Loading -->
@@ -506,7 +596,13 @@ onUnmounted(() => {
         </div>
 
         <!-- Empty State -->
-        <AutomationEmptyState v-else-if="!posts.length" />
+        <AutomationEmptyState
+            v-else-if="!posts.length"
+            :has-proposals="hasProposals"
+            :pipeline-summary="pipelineSummary"
+            @go-to-proposals="goToProposals"
+            @process-all="handleProcessAll"
+        />
 
         <!-- Content -->
         <template v-else>
@@ -535,6 +631,7 @@ onUnmounted(() => {
                 @upload-media="uploadMedia"
                 @delete-media="deleteMedia"
                 @reschedule="reschedulePost"
+                @process-next="handleProcessNext"
             />
 
             <!-- Mobile Cards -->
@@ -564,6 +661,7 @@ onUnmounted(() => {
                     @upload-media="uploadMedia"
                     @delete-media="deleteMedia"
                     @reschedule="reschedulePost"
+                    @process-next="handleProcessNext(post.id)"
                 />
             </div>
 
@@ -583,6 +681,7 @@ onUnmounted(() => {
             :bulk-generating-image-description="bulkGeneratingImageDescription"
             :bulk-generating-image="bulkGeneratingImage"
             :bulk-deleting="bulkDeleting"
+            @bulk-auto-process="handleBulkAutoProcess"
             @bulk-generate-text="bulkGenerateText"
             @bulk-generate-image-description="bulkGenerateImageDescription"
             @bulk-generate-image="bulkGenerateImage"
@@ -610,6 +709,14 @@ onUnmounted(() => {
             :show="showPreview"
             :post="previewPost"
             @close="showPreview = false"
+        />
+        <AutoPipelineModal
+            :show="showPipelineModal"
+            :is-processing="pipelineProcessing"
+            :current-step="pipelineStep"
+            :progress="pipelineProgress"
+            @cancel="handlePipelineCancel"
+            @close="handlePipelineModalClose"
         />
 
         </template><!-- /automation tab -->

@@ -16,6 +16,8 @@ import ProposalBulkBar from './ProposalBulkBar.vue';
 import AutomationPagination from '@/components/automation/AutomationPagination.vue';
 import LoadingSpinner from '@/components/common/LoadingSpinner.vue';
 
+const emit = defineEmits(['express-process']);
+
 const { t } = useI18n();
 const proposalsStore = useProposalsStore();
 const brandsStore = useBrandsStore();
@@ -139,12 +141,34 @@ async function handleGeneratePost(proposalId) {
 const panelLanguage = computed(() => authStore.user?.settings?.language || 'en');
 const brandLanguage = computed(() => brandsStore.currentBrand?.voice?.language || 'en');
 
-async function handleGenerateBatch({ days, language }) {
+async function handleGenerateBatch({ days, language, autoProcess }) {
     try {
         const result = await proposalsStore.generateBatch(days, brandsStore.currentBrand?.id, language);
         toast.success(t('postAutomation.proposals.generate.success', { count: result.count }));
         showGenerateModal.value = false;
         fetchProposals(1);
+
+        if (autoProcess) {
+            // Select all new proposals and bulk generate posts, then trigger express process
+            const allProposals = proposalsStore.proposals;
+            const pendingIds = allProposals.filter(p => p.status === 'pending').map(p => p.id);
+            if (pendingIds.length) {
+                bulkGenerating.value = true;
+                try {
+                    const bulkResult = await proposalsStore.bulkGeneratePosts(pendingIds);
+                    toast.success(t('postAutomation.proposals.success.bulkGenerated', {
+                        success: bulkResult.success,
+                        total: bulkResult.total,
+                    }));
+                    const postIds = bulkResult.post_ids || [];
+                    emit('express-process', postIds);
+                } catch {
+                    toast.error(t('postAutomation.proposals.errors.bulkGenerateFailed'));
+                } finally {
+                    bulkGenerating.value = false;
+                }
+            }
+        }
     } catch (err) {
         const errorCode = err?.response?.data?.error_code;
         const errorKey = `postAutomation.proposals.errors.${errorCode}`;
@@ -182,6 +206,22 @@ async function bulkGeneratePosts() {
         toast.success(t('postAutomation.proposals.success.bulkGenerated', { success: result.success, total: result.total }));
         clearSelection();
         fetchProposals(pagination.value.currentPage);
+    } catch {
+        toast.error(t('postAutomation.proposals.errors.bulkGenerateFailed'));
+    } finally {
+        bulkGenerating.value = false;
+    }
+}
+
+async function bulkGenerateAndProcess() {
+    bulkGenerating.value = true;
+    try {
+        const result = await proposalsStore.bulkGeneratePosts(selectedIds.value);
+        toast.success(t('postAutomation.proposals.success.bulkGenerated', { success: result.success, total: result.total }));
+        const postIds = result.post_ids || [];
+        clearSelection();
+        fetchProposals(pagination.value.currentPage);
+        emit('express-process', postIds);
     } catch {
         toast.error(t('postAutomation.proposals.errors.bulkGenerateFailed'));
     } finally {
@@ -309,6 +349,7 @@ onMounted(() => {
                     :count="selectedIds.length"
                     :generating="bulkGenerating"
                     @generate="bulkGeneratePosts"
+                    @generate-and-process="bulkGenerateAndProcess"
                     @clear="clearSelection"
                 />
 

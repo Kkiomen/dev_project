@@ -1031,14 +1031,14 @@
             "format": "Format błędu",
             "formatDescription": "Każdy błąd zawiera kod HTTP i opis:",
             "codes": {
-                "title": "Kody błędów",
                 "400": "400 Bad Request - Nieprawidłowe żądanie lub dane",
                 "401": "401 Unauthorized - Brak lub nieprawidłowy token",
                 "403": "403 Forbidden - Brak uprawnień do zasobu",
                 "404": "404 Not Found - Zasób nie istnieje",
                 "422": "422 Unprocessable Entity - Błędy walidacji",
                 "429": "429 Too Many Requests - Przekroczono limit zapytań",
-                "500": "500 Internal Server Error - Błąd serwera"
+                "500": "500 Internal Server Error - Błąd serwera",
+                "title": "Kody błędów"
             },
             "validation": {
                 "title": "Błędy walidacji",
@@ -2466,7 +2466,8 @@
             "noPlatforms": "Brak platform",
             "noTags": "Brak tagów",
             "addTag": "Dodaj tag...",
-            "tagPlaceholder": "Nazwa tagu"
+            "tagPlaceholder": "Nazwa tagu",
+            "pipeline": "Pipeline"
         },
         "actions": {
             "generateText": "Generuj Tekst",
@@ -2486,7 +2487,15 @@
             "bulkGenerateImage": "Generuj Obraz",
             "bulkApprove": "Zatwierdź Zaznaczone",
             "bulkDelete": "Usuń",
-            "deleting": "Usuwanie..."
+            "deleting": "Usuwanie...",
+            "processNext": "Przetwórz następny krok",
+            "autoProcess": "Auto-przetwórz",
+            "bulkAutoProcess": "Auto-przetwórz zaznaczone",
+            "processNextText": "Następny: Generuj tekst",
+            "processNextImageDesc": "Następny: Generuj opis",
+            "processNextImage": "Następny: Generuj obrazek",
+            "processNextApprove": "Następny: Zatwierdź",
+            "fullyProcessed": "W pełni przetworzony"
         },
         "webhookSettings": {
             "title": "Ustawienia Webhooków",
@@ -2565,7 +2574,8 @@
             "settings": "Ustawienia",
             "refresh": "Odśwież",
             "textPrompt": "Prompt Tekstu",
-            "imagePrompt": "Prompt Obrazka"
+            "imagePrompt": "Prompt Obrazka",
+            "processAll": "Przetwórz wszystko"
         },
         "systemPrompt": {
             "textTitle": "System Prompt dla Tekstu",
@@ -2626,9 +2636,19 @@
             "showing": "Wyświetlanie {from}-{to} z {total} postów"
         },
         "emptyState": {
-            "title": "Brak postów do automatyzacji",
+            "title": "Rozpocznij automatyzację",
             "description": "Utwórz posty w Kalendarzu, aby rozpocząć automatyzację publikacji.",
-            "goToCalendar": "Przejdź do Kalendarza"
+            "goToCalendar": "Przejdź do Kalendarza",
+            "step1Title": "Wygeneruj propozycje",
+            "step1Desc": "Zacznij od wygenerowania propozycji treści dla Twojej marki.",
+            "step1Action": "Przejdź do propozycji",
+            "step2Title": "Utwórz posty",
+            "step2Desc": "Przekształć propozycje w szkice postów.",
+            "step2Action": "Zobacz propozycje",
+            "step3Title": "Przetwórz z AI",
+            "step3Desc": "Pozwól AI wygenerować tekst, opisy i obrazki.",
+            "step3Action": "Przetwórz wszystko",
+            "stepComplete": "Ukończono"
         },
         "proposals": {
             "title": "Propozycje Postów",
@@ -2660,7 +2680,9 @@
                 "generateButton": "Generuj propozycje",
                 "generating": "Generowanie propozycji...",
                 "success": "Wygenerowano {count} propozycji",
-                "failed": "Nie udało się wygenerować propozycji"
+                "failed": "Nie udało się wygenerować propozycji",
+                "autoProcess": "Auto-przetwórz po utworzeniu",
+                "autoProcessHint": "Automatycznie generuj tekst, opisy i obrazki"
             },
             "form": {
                 "createTitle": "Nowa propozycja",
@@ -2740,8 +2762,35 @@
                 "selected": "{count} zaznaczonych",
                 "generatePosts": "Generuj posty",
                 "close": "Wyczyść zaznaczenie",
-                "generating": "Generowanie..."
+                "generating": "Generowanie...",
+                "generateAndProcess": "Generuj i przetwórz",
+                "generatingAndProcessing": "Przetwarzanie..."
             }
+        },
+        "pipeline": {
+            "text": "Tekst",
+            "imageDesc": "Opis",
+            "image": "Obrazek",
+            "approved": "Zatwierdzony",
+            "published": "Opublikowany",
+            "needText": "postów potrzebuje tekstu",
+            "needImageDesc": "postów potrzebuje opisów",
+            "needImage": "postów potrzebuje obrazków",
+            "needApproval": "postów do zatwierdzenia"
+        },
+        "autoPipeline": {
+            "title": "Auto-przetwarzanie",
+            "description": "Automatyczne przetwarzanie wszystkich kroków",
+            "stepText": "Generowanie tekstu",
+            "stepImageDesc": "Generowanie opisów obrazków",
+            "stepImage": "Generowanie obrazków",
+            "stepApprove": "Zatwierdzanie postów",
+            "progress": "Krok {current} z {total}",
+            "processing": "Przetwarzanie {count} postów...",
+            "complete": "Przetwarzanie zakończone!",
+            "completeDesc": "Wszystkie posty zostały przetworzone",
+            "errorCount": "Wystąpiło {count} błędów",
+            "cancel": "Anuluj"
         }
     },
     "notifications": {

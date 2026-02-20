@@ -10,6 +10,7 @@ defineProps({
 });
 
 const emit = defineEmits([
+    'bulk-auto-process',
     'bulk-generate-text',
     'bulk-generate-image-description',
     'bulk-generate-image',
@@ -42,6 +43,13 @@ const { t } = useI18n();
                 <div class="h-5 w-px bg-gray-600" />
 
                 <div class="flex items-center gap-2">
+                    <button
+                        @click="emit('bulk-auto-process')"
+                        class="px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 whitespace-nowrap transition-colors"
+                    >
+                        {{ t('postAutomation.actions.bulkAutoProcess') }}
+                    </button>
+                    <div class="h-5 w-px bg-gray-600" />
                     <button
                         @click="emit('bulk-generate-text')"
                         :disabled="bulkGeneratingText"

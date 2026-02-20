@@ -1,6 +1,8 @@
 <script setup>
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import Dropdown from '@/components/common/Dropdown.vue';
+import { getPostPipelineStep } from '@/composables/useAutoPipeline';
 
 const props = defineProps({
     post: { type: Object, required: true },
@@ -18,12 +20,24 @@ const emit = defineEmits([
     'publish',
     'preview',
     'edit',
+    'process-next',
 ]);
 
 const { t } = useI18n();
 
 const canApprove = ['draft', 'pending_approval'].includes(props.post.status);
 const canPublish = ['approved', 'scheduled'].includes(props.post.status);
+
+const nextStep = computed(() => getPostPipelineStep(props.post));
+const nextStepLabel = computed(() => {
+    const labels = {
+        text: t('postAutomation.actions.processNextText'),
+        imageDesc: t('postAutomation.actions.processNextImageDesc'),
+        image: t('postAutomation.actions.processNextImage'),
+        approve: t('postAutomation.actions.processNextApprove'),
+    };
+    return labels[nextStep.value] || t('postAutomation.actions.fullyProcessed');
+});
 </script>
 
 <template>
@@ -36,6 +50,17 @@ const canPublish = ['approved', 'scheduled'].includes(props.post.status);
             </button>
         </template>
         <template #content>
+            <button
+                v-if="nextStep"
+                @click="emit('process-next')"
+                class="w-full flex items-center gap-2 px-4 py-2 text-sm text-indigo-700 bg-indigo-50 hover:bg-indigo-100 font-medium"
+            >
+                <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+                {{ nextStepLabel }}
+            </button>
+            <div v-if="nextStep" class="border-t border-gray-100 my-1" />
             <button
                 @click="emit('generate-text')"
                 :disabled="generatingText"

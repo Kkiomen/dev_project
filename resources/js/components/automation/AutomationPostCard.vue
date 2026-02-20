@@ -3,7 +3,9 @@ import { ref, computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { useConfirm } from '@/composables/useConfirm';
 import PostStatusBadge from '@/components/posts/PostStatusBadge.vue';
+import PipelineStepIndicator from './PipelineStepIndicator.vue';
 import DateTimeInput from '@/components/common/DateTimeInput.vue';
+import { getPostPipelineStep } from '@/composables/useAutoPipeline';
 
 const props = defineProps({
     post: { type: Object, required: true },
@@ -31,7 +33,19 @@ const emit = defineEmits([
     'upload-media',
     'delete-media',
     'reschedule',
+    'process-next',
 ]);
+
+const nextStep = computed(() => getPostPipelineStep(props.post));
+const nextStepLabel = computed(() => {
+    const labels = {
+        text: t('postAutomation.actions.processNextText'),
+        imageDesc: t('postAutomation.actions.processNextImageDesc'),
+        image: t('postAutomation.actions.processNextImage'),
+        approve: t('postAutomation.actions.processNextApprove'),
+    };
+    return labels[nextStep.value] || t('postAutomation.actions.fullyProcessed');
+});
 
 const { t } = useI18n();
 const { confirm } = useConfirm();
@@ -165,6 +179,17 @@ function submitTag(platform) {
                     <p class="text-xs text-gray-500 mt-1 line-clamp-1">
                         {{ truncate(post.main_caption) || '—' }}
                     </p>
+                    <!-- Pipeline indicator -->
+                    <div class="mt-2">
+                        <PipelineStepIndicator
+                            :post="post"
+                            :compact="true"
+                            :generating-text="generatingText"
+                            :generating-image-description="generatingImageDescription"
+                            :generating-image="generatingImage"
+                            :publishing="publishing"
+                        />
+                    </div>
                     <div class="flex items-center justify-between mt-2">
                         <div class="flex items-center gap-1">
                             <span
@@ -438,6 +463,16 @@ function submitTag(platform) {
 
             <!-- Actions -->
             <div class="flex flex-wrap gap-1.5 pt-3 border-t border-gray-100">
+                <button
+                    v-if="nextStep"
+                    @click.stop="emit('process-next')"
+                    class="px-2.5 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors"
+                >
+                    {{ nextStepLabel }}
+                </button>
+                <span v-else class="px-2.5 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg">
+                    {{ t('postAutomation.actions.fullyProcessed') }}
+                </span>
                 <button
                     @click.stop="emit('generate-text')"
                     :disabled="generatingText"

@@ -73,6 +73,18 @@
 - **Implementation Quality:** Algorithm is fundamentally sound, grouping by source and computing timeline positions correctly. Needs refinement for edge cases and better error communication.
 - Routes: POST `/api/v1/video-projects/{publicId}/detect-silence` and `{publicId}/remove-silence` defined in api.php line 745-746
 
+## Auto-Pipeline Feature (2026-02-20 review)
+- Files: `resources/js/composables/useAutoPipeline.js`, `resources/js/components/automation/PipelineStepIndicator.vue`, `resources/js/components/automation/AutoPipelineModal.vue`, `resources/js/components/automation/AutomationEmptyState.vue`, `resources/js/components/automation/AutomationStatsBar.vue`, `resources/js/pages/PostAutomationPage.vue`
+- **Critical (useAutoPipeline.js L132):** `status_label: 'Approved'` hardcoded English string. Must use `t('posts.status.approved')` — requires adding `useI18n()` to the composable.
+- **Major (PostAutomationPage L124, L704-706):** Accessing refs as `pipeline.isProcessing.value` in both watcher and template. Should destructure refs from composable; template auto-unwraps top-level refs — `.value` is unnecessary and misleading.
+- **Major (PostAutomationPage L456):** `handleExpressProcess(postIds)` receives specific post IDs from ProposalsTab but ignores them, running the pipeline on all posts instead. Must filter: `posts.value.filter(p => postIds.includes(p.id))`.
+- **Minor (AutomationStatsBar L37):** `hasPipelineActions` is a plain function called in template — should be a `computed` for proper caching.
+- **Minor (PipelineStepIndicator L67):** Dead ternary inside `v-if="compact"` block — `compact ? 'w-2 h-2' : 'w-4 h-4'` always resolves to `'w-2 h-2'`.
+- **Minor (AutoPipelineModal L45-50):** `handleClose` emits both `cancel` and `close` simultaneously — modal closes before pipeline reacts to cancellation signal.
+- **Minor (useAutoPipeline L48):** `const stepLabels` declared but never used — dead code.
+- **Translation:** `en.json` and `pl.json` fully in sync, all `postAutomation.autoPipeline.*` and `postAutomation.emptyState.*` keys present.
+- **Recurring pattern:** Composables in this project should include `useI18n()` when their output touches user-facing state strings (status labels, etc.) — not just components.
+
 ## Auto-Discover Competitors Feature (2026-02-20 review)
 - Files: `app/Services/Apify/CompetitorAnalysisService.php` (new methods), `app/Http/Controllers/Api/V1/CiCompetitorController.php` (new action), `routes/api.php` (POST `/discover-competitors` at L738), `resources/js/stores/competitiveIntelligence.js` (new state/action), `resources/js/components/ci/DiscoverCompetitorsModal.vue` (new), `resources/js/components/ci/CompetitorList.vue` (modified), `resources/js/components/ci/CiDashboard.vue` (modified)
 - **Code Quality: EXCELLENT** — All SOLID principles followed, translations complete in en/pl, responsive design, error handling proper

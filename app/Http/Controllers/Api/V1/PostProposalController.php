@@ -247,6 +247,7 @@ class PostProposalController extends Controller
 
         $success = 0;
         $failed = 0;
+        $postIds = [];
 
         foreach ($request->proposal_ids as $publicId) {
             try {
@@ -264,8 +265,11 @@ class PostProposalController extends Controller
                     continue;
                 }
 
-                $service->generate($proposal);
+                $post = $service->generate($proposal);
                 $success++;
+                if ($post && $post->public_id) {
+                    $postIds[] = $post->public_id;
+                }
             } catch (\Exception $e) {
                 $failed++;
             }
@@ -276,6 +280,7 @@ class PostProposalController extends Controller
             'success' => $success,
             'failed' => $failed,
             'total' => count($request->proposal_ids),
+            'post_ids' => $postIds,
         ]);
     }
 

@@ -1,12 +1,17 @@
 <script setup>
+import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
 
 const props = defineProps({
     stats: { type: Object, default: () => ({}) },
     loading: { type: Boolean, default: false },
+    pipelineSummary: {
+        type: Object,
+        default: () => ({ needText: 0, needImageDesc: 0, needImage: 0, needApproval: 0, complete: 0 }),
+    },
 });
 
-const emit = defineEmits(['filter']);
+const emit = defineEmits(['filter', 'pipeline-action']);
 
 const { t } = useI18n();
 
@@ -29,6 +34,11 @@ function getCount(key) {
 function handleClick(status) {
     emit('filter', status);
 }
+
+const hasPipelineActions = computed(() => {
+    const s = props.pipelineSummary;
+    return s.needText > 0 || s.needImageDesc > 0 || s.needImage > 0 || s.needApproval > 0;
+});
 </script>
 
 <template>
@@ -50,6 +60,46 @@ function handleClick(status) {
                 </span>
             </button>
         </div>
+
+        <!-- Pipeline action tags -->
+        <div
+            v-if="hasPipelineActions && !loading"
+            class="mt-3 pt-3 border-t border-gray-100 flex flex-wrap gap-2"
+        >
+            <button
+                v-if="pipelineSummary.needText > 0"
+                @click="emit('pipeline-action', 'text')"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 rounded-full hover:bg-blue-100 transition-colors"
+            >
+                <span class="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                {{ pipelineSummary.needText }} {{ t('postAutomation.pipeline.needText') }}
+            </button>
+            <button
+                v-if="pipelineSummary.needImageDesc > 0"
+                @click="emit('pipeline-action', 'imageDesc')"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-teal-700 bg-teal-50 rounded-full hover:bg-teal-100 transition-colors"
+            >
+                <span class="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                {{ pipelineSummary.needImageDesc }} {{ t('postAutomation.pipeline.needImageDesc') }}
+            </button>
+            <button
+                v-if="pipelineSummary.needImage > 0"
+                @click="emit('pipeline-action', 'image')"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-50 rounded-full hover:bg-purple-100 transition-colors"
+            >
+                <span class="w-1.5 h-1.5 rounded-full bg-purple-500" />
+                {{ pipelineSummary.needImage }} {{ t('postAutomation.pipeline.needImage') }}
+            </button>
+            <button
+                v-if="pipelineSummary.needApproval > 0"
+                @click="emit('pipeline-action', 'approve')"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-full hover:bg-green-100 transition-colors"
+            >
+                <span class="w-1.5 h-1.5 rounded-full bg-green-500" />
+                {{ pipelineSummary.needApproval }} {{ t('postAutomation.pipeline.needApproval') }}
+            </button>
+        </div>
+
         <!-- Queue coverage bar -->
         <div v-if="stats.coverage_days != null" class="mt-3 pt-3 border-t border-gray-100">
             <div class="flex items-center justify-between text-xs text-gray-500 mb-1.5">

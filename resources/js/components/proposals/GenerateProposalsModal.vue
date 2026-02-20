@@ -16,6 +16,7 @@ const { t } = useI18n();
 
 const days = ref(7);
 const languageSource = ref('panel');
+const autoProcess = ref(false);
 
 const selectedLanguage = computed(() => {
     return languageSource.value === 'panel' ? props.panelLanguage : props.brandLanguage;
@@ -34,7 +35,7 @@ const brandLanguageLabel = computed(() => {
 });
 
 function handleGenerate() {
-    emit('generate', { days: days.value, language: selectedLanguage.value });
+    emit('generate', { days: days.value, language: selectedLanguage.value, autoProcess: autoProcess.value });
 }
 
 function handleClose() {
@@ -109,6 +110,25 @@ function handleClose() {
                             <span class="text-sm text-gray-700">{{ brandLanguageLabel }}</span>
                         </label>
                     </div>
+                </div>
+
+                <!-- Auto-process checkbox -->
+                <div class="pt-1">
+                    <label class="flex items-start gap-2.5 cursor-pointer">
+                        <input
+                            v-model="autoProcess"
+                            type="checkbox"
+                            class="mt-0.5 rounded text-indigo-600 focus:ring-indigo-500"
+                        />
+                        <div>
+                            <span class="text-sm font-medium text-gray-700">
+                                {{ t('postAutomation.proposals.generate.autoProcess') }}
+                            </span>
+                            <p class="text-xs text-gray-400 mt-0.5">
+                                {{ t('postAutomation.proposals.generate.autoProcessHint') }}
+                            </p>
+                        </div>
+                    </label>
                 </div>
 
                 <!-- Actions -->

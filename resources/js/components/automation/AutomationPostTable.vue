@@ -30,6 +30,7 @@ const emit = defineEmits([
     'upload-media',
     'delete-media',
     'reschedule',
+    'process-next',
 ]);
 
 const { t } = useI18n();
@@ -63,6 +64,9 @@ function toggleExpand(postId) {
                     </th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
                         {{ t('postAutomation.table.status') }}
+                    </th>
+                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28">
+                        {{ t('postAutomation.table.pipeline') }}
                     </th>
                     <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24">
                         {{ t('postAutomation.table.platforms') }}
@@ -103,6 +107,7 @@ function toggleExpand(postId) {
                     @upload-media="emit('upload-media', $event)"
                     @delete-media="emit('delete-media', $event)"
                     @reschedule="emit('reschedule', $event)"
+                    @process-next="emit('process-next', post.id)"
                 />
             </tbody>
         </table>

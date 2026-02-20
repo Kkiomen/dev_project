@@ -1030,14 +1030,14 @@
             "format": "Error Format",
             "formatDescription": "Each error contains HTTP code and description:",
             "codes": {
-                "title": "Error Codes",
                 "400": "400 Bad Request - Invalid request or data",
                 "401": "401 Unauthorized - Missing or invalid token",
                 "403": "403 Forbidden - No permission for resource",
                 "404": "404 Not Found - Resource doesn't exist",
                 "422": "422 Unprocessable Entity - Validation errors",
                 "429": "429 Too Many Requests - Rate limit exceeded",
-                "500": "500 Internal Server Error - Server error"
+                "500": "500 Internal Server Error - Server error",
+                "title": "Error Codes"
             },
             "validation": {
                 "title": "Validation Errors",
@@ -2463,7 +2463,8 @@
             "noPlatforms": "No platforms",
             "noTags": "No tags",
             "addTag": "Add tag...",
-            "tagPlaceholder": "Tag name"
+            "tagPlaceholder": "Tag name",
+            "pipeline": "Pipeline"
         },
         "actions": {
             "generateText": "Generate Text",
@@ -2483,7 +2484,15 @@
             "bulkGenerateImage": "Generate Image",
             "bulkApprove": "Approve Selected",
             "bulkDelete": "Delete",
-            "deleting": "Deleting..."
+            "deleting": "Deleting...",
+            "processNext": "Process Next Step",
+            "autoProcess": "Auto-Process",
+            "bulkAutoProcess": "Auto-Process Selected",
+            "processNextText": "Next: Generate Text",
+            "processNextImageDesc": "Next: Generate Description",
+            "processNextImage": "Next: Generate Image",
+            "processNextApprove": "Next: Approve",
+            "fullyProcessed": "Fully Processed"
         },
         "webhookSettings": {
             "title": "Webhook Settings",
@@ -2562,7 +2571,8 @@
             "settings": "Settings",
             "refresh": "Refresh",
             "textPrompt": "Text Prompt",
-            "imagePrompt": "Image Prompt"
+            "imagePrompt": "Image Prompt",
+            "processAll": "Process All"
         },
         "systemPrompt": {
             "textTitle": "Text System Prompt",
@@ -2623,9 +2633,19 @@
             "showing": "Showing {from}-{to} of {total} posts"
         },
         "emptyState": {
-            "title": "No posts to automate",
+            "title": "Get Started with Automation",
             "description": "Create posts in the Calendar to start automating your publishing.",
-            "goToCalendar": "Go to Calendar"
+            "goToCalendar": "Go to Calendar",
+            "step1Title": "Generate Proposals",
+            "step1Desc": "Start by generating content proposals for your brand.",
+            "step1Action": "Go to Proposals",
+            "step2Title": "Create Posts",
+            "step2Desc": "Convert your proposals into post drafts.",
+            "step2Action": "View Proposals",
+            "step3Title": "Process with AI",
+            "step3Desc": "Let AI generate text, descriptions, and images.",
+            "step3Action": "Process All",
+            "stepComplete": "Complete"
         },
         "proposals": {
             "title": "Post Proposals",
@@ -2657,7 +2677,9 @@
                 "generateButton": "Generate Proposals",
                 "generating": "Generating proposals...",
                 "success": "{count} proposals generated",
-                "failed": "Failed to generate proposals"
+                "failed": "Failed to generate proposals",
+                "autoProcess": "Auto-process after creation",
+                "autoProcessHint": "Automatically generate text, descriptions, and images"
             },
             "form": {
                 "createTitle": "New Proposal",
@@ -2737,8 +2759,35 @@
                 "selected": "{count} selected",
                 "generatePosts": "Generate Posts",
                 "close": "Clear selection",
-                "generating": "Generating..."
+                "generating": "Generating...",
+                "generateAndProcess": "Generate & Process",
+                "generatingAndProcessing": "Processing..."
             }
+        },
+        "pipeline": {
+            "text": "Text",
+            "imageDesc": "Description",
+            "image": "Image",
+            "approved": "Approved",
+            "published": "Published",
+            "needText": "posts need text",
+            "needImageDesc": "posts need descriptions",
+            "needImage": "posts need images",
+            "needApproval": "posts ready to approve"
+        },
+        "autoPipeline": {
+            "title": "Auto-Process Pipeline",
+            "description": "Automatically processing all pipeline steps",
+            "stepText": "Generating text",
+            "stepImageDesc": "Generating image descriptions",
+            "stepImage": "Generating images",
+            "stepApprove": "Approving posts",
+            "progress": "Step {current} of {total}",
+            "processing": "Processing {count} posts...",
+            "complete": "Pipeline complete!",
+            "completeDesc": "All posts have been processed",
+            "errorCount": "{count} errors occurred",
+            "cancel": "Cancel"
         }
     },
     "notifications": {

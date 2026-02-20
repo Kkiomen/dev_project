@@ -4,7 +4,9 @@ import { useI18n } from 'vue-i18n';
 import { useConfirm } from '@/composables/useConfirm';
 import PostStatusBadge from '@/components/posts/PostStatusBadge.vue';
 import AutomationRowActions from './AutomationRowActions.vue';
+import PipelineStepIndicator from './PipelineStepIndicator.vue';
 import DateTimeInput from '@/components/common/DateTimeInput.vue';
+import { getPostPipelineStep } from '@/composables/useAutoPipeline';
 
 const props = defineProps({
     post: { type: Object, required: true },
@@ -34,7 +36,19 @@ const emit = defineEmits([
     'upload-media',
     'delete-media',
     'reschedule',
+    'process-next',
 ]);
+
+const nextStep = computed(() => getPostPipelineStep(props.post));
+const nextStepLabel = computed(() => {
+    const labels = {
+        text: t('postAutomation.actions.processNextText'),
+        imageDesc: t('postAutomation.actions.processNextImageDesc'),
+        image: t('postAutomation.actions.processNextImage'),
+        approve: t('postAutomation.actions.processNextApprove'),
+    };
+    return labels[nextStep.value] || t('postAutomation.actions.fullyProcessed');
+});
 
 const { t } = useI18n();
 const { confirm } = useConfirm();
@@ -201,6 +215,18 @@ function submitTag(platform) {
             <PostStatusBadge :status="post.status" />
         </td>
 
+        <!-- Pipeline -->
+        <td class="px-3 py-3">
+            <PipelineStepIndicator
+                :post="post"
+                :compact="true"
+                :generating-text="generatingText"
+                :generating-image-description="generatingImageDescription"
+                :generating-image="generatingImage"
+                :publishing="publishing"
+            />
+        </td>
+
         <!-- Platforms (dots only) -->
         <td class="px-3 py-3">
             <div class="flex items-center gap-1">
@@ -238,14 +264,26 @@ function submitTag(platform) {
                 @publish="emit('publish')"
                 @preview="emit('preview')"
                 @edit="emit('edit')"
+                @process-next="emit('process-next')"
             />
         </td>
     </tr>
 
     <!-- Expanded Row -->
     <tr v-if="expanded">
-        <td colspan="6" class="px-0 py-0">
+        <td colspan="7" class="px-0 py-0">
             <div class="bg-gray-50 border-t border-b border-gray-200 px-6 py-5">
+                <!-- Pipeline progress (full) -->
+                <div class="mb-4 pb-4 border-b border-gray-200">
+                    <PipelineStepIndicator
+                        :post="post"
+                        :compact="false"
+                        :generating-text="generatingText"
+                        :generating-image-description="generatingImageDescription"
+                        :generating-image="generatingImage"
+                        :publishing="publishing"
+                    />
+                </div>
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <!-- Left Column: Text prompt + Content -->
                     <div class="space-y-4">
@@ -505,6 +543,16 @@ function submitTag(platform) {
 
                 <!-- Expanded row actions -->
                 <div class="flex flex-wrap items-center gap-2 mt-5 pt-4 border-t border-gray-200">
+                    <button
+                        v-if="nextStep"
+                        @click.stop="emit('process-next')"
+                        class="px-3 py-1.5 text-xs font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors"
+                    >
+                        {{ nextStepLabel }}
+                    </button>
+                    <span v-else class="px-3 py-1.5 text-xs font-medium text-green-700 bg-green-50 rounded-lg">
+                        {{ t('postAutomation.actions.fullyProcessed') }}
+                    </span>
                     <button
                         @click.stop="emit('generate-text')"
                         :disabled="generatingText"

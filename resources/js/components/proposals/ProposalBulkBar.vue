@@ -6,7 +6,7 @@ defineProps({
     generating: { type: Boolean, default: false },
 });
 
-const emit = defineEmits(['generate', 'clear']);
+const emit = defineEmits(['generate', 'generate-and-process', 'clear']);
 
 const { t } = useI18n();
 </script>
@@ -37,6 +37,13 @@ const { t } = useI18n();
                     class="px-3 py-1.5 text-xs font-medium bg-green-600 text-white rounded-lg hover:bg-green-500 disabled:opacity-50 whitespace-nowrap transition-colors"
                 >
                     {{ generating ? t('postAutomation.proposals.bulk.generating') : t('postAutomation.proposals.bulk.generatePosts') }}
+                </button>
+                <button
+                    @click="emit('generate-and-process')"
+                    :disabled="generating"
+                    class="px-3 py-1.5 text-xs font-medium bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 disabled:opacity-50 whitespace-nowrap transition-colors"
+                >
+                    {{ generating ? t('postAutomation.proposals.bulk.generatingAndProcessing') : t('postAutomation.proposals.bulk.generateAndProcess') }}
                 </button>
 
                 <button

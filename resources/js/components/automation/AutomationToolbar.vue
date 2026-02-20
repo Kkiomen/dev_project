@@ -5,7 +5,7 @@ const props = defineProps({
     modelValue: { type: String, default: '' },
 });
 
-const emit = defineEmits(['update:modelValue', 'settings', 'refresh', 'text-prompt', 'image-prompt']);
+const emit = defineEmits(['update:modelValue', 'settings', 'refresh', 'text-prompt', 'image-prompt', 'process-all']);
 
 const { t } = useI18n();
 
@@ -65,6 +65,18 @@ function onInput(e) {
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
             <span class="hidden sm:inline">{{ t('postAutomation.toolbar.settings') }}</span>
+        </button>
+
+        <!-- Process All button -->
+        <button
+            @click="emit('process-all')"
+            class="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-500 transition-colors shrink-0"
+            :title="t('postAutomation.toolbar.processAll')"
+        >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
+            <span class="hidden lg:inline">{{ t('postAutomation.toolbar.processAll') }}</span>
         </button>
 
         <!-- Refresh button -->
