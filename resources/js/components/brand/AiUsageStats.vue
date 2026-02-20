@@ -51,11 +51,11 @@ const totalCost = computed(() => {
     let cost = 0;
     if (data.value.providers) {
         Object.values(data.value.providers).forEach((p) => {
-            cost += p.total_cost || 0;
+            cost += parseFloat(p.total_cost) || 0;
         });
     }
     if (data.value.apify) {
-        cost += data.value.apify.total_cost || 0;
+        cost += parseFloat(data.value.apify.total_cost) || 0;
     }
     return cost;
 });
@@ -67,7 +67,7 @@ const chartData = computed(() => {
 
 const maxDailyCost = computed(() => {
     if (!chartData.value.length) return 1;
-    const max = Math.max(...chartData.value.map((d) => d.total_cost || 0));
+    const max = Math.max(...chartData.value.map((d) => parseFloat(d.total_cost) || 0));
     return max || 1;
 });
 
@@ -86,15 +86,15 @@ const apifyBreakdown = computed(() => {
 
 const apifyBudgetPercent = computed(() => {
     if (!apifyStats.value || !apifyStats.value.budget_limit) return 0;
-    return Math.min(100, (apifyStats.value.total_cost / apifyStats.value.budget_limit) * 100);
+    return Math.min(100, ((parseFloat(apifyStats.value.total_cost) || 0) / (parseFloat(apifyStats.value.budget_limit) || 1)) * 100);
 });
 
 const formatCost = (cost) => {
-    return `$${(cost || 0).toFixed(4)}`;
+    return `$${(parseFloat(cost) || 0).toFixed(4)}`;
 };
 
 const formatCostShort = (cost) => {
-    return `$${(cost || 0).toFixed(2)}`;
+    return `$${(parseFloat(cost) || 0).toFixed(2)}`;
 };
 
 const formatNumber = (num) => {
@@ -242,7 +242,7 @@ const formatDate = (dateStr) => {
                         >
                             <div
                                 class="w-full bg-blue-500 hover:bg-blue-600 rounded-t transition-colors cursor-default min-h-[2px]"
-                                :style="{ height: `${Math.max(2, (day.total_cost / maxDailyCost) * 100)}%` }"
+                                :style="{ height: `${Math.max(2, ((parseFloat(day.total_cost) || 0) / maxDailyCost) * 100)}%` }"
                             />
                             <!-- Tooltip -->
                             <div class="absolute bottom-full mb-2 hidden group-hover:block z-10">
