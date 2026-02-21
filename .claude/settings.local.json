@@ -30,7 +30,8 @@
       "Bash(./vendor/bin/sail artisan tinker:*)",
       "Bash(./vendor/bin/sail artisan queue:work:*)",
       "Bash(python3:*)",
-      "Bash(./vendor/bin/sail test:*)"
+      "Bash(./vendor/bin/sail test:*)",
+      "Bash(./vendor/bin/sail npm run build:*)"
     ]
   }
 }

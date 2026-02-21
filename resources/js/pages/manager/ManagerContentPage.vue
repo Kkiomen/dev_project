@@ -43,6 +43,7 @@ const posts = computed(() => {
         .filter(sp => sp.social_post?.id)
         .map(sp => ({
             id: sp.social_post.id,
+            scheduledPostId: sp.id,
             title: sp.social_post?.title || sp.content?.substring(0, 50) || '',
             main_caption: sp.social_post?.main_caption || sp.content || '',
             status: sp.approval_status === 'pending' ? 'pending_approval' : sp.approval_status,
@@ -122,7 +123,7 @@ const handleDeletePost = async (post) => {
     if (!confirmed) return;
 
     try {
-        await managerStore.deleteScheduledPost(post.id);
+        await managerStore.deleteScheduledPost(post.scheduledPostId);
         toast.success(t('manager.content.deleted'));
     } catch {
         toast.error(t('manager.content.deleteError'));
