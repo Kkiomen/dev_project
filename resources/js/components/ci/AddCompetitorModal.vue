@@ -56,7 +56,7 @@ const handleClose = () => {
 </script>
 
 <template>
-    <Modal :show="show" @close="handleClose" max-width="lg">
+    <Modal :show="show" @close="handleClose" max-width="lg" variant="dark">
         <div class="p-6">
             <h2 class="text-lg font-semibold text-white mb-4">{{ t('ci.competitors.add') }}</h2>
 

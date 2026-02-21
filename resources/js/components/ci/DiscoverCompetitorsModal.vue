@@ -64,7 +64,7 @@ const platformColors = {
 </script>
 
 <template>
-    <Modal :show="show" @close="handleClose" max-width="2xl">
+    <Modal :show="show" @close="handleClose" max-width="2xl" variant="dark">
         <div class="p-6">
             <h2 class="text-lg font-semibold text-white mb-1">{{ t('ci.discover.title') }}</h2>
             <p class="text-sm text-gray-400 mb-5">{{ t('ci.discover.description') }}</p>

@@ -1,5 +1,5 @@
 <script setup>
-import { watch, onMounted, onUnmounted } from 'vue';
+import { computed, watch, onMounted, onUnmounted } from 'vue';
 
 const props = defineProps({
     show: {
@@ -9,6 +9,11 @@ const props = defineProps({
     maxWidth: {
         type: String,
         default: 'md',
+    },
+    variant: {
+        type: String,
+        default: 'light',
+        validator: (v) => ['light', 'dark'].includes(v),
     },
 });
 
@@ -25,6 +30,12 @@ const maxWidthClass = {
     '5xl': 'max-w-5xl',
     'full': 'max-w-[90vw]',
 };
+
+const panelClass = computed(() =>
+    props.variant === 'dark'
+        ? 'relative bg-gray-900 border border-gray-700 rounded-xl shadow-xl w-full'
+        : 'relative bg-white rounded-xl shadow-xl w-full p-6'
+);
 
 const close = () => {
     emit('close');
@@ -82,8 +93,7 @@ watch(() => props.show, (value) => {
                     >
                         <div
                             v-if="show"
-                            class="relative bg-white rounded-xl shadow-xl w-full p-6"
-                            :class="maxWidthClass[maxWidth]"
+                            :class="[panelClass, maxWidthClass[maxWidth]]"
                         >
                             <slot />
                         </div>

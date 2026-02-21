@@ -5112,7 +5112,7 @@
             "addAccount": "Add Account",
             "platform": "Platform",
             "handle": "Handle",
-            "handlePlaceholder": "@username",
+            "handlePlaceholder": "{'@'}username",
             "posts": "Posts",
             "postsCount": "{count} posts",
             "lastScraped": "Last scraped",

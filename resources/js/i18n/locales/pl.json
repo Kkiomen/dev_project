@@ -5071,7 +5071,7 @@
             "addAccount": "Dodaj Konto",
             "platform": "Platforma",
             "handle": "Nazwa użytkownika",
-            "handlePlaceholder": "@nazwaużytkownika",
+            "handlePlaceholder": "{'@'}nazwaużytkownika",
             "posts": "Posty",
             "postsCount": "{count} postów",
             "lastScraped": "Ostatni scraping",

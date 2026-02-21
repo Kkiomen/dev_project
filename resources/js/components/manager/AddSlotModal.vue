@@ -141,8 +141,8 @@ const formattedDate = computed(() => {
 </script>
 
 <template>
-    <Modal :show="show" max-width="lg" @close="close">
-        <div class="bg-gray-900 -m-6 rounded-xl">
+    <Modal :show="show" max-width="lg" @close="close" variant="dark">
+        <div>
             <!-- Header -->
             <div class="p-5 border-b border-gray-800">
                 <div class="flex items-start justify-between gap-3">
