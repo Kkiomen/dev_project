@@ -129,6 +129,27 @@ class SmContentPlanController extends Controller
         return response()->json(['message' => 'Slot removed']);
     }
 
+    public function bulkRemoveSlots(Request $request, Brand $brand, SmContentPlan $smContentPlan): JsonResponse
+    {
+        $this->authorize('update', $brand);
+
+        $validated = $request->validate([
+            'slot_ids' => ['required', 'array', 'min:1'],
+            'slot_ids.*' => ['integer'],
+        ]);
+
+        $deleted = $smContentPlan->slots()
+            ->whereIn('id', $validated['slot_ids'])
+            ->delete();
+
+        $smContentPlan->recalculateSlotCounts();
+
+        return response()->json([
+            'message' => 'Slots removed',
+            'deleted' => $deleted,
+        ]);
+    }
+
     public function generateSlotContent(Request $request, Brand $brand, SmContentPlan $smContentPlan, SmContentPlanSlot $slot): JsonResponse
     {
         $this->authorize('update', $brand);

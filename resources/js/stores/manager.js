@@ -621,6 +621,23 @@ export const useManagerStore = defineStore('manager', {
             }
         },
 
+        async bulkRemovePlanSlots(planId, slotIds) {
+            const brandId = this.currentBrandId;
+            if (!brandId || !slotIds.length) return;
+
+            const response = await axios.post(`/api/v1/brands/${brandId}/sm-content-plans/${planId}/slots/bulk-delete`, {
+                slot_ids: slotIds,
+            });
+
+            if (this.currentPlan?.id === planId && this.currentPlan.slots) {
+                const idSet = new Set(slotIds);
+                this.currentPlan.slots = this.currentPlan.slots.filter(s => !idSet.has(s.id));
+                this.currentPlan.total_slots = Math.max(0, this.currentPlan.slots.length);
+            }
+
+            return response.data;
+        },
+
         async generateTopicProposition(planId, data) {
             const brandId = this.currentBrandId;
             if (!brandId) return;

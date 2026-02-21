@@ -11,7 +11,7 @@ const props = defineProps({
     pillars: { type: Array, default: () => [] },
 });
 
-const emit = defineEmits(['updated', 'add', 'addBetween', 'generate-slot', 'preview-slot']);
+const emit = defineEmits(['updated', 'add', 'addBetween', 'generate-slot', 'preview-slot', 'bulk-delete']);
 
 const { t, locale } = useI18n();
 const managerStore = useManagerStore();
@@ -29,6 +29,56 @@ const platformColors = {
     x: 'bg-gray-400 text-gray-900',
     youtube: 'bg-red-600 text-white',
 };
+
+const selectedSlots = ref(new Set());
+
+const allSelected = computed(() =>
+    sortedSlots.value.length > 0 && selectedSlots.value.size === sortedSlots.value.length
+);
+
+const hasSelection = computed(() => selectedSlots.value.size > 0);
+
+function toggleSlot(slotId) {
+    if (selectedSlots.value.has(slotId)) {
+        selectedSlots.value.delete(slotId);
+    } else {
+        selectedSlots.value.add(slotId);
+    }
+}
+
+function toggleAll() {
+    if (allSelected.value) {
+        selectedSlots.value.clear();
+    } else {
+        sortedSlots.value.forEach(s => selectedSlots.value.add(s.id));
+    }
+}
+
+function clearSelection() {
+    selectedSlots.value.clear();
+}
+
+async function handleBulkDelete() {
+    const count = selectedSlots.value.size;
+    const confirmed = await confirm({
+        title: t('common.deleteConfirmTitle'),
+        message: t('manager.contentList.bulkDeleteConfirm', { count }),
+        confirmText: t('common.delete'),
+        variant: 'danger',
+    });
+    if (!confirmed) return;
+
+    try {
+        await managerStore.bulkRemovePlanSlots(props.planId, [...selectedSlots.value]);
+        toast.success(t('manager.contentList.bulkDeleted', { count }));
+        selectedSlots.value.clear();
+        emit('updated');
+    } catch {
+        toast.error(t('common.error'));
+    }
+}
+
+defineExpose({ hasSelection, clearSelection });
 
 const generatingSlots = ref(new Set());
 
@@ -167,11 +217,49 @@ function formatTime(time) {
 
 <template>
     <div class="rounded-xl bg-gray-900 border border-gray-800 overflow-hidden">
+        <!-- Selection bar -->
+        <Transition
+            enter-active-class="transition ease-out duration-200"
+            enter-from-class="opacity-0 -translate-y-2"
+            enter-to-class="opacity-100 translate-y-0"
+            leave-active-class="transition ease-in duration-150"
+            leave-from-class="opacity-100 translate-y-0"
+            leave-to-class="opacity-0 -translate-y-2"
+        >
+            <div v-if="hasSelection" class="sticky top-0 z-20 flex items-center justify-between gap-3 px-4 py-2.5 bg-orange-500/10 border-b border-orange-500/20">
+                <span class="text-sm text-orange-300">
+                    {{ t('manager.contentList.selectedCount', { count: selectedSlots.size }) }}
+                </span>
+                <div class="flex items-center gap-2">
+                    <button
+                        @click="clearSelection"
+                        class="px-3 py-1 text-xs font-medium rounded-lg border border-gray-700 text-gray-300 hover:text-white hover:border-gray-600 transition-colors"
+                    >
+                        {{ t('common.cancel') }}
+                    </button>
+                    <button
+                        @click="handleBulkDelete"
+                        class="px-3 py-1 text-xs font-medium rounded-lg bg-red-600/20 border border-red-500/30 text-red-300 hover:bg-red-600/30 hover:text-red-200 transition-colors"
+                    >
+                        {{ t('manager.contentList.deleteSelected', { count: selectedSlots.size }) }}
+                    </button>
+                </div>
+            </div>
+        </Transition>
+
         <!-- Desktop table (hidden on mobile) -->
         <div class="hidden sm:block overflow-x-auto">
             <table class="w-full text-left">
                 <thead class="sticky top-0 z-10 bg-gray-900 border-b border-gray-800">
                     <tr>
+                        <th class="px-3 py-3 w-10">
+                            <input
+                                type="checkbox"
+                                :checked="allSelected"
+                                @change="toggleAll"
+                                class="rounded border-gray-600 bg-gray-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-0 cursor-pointer"
+                            />
+                        </th>
                         <th class="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider w-8">#</th>
                         <th class="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ t('manager.contentList.colDate') }}</th>
                         <th class="px-3 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">{{ t('manager.contentList.colTime') }}</th>
@@ -185,7 +273,16 @@ function formatTime(time) {
                 </thead>
                 <tbody>
                     <template v-for="(slot, index) in sortedSlots" :key="slot.id">
-                        <tr class="hover:bg-gray-800/30 transition-colors border-b border-gray-800/50">
+                        <tr class="hover:bg-gray-800/30 transition-colors border-b border-gray-800/50" :class="{ 'bg-orange-500/5': selectedSlots.has(slot.id) }">
+                            <!-- Checkbox -->
+                            <td class="px-3 py-2.5">
+                                <input
+                                    type="checkbox"
+                                    :checked="selectedSlots.has(slot.id)"
+                                    @change.stop="toggleSlot(slot.id)"
+                                    class="rounded border-gray-600 bg-gray-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-0 cursor-pointer"
+                                />
+                            </td>
                             <!-- # + Status dot -->
                             <td class="px-3 py-2.5">
                                 <div class="flex items-center gap-1.5">
@@ -411,7 +508,7 @@ function formatTime(time) {
                             @mouseenter="hoveredInsertIndex = index"
                             @mouseleave="hoveredInsertIndex = null"
                         >
-                            <td colspan="9" class="p-0 relative h-0">
+                            <td colspan="10" class="p-0 relative h-0">
                                 <div class="absolute inset-x-0 -top-px flex items-center justify-center z-[5]">
                                     <button
                                         @click.stop="handleInsertBetween(index)"
@@ -433,10 +530,16 @@ function formatTime(time) {
         <!-- Mobile cards (visible on mobile only) -->
         <div class="sm:hidden divide-y divide-gray-800">
             <template v-for="(slot, index) in sortedSlots" :key="slot.id">
-                <div class="p-4 space-y-3">
-                    <!-- Header: # + platform badge + delete button -->
+                <div class="p-4 space-y-3" :class="{ 'bg-orange-500/5': selectedSlots.has(slot.id) }">
+                    <!-- Header: checkbox + # + platform badge + delete button -->
                     <div class="flex items-center justify-between">
                         <div class="flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                :checked="selectedSlots.has(slot.id)"
+                                @change.stop="toggleSlot(slot.id)"
+                                class="rounded border-gray-600 bg-gray-800 text-orange-500 focus:ring-orange-500 focus:ring-offset-0 cursor-pointer"
+                            />
                             <span class="w-2 h-2 rounded-full shrink-0" :class="getStatusColor(slot.status)" :title="getStatusLabel(slot.status)"></span>
                             <span class="text-xs text-gray-500">#{{ index + 1 }}</span>
                             <span
