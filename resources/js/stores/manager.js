@@ -626,7 +626,7 @@ export const useManagerStore = defineStore('manager', {
             if (!brandId || !slotIds.length) return;
 
             const response = await axios.post(`/api/v1/brands/${brandId}/sm-content-plans/${planId}/slots/bulk-delete`, {
-                slot_ids: slotIds,
+                slot_ids: slotIds.map(id => Number(id)),
             });
 
             if (this.currentPlan?.id === planId && this.currentPlan.slots) {
