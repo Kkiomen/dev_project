@@ -5,6 +5,7 @@ namespace App\Jobs\SmManager;
 use App\Models\Brand;
 use App\Services\SmManager\SmAlertNotificationService;
 use App\Services\SmManager\SmCrisisDetectorService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class SmDetectCrisisJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 60;
 
@@ -26,8 +27,14 @@ class SmDetectCrisisJob implements ShouldQueue
         protected Brand $brand
     ) {}
 
+    protected function taskType(): string { return 'crisis_detection'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
+
     public function handle(SmCrisisDetectorService $detector, SmAlertNotificationService $notifier): void
     {
+        $this->broadcastTaskStarted();
+
         try {
             $result = $detector->detect($this->brand);
 
@@ -35,7 +42,6 @@ class SmDetectCrisisJob implements ShouldQueue
             $indicators = $result['indicators'];
 
             if ($alertsCreated > 0) {
-                // Notify for each newly created crisis alert
                 $recentAlerts = $this->brand->smCrisisAlerts()
                     ->unresolved()
                     ->where('created_at', '>=', now()->subMinutes(5))
@@ -56,11 +62,15 @@ class SmDetectCrisisJob implements ShouldQueue
                     'brand_id' => $this->brand->id,
                 ]);
             }
+
+            $this->broadcastTaskCompleted(true);
         } catch (\Exception $e) {
             Log::error('SmDetectCrisisJob: failed', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }

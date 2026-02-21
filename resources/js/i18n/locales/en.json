@@ -2814,10 +2814,201 @@
         "types": {
             "contentGeneration": "Generating content",
             "postPublishing": "Publishing post",
-            "imageGeneration": "Generating image"
+            "imageGeneration": "Generating image",
+            "videoTranscription": "Video Transcription",
+            "videoRender": "Video Render",
+            "videoSilenceRemoval": "Silence Removal",
+            "timelineExport": "Timeline Export",
+            "postContentGeneration": "Content Generation",
+            "contentPlanGeneration": "Content Plan",
+            "psdImport": "PSD Import",
+            "templateClassification": "Template Classification",
+            "thumbnailGeneration": "Thumbnail Generation",
+            "pipelineExecution": "Pipeline Execution",
+            "strategyGeneration": "Strategy Generation",
+            "smContentPlan": "SM Content Plan",
+            "smPostContent": "SM Post Content",
+            "weeklyReport": "Weekly Report",
+            "autoSchedule": "Auto Schedule",
+            "automationProcessing": "Automation",
+            "smPostPublish": "SM Publish",
+            "postScoring": "Post Scoring",
+            "metricsCollection": "Metrics Collection",
+            "crisisDetection": "Crisis Detection",
+            "rssFetch": "RSS Fetch",
+            "ciScrapeCompetitors": "Competitor Scrape",
+            "ciScrapeTrends": "Trends Scrape",
+            "ciProcessResults": "CI Processing",
+            "ciGenerateInsights": "CI Insights"
         },
         "descriptions": {
             "contentGeneration": "Creating post for \"{pillar}\" ({brand})"
+        },
+        "toast": {
+            "content": {
+                "generation": {
+                    "success": "Content generated successfully",
+                    "error": "Content generation failed"
+                },
+                "plan": {
+                    "generation": {
+                        "success": "Content plan generated",
+                        "error": "Content plan generation failed"
+                    }
+                }
+            },
+            "post": {
+                "publishing": {
+                    "success": "Post published successfully",
+                    "error": "Post publishing failed"
+                },
+                "content": {
+                    "generation": {
+                        "success": "Post content generated",
+                        "error": "Post content generation failed"
+                    }
+                },
+                "scoring": {
+                    "success": "Post scoring completed",
+                    "error": "Post scoring failed"
+                }
+            },
+            "image": {
+                "generation": {
+                    "success": "Image generated successfully",
+                    "error": "Image generation failed"
+                }
+            },
+            "video": {
+                "transcription": {
+                    "success": "Transcription complete",
+                    "error": "Transcription failed"
+                },
+                "render": {
+                    "success": "Video render complete",
+                    "error": "Video render failed"
+                },
+                "silence": {
+                    "removal": {
+                        "success": "Silence removal complete",
+                        "error": "Silence removal failed"
+                    }
+                }
+            },
+            "timeline": {
+                "export": {
+                    "success": "Timeline exported successfully",
+                    "error": "Timeline export failed"
+                }
+            },
+            "psd": {
+                "import": {
+                    "success": "PSD imported successfully",
+                    "error": "PSD import failed"
+                }
+            },
+            "template": {
+                "classification": {
+                    "success": "Template classified",
+                    "error": "Template classification failed"
+                }
+            },
+            "thumbnail": {
+                "generation": {
+                    "success": "Thumbnail generated",
+                    "error": "Thumbnail generation failed"
+                }
+            },
+            "pipeline": {
+                "execution": {
+                    "success": "Pipeline executed successfully",
+                    "error": "Pipeline execution failed"
+                }
+            },
+            "strategy": {
+                "generation": {
+                    "success": "Strategy generated",
+                    "error": "Strategy generation failed"
+                }
+            },
+            "sm": {
+                "content": {
+                    "plan": {
+                        "success": "SM content plan generated",
+                        "error": "SM content plan generation failed"
+                    }
+                },
+                "post": {
+                    "content": {
+                        "success": "SM post content generated",
+                        "error": "SM post content generation failed"
+                    },
+                    "publish": {
+                        "success": "SM post published",
+                        "error": "SM post publishing failed"
+                    }
+                }
+            },
+            "weekly": {
+                "report": {
+                    "success": "Weekly report generated",
+                    "error": "Weekly report generation failed"
+                }
+            },
+            "auto": {
+                "schedule": {
+                    "success": "Post auto-scheduled",
+                    "error": "Auto-scheduling failed"
+                }
+            },
+            "automation": {
+                "processing": {
+                    "success": "Automation completed",
+                    "error": "Automation processing failed"
+                }
+            },
+            "metrics": {
+                "collection": {
+                    "success": "Metrics collected",
+                    "error": "Metrics collection failed"
+                }
+            },
+            "crisis": {
+                "detection": {
+                    "success": "Crisis detection completed",
+                    "error": "Crisis detection failed"
+                }
+            },
+            "rss": {
+                "fetch": {
+                    "success": "RSS feed fetched",
+                    "error": "RSS feed fetch failed"
+                }
+            },
+            "ci": {
+                "scrape": {
+                    "competitors": {
+                        "success": "Competitor scraping completed",
+                        "error": "Competitor scraping failed"
+                    },
+                    "trends": {
+                        "success": "Trends scraping completed",
+                        "error": "Trends scraping failed"
+                    }
+                },
+                "process": {
+                    "results": {
+                        "success": "CI results processed",
+                        "error": "CI results processing failed"
+                    }
+                },
+                "generate": {
+                    "insights": {
+                        "success": "CI insights generated",
+                        "error": "CI insights generation failed"
+                    }
+                }
+            }
         }
     },
     "psd_editor": {

@@ -9,13 +9,19 @@ class SmContentPlanFactory extends Factory
 {
     protected $model = SmContentPlan::class;
 
+    private static int $monthSequence = 0;
+
     public function definition(): array
     {
+        self::$monthSequence++;
+        $month = ((self::$monthSequence - 1) % 12) + 1;
+        $year = 2026 + intdiv(self::$monthSequence - 1, 12);
+
         return [
             'brand_id' => 1,
             'sm_strategy_id' => null,
-            'month' => fake()->numberBetween(1, 12),
-            'year' => 2026,
+            'month' => $month,
+            'year' => $year,
             'status' => 'active',
             'summary' => null,
             'total_slots' => 20,

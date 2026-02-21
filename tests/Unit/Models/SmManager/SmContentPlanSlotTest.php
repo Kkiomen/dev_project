@@ -3,6 +3,7 @@
 use App\Models\Brand;
 use App\Models\SmContentPlan;
 use App\Models\SmContentPlanSlot;
+use App\Models\SocialPost;
 use App\Models\User;
 use Carbon\Carbon;
 
@@ -44,9 +45,10 @@ describe('SmContentPlanSlot', function () {
     describe('hasContent', function () {
 
         it('returns true when social_post_id is set', function () {
+            $socialPost = SocialPost::factory()->create(['user_id' => $this->user->id]);
             $slot = SmContentPlanSlot::factory()->create([
                 'sm_content_plan_id' => $this->contentPlan->id,
-                'social_post_id' => 1,
+                'social_post_id' => $socialPost->id,
             ]);
 
             expect($slot->hasContent())->toBeTrue();

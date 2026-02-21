@@ -14,9 +14,40 @@ const isOpen = ref(false);
 const dropdownRef = ref(null);
 
 const taskTypeLabels = computed(() => ({
+    // Content
     content_generation: t('tasks.types.contentGeneration'),
     post_publishing: t('tasks.types.postPublishing'),
     image_generation: t('tasks.types.imageGeneration'),
+    post_content_generation: t('tasks.types.postContentGeneration'),
+    content_plan_generation: t('tasks.types.contentPlanGeneration'),
+    // Video
+    video_transcription: t('tasks.types.videoTranscription'),
+    video_render: t('tasks.types.videoRender'),
+    video_silence_removal: t('tasks.types.videoSilenceRemoval'),
+    timeline_export: t('tasks.types.timelineExport'),
+    // PSD / Templates
+    psd_import: t('tasks.types.psdImport'),
+    template_classification: t('tasks.types.templateClassification'),
+    thumbnail_generation: t('tasks.types.thumbnailGeneration'),
+    // SM Manager
+    pipeline_execution: t('tasks.types.pipelineExecution'),
+    strategy_generation: t('tasks.types.strategyGeneration'),
+    sm_content_plan: t('tasks.types.smContentPlan'),
+    sm_post_content: t('tasks.types.smPostContent'),
+    weekly_report: t('tasks.types.weeklyReport'),
+    auto_schedule: t('tasks.types.autoSchedule'),
+    automation_processing: t('tasks.types.automationProcessing'),
+    sm_post_publish: t('tasks.types.smPostPublish'),
+    post_scoring: t('tasks.types.postScoring'),
+    metrics_collection: t('tasks.types.metricsCollection'),
+    crisis_detection: t('tasks.types.crisisDetection'),
+    // RSS
+    rss_fetch: t('tasks.types.rssFetch'),
+    // CI
+    ci_scrape_competitors: t('tasks.types.ciScrapeCompetitors'),
+    ci_scrape_trends: t('tasks.types.ciScrapeTrends'),
+    ci_process_results: t('tasks.types.ciProcessResults'),
+    ci_generate_insights: t('tasks.types.ciGenerateInsights'),
 }));
 
 const getTaskLabel = (task) => {
@@ -25,15 +56,33 @@ const getTaskLabel = (task) => {
 
 const getTaskDescription = (task) => {
     const data = task.data || {};
+    const brandName = data.brand_name || '';
+    const projectTitle = data.title || '';
 
     switch (task.task_type) {
         case 'content_generation':
             return t('tasks.descriptions.contentGeneration', {
                 pillar: data.pillar || '',
-                brand: data.brand_name || '',
+                brand: brandName,
             });
+        case 'video_transcription':
+        case 'video_render':
+        case 'video_silence_removal':
+        case 'timeline_export':
+            return projectTitle;
+        case 'pipeline_execution':
+            return data.pipeline_name || '';
+        case 'post_content_generation':
+        case 'content_plan_generation':
+        case 'strategy_generation':
+        case 'sm_content_plan':
+        case 'sm_post_content':
+        case 'weekly_report':
+            return brandName;
+        case 'psd_import':
+            return data.filename || '';
         default:
-            return '';
+            return brandName;
     }
 };
 

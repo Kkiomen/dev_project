@@ -5,6 +5,7 @@ namespace App\Jobs\Apify;
 use App\Models\Brand;
 use App\Services\Apify\CompetitorAnalysisService;
 use App\Services\Apify\ContentInsightsService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class CiGenerateInsightsJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 600;
     public int $tries = 2;
@@ -24,11 +25,17 @@ class CiGenerateInsightsJob implements ShouldQueue
         protected Brand $brand,
     ) {}
 
+    protected function taskType(): string { return 'ci_generate_insights'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
+
     public function handle(
         CompetitorAnalysisService $analysisService,
         ContentInsightsService $insightsService,
     ): void {
         Log::info('[CiGenerateInsightsJob] Starting', ['brand_id' => $this->brand->id]);
+
+        $this->broadcastTaskStarted();
 
         try {
             // First, analyze unanalyzed posts
@@ -46,11 +53,16 @@ class CiGenerateInsightsJob implements ShouldQueue
                 'brand_id' => $this->brand->id,
                 'insights_count' => $insights,
             ]);
+
+            $this->broadcastTaskCompleted(true);
         } catch (\Throwable $e) {
             Log::error('[CiGenerateInsightsJob] Failed', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
+
             throw $e;
         }
     }

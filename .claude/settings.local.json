@@ -29,7 +29,8 @@
       "Bash(./vendor/bin/sail artisan tinker --execute=\"DB::statement\\(''DROP TABLE IF EXISTS ci_competitor_posts''\\);\")",
       "Bash(./vendor/bin/sail artisan tinker:*)",
       "Bash(./vendor/bin/sail artisan queue:work:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(./vendor/bin/sail test:*)"
     ]
   }
 }

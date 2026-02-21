@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\PsdImport;
 use App\Models\User;
 use App\Services\BulkPsdImportService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,31 +16,25 @@ use Throwable;
 
 class ImportPsdFileJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
-    /**
-     * The number of times the job may be attempted.
-     */
     public int $tries = 2;
 
-    /**
-     * The number of seconds the job can run before timing out.
-     */
     public int $timeout = 600;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         protected PsdImport $import,
         protected User $user
     ) {}
 
-    /**
-     * Execute the job.
-     */
+    protected function taskType(): string { return 'psd_import'; }
+    protected function taskUserId(): int { return $this->user->id; }
+    protected function taskModelId(): string|int { return $this->import->id; }
+
     public function handle(BulkPsdImportService $bulkImportService): void
     {
+        $this->broadcastTaskStarted();
+
         Log::info('ImportPsdFileJob: Starting', [
             'import_id' => $this->import->id,
             'filename' => $this->import->filename,
@@ -83,10 +78,7 @@ class ImportPsdFileJob implements ShouldQueue
             $this->import->markAsAiClassifying();
 
             foreach ($result['templates'] as $template) {
-                // Dispatch AI classification job
                 ClassifyTemplateWithAiJob::dispatch($template, $this->import);
-
-                // Dispatch thumbnail generation job
                 GenerateThumbnailJob::dispatch($template);
 
                 Log::info('ImportPsdFileJob: Jobs dispatched for template', [
@@ -95,6 +87,10 @@ class ImportPsdFileJob implements ShouldQueue
                 ]);
             }
 
+            $this->broadcastTaskCompleted(true, null, [
+                'template_count' => $templateCount,
+                'filename' => $this->import->filename,
+            ]);
         } catch (Throwable $e) {
             Log::error('ImportPsdFileJob: Import failed', [
                 'import_id' => $this->import->id,
@@ -103,14 +99,12 @@ class ImportPsdFileJob implements ShouldQueue
             ]);
 
             $this->import->markAsFailed($e->getMessage());
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }
     }
 
-    /**
-     * Handle a job failure.
-     */
     public function failed(Throwable $exception): void
     {
         Log::error('ImportPsdFileJob: Job failed permanently', [

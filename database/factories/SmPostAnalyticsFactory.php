@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\SmPostAnalytics;
+use App\Models\SocialPost;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SmPostAnalyticsFactory extends Factory
@@ -12,7 +13,7 @@ class SmPostAnalyticsFactory extends Factory
     public function definition(): array
     {
         return [
-            'social_post_id' => 1,
+            'social_post_id' => SocialPost::factory(),
             'platform' => fake()->randomElement(['instagram', 'facebook', 'tiktok', 'linkedin', 'x', 'youtube']),
             'likes' => fake()->numberBetween(0, 5000),
             'comments' => fake()->numberBetween(0, 500),

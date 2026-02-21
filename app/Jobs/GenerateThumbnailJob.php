@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Template;
 use App\Services\TemplateRenderService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,40 +17,28 @@ use Throwable;
 
 class GenerateThumbnailJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
-    /**
-     * The number of times the job may be attempted.
-     */
     public int $tries = 3;
 
-    /**
-     * The number of seconds the job can run before timing out.
-     */
     public int $timeout = 120;
 
-    /**
-     * The number of seconds to wait before retrying the job.
-     */
     public int $backoff = 10;
 
-    /**
-     * Thumbnail width.
-     */
     protected int $thumbnailWidth = 400;
 
-    /**
-     * Create a new job instance.
-     */
     public function __construct(
         protected Template $template
     ) {}
 
-    /**
-     * Execute the job.
-     */
+    protected function taskType(): string { return 'thumbnail_generation'; }
+    protected function taskUserId(): int { return $this->template->user_id; }
+    protected function taskModelId(): string|int { return $this->template->id; }
+
     public function handle(TemplateRenderService $renderService): void
     {
+        $this->broadcastTaskStarted();
+
         Log::info('GenerateThumbnailJob: Starting', [
             'template_id' => $this->template->id,
             'template_name' => $this->template->name,
@@ -80,6 +69,7 @@ class GenerateThumbnailJob implements ShouldQueue
                 'thumbnail_path' => $thumbnailPath,
             ]);
 
+            $this->broadcastTaskCompleted(true);
         } catch (Throwable $e) {
             Log::error('GenerateThumbnailJob: Failed to generate thumbnail', [
                 'template_id' => $this->template->id,
@@ -91,6 +81,7 @@ class GenerateThumbnailJob implements ShouldQueue
                 Log::warning('GenerateThumbnailJob: Max attempts reached, giving up', [
                     'template_id' => $this->template->id,
                 ]);
+                $this->broadcastTaskCompleted(false, $e->getMessage());
                 return;
             }
 
@@ -98,9 +89,6 @@ class GenerateThumbnailJob implements ShouldQueue
         }
     }
 
-    /**
-     * Handle a job failure.
-     */
     public function failed(Throwable $exception): void
     {
         Log::error('GenerateThumbnailJob: Job failed permanently', [

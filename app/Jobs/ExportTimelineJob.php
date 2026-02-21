@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Enums\VideoProjectStatus;
 use App\Models\VideoProject;
 use App\Services\VideoEditorService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class ExportTimelineJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 900;
     public int $tries = 2;
@@ -27,9 +28,15 @@ class ExportTimelineJob implements ShouldQueue
         protected array $mediaFiles = [],
     ) {}
 
+    protected function taskType(): string { return 'timeline_export'; }
+    protected function taskUserId(): int { return $this->project->user_id; }
+    protected function taskModelId(): string|int { return $this->project->id; }
+
     public function handle(VideoEditorService $editor): void
     {
         $useRenderPlan = $this->renderPlan !== null;
+
+        $this->broadcastTaskStarted();
 
         Log::info('[ExportTimelineJob] Starting export', [
             'project_id' => $this->project->id,
@@ -67,6 +74,10 @@ class ExportTimelineJob implements ShouldQueue
                 'output' => $outputPath,
                 'mode' => $useRenderPlan ? 'composition' : 'edl',
             ]);
+
+            $this->broadcastTaskCompleted(true, null, [
+                'project_id' => $this->project->public_id ?? $this->project->id,
+            ]);
         } catch (\Exception $e) {
             Log::error('[ExportTimelineJob] Failed', [
                 'project_id' => $this->project->id,
@@ -77,6 +88,8 @@ class ExportTimelineJob implements ShouldQueue
                 'status' => VideoProjectStatus::Failed,
                 'error_message' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }

@@ -4,6 +4,7 @@ namespace App\Jobs\SmManager;
 
 use App\Models\Brand;
 use App\Models\SmAnalyticsSnapshot;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class SmCollectMetricsJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 120;
 
@@ -25,15 +26,14 @@ class SmCollectMetricsJob implements ShouldQueue
         protected Brand $brand
     ) {}
 
-    /**
-     * Collect analytics metrics for a brand from connected platform accounts.
-     *
-     * NOTE: This is a placeholder. Actual platform API calls will be added
-     * when OAuth integration is implemented. Currently creates snapshots
-     * from locally available SmAccount metadata.
-     */
+    protected function taskType(): string { return 'metrics_collection'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
+
     public function handle(): void
     {
+        $this->broadcastTaskStarted();
+
         try {
             $accounts = $this->brand->smAccounts()
                 ->where('status', 'active')
@@ -44,14 +44,13 @@ class SmCollectMetricsJob implements ShouldQueue
                     'brand_id' => $this->brand->id,
                 ]);
 
+                $this->broadcastTaskCompleted(true);
                 return;
             }
 
             $snapshotsCreated = 0;
 
             foreach ($accounts as $account) {
-                // TODO: Replace with actual platform API calls when OAuth is implemented
-                // For now, create a snapshot from the account's local metadata
                 $metadata = $account->metadata ?? [];
 
                 SmAnalyticsSnapshot::create([
@@ -81,11 +80,15 @@ class SmCollectMetricsJob implements ShouldQueue
                 'accounts_processed' => $accounts->count(),
                 'snapshots_created' => $snapshotsCreated,
             ]);
+
+            $this->broadcastTaskCompleted(true);
         } catch (\Exception $e) {
             Log::error('SmCollectMetricsJob: failed', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }

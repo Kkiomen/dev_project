@@ -2817,10 +2817,157 @@
         "types": {
             "contentGeneration": "Generowanie treści",
             "postPublishing": "Publikowanie posta",
-            "imageGeneration": "Generowanie obrazu"
+            "imageGeneration": "Generowanie obrazu",
+            "videoTranscription": "Transkrypcja video",
+            "videoRender": "Renderowanie video",
+            "videoSilenceRemoval": "Usuwanie ciszy",
+            "timelineExport": "Eksport timeline",
+            "postContentGeneration": "Generowanie treści",
+            "contentPlanGeneration": "Plan treści",
+            "psdImport": "Import PSD",
+            "templateClassification": "Klasyfikacja szablonu",
+            "thumbnailGeneration": "Generowanie miniaturki",
+            "pipelineExecution": "Wykonanie pipeline",
+            "strategyGeneration": "Generowanie strategii",
+            "smContentPlan": "Plan treści SM",
+            "smPostContent": "Treść posta SM",
+            "weeklyReport": "Raport tygodniowy",
+            "autoSchedule": "Auto-harmonogram",
+            "automationProcessing": "Automatyzacja",
+            "smPostPublish": "Publikacja SM",
+            "postScoring": "Ocenianie postów",
+            "metricsCollection": "Zbieranie metryk",
+            "crisisDetection": "Wykrywanie kryzysu",
+            "rssFetch": "Pobieranie RSS",
+            "ciScrapeCompetitors": "Scraping konkurencji",
+            "ciScrapeTrends": "Scraping trendów",
+            "ciProcessResults": "Przetwarzanie CI",
+            "ciGenerateInsights": "Insighty CI"
         },
         "descriptions": {
             "contentGeneration": "Tworzenie posta dla \"{pillar}\" ({brand})"
+        },
+        "toast": {
+            "content": {
+                "generation": {
+                    "success": "Treść wygenerowana pomyślnie",
+                    "error": "Generowanie treści nie powiodło się"
+                },
+                "plan": {
+                    "generation": {
+                        "success": "Plan treści wygenerowany",
+                        "error": "Generowanie planu treści nie powiodło się"
+                    }
+                }
+            },
+            "psd": {
+                "import": {
+                    "success": "PSD zaimportowany pomyślnie",
+                    "error": "Import PSD nie powiódł się"
+                }
+            },
+            "template": {
+                "classification": {
+                    "success": "Szablon sklasyfikowany",
+                    "error": "Klasyfikacja szablonu nie powiodła się"
+                }
+            },
+            "thumbnail": {
+                "generation": {
+                    "success": "Miniaturka wygenerowana",
+                    "error": "Generowanie miniaturki nie powiodło się"
+                }
+            },
+            "pipeline": {
+                "execution": {
+                    "success": "Pipeline wykonany pomyślnie",
+                    "error": "Wykonanie pipeline nie powiodło się"
+                }
+            },
+            "strategy": {
+                "generation": {
+                    "success": "Strategia wygenerowana",
+                    "error": "Generowanie strategii nie powiodło się"
+                }
+            },
+            "sm": {
+                "content": {
+                    "plan": {
+                        "success": "Plan treści SM wygenerowany",
+                        "error": "Generowanie planu treści SM nie powiodło się"
+                    }
+                },
+                "post": {
+                    "content": {
+                        "success": "Treść posta SM wygenerowana",
+                        "error": "Generowanie treści posta SM nie powiodło się"
+                    },
+                    "publish": {
+                        "success": "Post SM opublikowany",
+                        "error": "Publikacja posta SM nie powiodła się"
+                    }
+                }
+            },
+            "weekly": {
+                "report": {
+                    "success": "Raport tygodniowy wygenerowany",
+                    "error": "Generowanie raportu tygodniowego nie powiodło się"
+                }
+            },
+            "auto": {
+                "schedule": {
+                    "success": "Post zaplanowany automatycznie",
+                    "error": "Automatyczne planowanie nie powiodło się"
+                }
+            },
+            "automation": {
+                "processing": {
+                    "success": "Automatyzacja zakończona",
+                    "error": "Przetwarzanie automatyzacji nie powiodło się"
+                }
+            },
+            "metrics": {
+                "collection": {
+                    "success": "Metryki zebrane",
+                    "error": "Zbieranie metryk nie powiodło się"
+                }
+            },
+            "crisis": {
+                "detection": {
+                    "success": "Wykrywanie kryzysu zakończone",
+                    "error": "Wykrywanie kryzysu nie powiodło się"
+                }
+            },
+            "rss": {
+                "fetch": {
+                    "success": "RSS pobrane",
+                    "error": "Pobieranie RSS nie powiodło się"
+                }
+            },
+            "ci": {
+                "scrape": {
+                    "competitors": {
+                        "success": "Scraping konkurencji zakończony",
+                        "error": "Scraping konkurencji nie powiódł się"
+                    },
+                    "trends": {
+                        "success": "Scraping trendów zakończony",
+                        "error": "Scraping trendów nie powiódł się"
+                    }
+                },
+                "process": {
+                    "results": {
+                        "success": "Wyniki CI przetworzone",
+                        "error": "Przetwarzanie wyników CI nie powiodło się"
+                    }
+                },
+                "generate": {
+                    "insights": {
+                        "success": "Insighty CI wygenerowane",
+                        "error": "Generowanie insightów CI nie powiodło się"
+                    }
+                }
+            }
         }
     },
     "psd_editor": {

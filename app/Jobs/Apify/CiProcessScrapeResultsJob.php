@@ -10,6 +10,7 @@ use App\Models\CiScrapeRun;
 use App\Services\Apify\ApifyService;
 use App\Services\Apify\CompetitorScraperService;
 use App\Services\Apify\TrendingContentService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -19,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 
 class CiProcessScrapeResultsJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 300;
     public int $tries = 5;
@@ -31,6 +32,10 @@ class CiProcessScrapeResultsJob implements ShouldQueue
         protected Brand $brand,
         protected CiScrapeRun $scrapeRun,
     ) {}
+
+    protected function taskType(): string { return 'ci_process_results'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->scrapeRun->id; }
 
     public function handle(
         ApifyService $apifyService,
@@ -48,6 +53,8 @@ class CiProcessScrapeResultsJob implements ShouldQueue
             return;
         }
 
+        $this->broadcastTaskStarted();
+
         Log::info('[CiProcessScrapeResultsJob] Checking run status', [
             'scrape_run_id' => $scrapeRun->id,
             'apify_run_id' => $scrapeRun->apify_run_id,
@@ -64,6 +71,7 @@ class CiProcessScrapeResultsJob implements ShouldQueue
 
             if ($status['status'] !== 'SUCCEEDED') {
                 $scrapeRun->markAsFailed("Apify run status: {$status['status']}");
+                $this->broadcastTaskCompleted(false, "Apify run status: {$status['status']}");
                 return;
             }
 
@@ -80,6 +88,8 @@ class CiProcessScrapeResultsJob implements ShouldQueue
                 'results_count' => count($results),
                 'cost' => $actualCost,
             ]);
+
+            $this->broadcastTaskCompleted(true);
         } catch (\Throwable $e) {
             $scrapeRun->markAsFailed($e->getMessage());
 
@@ -87,6 +97,9 @@ class CiProcessScrapeResultsJob implements ShouldQueue
                 'scrape_run_id' => $scrapeRun->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
+
             throw $e;
         }
     }

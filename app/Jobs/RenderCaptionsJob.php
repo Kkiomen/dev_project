@@ -3,10 +3,9 @@
 namespace App\Jobs;
 
 use App\Enums\VideoProjectStatus;
-use App\Events\TaskCompleted;
-use App\Events\TaskStarted;
 use App\Models\VideoProject;
 use App\Services\VideoEditorService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class RenderCaptionsJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 900;
     public int $tries = 2;
@@ -24,16 +23,17 @@ class RenderCaptionsJob implements ShouldQueue
 
     public function __construct(protected VideoProject $project) {}
 
+    protected function taskType(): string { return 'video_render'; }
+    protected function taskUserId(): int { return $this->project->user_id; }
+    protected function taskModelId(): string|int { return $this->project->id; }
+    protected function taskStartData(): array
+    {
+        return ['project_id' => $this->project->public_id, 'title' => $this->project->title];
+    }
+
     public function handle(VideoEditorService $editor): void
     {
-        $taskId = 'video_render_' . $this->project->id;
-
-        broadcast(new TaskStarted(
-            $this->project->user_id,
-            $taskId,
-            'video_render',
-            ['project_id' => $this->project->public_id, 'title' => $this->project->title]
-        ));
+        $this->broadcastTaskStarted();
 
         try {
             $this->project->markAs(VideoProjectStatus::Rendering);
@@ -72,24 +72,13 @@ class RenderCaptionsJob implements ShouldQueue
                 'output' => $outputPath,
             ]);
 
-            broadcast(new TaskCompleted(
-                $this->project->user_id,
-                $taskId,
-                'video_render',
-                true,
-                null,
-                ['project_id' => $this->project->public_id, 'output_path' => $outputPath]
-            ));
+            $this->broadcastTaskCompleted(true, null, [
+                'project_id' => $this->project->public_id,
+                'output_path' => $outputPath,
+            ]);
         } catch (\Throwable $e) {
             $this->project->markAsFailed($e->getMessage());
-
-            broadcast(new TaskCompleted(
-                $this->project->user_id,
-                $taskId,
-                'video_render',
-                false,
-                $e->getMessage(),
-            ));
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             Log::error('[RenderCaptionsJob] Failed', [
                 'project_id' => $this->project->id,

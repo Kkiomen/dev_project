@@ -3,10 +3,9 @@
 namespace App\Jobs;
 
 use App\Enums\VideoProjectStatus;
-use App\Events\TaskCompleted;
-use App\Events\TaskStarted;
 use App\Models\VideoProject;
 use App\Services\VideoEditorService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -16,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class RemoveSilenceJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 900;
     public int $tries = 2;
@@ -28,16 +27,17 @@ class RemoveSilenceJob implements ShouldQueue
         protected float $padding = 0.1,
     ) {}
 
+    protected function taskType(): string { return 'video_silence_removal'; }
+    protected function taskUserId(): int { return $this->project->user_id; }
+    protected function taskModelId(): string|int { return $this->project->id; }
+    protected function taskStartData(): array
+    {
+        return ['project_id' => $this->project->public_id, 'title' => $this->project->title];
+    }
+
     public function handle(VideoEditorService $editor): void
     {
-        $taskId = 'video_silence_' . $this->project->id;
-
-        broadcast(new TaskStarted(
-            $this->project->user_id,
-            $taskId,
-            'video_silence_removal',
-            ['project_id' => $this->project->public_id, 'title' => $this->project->title]
-        ));
+        $this->broadcastTaskStarted();
 
         try {
             $this->project->markAs(VideoProjectStatus::Editing);
@@ -56,14 +56,7 @@ class RemoveSilenceJob implements ShouldQueue
                     'project_id' => $this->project->id,
                 ]);
                 $this->project->markAs(VideoProjectStatus::Transcribed);
-                broadcast(new TaskCompleted(
-                    $this->project->user_id,
-                    $taskId,
-                    'video_silence_removal',
-                    true,
-                    null,
-                    ['project_id' => $this->project->public_id]
-                ));
+                $this->broadcastTaskCompleted(true, null, ['project_id' => $this->project->public_id]);
                 return;
             }
 
@@ -93,24 +86,10 @@ class RemoveSilenceJob implements ShouldQueue
                 'silence_removed' => count($silenceRegions),
             ]);
 
-            broadcast(new TaskCompleted(
-                $this->project->user_id,
-                $taskId,
-                'video_silence_removal',
-                true,
-                null,
-                ['project_id' => $this->project->public_id]
-            ));
+            $this->broadcastTaskCompleted(true, null, ['project_id' => $this->project->public_id]);
         } catch (\Throwable $e) {
             $this->project->markAsFailed($e->getMessage());
-
-            broadcast(new TaskCompleted(
-                $this->project->user_id,
-                $taskId,
-                'video_silence_removal',
-                false,
-                $e->getMessage(),
-            ));
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             Log::error('[RemoveSilenceJob] Failed', [
                 'project_id' => $this->project->id,

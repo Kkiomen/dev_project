@@ -5,6 +5,7 @@ namespace App\Jobs\Apify;
 use App\Models\Brand;
 use App\Services\Apify\ApifyService;
 use App\Services\Apify\TrendingContentService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class CiScrapeTrendsJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 120;
     public int $tries = 2;
@@ -23,6 +24,10 @@ class CiScrapeTrendsJob implements ShouldQueue
     public function __construct(
         protected Brand $brand,
     ) {}
+
+    protected function taskType(): string { return 'ci_scrape_trends'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
 
     public function handle(TrendingContentService $trendingService, ApifyService $apifyService): void
     {
@@ -34,6 +39,8 @@ class CiScrapeTrendsJob implements ShouldQueue
             ]);
             return;
         }
+
+        $this->broadcastTaskStarted();
 
         try {
             $runs = [];
@@ -56,11 +63,16 @@ class CiScrapeTrendsJob implements ShouldQueue
                 'brand_id' => $this->brand->id,
                 'runs' => count($runs),
             ]);
+
+            $this->broadcastTaskCompleted(true);
         } catch (\Throwable $e) {
             Log::error('[CiScrapeTrendsJob] Failed', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
+
             throw $e;
         }
     }

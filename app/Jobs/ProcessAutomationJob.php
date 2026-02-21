@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Brand;
 use App\Services\Automation\AutomationOrchestrator;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class ProcessAutomationJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 300;
 
@@ -22,6 +23,10 @@ class ProcessAutomationJob implements ShouldQueue
     public function __construct(
         protected Brand $brand
     ) {}
+
+    protected function taskType(): string { return 'automation_processing'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
 
     public function handle(AutomationOrchestrator $orchestrator): void
     {
@@ -49,6 +54,8 @@ class ProcessAutomationJob implements ShouldQueue
             return;
         }
 
+        $this->broadcastTaskStarted();
+
         try {
             $results = $orchestrator->processAutomation($this->brand);
 
@@ -56,11 +63,15 @@ class ProcessAutomationJob implements ShouldQueue
                 'brand_id' => $this->brand->id,
                 'results' => $results,
             ]);
+
+            $this->broadcastTaskCompleted(true);
         } catch (\Exception $e) {
             Log::error('Automation job failed', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }

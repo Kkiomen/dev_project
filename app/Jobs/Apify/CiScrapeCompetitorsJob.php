@@ -5,6 +5,7 @@ namespace App\Jobs\Apify;
 use App\Models\Brand;
 use App\Services\Apify\ApifyService;
 use App\Services\Apify\CompetitorScraperService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class CiScrapeCompetitorsJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 120;
     public int $tries = 2;
@@ -24,6 +25,10 @@ class CiScrapeCompetitorsJob implements ShouldQueue
         protected Brand $brand,
         protected string $type = 'profiles',
     ) {}
+
+    protected function taskType(): string { return 'ci_scrape_competitors'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
 
     public function handle(CompetitorScraperService $scraperService, ApifyService $apifyService): void
     {
@@ -38,6 +43,8 @@ class CiScrapeCompetitorsJob implements ShouldQueue
             ]);
             return;
         }
+
+        $this->broadcastTaskStarted();
 
         try {
             $runs = match ($this->type) {
@@ -55,11 +62,16 @@ class CiScrapeCompetitorsJob implements ShouldQueue
                 'brand_id' => $this->brand->id,
                 'runs' => count($runs),
             ]);
+
+            $this->broadcastTaskCompleted(true);
         } catch (\Throwable $e) {
             Log::error('[CiScrapeCompetitorsJob] Failed', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
+
             throw $e;
         }
     }

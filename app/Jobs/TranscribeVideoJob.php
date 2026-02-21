@@ -3,11 +3,10 @@
 namespace App\Jobs;
 
 use App\Enums\VideoProjectStatus;
-use App\Events\TaskCompleted;
-use App\Events\TaskStarted;
 use App\Models\VideoProject;
 use App\Services\TranscriberService;
 use App\Services\VideoEditorService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -17,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class TranscribeVideoJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 600;
     public int $tries = 2;
@@ -25,16 +24,17 @@ class TranscribeVideoJob implements ShouldQueue
 
     public function __construct(protected VideoProject $project) {}
 
+    protected function taskType(): string { return 'video_transcription'; }
+    protected function taskUserId(): int { return $this->project->user_id; }
+    protected function taskModelId(): string|int { return $this->project->id; }
+    protected function taskStartData(): array
+    {
+        return ['project_id' => $this->project->public_id, 'title' => $this->project->title];
+    }
+
     public function handle(TranscriberService $transcriber, VideoEditorService $editor): void
     {
-        $taskId = 'video_transcribe_' . $this->project->id;
-
-        broadcast(new TaskStarted(
-            $this->project->user_id,
-            $taskId,
-            'video_transcription',
-            ['project_id' => $this->project->public_id, 'title' => $this->project->title]
-        ));
+        $this->broadcastTaskStarted();
 
         try {
             // Update status
@@ -70,24 +70,10 @@ class TranscribeVideoJob implements ShouldQueue
                 'language' => $result['language'] ?? 'unknown',
             ]);
 
-            broadcast(new TaskCompleted(
-                $this->project->user_id,
-                $taskId,
-                'video_transcription',
-                true,
-                null,
-                ['project_id' => $this->project->public_id]
-            ));
+            $this->broadcastTaskCompleted(true, null, ['project_id' => $this->project->public_id]);
         } catch (\Throwable $e) {
             $this->project->markAsFailed($e->getMessage());
-
-            broadcast(new TaskCompleted(
-                $this->project->user_id,
-                $taskId,
-                'video_transcription',
-                false,
-                $e->getMessage(),
-            ));
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             Log::error('[TranscribeVideoJob] Failed', [
                 'project_id' => $this->project->id,

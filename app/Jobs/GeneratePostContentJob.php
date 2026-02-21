@@ -6,6 +6,7 @@ use App\Events\PostContentGenerated;
 use App\Models\Brand;
 use App\Models\SocialPost;
 use App\Services\AI\ContentGeneratorService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class GeneratePostContentJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 60;
 
@@ -27,8 +28,14 @@ class GeneratePostContentJob implements ShouldQueue
         protected array $config
     ) {}
 
+    protected function taskType(): string { return 'post_content_generation'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->post->id; }
+
     public function handle(ContentGeneratorService $generator): void
     {
+        $this->broadcastTaskStarted();
+
         try {
             // Get user settings for AI generation
             $userSettings = $this->brand->user?->settings ?? [];
@@ -52,11 +59,18 @@ class GeneratePostContentJob implements ShouldQueue
                 'post_id' => $this->post->id,
                 'brand_id' => $this->brand->id,
             ]);
+
+            $this->broadcastTaskCompleted(true, null, [
+                'post_id' => $this->post->public_id ?? $this->post->id,
+                'brand_name' => $this->brand->name,
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to generate post content', [
                 'post_id' => $this->post->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }

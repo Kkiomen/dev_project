@@ -6,12 +6,11 @@ use App\Enums\Platform;
 use App\Enums\PostStatus;
 use App\Events\CalendarPostCreated;
 use App\Events\PostContentGenerated;
-use App\Events\TaskCompleted;
-use App\Events\TaskStarted;
 use App\Models\ContentQueue;
 use App\Models\SocialPost;
 use App\Services\AI\ContentGeneratorService;
 use App\Services\NotificationService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -21,7 +20,7 @@ use Illuminate\Support\Facades\Log;
 
 class GenerateQueuedContentJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 120;
 
@@ -33,22 +32,24 @@ class GenerateQueuedContentJob implements ShouldQueue
         protected ContentQueue $queueItem
     ) {}
 
+    protected function taskType(): string { return 'content_generation'; }
+    protected function taskUserId(): int { return $this->queueItem->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->queueItem->id; }
+    protected function taskStartData(): array
+    {
+        $brand = $this->queueItem->brand;
+        return [
+            'pillar' => $this->queueItem->pillar_name,
+            'platform' => $this->queueItem->platform,
+            'brand_name' => $brand->name,
+        ];
+    }
+
     public function handle(ContentGeneratorService $generator): void
     {
         $brand = $this->queueItem->brand;
-        $taskId = 'content_generation_' . $this->queueItem->id;
 
-        // Broadcast task started
-        broadcast(new TaskStarted(
-            $brand->user_id,
-            $taskId,
-            'content_generation',
-            [
-                'pillar' => $this->queueItem->pillar_name,
-                'platform' => $this->queueItem->platform,
-                'brand_name' => $brand->name,
-            ]
-        ));
+        $this->broadcastTaskStarted();
 
         try {
             // Generate topic if not set
@@ -98,19 +99,11 @@ class GenerateQueuedContentJob implements ShouldQueue
                 $post->public_id
             );
 
-            // Broadcast task completed
-            broadcast(new TaskCompleted(
-                $brand->user_id,
-                $taskId,
-                'content_generation',
-                true,
-                null,
-                [
-                    'post_id' => $post->public_id,
-                    'post_title' => $content['title'],
-                    'brand_name' => $brand->name,
-                ]
-            ));
+            $this->broadcastTaskCompleted(true, null, [
+                'post_id' => $post->public_id,
+                'post_title' => $content['title'],
+                'brand_name' => $brand->name,
+            ]);
 
             Log::info('Queued content generated successfully', [
                 'queue_id' => $this->queueItem->id,
@@ -120,18 +113,10 @@ class GenerateQueuedContentJob implements ShouldQueue
         } catch (\Exception $e) {
             $this->queueItem->markAsFailed($e->getMessage());
 
-            // Broadcast task failed
-            broadcast(new TaskCompleted(
-                $brand->user_id,
-                $taskId,
-                'content_generation',
-                false,
-                $e->getMessage(),
-                [
-                    'pillar' => $this->queueItem->pillar_name,
-                    'brand_name' => $brand->name,
-                ]
-            ));
+            $this->broadcastTaskCompleted(false, $e->getMessage(), [
+                'pillar' => $this->queueItem->pillar_name,
+                'brand_name' => $brand->name,
+            ]);
 
             Log::error('Failed to generate queued content', [
                 'queue_id' => $this->queueItem->id,

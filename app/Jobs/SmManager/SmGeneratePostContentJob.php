@@ -10,6 +10,7 @@ use App\Services\AI\DirectTextGeneratorService;
 use App\Services\SmManager\SmCopywriterService;
 use App\Services\SmManager\SmHashtagService;
 use App\Services\SmManager\SmSchedulerService;
+use App\Traits\BroadcastsTaskProgress;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,7 +22,7 @@ use Illuminate\Support\Facades\Storage;
 
 class SmGeneratePostContentJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 180;
 
@@ -32,6 +33,10 @@ class SmGeneratePostContentJob implements ShouldQueue
     public function __construct(
         protected SmContentPlanSlot $slot
     ) {}
+
+    protected function taskType(): string { return 'sm_post_content'; }
+    protected function taskUserId(): int { return $this->slot->contentPlan->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->slot->id; }
 
     public function handle(
         SmCopywriterService $copywriter,
@@ -51,6 +56,8 @@ class SmGeneratePostContentJob implements ShouldQueue
                 ]);
                 return;
             }
+
+            $this->broadcastTaskStarted();
 
             $contentPlan = $this->slot->contentPlan;
             $brand = $contentPlan->brand;
@@ -129,11 +136,17 @@ class SmGeneratePostContentJob implements ShouldQueue
                 'hashtags_count' => count($hashtags),
                 'has_image' => $post->image_prompt !== null,
             ]);
+
+            $this->broadcastTaskCompleted(true, null, [
+                'brand_name' => $brand->name,
+            ]);
         } catch (\Exception $e) {
             Log::error('SmGeneratePostContentJob: failed', [
                 'slot_id' => $this->slot->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }
@@ -214,7 +227,6 @@ class SmGeneratePostContentJob implements ShouldQueue
         ]);
 
         // Only reset to planned if slot is still in generating status
-        // Prevents race condition when a new generation dispatch has already claimed the slot
         SmContentPlanSlot::where('id', $this->slot->id)
             ->where('status', 'generating')
             ->update(['status' => 'planned']);

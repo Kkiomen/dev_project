@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\SmScheduledPost;
+use App\Models\SocialPost;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class SmScheduledPostFactory extends Factory
@@ -13,7 +14,7 @@ class SmScheduledPostFactory extends Factory
     {
         return [
             'brand_id' => 1,
-            'social_post_id' => null,
+            'social_post_id' => SocialPost::factory(),
             'platform' => fake()->randomElement(['instagram', 'facebook', 'tiktok', 'linkedin', 'x', 'youtube']),
             'scheduled_at' => fake()->dateTimeBetween('now', '+1 week'),
             'published_at' => null,

@@ -4,6 +4,7 @@ namespace App\Jobs\SmManager;
 
 use App\Models\Brand;
 use App\Services\SmManager\SmReportGeneratorService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
 
 class SmGenerateWeeklyReportJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 120;
 
@@ -25,8 +26,14 @@ class SmGenerateWeeklyReportJob implements ShouldQueue
         protected Brand $brand
     ) {}
 
+    protected function taskType(): string { return 'weekly_report'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
+
     public function handle(SmReportGeneratorService $reportGenerator): void
     {
+        $this->broadcastTaskStarted();
+
         try {
             $result = $reportGenerator->generateWeeklyReport($this->brand);
 
@@ -48,11 +55,17 @@ class SmGenerateWeeklyReportJob implements ShouldQueue
                 'period' => $report->getPeriodLabel(),
                 'message' => $result['message'] ?? null,
             ]);
+
+            $this->broadcastTaskCompleted(true, null, [
+                'brand_name' => $this->brand->name,
+            ]);
         } catch (\Exception $e) {
             Log::error('SmGenerateWeeklyReportJob: failed', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }

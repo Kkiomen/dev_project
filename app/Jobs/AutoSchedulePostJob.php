@@ -6,6 +6,7 @@ use App\Enums\Platform;
 use App\Enums\PostStatus;
 use App\Models\SocialPost;
 use App\Services\Automation\ScheduleSlotService;
+use App\Traits\BroadcastsTaskProgress;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -15,7 +16,7 @@ use Illuminate\Support\Facades\Log;
 
 class AutoSchedulePostJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 30;
 
@@ -25,13 +26,20 @@ class AutoSchedulePostJob implements ShouldQueue
         protected SocialPost $post
     ) {}
 
+    protected function taskType(): string { return 'auto_schedule'; }
+    protected function taskUserId(): int { return $this->post->user_id; }
+    protected function taskModelId(): string|int { return $this->post->id; }
+
     public function handle(ScheduleSlotService $slotService): void
     {
+        $this->broadcastTaskStarted();
+
         // Skip if post already has a scheduled time
         if ($this->post->scheduled_at) {
             Log::info('Post already scheduled, skipping auto-schedule', [
                 'post_id' => $this->post->id,
             ]);
+            $this->broadcastTaskCompleted(true);
             return;
         }
 
@@ -41,6 +49,7 @@ class AutoSchedulePostJob implements ShouldQueue
             Log::info('Auto-schedule not enabled for brand, skipping', [
                 'post_id' => $this->post->id,
             ]);
+            $this->broadcastTaskCompleted(true);
             return;
         }
 
@@ -50,6 +59,7 @@ class AutoSchedulePostJob implements ShouldQueue
             Log::info('No enabled platforms for post, skipping auto-schedule', [
                 'post_id' => $this->post->id,
             ]);
+            $this->broadcastTaskCompleted(true);
             return;
         }
 
@@ -62,6 +72,7 @@ class AutoSchedulePostJob implements ShouldQueue
                 'post_id' => $this->post->id,
                 'platform' => $platform->value,
             ]);
+            $this->broadcastTaskCompleted(true);
             return;
         }
 
@@ -80,6 +91,8 @@ class AutoSchedulePostJob implements ShouldQueue
             'post_id' => $this->post->id,
             'scheduled_at' => $scheduledAt->toIso8601String(),
         ]);
+
+        $this->broadcastTaskCompleted(true);
     }
 
     public function failed(\Throwable $exception): void

@@ -6,6 +6,7 @@ use App\Events\ContentPlanGenerated;
 use App\Models\Brand;
 use App\Models\SocialPost;
 use App\Services\AI\ContentPlannerService;
+use App\Traits\BroadcastsTaskProgress;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -16,7 +17,7 @@ use Illuminate\Support\Facades\Log;
 
 class GenerateContentPlanJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels, BroadcastsTaskProgress;
 
     public int $timeout = 120;
 
@@ -28,8 +29,14 @@ class GenerateContentPlanJob implements ShouldQueue
         protected string $period
     ) {}
 
+    protected function taskType(): string { return 'content_plan_generation'; }
+    protected function taskUserId(): int { return $this->brand->user_id; }
+    protected function taskModelId(): string|int { return $this->brand->id; }
+
     public function handle(ContentPlannerService $planner): void
     {
+        $this->broadcastTaskStarted();
+
         try {
             // Generate the plan
             $plan = $this->period === 'month'
@@ -47,11 +54,18 @@ class GenerateContentPlanJob implements ShouldQueue
                 'period' => $this->period,
                 'posts_count' => count($posts),
             ]);
+
+            $this->broadcastTaskCompleted(true, null, [
+                'brand_name' => $this->brand->name,
+                'posts_count' => count($posts),
+            ]);
         } catch (\Exception $e) {
             Log::error('Failed to generate content plan', [
                 'brand_id' => $this->brand->id,
                 'error' => $e->getMessage(),
             ]);
+
+            $this->broadcastTaskCompleted(false, $e->getMessage());
 
             throw $e;
         }
@@ -105,7 +119,5 @@ class GenerateContentPlanJob implements ShouldQueue
             'brand_id' => $this->brand->id,
             'error' => $exception->getMessage(),
         ]);
-
-        // Could notify user via broadcast or notification
     }
 }
