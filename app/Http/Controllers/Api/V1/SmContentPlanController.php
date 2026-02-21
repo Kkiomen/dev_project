@@ -135,11 +135,11 @@ class SmContentPlanController extends Controller
 
         $validated = $request->validate([
             'slot_ids' => ['required', 'array', 'min:1'],
-            'slot_ids.*' => ['integer'],
+            'slot_ids.*' => ['string', 'size:26'],
         ]);
 
         $deleted = $smContentPlan->slots()
-            ->whereIn('id', $validated['slot_ids'])
+            ->whereIn('public_id', $validated['slot_ids'])
             ->delete();
 
         $smContentPlan->recalculateSlotCounts();
